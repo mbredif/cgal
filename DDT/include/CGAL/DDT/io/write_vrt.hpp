@@ -1,7 +1,7 @@
 #ifndef DDT_WRITE_VRT_HPP
 #define DDT_WRITE_VRT_HPP
 
-#include "conf_header/conf.hpp"
+// #include "conf_header/conf.hpp"
 
 #include <boost/filesystem.hpp>
 #undef BOOST_NO_CXX11_SCOPED_ENUMS

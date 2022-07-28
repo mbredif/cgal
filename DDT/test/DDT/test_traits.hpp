@@ -1,14 +1,13 @@
 #ifndef DDT_TEST_HPP
 #define DDT_TEST_HPP
 
-#include <boost/filesystem.hpp>
 #include <vector>
 #include <boost/filesystem.hpp>
-#include "io/write.hpp"
-#include "io/read.hpp"
-#include "partitioner/grid_partitioner.hpp"
-#include "scheduler/scheduler.hpp"
-#include "DDT.hpp"
+#include <CGAL/DDT/io/write.hpp>
+#include <CGAL/DDT/io/read.hpp>
+#include <CGAL/DDT/partitioner/grid_partitioner.hpp>
+#include <CGAL/DDT/scheduler/scheduler.hpp>
+#include <CGAL/DDT/DDT.hpp>
 
 template <typename T>
 int dump_2d_vrt(T & tri,const std::string& testname)

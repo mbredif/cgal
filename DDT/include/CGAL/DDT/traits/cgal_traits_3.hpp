@@ -6,9 +6,9 @@
 #include <CGAL/Triangulation_vertex_base_with_info_3.h>
 #include <CGAL/point_generators_3.h>
 
-#include "../data.hpp"
-#include "../bbox.hpp"
-#include "../iterator/Facet_const_iterator_3.hpp"
+#include #include <CGAL/DDT/data.hpp>
+#include #include <CGAL/DDT/bbox.hpp>
+#include #include <CGAL/DDT/iterator/Facet_const_iterator_3.hpp>
 
 namespace ddt
 {

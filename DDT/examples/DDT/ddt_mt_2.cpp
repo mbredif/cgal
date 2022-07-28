@@ -1,9 +1,9 @@
 typedef unsigned char Id;
 typedef unsigned char Flag;
 
-#include "traits/cgal_traits_2.hpp"
-//#include "traits/cgal_traits_3.hpp"
-//#include "traits/cgal_traits_d.hpp"
+#include <CGAL/DDT/traits/cgal_traits_2.hpp>
+//#include <CGAL/DDT/traits/cgal_traits_3.hpp>
+//#include <CGAL/DDT/traits/cgal_traits_d.hpp>
 
 typedef ddt::Cgal_traits_2<Id,Flag> Traits;
 //typedef ddt::Cgal_traits_3<Id,Flag> Traits;
@@ -14,15 +14,15 @@ typedef ddt::Cgal_traits_2<Id,Flag> Traits;
 
 typedef Traits::Random_points_in_box Random_points;
 
-#include "partitioner/grid_partitioner.hpp"
-#include "DDT.hpp"
-#include "scheduler/scheduler.hpp"
+#include <CGAL/DDT/partitioner/grid_partitioner.hpp>
+#include <CGAL/DDT/DDT.hpp>
+#include <CGAL/DDT/scheduler/scheduler.hpp>
 typedef ddt::Tile<Traits> Tile;
 typedef ddt::Scheduler<Tile> Scheduler;
 typedef ddt::DDT<Traits, Scheduler> DDT;
-#include "io/write_ply.hpp"
-#include "io/write_vrt.hpp"
-#include "io/logging.hpp"
+#include <CGAL/DDT/io/write_ply.hpp>
+#include <CGAL/DDT/io/write_vrt.hpp>
+#include <CGAL/DDT/io/logging.hpp>
 
 #include <boost/program_options.hpp>
 namespace po = boost::program_options;
@@ -89,7 +89,7 @@ int main(int argc, char **argv)
 
     Random_points points(D, range);
     {
-        ddt::logging log("Overall      ", loglevel);
+        ddt::logging<> log("Overall      ", loglevel);
         log.step("Send Points");
         tri.send_points(points, NP, partitioner);
         log.step("Insert Points");
@@ -104,7 +104,7 @@ int main(int argc, char **argv)
 
     if ( vm.count("out")  )
     {
-        ddt::logging log("Writing      ", loglevel);
+        ddt::logging<> log("Writing      ", loglevel);
         ddt::write_ply(tri, out+".ply");
         ddt::write_vrt_cell(tri, out+"_c.vrt");
         ddt::write_vrt_vert(tri, out+"_v.vrt");
@@ -112,7 +112,7 @@ int main(int argc, char **argv)
 
     if ( vm.count("check")  )
     {
-        ddt::logging log("Validity     ", loglevel);
+        ddt::logging<> log("Validity     ", loglevel);
         std::cout << "Validity     \t" << (tri.is_valid() ? "OK" : "ERROR!") << std::endl;
     }
     return 0;

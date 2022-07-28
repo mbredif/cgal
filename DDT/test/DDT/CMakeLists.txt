@@ -1,23 +1,16 @@
-add_executable(test_cgal_traits_2 test_cgal_traits_2.cpp test_traits.hpp)
-add_executable(test_cgal_traits_3 test_cgal_traits_3.cpp test_traits.hpp)
-add_executable(test_cgal_traits_d2 test_cgal_traits_d2.cpp test_traits.hpp)
-add_executable(test_cgal_traits_d3 test_cgal_traits_d3.cpp test_traits.hpp)
-add_executable(test_cgal_traits_d4 test_cgal_traits_d4.cpp test_traits.hpp)
-add_executable(test_DDT test_DDT.cpp)
+# Created by the script cgal_create_cmake_script
+# This is the CMake script for compiling a CGAL application.
 
+cmake_minimum_required(VERSION 3.1...3.23)
+project(DDT_Tests)
 
+find_package(CGAL REQUIRED)
 
-target_link_libraries(test_cgal_traits_2 libddt ${ddt_EXE_LIB_DEP})
-target_link_libraries(test_cgal_traits_3 libddt ${ddt_EXE_LIB_DEP})
-target_link_libraries(test_cgal_traits_d2 libddt ${ddt_EXE_LIB_DEP})
-target_link_libraries(test_cgal_traits_d3 libddt ${ddt_EXE_LIB_DEP})
-target_link_libraries(test_cgal_traits_d4 libddt ${ddt_EXE_LIB_DEP})
-target_link_libraries(test_DDT libddt ${ddt_EXE_LIB_DEP})
-
-
-add_test(cgal_traits_2 test_cgal_traits_2)
-add_test(cgal_traits_3 test_cgal_traits_3)
-add_test(cgal_traits_d2 test_cgal_traits_d2)
-add_test(cgal_traits_d3 test_cgal_traits_d3)
-add_test(cgal_traits_d4 test_cgal_traits_d4)
-add_test(DDT test_DDT)
+# create a target per cppfile
+file(
+  GLOB cppfiles
+  RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
+  ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp)
+foreach(cppfile ${cppfiles})
+  create_single_source_cgal_program("${cppfile}")
+endforeach()

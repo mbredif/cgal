@@ -1,7 +1,7 @@
 #ifndef DDT_TILE_HPP
 #define DDT_TILE_HPP
 
-#include "bbox.hpp"
+#include #include <CGAL/DDT/bbox.hpp>
 
 #include <vector>
 #include <set>
