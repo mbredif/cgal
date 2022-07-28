@@ -72,10 +72,10 @@
 \package_listing{Hyperbolic_triangulation_2}
 \package_listing{Periodic_4_hyperbolic_triangulation_2}
 \package_listing{Triangulation_3}
-\package_listing{DDT}
 \package_listing{TDS_3}
 \package_listing{Periodic_3_triangulation_3}
 \package_listing{Triangulation}
+\package_listing{DDT}
 \package_listing{Alpha_shapes_2}
 \package_listing{Alpha_shapes_3}
 
