@@ -7,7 +7,7 @@
 #include <CGAL/DDT/IO/read.h>
 #include <CGAL/DDT/partitioner/grid_partitioner.h>
 #include <CGAL/DDT/scheduler/scheduler.h>
-#include <CGAL/DDT/DDT.h>
+#include <CGAL/DDT.h>
 
 template <typename T>
 int dump_2d_vrt(T & tri,const std::string& testname)
