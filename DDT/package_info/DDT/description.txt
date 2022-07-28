@@ -1,0 +1,2 @@
+Distributed Delaunay Triangulation: provides an abstraction layer to distribute
+the computation, storage and access to a Delaunay triangulation.

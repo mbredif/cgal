@@ -1,0 +1,56 @@
+/// \defgroup PkgDDTRef 2D Triangulations Reference
+/// \defgroup PkgDDTConcepts Concepts
+/// \ingroup PkgDDTRef
+
+/// \defgroup PkgDDTClasses Triangulation Classes
+/// \ingroup PkgDDTRef
+
+/*!
+\addtogroup PkgDDTRef
+\cgalPkgDescriptionBegin{Distributed Delaunay Triangulation,PkgDDT}
+\cgalPkgPicture{ddt-small.png}
+\cgalPkgSummaryBegin
+\cgalPkgAuthor{Mathieu Brédif, Laurent Caraffa}
+\cgalPkgDesc{This package provides an abstraction layer to distribute the computation, the storage and the access to a Delaunay triangulation.}
+\cgalPkgManuals{Chapter_DDT,PkgDDTRef}
+\cgalPkgSummaryEnd
+\cgalPkgShortInfoBegin
+\cgalPkgSince{5.8}
+\cgalPkgBib{cgal:bc-ddt}
+\cgalPkgLicense{\ref licensesGPL "GPL"}
+\cgalPkgShortInfoEnd
+\cgalPkgDescriptionEnd
+
+The Distributed Delaunay Triangulation (DDT) package, ....
+
+\cgalClassifedRefPages
+
+\cgalCRPSection{Concepts}
+- `TriangulationTraits_2`
+- `DelaunayTriangulationTraits_2`
+- `RegularTriangulationTraits_2`
+- `ConstrainedTriangulationTraits_2`
+- `ConstrainedDelaunayTriangulationTraits_2`
+
+\cgalCRPSection{Classes}
+
+- `CGAL::Triangulation_2<Traits,Tds>`
+- `CGAL::Delaunay_triangulation_2<Traits,Tds>`
+- `CGAL::Regular_triangulation_2<Traits,Tds>`
+- `CGAL::Constrained_triangulation_2<Traits,Tds,Itag>`
+- `CGAL::Constrained_Delaunay_triangulation_2<Traits,Tds,Itag>`
+- `CGAL::Constrained_triangulation_plus_2<Tr>`
+- `CGAL::Triangulation_hierarchy_2<Tr>`
+
+- `CGAL::Triangulation_face_base_2<Traits,Fb>`
+- `CGAL::Triangulation_vertex_base_2<Traits,Vb>`
+- `CGAL::Regular_triangulation_face_base_2<Traits,Fb>`
+- `CGAL::Regular_triangulation_vertex_base_2<Traits,Vb>`
+- `CGAL::Constrained_triangulation_face_base_2<Traits,Fb>`
+- `CGAL::Triangulation_vertex_base_with_info_2<Info,Traits,Vb>`
+- `CGAL::Triangulation_face_base_with_info_2<Info,Traits,Fb>`
+- `CGAL::Triangulation_hierarchy_vertex_base_2<Vb>`
+
+- `CGAL::Triangulation_cw_ccw_2`
+*/
+

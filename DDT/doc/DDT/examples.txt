@@ -1,0 +1,3 @@
+/*!
+\example DDT/ddt_mt_2.cpp
+*/
