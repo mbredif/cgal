@@ -16,7 +16,7 @@ typedef Traits::Random_points_in_box Random_points;
 
 #include <CGAL/DDT/partitioner/grid_partitioner.h>
 #include <CGAL/DDT.h>
-#include <CGAL/DDT/scheduler/scheduler.h>
+#include <CGAL/DDT/scheduler.h>
 typedef ddt::Tile<Traits> Tile;
 typedef ddt::Scheduler<Tile> Scheduler;
 typedef ddt::DDT<Traits, Scheduler> DDT;

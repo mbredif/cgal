@@ -6,7 +6,7 @@
 #include <CGAL/DDT/IO/write.h>
 #include <CGAL/DDT/IO/read.h>
 #include <CGAL/DDT/partitioner/grid_partitioner.h>
-#include <CGAL/DDT/scheduler/scheduler.h>
+#include <CGAL/DDT/scheduler.h>
 #include <CGAL/DDT.h>
 
 template <typename T>

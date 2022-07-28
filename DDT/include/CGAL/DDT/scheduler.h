@@ -9,8 +9,8 @@
 //
 // Author(s)     : Mathieu Brédif and Laurent Caraffa
 
-#ifndef CGAL_DDT_SCHEDULER_SCHEDULER_H
-#define CGAL_DDT_SCHEDULER_SCHEDULER_H
+#ifndef CGAL_DDT_SCHEDULER_H
+#define CGAL_DDT_SCHEDULER_H
 
 #if DDT_USE_THREADS
 
@@ -30,4 +30,4 @@ template <typename T> using Scheduler = ddt::sequential_scheduler<T>;
 
 #endif
 
-#endif // CGAL_DDT_SCHEDULER_SCHEDULER_H
+#endif // CGAL_DDT_SCHEDULER_H

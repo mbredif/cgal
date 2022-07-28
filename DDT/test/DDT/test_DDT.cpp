@@ -7,7 +7,7 @@ typedef unsigned char Flag;
 typedef ddt::Cgal_traits<2,Id,Flag> Traits;
 
 #include <CGAL/DDT.h>
-#include <CGAL/DDT/scheduler/scheduler.h>
+#include <CGAL/DDT/scheduler.h>
 #include <CGAL/DDT/partitioner/grid_partitioner.h>
 #include <CGAL/DDT/IO/write_vrt.h>
 
