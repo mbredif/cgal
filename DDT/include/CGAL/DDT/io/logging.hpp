@@ -7,21 +7,44 @@
 namespace ddt
 {
 
+template <int ID=0>
 class logging
 {
 public:
-    logging(const std::string& s, int l);
-    ~logging() ;
+    logging(const std::string& s, int l) : level(l), time(), overall(s)
+    {
+        time = last = start = std::chrono::system_clock::now();
+    }
+    ~logging()
+    {
+      step(overall);
+      time = std::chrono::system_clock::now();
+      operator()(0, std::chrono::duration<float>(time-start).count(), "\n");
+      last = time;
+    }
     template<typename...Args>
     void operator()(int l, Args&&... args) const
     {
         if(level>=l) do_log(args...);
     }
-    void step(const std::string& s) const;
+    void step(const std::string& s) const
+    {
+      time = std::chrono::system_clock::now();
+      if(last!=start)
+      {
+          operator()(2, "\n");
+          operator()(0, std::chrono::duration<float>(time-last).count(), "\n");
+      }
+      last = time;
+      operator()(0, s, "\t");
+    }
     int level;
 private:
 
-    void do_log() const;
+    void do_log() const
+    {
+      std::cout << std::flush;
+    }
     template<typename Arg, typename...Args>
     void do_log(Arg&& arg, Args&&... args) const
     {

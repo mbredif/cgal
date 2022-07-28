@@ -8,8 +8,17 @@
 namespace ddt
 {
 
-void write_ply_header_begin(std::ostream& out);
-void write_ply_header_end(std::ostream& out);
+inline void write_ply_header_begin(std::ostream& out)
+{
+    out << "ply" << std::endl;
+    out << "format binary_little_endian 1.0" << std::endl;
+    out << "comment creator: Mathieu Bredif" << std::endl;
+}
+
+inline void write_ply_header_end(std::ostream& out)
+{
+    out << "end_header" << std::endl;
+}
 
 template<typename DDT>
 void write_ply_element_cell(const DDT& tri, std::ostream& out)
