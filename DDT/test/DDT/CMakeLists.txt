@@ -1,16 +1,33 @@
 # Created by the script cgal_create_cmake_script
 # This is the CMake script for compiling a CGAL application.
 
-cmake_minimum_required(VERSION 3.1...3.23)
-project(DDT_Tests)
+cmake_minimum_required(VERSION 3.1...3.14)
+project( DDT )
 
 find_package(CGAL REQUIRED)
+#find_package(Boost QUIET COMPONENTS program_options)
+find_package(Boost QUIET COMPONENTS filesystem)
+if(NOT TARGET Boost::filesystem)
+  message(STATUS  "NOTICE: Tests requires boost filesystem and will not be compiled.")
+  return()
+endif()
 
-# create a target per cppfile
-file(
-  GLOB cppfiles
-  RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
-  ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp)
-foreach(cppfile ${cppfiles})
-  create_single_source_cgal_program("${cppfile}")
-endforeach()
+find_package(Eigen3)
+include(CGAL_Eigen3_support)
+if(NOT TARGET CGAL::Eigen3_support)
+  message(STATUS  "NOTICE: Some tests requires Eigen3 and will not be compiled.")
+else()
+create_single_source_cgal_program( "test_DDT_traits_d2.cpp" )
+create_single_source_cgal_program( "test_DDT_traits_d3.cpp" )
+create_single_source_cgal_program( "test_DDT_traits_d4.cpp" )
+create_single_source_cgal_program( "test_DDT.cpp" )
+target_link_libraries(test_DDT_traits_d2 PUBLIC CGAL::Eigen3_support PRIVATE Boost::filesystem)
+target_link_libraries(test_DDT_traits_d3 PUBLIC CGAL::Eigen3_support PRIVATE Boost::filesystem)
+target_link_libraries(test_DDT_traits_d4 PUBLIC CGAL::Eigen3_support PRIVATE Boost::filesystem)
+target_link_libraries(test_DDT PUBLIC CGAL::Eigen3_support PRIVATE Boost::filesystem)
+endif()
+
+create_single_source_cgal_program( "test_DDT_traits_2.cpp" )
+create_single_source_cgal_program( "test_DDT_traits_3.cpp" )
+target_link_libraries(test_DDT_traits_2 PRIVATE Boost::filesystem)
+target_link_libraries(test_DDT_traits_3 PRIVATE Boost::filesystem)

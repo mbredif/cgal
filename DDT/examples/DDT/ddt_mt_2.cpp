@@ -20,9 +20,9 @@ typedef Traits::Random_points_in_box Random_points;
 typedef ddt::Tile<Traits> Tile;
 typedef ddt::Scheduler<Tile> Scheduler;
 typedef ddt::DDT<Traits, Scheduler> DDT;
-#include <CGAL/DDT/io/write_ply.hpp>
-#include <CGAL/DDT/io/write_vrt.hpp>
-#include <CGAL/DDT/io/logging.hpp>
+#include <CGAL/DDT/IO/write_ply.hpp>
+#include <CGAL/DDT/IO/write_vrt.hpp>
+#include <CGAL/DDT/IO/logging.hpp>
 
 #include <boost/program_options.hpp>
 namespace po = boost::program_options;

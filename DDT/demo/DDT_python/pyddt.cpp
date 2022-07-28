@@ -1,6 +1,6 @@
 #include "tile.hpp"
-#include "io/read.hpp"
-#include "io/write.hpp"
+#include "IO/read.hpp"
+#include "IO/write.hpp"
 
 #include <vector>
 #include <boost/python.hpp>

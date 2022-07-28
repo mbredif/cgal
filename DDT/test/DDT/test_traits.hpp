@@ -3,8 +3,8 @@
 
 #include <vector>
 #include <boost/filesystem.hpp>
-#include <CGAL/DDT/io/write.hpp>
-#include <CGAL/DDT/io/read.hpp>
+#include <CGAL/DDT/IO/write.hpp>
+#include <CGAL/DDT/IO/read.hpp>
 #include <CGAL/DDT/partitioner/grid_partitioner.hpp>
 #include <CGAL/DDT/scheduler/scheduler.hpp>
 #include <CGAL/DDT/DDT.hpp>

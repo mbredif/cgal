@@ -9,7 +9,7 @@ typedef ddt::Cgal_traits<2,Id,Flag> Traits;
 #include <CGAL/DDT/DDT.hpp>
 #include <CGAL/DDT/scheduler/scheduler.hpp>
 #include <CGAL/DDT/partitioner/grid_partitioner.hpp>
-#include <CGAL/DDT/io/write_vrt.hpp>
+#include <CGAL/DDT/IO/write_vrt.hpp>
 
 typedef ddt::Tile<Traits> Tile;
 typedef ddt::Scheduler<Tile> Scheduler;

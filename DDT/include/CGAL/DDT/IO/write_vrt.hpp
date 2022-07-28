@@ -14,7 +14,10 @@
 #include <stdlib.h>
 #include <set>
 
-
+// TODO: tmp to workariound conf.hpp
+#ifndef STYLE_SOURCE_DIR
+#define STYLE_SOURCE_DIR ""
+#endif
 
 namespace ddt
 {

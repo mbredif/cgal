@@ -1,7 +1,7 @@
 #ifndef algo_ddt_algo_ddt_HPP
 #define algo_ddt_algo_ddt_HPP
 
-#include <CGAL/DDT/io/logging.hpp>
+#include <CGAL/DDT/IO/logging.hpp>
 
 #include <string>
 #include <unordered_map>
