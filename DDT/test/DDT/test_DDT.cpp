@@ -3,13 +3,13 @@ typedef unsigned char Flag;
 
 #include <assert.h>
 #include <vector>
-#include <CGAL/DDT/traits/cgal_traits_d.hpp>
+#include <CGAL/DDT/traits/cgal_traits_d.h>
 typedef ddt::Cgal_traits<2,Id,Flag> Traits;
 
-#include <CGAL/DDT/DDT.hpp>
-#include <CGAL/DDT/scheduler/scheduler.hpp>
-#include <CGAL/DDT/partitioner/grid_partitioner.hpp>
-#include <CGAL/DDT/IO/write_vrt.hpp>
+#include <CGAL/DDT/DDT.h>
+#include <CGAL/DDT/scheduler/scheduler.h>
+#include <CGAL/DDT/partitioner/grid_partitioner.h>
+#include <CGAL/DDT/IO/write_vrt.h>
 
 typedef ddt::Tile<Traits> Tile;
 typedef ddt::Scheduler<Tile> Scheduler;

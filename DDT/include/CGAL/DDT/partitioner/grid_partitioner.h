@@ -1,7 +1,7 @@
 #ifndef DDT_GRID_PARTITIONER_HPP
 #define DDT_GRID_PARTITIONER_HPP
 
-#include <CGAL/DDT/bbox.hpp>
+#include <CGAL/DDT/bbox.h>
 
 namespace ddt
 {

@@ -1,9 +1,9 @@
 typedef unsigned char Id;
 typedef unsigned char Flag;
 
-#include <CGAL/DDT/traits/cgal_traits_2.hpp>
-//#include <CGAL/DDT/traits/cgal_traits_3.hpp>
-//#include <CGAL/DDT/traits/cgal_traits_d.hpp>
+#include <CGAL/DDT/traits/cgal_traits_2.h>
+//#include <CGAL/DDT/traits/cgal_traits_3.h>
+//#include <CGAL/DDT/traits/cgal_traits_d.h>
 
 typedef ddt::Cgal_traits_2<Id,Flag> Traits;
 //typedef ddt::Cgal_traits_3<Id,Flag> Traits;
@@ -14,15 +14,15 @@ typedef ddt::Cgal_traits_2<Id,Flag> Traits;
 
 typedef Traits::Random_points_in_box Random_points;
 
-#include <CGAL/DDT/partitioner/grid_partitioner.hpp>
-#include <CGAL/DDT/DDT.hpp>
-#include <CGAL/DDT/scheduler/scheduler.hpp>
+#include <CGAL/DDT/partitioner/grid_partitioner.h>
+#include <CGAL/DDT/DDT.h>
+#include <CGAL/DDT/scheduler/scheduler.h>
 typedef ddt::Tile<Traits> Tile;
 typedef ddt::Scheduler<Tile> Scheduler;
 typedef ddt::DDT<Traits, Scheduler> DDT;
-#include <CGAL/DDT/IO/write_ply.hpp>
-#include <CGAL/DDT/IO/write_vrt.hpp>
-#include <CGAL/DDT/IO/logging.hpp>
+#include <CGAL/DDT/IO/write_ply.h>
+#include <CGAL/DDT/IO/write_vrt.h>
+#include <CGAL/DDT/IO/logging.h>
 
 #include <boost/program_options.hpp>
 namespace po = boost::program_options;

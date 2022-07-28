@@ -3,11 +3,11 @@
 
 #include <vector>
 #include <boost/filesystem.hpp>
-#include <CGAL/DDT/IO/write.hpp>
-#include <CGAL/DDT/IO/read.hpp>
-#include <CGAL/DDT/partitioner/grid_partitioner.hpp>
-#include <CGAL/DDT/scheduler/scheduler.hpp>
-#include <CGAL/DDT/DDT.hpp>
+#include <CGAL/DDT/IO/write.h>
+#include <CGAL/DDT/IO/read.h>
+#include <CGAL/DDT/partitioner/grid_partitioner.h>
+#include <CGAL/DDT/scheduler/scheduler.h>
+#include <CGAL/DDT/DDT.h>
 
 template <typename T>
 int dump_2d_vrt(T & tri,const std::string& testname)

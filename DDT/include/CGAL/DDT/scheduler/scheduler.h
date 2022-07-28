@@ -3,7 +3,7 @@
 
 #if DDT_USE_THREADS
 
-#include <CGAL/DDT/scheduler/multithread_scheduler.hpp>
+#include <CGAL/DDT/scheduler/multithread_scheduler.h>
 namespace ddt
 {
 template <typename T> using Scheduler = ddt::multithread_scheduler<T>;
@@ -11,7 +11,7 @@ template <typename T> using Scheduler = ddt::multithread_scheduler<T>;
 
 #else
 
-#include <CGAL/DDT/scheduler/sequential_scheduler.hpp>
+#include <CGAL/DDT/scheduler/sequential_scheduler.h>
 namespace ddt
 {
 template <typename T> using Scheduler = ddt::sequential_scheduler<T>;

@@ -1,10 +1,10 @@
 #ifndef DDT_DDT_HPP
 #define DDT_DDT_HPP
 
-#include <CGAL/DDT/iterator/Vertex_const_iterator.hpp>
-#include <CGAL/DDT/iterator/Facet_const_iterator.hpp>
-#include <CGAL/DDT/iterator/Cell_const_iterator.hpp>
-#include <CGAL/DDT/tile.hpp>
+#include <CGAL/DDT/iterator/Vertex_const_iterator.h>
+#include <CGAL/DDT/iterator/Facet_const_iterator.h>
+#include <CGAL/DDT/iterator/Cell_const_iterator.h>
+#include <CGAL/DDT/tile.h>
 
 #include <string>
 #include <unordered_map>

@@ -1,7 +1,7 @@
 typedef unsigned char Id;
 typedef unsigned char Flag;
 
-#include <CGAL/DDT/traits/cgal_traits_2.hpp>
+#include <CGAL/DDT/traits/cgal_traits_2.h>
 typedef ddt::Cgal_traits_2<Id,Flag> Traits;
 
 #include "test_traits.hpp"

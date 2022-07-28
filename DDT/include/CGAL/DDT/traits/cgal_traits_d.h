@@ -2,9 +2,9 @@
 #define DDT_CGAL_TRAITS_D_HPP
 
 
-#include <CGAL/DDT/data.hpp>
-#include <CGAL/DDT/bbox.hpp>
-#include <CGAL/DDT/iterator/Facet_const_iterator_d.hpp>
+#include <CGAL/DDT/data.h>
+#include <CGAL/DDT/bbox.h>
+#include <CGAL/DDT/iterator/Facet_const_iterator_d.h>
 
 #include <CGAL/Epick_d.h>
 #include <CGAL/Delaunay_triangulation.h>

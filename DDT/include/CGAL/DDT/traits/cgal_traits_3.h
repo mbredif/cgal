@@ -1,56 +1,57 @@
-#ifndef DDT_CGAL_TRAITS_2_HPP
-#define DDT_CGAL_TRAITS_2_HPP
+#ifndef DDT_CGAL_TRAITS_3_HPP
+#define DDT_CGAL_TRAITS_3_HPP
 
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
-#include <CGAL/Delaunay_triangulation_2.h>
-#include <CGAL/Triangulation_vertex_base_with_info_2.h>
-#include <CGAL/point_generators_2.h>
+#include <CGAL/Delaunay_triangulation_3.h>
+#include <CGAL/Triangulation_vertex_base_with_info_3.h>
+#include <CGAL/point_generators_3.h>
 
-#include <CGAL/DDT/data.hpp>
-#include <CGAL/DDT/bbox.hpp>
-#include <CGAL/DDT/iterator/Facet_const_iterator_2.hpp>
+#include <CGAL/DDT/data.h>
+#include <CGAL/DDT/bbox.h>
+#include <CGAL/DDT/iterator/Facet_const_iterator_3.h>
 
 namespace ddt
 {
 
 template<typename I, typename F>
-struct Cgal_traits_2
+struct Cgal_traits_3
 {
-    enum { D = 2 };
+    enum { D = 3 };
     typedef I                                                      Id;
     typedef F                                                      Flag;
     typedef ddt::Data<Id, Flag>                                    Data;
     typedef CGAL::Exact_predicates_inexact_constructions_kernel    K;
-    typedef CGAL::Triangulation_vertex_base_with_info_2<Data, K>   Vb;
-    typedef CGAL::Triangulation_data_structure_2<Vb>               TDS;
-    typedef typename K::Point_2                                    Point;
+    typedef CGAL::Triangulation_vertex_base_with_info_3<Data, K>   Vb;
+    typedef CGAL::Delaunay_triangulation_cell_base_3<K>            Cb;
+    typedef CGAL::Triangulation_data_structure_3<Vb, Cb>           TDS;
+    typedef typename K::Point_3                                    Point;
 
     typedef typename TDS::Vertex_iterator                          Vertex_const_iterator;
     typedef typename TDS::Vertex_handle                            Vertex_const_handle;
     typedef typename TDS::Vertex_iterator                          Vertex_iterator;
     typedef typename TDS::Vertex_handle                            Vertex_handle;
 
-    typedef typename TDS::Face_iterator                            Cell_const_iterator;
-    typedef typename TDS::Face_handle                              Cell_const_handle;
-    typedef typename TDS::Face_iterator                            Cell_iterator;
-    typedef typename TDS::Face_handle                              Cell_handle;
+    typedef typename TDS::Cell_iterator                            Cell_const_iterator;
+    typedef typename TDS::Cell_handle                              Cell_const_handle;
+    typedef typename TDS::Cell_iterator                            Cell_iterator;
+    typedef typename TDS::Cell_handle                              Cell_handle;
 
     typedef std::pair<Cell_const_handle, int>                      Facet;
-    typedef Facet_const_iterator_2<TDS>                            Facet_const_iterator;
+    typedef Facet_const_iterator_3<TDS>                            Facet_const_iterator;
     typedef Facet_const_iterator                                   Facet_const_handle;
     typedef Facet_const_iterator                                   Facet_iterator;
     typedef Facet_const_iterator                                   Facet_handle;
 
-    typedef CGAL::Delaunay_triangulation_2<K, TDS>                 Delaunay_triangulation;
-    typedef CGAL::Random_points_in_disc_2<Point>                   Random_points_in_ball;
+    typedef CGAL::Delaunay_triangulation_3<K, TDS>                 Delaunay_triangulation;
+    typedef CGAL::Random_points_in_sphere_3<Point>                 Random_points_in_ball;
 
-    struct Random_points_in_box : CGAL::Random_points_in_square_2<Point>
+    struct Random_points_in_box : CGAL::Random_points_in_cube_3<Point>
     {
-        Random_points_in_box(int d, double g) : CGAL::Random_points_in_square_2<Point>(g)
+        Random_points_in_box(int d, double g) : CGAL::Random_points_in_cube_3<Point>(g)
         {
-            CGAL_assertion(d==2);
+            CGAL_assertion(d==3);
         }
-        Random_points_in_box(double g) : CGAL::Random_points_in_square_2<Point>(g) {}
+        Random_points_in_box(double g) : CGAL::Random_points_in_cube_3<Point>(g) {}
     };
 
     Delaunay_triangulation triangulation(int dimension) const
@@ -77,7 +78,7 @@ struct Cgal_traits_2
     }
     inline size_t number_of_cells(const Delaunay_triangulation& dt) const
     {
-        return dt.number_of_faces();
+        return dt.number_of_cells();
     }
     inline size_t number_of_vertices(const Delaunay_triangulation& dt) const
     {
@@ -113,11 +114,11 @@ struct Cgal_traits_2
     }
     inline Cell_const_iterator cells_begin(const Delaunay_triangulation& dt) const
     {
-        return dt.all_faces_begin();
+        return dt.all_cells_begin();
     }
     inline Cell_const_iterator cells_end(const Delaunay_triangulation& dt) const
     {
-        return dt.all_faces_end();
+        return dt.all_cells_end();
     }
 
     inline Vertex_handle infinite_vertex(const Delaunay_triangulation& dt) const
@@ -137,7 +138,7 @@ struct Cgal_traits_2
 
     template<class It> inline void remove(Delaunay_triangulation& dt, It begin, It end) const
     {
-        for(It it=begin; it!=end; ++it) dt.remove(*it);
+        dt.remove_cluster(begin, end);
     }
 
     inline Point circumcenter(const Delaunay_triangulation& dt, Cell_const_handle c) const
@@ -218,7 +219,7 @@ struct Cgal_traits_2
 
     inline int mirror_index(const Delaunay_triangulation& dt, Cell_const_handle c, int i) const
     {
-        return c->neighbor(i)->index(c);
+        return dt.mirror_index(c, i);
     }
 
     inline Cell_const_iterator neighbor(const Delaunay_triangulation& dt, Cell_const_iterator c, int i) const
@@ -235,4 +236,4 @@ struct Cgal_traits_2
 
 }
 
-#endif // DDT_CGAL_TRAITS_2_HPP
+#endif // DDT_CGAL_TRAITS_3_HPP
