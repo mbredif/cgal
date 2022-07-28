@@ -4,7 +4,7 @@
 #include <map>
 #include <vector>
 #include <chrono>
-#include #include <CGAL/DDT/thread_pool.hpp>
+#include <CGAL/DDT/thread_pool.hpp>
 
 namespace ddt
 {

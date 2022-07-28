@@ -10,7 +10,7 @@
 #include <vector>
 #include <queue>
 
-#include #include <CGAL/DDT/safe.hpp>
+#include <CGAL/DDT/safe.hpp>
 
 class thread_pool
 {
