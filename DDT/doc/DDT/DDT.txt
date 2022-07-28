@@ -1,0 +1,165 @@
+namespace CGAL {
+/*!
+
+\mainpage User Manual
+\anchor Chapter_DDT
+
+\cgalAutoToc
+\author Mathieu Brédif, Laurent Caraffa
+
+
+\section Section_DDT_Overview Overview
+
+This package offers the distributed computation of Delaunay Triangulations (DT) (with 2D, 3D and nD traits). It has been developed in the LASTIG laboratory (Univ. Gustave Eiffel, IGN ENSG) as a first step for the 3D reconstruction of large scale surfaces. This reconstruction is based on the 3D Delaunay triangulation of input 3D point clouds. Then each tetrahedra is classified as Inside or Outside using a distributed graph cut energy minimisation and the final triangular mesh is extracted as the soup of triangles between an Inside tetrahedron and an Outside tetrahedron \cgalCite{caraffa2021efficiently}. For scaling, the scene is split in "tiles" that partition the n-dimensional ambient space.
+The DT algorithm is designed to be fully distributed : processing elements handle size-limited triangulations of a subset of the points. These triangulations eventually converge to local views of the overall Delaunay Triangulation after they iteratively exchange points.
+There is no complex structure in any master node : the messages that are exchanged between processing nodes are limited to small point sets and the iterations stop when no more points are sent.
+
+
+\section Section_DDT_Distribution Distribution
+
+The overall Delaunay Triangulation of all points is likely not fitting in the memory or on the disk of a single computer. Thus, it is split into pieces of limited sizes. These pieces are themselves also Delaunay Triangulations, but on a subset of the input points. This enables the reuse of existing algorithms and data structures.
+
+The input point cloud is partitioned into disjoint subsets (tiles) \f$P_i\f$  and each tile has a unique tile identifier \f$i\f$ .
+
+\subsection SSection_DDT_TileT Tile-triangulation
+
+For each tile, a triangulation is maintained: the **tile-triangulation** \f$T_i\f$ is defined as a triangulation of a supset \f$Q_i\f$ of the local points \f$P_i\f$ :
+- \f$P_i\f$ are the local points of the tile, according to the partition.
+- \f$Q_i\setminus P_i\f$ are foreign points that are replicated vertices in the triangulation \f$T_i\f$, even though they are local to another tile.
+- A collection of tile-triangulations \f$(T_i)_{i\in I}\f$ constitutes a **distributed triangulation**.
+
+We define a simplex as **local**  if all its points are local, **foreign** if all its points are foreign and **mixed** otherwise.
+
+Each tile triangulation is initialized as the Delaunay Triangulation of its local points. Each tile will then receive, insert, send and remove foreign points until each tile triangulation converges to the Delaunay Triangulation of its local points and of their neighbors in the overall Delaunay Triangulation of all points. The resulting Delaunay tile-triangulation, are just partial views of the overall Delaunay triangulation, as they agree on the stars of their local points.
+
+
+The next figure shows a toy example of a tile-triangulation. Colored simplices belong to the bottom left tile.
+Only local and mixed simplices are contained in the stars of local points, and are thus matching simplices of the overall Delaunay triangulation.
+Thus, vertices that are only adjacent to foreign cells may be removed from the tile-triangulation without impacting local stars and thus the distributed Delaunay triangulation. This is the simplification step.
+If all foreign cells were removed, then the resulting triangulated domain would not necessarily be convex.
+Thus, some foreign cells are left unsimplified, so that the tile triangulation is indeed simply the Delaunay triangulation of the local points and their neighbors in the overall triangulation.
+
+
+\cgalFigureAnchor{StarSplaying}
+<center>
+<table border=0>
+<tr align="center"><td>Local DT before simplification</td><td>Local DT after simplification</td></tr>
+<tr>
+<td>\image html fig/starsplay-tile-redundant.svg</td>
+<td>\image html fig/starsplay-tile-simplified.svg</td>
+</tr>
+<tr><td>\image html fig/legend.png</td></tr>
+</table>
+</center>
+
+\subsection SSection_DDT_DelauanyTileT Delaunay tile-triangulation
+
+The distributed triangulation \f$(T_i)_{i\in I}\f$ of a triangulation \f$T=DT(P)\f$ according to a point-partitioning \f$(P_i)_{i\in I}\f$ is defined as a set of Delaunay triangulations \f$(DT(Q_i))_{i\in I}\f$, with \f$Q_i = P_i\cup \bigcup_{p\in P_i}Neigbors(p,T)\f$, where \f$Neigbors(p,T)\f$ are the neighbors of the point p in the overall triangulation \f$T\f$. \f$T_i\f$ is thus a local view of \f$T\f$. Conversely, the overall triangulation \f$T\f$ may be reconstructed from a distributed triangulation \f$(T_i)_{i\in I}\f$ with a partitioning \f$P_I\f$ as the set of cells (triangles in 2D, tetrahedra in 3D...)
+
+\f$T=\bigcup_{i\in I}\bigcup_{p\in P_i} Star(p,T_i)\f$, where  \f$ Star(p, T_i) \f$  denotes the set of cells of the subcomplex of \f$T_i\f$ induced by \f$ p \in P_i \f$ and all its neighbors in \f$T_i\f$.
+
+
+\subsection SSection_DDT_MainSimplices Main simplices
+Simplices (points, facets, cells) are replicated in each tile triangulation of its vertices.
+Thus, local simplices are only present in their own tile triangulation.
+However, mixed simplices have at least 2 duplicates (possibly \f$N+1\f$ in \f$N\f$ dimensions).
+It is however handy to elect a ***main*** simplex out of these duplicates, for application like iterating only once over each simplex.
+This is done by defining an oracle that can, for each simplex, tell if it is **main** or not. One possible oracle is to set let the ***main*** simplex be the one in the tile-triangulation with the lowest tile id.
+
+\section Section_DDT_StarSplaying Distributed Delaunay Triangulation and Star Splaying
+
+The distributed computation of the Delaunay triangulation extends the star splaying approach \cgalCite{shewchuk2005star} which maintains a star for each point and exchanges possibly neighboring points between stars until convergence. That is, when it can be proven that the maintained stars have converged to the stars of the DT. The implemented approach does not treat individually each stars, but maintains instead a DT for each tile \cgalCite{caraffa2019tile}. Indeed, these Delaunay tile-triangulations contain each star of its local points. The implemented approach is thus a batched version of star splaying. It can leverage any Delaunay insertion/removal algorithm. The proof of convergence \cgalCite{bredif2020provably} comes from the proof of [1] and the initialization of the messages : all tiles broadcast to all other tiles their bounding box points (in nD, 2n points each: minimum and maximum in all dimensions).
+
+
+\section Section_DDT_Implementation Implementation details
+
+\subsection SSection_DDT_MainFunc Main functionalites
+
+General info about the code :
+- Distributed Delaunay triangulation structure and DDT with shared memory in multithread is available in 2d, 3d, and nd, using traits.
+- A sample program for simple benchmarking is available in "./src/main.cpp"
+  - can be run with differents parameters / thread
+  - May be edited to be compiled with different Kernel.
+- tests are in ./test/ (but with many kernels!)
+- There is a functional python binding in ./src/python/
+- Shapefile output is only available in 2D.
+- Reading / Writing the DDT by tile is actually implemented but the loaded DDT is not valid according to CGAL in this version.
+  - the test can be found in the "test io" section in the file "./test/test_traits.hpp"
+
+
+\subsection SSection_DDT_Files Files
+
+\subsubsection SSSection_DDT_Tile Tile.hpp
+The \ref ddt::Tile "Tile" class encapsulates :
+  - The tile identifier.
+  - The Delaunay tile-triangulation, obviously. In order to keep track of the tile id of foreign points, the vertices are templated with a data attribute to hold this id ( \ref ddt::Data "data.hpp" ). The access is provided by a function of the trait : id(Vertex_handle v) . However, other storage policies are possible , such as storing the tile ids of the vertices outside the DT in an external data structure, which would save space by not storing the id of local vertices.
+  - The number of main vertices, facets and cells in the tile-triangulation (cached for performance)
+  - An archive of its local points it already sent to which tile, preventing any resending.
+  - The bounding boxes of all other tiles, if known (for legacy reasons, if needed, they might be better placed in the DDT class...)
+
+It exposes the insert function of the DT and manages tile ids and automatic simplification of foreign cells.
+
+As mentioned mixed simplices may be duplicated in multiple tiles. **Locate** functions are provided to find the corresponding simplex handle in another tile, if present. This is valuable to get the **main** simplex in another tile corresponding to a given non-main simplex. Currently, only the brute force approach is implemented.
+
+The ostream operator<< is overloaded, so that a tile can be written in a ascii/binary format.
+
+\subsubsection SSSection_DDT_DDT DDT.hpp
+The \ref ddt::DDT "DDT" class is a view on the distributed Delaynay Triangulation, in the sense that, if enough memory is available, it could load all the tiles and provide operations such as (batch) point insertion seamlessly to the user. However, it has the possibility to load only a subset of the tiles, which is interesting when memory resources are insufficient and for future extensions (streaming processing, dynamic loading/unloading...)
+
+\subsubsection SSSection_DDT_Iterators Iterators
+Iterators are provided to enumerate the main simplices of the loaded tiles in a DDT.
+
+- \ref ddt::Cell_const_iterator "Cell_const_iterator.hpp"
+- \ref ddt::Vertex_const_iterator "Vertex_const_iterator.hpp"
+- \ref ddt::Facet_const_iterator "Facet_const_iterator.hpp"
+
+These iterators are implemented by maintaining a local filtered iterator over the main simplices and an iterator over the tiles.
+It thus iterates over the  **main** simplices of each loaded tiles in turn.
+
+In order to iterate over each main simplex of the overall DT in parallel, the loading of the tiles should be distributed among the parallel processes, so that each process loads a non-overlaping subset of the tiles. Then each process may iterate over its main simplices using the provided operators.
+
+\subsubsection SSSection_DDT_Traits  Traits*.hpp
+	The trait classes provide glue layers that hide or adapt the API discrepancies between DT implementations, so that the rest of the code is agnostic of the exact DT implementation : CGAL 2D, CGAL 3D, CGAL nD... (there used to be a geogram trait as well!)
+	See for instance the nD trait \ref ddt::Cgal_traits_d "cgal_traits_d.hpp"
+
+
+\subsection SSection_DDT_Schedulers Schedulers
+
+The Scheduler is a DDT template parameter which is responsible for abstracting the distributed execution and the message passing implementations.
+Message Passing is however limited to point sets.
+Schedulers must implement a number of functions, including :
+  - send : send a point to a tile.
+  - splay_fun : receive some points, apply a function on the received point that may emit some points and send the emited points.
+  - for_each : map a function object to all tiles
+  - for_each_rec : map a function object repeatedly to all tiles until all tiles return a value of 0.
+
+
+For example the DDT class uses the scheduler to insert received points :
+\code{.cpp}
+    int insert_received_points(bool do_simplify=true) { return sch.for_each(tiles_begin(), tiles_end(), sch.insert_func(do_simplify)); }
+\endcode
+
+
+\subsubsection SSection_DDT_SeqSchedulers Sequential Scheduler
+
+This is a trivial scheduler with no multithreading. It is used for testing and development.
+
+\subsubsection SSection_DDT_MTSchedulers Multithread Scheduler
+
+This scheduler uses a thread pool (std::thread) to distribute processing among multiple processes on a single computer.
+Communication is implemented by a shared inbox of points, with tile ids : tile id of the point, sending tile id of the source, and receiving tile id of the message target. This inbox is in shared memory and is thus protected by mutexes, contrary to other data structures such as Delaunay triangulations, which are not shared among threads.
+
+\subsubsection SSection_DDT_SparkSchedulers Spark implementation (not available here)
+	Spark is a big data framework written in scala available on Hadoop clusters. The Spark scheduler (not released here) is thus implemented in scala and uses Spark for the message passing of serialized point sets and triangulations and the distributed execution of C++ programs that are implemented using this library : read some serialized triangulation and/or point set, perform an operation (insertion, removal, simplification...) ).
+
+\subsubsection SSection_DDT_Extension  Extensions
+-	A MPI Scheduler is not implemented yet, but it should definitely be possible, either directly from scratch or using a framework such as Bitpit
+	https://optimad.github.io/bitpit/.
+- Schedulers could be extended to support streaming by loading and unloading tiles as needed.
+
+\section Section_DDT_History Design and Implementation History
+
+The code of this package is based on a version of the code developed in the LASTIG laboratory (Univ. Gustave Eiffel, IGN ENSG) by Mathieu Brédif and Laurent Caraffa.
+
+*/
+} /* namespace CGAL */
