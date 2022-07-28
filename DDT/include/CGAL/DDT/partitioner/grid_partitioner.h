@@ -1,5 +1,16 @@
-#ifndef DDT_GRID_PARTITIONER_HPP
-#define DDT_GRID_PARTITIONER_HPP
+// Copyright (c) 2022 Institut Géographique National - IGN (France)
+// All rights reserved.
+//
+// This file is part of CGAL (www.cgal.org).
+//
+// $URL$
+// $Id$
+// SPDX-License-Identifier: GPL-3.0-or-later OR LicenseRef-Commercial
+//
+// Author(s)     : Mathieu Brédif and Laurent Caraffa
+
+#ifndef CGAL_DDT_PARITIONER_GRID_PARTITIONER_H
+#define CGAL_DDT_PARITIONER_GRID_PARTITIONER_H
 
 #include <CGAL/DDT/bbox.h>
 
@@ -60,4 +71,4 @@ private:
 
 }
 
-#endif // DDT_GRID_PARTITIONER_HPP
+#endif // CGAL_DDT_PARITIONER_GRID_PARTITIONER_H

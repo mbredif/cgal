@@ -1,5 +1,16 @@
-#ifndef DDT_TILE_HPP
-#define DDT_TILE_HPP
+// Copyright (c) 2022 Institut Géographique National - IGN (France)
+// All rights reserved.
+//
+// This file is part of CGAL (www.cgal.org).
+//
+// $URL$
+// $Id$
+// SPDX-License-Identifier: GPL-3.0-or-later OR LicenseRef-Commercial
+//
+// Author(s)     : Mathieu Brédif and Laurent Caraffa
+
+#ifndef CGAL_DDT_TILE_H
+#define CGAL_DDT_TILE_H
 
 #include <CGAL/DDT/bbox.h>
 
@@ -665,4 +676,4 @@ std::ostream& operator<< (std::ostream& os,const Tile<T> & tt)
 
 }
 
-#endif // DDT_TILE_HPP
+#endif // CGAL_DDT_TILE_H

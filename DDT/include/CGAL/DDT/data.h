@@ -1,5 +1,16 @@
-#ifndef DDT_DATA_HPP
-#define DDT_DATA_HPP
+// Copyright (c) 2022 Institut Géographique National - IGN (France)
+// All rights reserved.
+//
+// This file is part of CGAL (www.cgal.org).
+//
+// $URL$
+// $Id$
+// SPDX-License-Identifier: GPL-3.0-or-later OR LicenseRef-Commercial
+//
+// Author(s)     : Mathieu Brédif and Laurent Caraffa
+
+#ifndef CGAL_DDT_DATA_H
+#define CGAL_DDT_DATA_H
 
 #include <iostream>
 #include <CGAL/IO/io.h>
@@ -62,4 +73,4 @@ operator>>(std::istream & is,  Data<I,F> & dd)
 
 }
 
-#endif // DDT_DATA_HPP
+#endif // CGAL_DDT_DATA_H

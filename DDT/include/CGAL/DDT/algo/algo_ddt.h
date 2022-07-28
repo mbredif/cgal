@@ -1,5 +1,16 @@
-#ifndef algo_ddt_algo_ddt_HPP
-#define algo_ddt_algo_ddt_HPP
+// Copyright (c) 2022 Institut Géographique National - IGN (France)
+// All rights reserved.
+//
+// This file is part of CGAL (www.cgal.org).
+//
+// $URL$
+// $Id$
+// SPDX-License-Identifier: GPL-3.0-or-later OR LicenseRef-Commercial
+//
+// Author(s)     : Mathieu Brédif and Laurent Caraffa
+
+#ifndef CGAL_ALGO_DDT_ALGO_DDT_H
+#define CGAL_ALGO_DDT_ALGO_DDT_H
 
 #include <CGAL/DDT/IO/logging.h>
 
@@ -55,4 +66,4 @@ private:
 
 }
 
-#endif // algo_ddt_DDT_HPP
+#endif // CGAL_ALGO_DDT_DDT_H

@@ -1,5 +1,16 @@
-#ifndef DDT_READ_CGAL_HPP
-#define DDT_READ_CGAL_HPP
+// Copyright (c) 2022 Institut Géographique National - IGN (France)
+// All rights reserved.
+//
+// This file is part of CGAL (www.cgal.org).
+//
+// $URL$
+// $Id$
+// SPDX-License-Identifier: GPL-3.0-or-later OR LicenseRef-Commercial
+//
+// Author(s)     : Mathieu Brédif and Laurent Caraffa
+
+#ifndef CGAL_DDT_READ_CGAL_H
+#define CGAL_DDT_READ_CGAL_H
 
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
@@ -82,4 +93,4 @@ int read_cgal(DDT& tri, const std::string& dirname)
 
 }
 
-#endif // DDT_READ_CGAL_HPP
+#endif // CGAL_DDT_READ_CGAL_H

@@ -1,5 +1,16 @@
-#ifndef DDT_BBOX_HPP
-#define DDT_BBOX_HPP
+// Copyright (c) 2022 Institut Géographique National - IGN (France)
+// All rights reserved.
+//
+// This file is part of CGAL (www.cgal.org).
+//
+// $URL$
+// $Id$
+// SPDX-License-Identifier: GPL-3.0-or-later OR LicenseRef-Commercial
+//
+// Author(s)     : Mathieu Brédif and Laurent Caraffa
+
+#ifndef CGAL_DDT_BBOX_H
+#define CGAL_DDT_BBOX_H
 
 #include <stddef.h>
 #include <limits>
@@ -105,5 +116,5 @@ std::istream& operator>>(std::istream& in, Bbox<D>& bbox)
 
 }
 
-#endif // DDT_BBOX_HPP
+#endif // CGAL_DDT_BBOX_H
 

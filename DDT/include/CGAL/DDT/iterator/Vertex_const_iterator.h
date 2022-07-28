@@ -1,5 +1,16 @@
-#ifndef DDT_VERTEX_CONST_ITERATOR_HPP
-#define DDT_VERTEX_CONST_ITERATOR_HPP
+// Copyright (c) 2022 Institut Géographique National - IGN (France)
+// All rights reserved.
+//
+// This file is part of CGAL (www.cgal.org).
+//
+// $URL$
+// $Id$
+// SPDX-License-Identifier: GPL-3.0-or-later OR LicenseRef-Commercial
+//
+// Author(s)     : Mathieu Brédif and Laurent Caraffa
+
+#ifndef CGAL_DDT_VERTEX_CONST_ITERATOR_H
+#define CGAL_DDT_VERTEX_CONST_ITERATOR_H
 
 namespace ddt
 {
@@ -154,4 +165,4 @@ public:
 
 }
 
-#endif // DDT_VERTEX_CONST_ITERATOR_HPP
+#endif // CGAL_DDT_VERTEX_CONST_ITERATOR_H

@@ -1,5 +1,16 @@
-#ifndef DDT_CGAL_TRAITS_3_HPP
-#define DDT_CGAL_TRAITS_3_HPP
+// Copyright (c) 2022 Institut Géographique National - IGN (France)
+// All rights reserved.
+//
+// This file is part of CGAL (www.cgal.org).
+//
+// $URL$
+// $Id$
+// SPDX-License-Identifier: GPL-3.0-or-later OR LicenseRef-Commercial
+//
+// Author(s)     : Mathieu Brédif and Laurent Caraffa
+
+#ifndef CGAL_DDT_CGAL_TRAITS_3_H
+#define CGAL_DDT_CGAL_TRAITS_3_H
 
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
 #include <CGAL/Delaunay_triangulation_3.h>
@@ -236,4 +247,4 @@ struct Cgal_traits_3
 
 }
 
-#endif // DDT_CGAL_TRAITS_3_HPP
+#endif // CGAL_DDT_CGAL_TRAITS_3_H
