@@ -71,7 +71,7 @@ int test_traits(const std::string& testname, int ND, int NP, bool do_test_io = f
     if (Traits::D == 3)
     {
         std::cout << "== write_ply ==" << std::endl;
-        ddt::write_ply(tri1, testname+".ply");
+        ddt::write_ply(tri1, testname + "/out.ply");
     }
     else if (Traits::D == 2)
     {

@@ -8,5 +8,5 @@ typedef ddt::Cgal_traits_3<Id,Flag> Traits;
 
 int main(int, char **)
 {
-    return test_traits<Traits>("cgal_traits_3", 3, 500);
+    return test_traits<Traits>("test_DDT_traits_3_out", 3, 500);
 }

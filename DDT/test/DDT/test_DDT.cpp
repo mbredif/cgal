@@ -3,6 +3,8 @@ typedef unsigned char Flag;
 
 #include <assert.h>
 #include <vector>
+#include <boost/filesystem.hpp>
+
 #include <CGAL/DDT/traits/cgal_traits_d.h>
 typedef ddt::Cgal_traits<2,Id,Flag> Traits;
 
@@ -64,12 +66,14 @@ int main(int, char **)
     tri.finalize();
     assert(tri.is_valid());
 
-    ddt::write_vrt_vert(tri, "./DDT_vert.vrt");
-    ddt::write_vrt_facet(tri, "./DDT_facet.vrt");
-    ddt::write_vrt_cell(tri, "./DDT_cell.vrt");
-    ddt::write_vrt_verts(tri, "./DDT/");
-    ddt::write_vrt_facets(tri, "./DDT/");
-    ddt::write_vrt_cells(tri, "./DDT/");
+    boost::filesystem::path outdir("./test_DDT_out/");
+    boost::filesystem::create_directories(outdir);
+    ddt::write_vrt_vert(tri, outdir.string() + "DDT_vert.vrt");
+    ddt::write_vrt_facet(tri, outdir.string() + "DDT_facet.vrt");
+    ddt::write_vrt_cell(tri, outdir.string() + "DDT_cell.vrt");
+    ddt::write_vrt_verts(tri, outdir.string());
+    ddt::write_vrt_facets(tri, outdir.string());
+    ddt::write_vrt_cells(tri, outdir.string());
 
 
     for(auto vertex = tri.vertices_begin(); vertex != tri.vertices_end(); ++vertex)
@@ -116,7 +120,7 @@ int main(int, char **)
         }
         std::set<typename DDT::Cell_const_iterator> ring;
         tri.get_ring(cell, 1, ring);
-        write_vrt_cell_range(ring.begin(), ring.end(), std::to_string(cid) + "_ring.vrt");
+        write_vrt_cell_range(ring.begin(), ring.end(), outdir.string() + std::to_string(cid) + "_ring.vrt");
     }
 
     return 0;

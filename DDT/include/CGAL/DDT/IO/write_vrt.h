@@ -60,7 +60,7 @@ inline void write_vrt_header_vert(std::ofstream& csv, const std::string& filenam
     f <<  "</OGRVRTLayer>" << std::endl;
     f <<"</OGRVRTDataSource>" << std::endl;
 
-    add_qgis_style(filename, std::string("vert1.qml"));
+    //    add_qgis_style(filename, std::string("vert1.qml"));
     csv.open(path.replace_extension("csv").string());
     csv << "geom,tid,id" << std::endl;
 }
@@ -109,7 +109,7 @@ inline void write_vrt_header_cell(std::ofstream& csv, const std::string& filenam
     f <<  "</OGRVRTLayer>" << std::endl;
     f <<"</OGRVRTDataSource>" << std::endl;
 
-    add_qgis_style(filename,std::string("tri1.qml"));
+    //    add_qgis_style(filename,std::string("tri1.qml"));
     csv.open(path.replace_extension("csv").string());
     csv << "geom,tid,local,main,cid,cid0,cid1,cid2" << std::endl;
 }
@@ -153,7 +153,7 @@ inline void write_vrt_header_bbox(std::ofstream& csv, const std::string& filenam
     f <<  "</OGRVRTLayer>" << std::endl;
     f <<"</OGRVRTDataSource>" << std::endl;
 
-    add_qgis_style(filename, std::string("bbox1.qml"));
+    //    add_qgis_style(filename, std::string("bbox1.qml"));
     csv.open(path.replace_extension("csv").string());
     csv << "geom,tid,bboxid" << std::endl;
 }
@@ -235,7 +235,7 @@ void write_tile_vrt_cells(const Tile& tile, const std::string& vrt_name, bool ma
 
     std::ofstream csv;
     write_vrt_header_cell(csv,vrt_name);
-    add_qgis_style(vrt_name,std::string("tri1.qml"));
+    // add_qgis_style(vrt_name,std::string("tri1.qml"));
     write_csv_cell(tile, csv,main_only);
 }
 
