@@ -36,8 +36,8 @@ std::istream& read_json(Tile & tile,std::istream&  ifile)
     boost::property_tree::ptree root_node;
     boost::property_tree::read_json(ifile, root_node);
     auto & bbox = tile.bbox();
-    // int id =  root_node.get<Id>("id");
-    // tile.set_id(id);
+    int id =  root_node.get<Id>("id");
+    tile.set_id(id);
     for (auto its : root_node.get_child("bbox"))
     {
         int iid = std::stoi(its.first);
@@ -54,7 +54,7 @@ int read_cgal_tile(Tile& tile, const std::string& dirname)
 
     std::string filename = dirname + "/" + std::to_string(tile.id() ) + ".bin";
     std::string json_name = dirname + "/" + std::to_string(tile.id() ) + ".json";
-    std::ifstream ifile_tri(filename,  std::ios::in);
+    std::ifstream ifile_tri(filename,  std::ios::in );
 
     if (!ifile_tri.is_open())
     {
@@ -62,7 +62,7 @@ int read_cgal_tile(Tile& tile, const std::string& dirname)
         return 1;
     }
 
-    tile.read_class(ifile_tri);
+    ifile_tri >> tile;
     ifile_tri.close();
 
     std::ifstream ifile_json(json_name, std::ifstream::in);
@@ -87,7 +87,8 @@ int read_cgal(DDT& tri, const std::string& dirname)
         auto tile  = tri.get_tile(tid);
         read_cgal_tile(*tile,dirname);
     }
-
+    tri.finalize();
+    assert(tri.is_valid());
     return 0;
 }
 

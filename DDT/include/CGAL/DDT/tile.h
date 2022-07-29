@@ -626,11 +626,6 @@ public:
         }
     }
 
-    void read_class(std::istream& is)
-    {
-        is >> id_;
-        is >> dt_;
-    }
 
     bool is_valid() const
     {
@@ -657,18 +652,13 @@ template<class T>
 std::istream& operator>> (std::istream& is,Tile<T> & tt)
 {
     
-  typedef typename Tile<T>::Id Id;
-  Id ii;
-  is >> ii;
-  is >> tt;
-  tt.set_id(ii);
+  is >> tt.triangulation();
   return is;
 }
 
 template<class T>
 std::ostream& operator<< (std::ostream& os,const Tile<T> & tt)
 {
-    os << tt.id() << " ";
     os << tt.triangulation();
     return os;
 }
