@@ -1,3 +1,6 @@
+cmake_minimum_required(VERSION 3.1...3.23)
+project(DDT_qgis_Demo)
+
 file(GLOB MY_PUBLIC_HEADERS
   ${CMAKE_CURRENT_SOURCE_DIR}/*.qml
   )

@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.1...3.23)
-project(pyDDT)
+project(DDT_python_Demo)
 
 find_package(Python COMPONENTS Interpreter Development REQUIRED)
 find_package(Boost COMPONENTS filesystem python REQUIRED)
