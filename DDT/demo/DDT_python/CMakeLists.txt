@@ -1,19 +1,18 @@
 cmake_minimum_required(VERSION 3.1...3.23)
 project(pyDDT)
 
-FIND_PACKAGE(PythonInterp REQUIRED)
-FIND_PACKAGE(PythonLibs REQUIRED)
-FIND_PACKAGE(CGAL REQUIRED)
-FIND_PACKAGE(Eigen3 REQUIRED NO_MODULE)
-FIND_PACKAGE(Boost COMPONENTS python system filesystem REQUIRED)
-include_directories(${Boost_INCLUDE_DIRS})
-link_directories(${Boost_LIBRARY_DIRS})
+find_package(Python COMPONENTS Interpreter Development REQUIRED)
+find_package(Boost COMPONENTS filesystem python REQUIRED)
+find_package(Eigen3 REQUIRED NO_MODULE)
+find_package(CGAL REQUIRED)
 
-INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIRS} ${PYTHON_INCLUDE_DIRS} ${CGAL_INCLUDE_DIRS})
+link_directories(${Python_LIBRARY_DIRS} ${Boost_LIBRARY_DIRS})
+include_directories( ${Python_INCLUDE_DIRS} ${Boost_INCLUDE_DIRS} ${CGAL_INCLUDE_DIRS})
 add_library( pyddt SHARED pyddt.cpp )
 target_link_libraries( pyddt
-  ${Boost_LIBRARIES}
-  ${PYTHON_LIBRARIES}
+  Python::Python
+  Boost::filesystem
+  Boost::python
   Eigen3::Eigen
   CGAL::CGAL
   )
