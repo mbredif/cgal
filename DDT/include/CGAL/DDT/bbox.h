@@ -12,6 +12,7 @@
 #ifndef CGAL_DDT_BBOX_H
 #define CGAL_DDT_BBOX_H
 
+#include <boost/config.hpp> // defines BOOST_PREVENT_MACRO_SUBSTITUTION
 #include <stddef.h>
 #include <limits>
 #include <iostream>
@@ -76,11 +77,11 @@ struct Bbox
         return *this;
     }
 
-    inline double min(int i) const
+    inline double min BOOST_PREVENT_MACRO_SUBSTITUTION (int i) const
     {
         return value[i  ];
     }
-    inline double max(int i) const
+    inline double max BOOST_PREVENT_MACRO_SUBSTITUTION (int i) const
     {
         return value[i+D];
     }
