@@ -41,13 +41,13 @@ if insert_input_points and input_points:
     tri.send_points(points, len(points), Grid_partitioner(bbox,4))
     npoints += len(points)/2
 
-print "Triangulating %d points" % npoints
-print tri.insert_received_points()
-print tri.send_all_bbox_points()
-print tri.splay_stars()
+print("Triangulating %d points" % npoints)
+print(tri.insert_received_points())
+print(tri.send_all_bbox_points())
+print(tri.splay_stars())
 
 
-print "Exporting to QGIS"
+print("Exporting to QGIS")
 fields = [QgsField("tid", QVariant.Int),QgsField("local",QVariant.Int)]
 writer = processing.VectorWriter(output_triangulation, None, fields, QGis.WKBPolygon, layer.crs())
 

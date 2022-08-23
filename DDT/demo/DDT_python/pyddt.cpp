@@ -1,16 +1,16 @@
-#include "tile.hpp"
-#include "IO/read.hpp"
-#include "IO/write.hpp"
+#include <CGAL/DDT/tile.h>
+#include <CGAL/DDT/IO/read.h>
+#include <CGAL/DDT/IO/write.h>
 
 #include <vector>
 #include <boost/python.hpp>
 #include <sstream>
 
-
 typedef int Id;
 typedef int Flag;
 //
-#include "traits/cgal_traits_d.hpp"
+
+#include <CGAL/DDT/traits/cgal_traits_d.h>
 typedef ddt::Cgal_traits<2,Id,Flag> Traits;
 typedef Traits::Random_points_in_box Random_points;
 
@@ -143,10 +143,10 @@ public:
     py_cell_iterator py_cells_end()   const { return py_cell_iterator(cells_end  (), *this); }
 };
 
-#include "scheduler/scheduler.hpp"
-typedef ddt::Scheduler<py_tile> Scheduler;
+#include <CGAL/DDT/scheduler/multithread_scheduler.h>
+typedef ddt::multithread_scheduler<py_tile> Scheduler;
 
-#include "DDT.hpp"
+#include <CGAL/DDT.h>
 class py_DDT : public ddt::DDT<Traits, Scheduler, py_tile>
 {
 private:
@@ -201,9 +201,9 @@ public:
 // }
 
 
-#include "partitioner/const_partitioner.hpp"
-#include "partitioner/grid_partitioner.hpp"
-#include "partitioner/random_partitioner.hpp"
+#include <CGAL/DDT/partitioner/const_partitioner.h>
+#include <CGAL/DDT/partitioner/grid_partitioner.h>
+#include <CGAL/DDT/partitioner/random_partitioner.h>
 typedef ddt::const_partitioner<Traits> Const_partitioner;
 typedef ddt::grid_partitioner<Traits> Grid_partitioner;
 typedef ddt::random_partitioner<Traits> Random_partitioner;
