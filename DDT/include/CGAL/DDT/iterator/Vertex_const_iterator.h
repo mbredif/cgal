@@ -16,9 +16,15 @@ namespace ddt
 {
 
 template<typename DDT>
-class Vertex_const_iterator : public std::iterator<std::input_iterator_tag, Vertex_const_iterator<DDT> >
+class Vertex_const_iterator
 {
 public:
+    using iterator_category = std::input_iterator_tag;
+    using value_type = Vertex_const_iterator<DDT>;
+    using difference_type = std::ptrdiff_t;
+    using pointer = value_type*;
+    using reference = value_type&;
+
     typedef typename DDT::Traits                     Traits;
     typedef typename DDT::Tile_vertex_const_iterator Tile_vertex_const_iterator;
     typedef typename DDT::Tile_const_iterator        Tile_const_iterator;

@@ -16,9 +16,15 @@ namespace ddt
 {
 
 template<typename TDS>
-class Facet_const_iterator_d : public std::iterator<std::input_iterator_tag, typename TDS::Facet>
+class Facet_const_iterator_d
 {
 public:
+    using iterator_category = std::input_iterator_tag;
+    using value_type = typename TDS::Facet;
+    using difference_type = std::ptrdiff_t;
+    using pointer = value_type*;
+    using reference = value_type&;
+
     typedef typename TDS::Full_cell_const_handle     Cell_const_handle;
     typedef std::pair<Cell_const_handle, int> Facet;
 

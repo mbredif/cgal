@@ -19,9 +19,15 @@ template <typename TDS> using Cell_const_iterator_3 = typename TDS::Cell_iterato
 template <typename TDS> using Facet_3 = std::pair<Cell_const_iterator_3<TDS>, int>;
 
 template<typename TDS>
-class Facet_const_iterator_3 : public std::iterator<std::input_iterator_tag, Facet_3<TDS>>
+class Facet_const_iterator_3
 {
 public:
+    using iterator_category = std::input_iterator_tag;
+    using value_type = Facet_3<TDS>;
+    using difference_type = std::ptrdiff_t;
+    using pointer = value_type*;
+    using reference = value_type&;
+
     typedef Cell_const_iterator_3<TDS> Cell_const_iterator;
     typedef Facet_3<TDS>               Facet;
 

@@ -16,9 +16,15 @@ namespace ddt
 {
 
 template<typename DDT>
-class Cell_const_iterator : public std::iterator<std::input_iterator_tag, Cell_const_iterator<DDT> >
+class Cell_const_iterator
 {
 public:
+    using iterator_category = std::input_iterator_tag;
+    using value_type = Cell_const_iterator<DDT>;
+    using difference_type = std::ptrdiff_t;
+    using pointer = value_type*;
+    using reference = value_type&;
+
     typedef typename DDT::Traits                    Traits;
     typedef typename DDT::Tile_cell_const_handle    Tile_cell_const_handle;
     typedef typename DDT::Tile_cell_const_iterator  Tile_cell_const_iterator;

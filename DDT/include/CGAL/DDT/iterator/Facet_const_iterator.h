@@ -16,9 +16,15 @@ namespace ddt
 {
 
 template<typename DDT>
-class Facet_const_iterator : public std::iterator<std::input_iterator_tag, Facet_const_iterator<DDT> >
+class Facet_const_iterator
 {
 public:
+    using iterator_category = std::input_iterator_tag;
+    using value_type = Facet_const_iterator<DDT>;
+    using difference_type = std::ptrdiff_t;
+    using pointer = value_type*;
+    using reference = value_type&;
+
     typedef typename DDT::Traits                    Traits;
     typedef typename DDT::Tile_facet_const_iterator Tile_facet_const_iterator;
     typedef typename DDT::Tile_cell_const_iterator  Tile_cell_const_iterator;
