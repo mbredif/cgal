@@ -21,7 +21,7 @@
 #include <vector>
 #include <queue>
 
-#include <CGAL/DDT/safe.hpp>
+#include <CGAL/DDT/scheduler/safe.h>
 
 class thread_pool
 {

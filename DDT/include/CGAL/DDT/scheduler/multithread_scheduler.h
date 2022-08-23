@@ -15,7 +15,7 @@
 #include <map>
 #include <vector>
 #include <chrono>
-#include <CGAL/DDT/thread_pool.hpp>
+#include <CGAL/DDT/scheduler/thread_pool.h>
 
 namespace ddt
 {

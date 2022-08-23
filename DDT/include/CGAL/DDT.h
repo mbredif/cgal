@@ -138,6 +138,7 @@ public:
     inline size_t number_of_vertices() const { return number_of_vertices_; }
     inline size_t number_of_facets  () const { return number_of_facets_;   }
     inline size_t number_of_tiles   () const { return tiles.size();   }
+    inline size_t number_of_threads () const { return sch.number_of_threads(); }
 
     Vertex_const_iterator vertices_begin() const { return Vertex_const_iterator(tiles_begin(), tiles_end()); }
     Vertex_const_iterator vertices_end  () const { return Vertex_const_iterator(tiles_begin(), tiles_end(), tiles_end()); }

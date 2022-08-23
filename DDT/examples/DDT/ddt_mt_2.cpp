@@ -16,6 +16,7 @@ typedef Traits::Random_points_in_box Random_points;
 
 #include <CGAL/DDT/partitioner/grid_partitioner.h>
 #include <CGAL/DDT.h>
+#define DDT_USE_THREADS 1
 #include <CGAL/DDT/scheduler.h>
 typedef ddt::Tile<Traits> Tile;
 typedef ddt::Scheduler<Tile> Scheduler;
@@ -76,16 +77,16 @@ int main(int argc, char **argv)
     ddt::Bbox<D> bbox(range);
     ddt::grid_partitioner<Traits> partitioner(bbox, NT.begin(), NT.end());
 
+    DDT tri(threads);
+
     std::cout << "- Loglevel : " << loglevel << std::endl;
     std::cout << "- Range    : " << range << std::endl;
     std::cout << "- Points   : " << NP << std::endl;
-    std::cout << "- Threads  : " << threads << std::endl;
+    std::cout << "- Threads  : " << tri.number_of_threads() << std::endl;
     std::cout << "- Out dir  : " << (out.empty() ? "[no output]" : out) << std::endl;
     std::cout << "- Tiles    : " << partitioner.size() << " ( ";
     std::copy(partitioner.begin(), partitioner.end(), std::ostream_iterator<int>(std::cout, " "));
     std::cout << ")" << std::endl;
-
-    DDT tri(threads);
 
     Random_points points(D, range);
     {

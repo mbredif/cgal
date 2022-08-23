@@ -31,7 +31,7 @@ struct sequential_scheduler
     sequential_scheduler(int /*unused*/) {}
     inline int number_of_threads() const
     {
-        return 0;
+        return 1;
     }
 
     std::function<int(Tile&, bool)>
