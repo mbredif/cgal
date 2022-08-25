@@ -17,13 +17,19 @@ typedef Traits::Random_points_in_box Random_points;
 
 typedef ddt::Tile<Traits> Tile;
 
-class py_vertex_iterator : public std::iterator<std::input_iterator_tag, py_vertex_iterator>
+class py_vertex_iterator
 {
 private:
     Tile::Vertex_const_iterator v;
     const Tile& tile;
 
 public:
+    using iterator_category = std::forward_iterator_tag;
+    using value_type = py_vertex_iterator;
+    using difference_type = std::ptrdiff_t;
+    using pointer = value_type*;
+    using reference = value_type&;
+
     py_vertex_iterator(Tile::Vertex_const_iterator i, const Tile& t) : v(i), tile(t) {}
     py_vertex_iterator(const py_vertex_iterator& i) : v(i.v), tile(i.tile) {}
 
@@ -52,13 +58,19 @@ public:
     }
 };
 
-class py_cell_iterator : public std::iterator<std::input_iterator_tag, py_cell_iterator>
+class py_cell_iterator
 {
 private:
     Tile::Cell_const_iterator c;
     const Tile& tile;
 
 public:
+    using iterator_category = std::forward_iterator_tag;
+    using value_type = py_cell_iterator;
+    using difference_type = std::ptrdiff_t;
+    using pointer = value_type*;
+    using reference = value_type&;
+
     py_cell_iterator(Tile::Cell_const_iterator i, const Tile& t) : c(i), tile(t) {}
     py_cell_iterator(const py_cell_iterator& i) : c(i.c), tile(i.tile) {}
 
@@ -96,7 +108,7 @@ public:
     }
 };
 
-class py_point_iterator : public std::iterator<std::input_iterator_tag, Tile::Point>
+class py_point_iterator
 {
 private:
     const boost::python::list& points;
@@ -104,6 +116,12 @@ private:
     Tile::Point p;
 
 public:
+    using iterator_category = std::forward_iterator_tag;
+    using value_type = Tile::Point;
+    using difference_type = std::ptrdiff_t;
+    using pointer = value_type*;
+    using reference = value_type&;
+
     py_point_iterator(const boost::python::list& p) : points(p), i(0) {}
     py_point_iterator(const py_point_iterator& p) : points(p.points), i(p.i) {}
 

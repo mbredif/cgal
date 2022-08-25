@@ -19,7 +19,7 @@ template<typename DDT>
 class Facet_const_iterator
 {
 public:
-    using iterator_category = std::input_iterator_tag;
+    using iterator_category = std::forward_iterator_tag;
     using value_type = Facet_const_iterator<DDT>;
     using difference_type = std::ptrdiff_t;
     using pointer = value_type*;

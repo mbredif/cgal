@@ -28,9 +28,11 @@ template<typename Map_const_iterator>
 class Key_const_iterator : public Map_const_iterator
 {
 public:
-    typedef typename Map_const_iterator::value_type::first_type value_type;
-    typedef const value_type& reference;
-    typedef const value_type* pointer;
+    using iterator_category = std::forward_iterator_tag;
+    using value_type = typename Map_const_iterator::value_type::first_type;
+    using difference_type = std::ptrdiff_t;
+    using pointer = const value_type*;
+    using reference = const value_type&;
 
     Key_const_iterator ( ) : Map_const_iterator ( ) { }
     Key_const_iterator ( Map_const_iterator it_ ) : Map_const_iterator ( it_ ) { }
@@ -45,9 +47,11 @@ template<typename Map_const_iterator>
 class Mapped_const_iterator : public Map_const_iterator
 {
 public:
-    typedef typename Map_const_iterator::value_type::second_type value_type;
-    typedef const value_type& reference;
-    typedef const value_type* pointer;
+    using iterator_category = std::forward_iterator_tag;
+    using value_type = typename Map_const_iterator::value_type::second_type;
+    using difference_type = std::ptrdiff_t;
+    using pointer = const value_type*;
+    using reference = const value_type&;
 
     Mapped_const_iterator ( ) : Map_const_iterator ( ) { }
     Mapped_const_iterator ( Map_const_iterator it_ ) : Map_const_iterator ( it_ ) { }
@@ -62,9 +66,11 @@ template<typename Map_iterator>
 class Mapped_iterator : public Map_iterator
 {
 public:
-    typedef typename Map_iterator::value_type::second_type value_type;
-    typedef value_type& reference;
-    typedef value_type* pointer;
+    using iterator_category = std::forward_iterator_tag;
+    using value_type = typename Map_iterator::value_type::second_type;
+    using difference_type = std::ptrdiff_t;
+    using pointer = value_type*;
+    using reference = value_type&;
 
     Mapped_iterator ( ) : Map_iterator ( ) { }
     Mapped_iterator ( Map_iterator it_ ) : Map_iterator ( it_ ) { }
@@ -162,8 +168,8 @@ public:
 
     int vertex_id(Vertex_const_iterator v) const
     {
-        if (v->is_infinite()) return -1;
-        return std::distance(vertices_begin(), v->main());
+        if (v.is_infinite()) return -1;
+        return std::distance(vertices_begin(), v.main());
     }
 
     int cell_id(Cell_const_iterator c) const

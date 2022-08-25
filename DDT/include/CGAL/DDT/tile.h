@@ -226,7 +226,8 @@ public:
     }
 
 
-    template<typename C>                                                                                                                                                                                               bool cell_is_foreign_in_tile(C c, int tid) const
+    template<typename C>
+    bool cell_is_foreign_in_tile(C c, int tid) const
     {
         for(int i=0; i<=current_dimension(); ++i)
         {
@@ -413,18 +414,25 @@ public:
                 if(vertex_is_infinite(v)) break;
                 Id idv = id(v);
                 if(idv != id())
+                {
                     for(int j=0; j<=current_dimension(); ++j)
                     {
                         Vertex_const_handle w = vertex(cit, j);
                         if(vertex_is_infinite(w) || id(w) != idv) // implies i!=j
                             outbox[idv].insert(w);
                     }
+                }
             }
         for(auto&& pair : outbox)
-            for(auto vh : pair.second)
-                out.push_back(std::make_pair(vh, pair.first));
+        {
+            Id idv = pair.first;
+            for(auto w : pair.second)
+            {
+                out.push_back(std::make_pair(w, idv));
+            }
+        }
     }
-
+/*
     void get_neighbors_pid(std::map<Id, std::vector<Point_id_source>> & outbox)
     {
 
@@ -448,6 +456,7 @@ public:
         }
 
     }
+*/
 
     int send_one(
         std::map<Id, std::vector<Point_id_source>>& inbox,
