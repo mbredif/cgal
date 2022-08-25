@@ -195,12 +195,6 @@ public:
     }
 };
 
-
-// class py_algo_ddt : public ddt::algo_ddt<py_DDT,Scheduler> {
-//   public py_algo_ddt(py_DDT & pyddt,Scheduler & sch) : algo_ddt(pyddt,sch) {};
-// }
-
-
 #include <CGAL/DDT/partitioner/const_partitioner.h>
 #include <CGAL/DDT/partitioner/grid_partitioner.h>
 #include <CGAL/DDT/partitioner/random_partitioner.h>
