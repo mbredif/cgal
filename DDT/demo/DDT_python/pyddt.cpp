@@ -202,7 +202,7 @@ typedef ddt::const_partitioner<Traits> Const_partitioner;
 typedef ddt::grid_partitioner<Traits> Grid_partitioner;
 typedef ddt::random_partitioner<Traits> Random_partitioner;
 
-typedef ddt::Bbox<Traits::D> Bbox;
+typedef ddt::Bbox<Traits::D, double> Bbox;
 
 template<typename Iterator, typename Param, typename Partitioner>
 inline void send_points(py_DDT& tri, Param p, int count, Partitioner& part)

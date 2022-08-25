@@ -74,7 +74,7 @@ int main(int argc, char **argv)
         std::cerr << desc << std::endl;
         return -1;
     }
-    ddt::Bbox<D> bbox(range);
+    ddt::Bbox<D, double> bbox(range);
     ddt::grid_partitioner<Traits> partitioner(bbox, NT.begin(), NT.end());
 
     DDT tri(threads);

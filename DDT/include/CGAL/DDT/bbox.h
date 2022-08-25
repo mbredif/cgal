@@ -20,10 +20,10 @@
 namespace ddt
 {
 
-template<int D>
+template<int D, typename T>
 struct Bbox
 {
-    Bbox(double range)
+    Bbox(T range)
     {
         for(int i=0; i<D; ++i)
         {
@@ -31,7 +31,7 @@ struct Bbox
             value[i+D] =  range;
         }
     }
-    Bbox(double m, double M)
+    Bbox(T m, T M)
     {
         for(int i=0; i<D; ++i)
         {
@@ -39,12 +39,14 @@ struct Bbox
             value[i+D] = M;
         }
     }
+
+    // empty box (min>max in all dimensions)
     Bbox()
     {
         for(int i=0; i<D; ++i)
         {
-            value[i  ] = +std::numeric_limits<double>::infinity();
-            value[i+D] = -std::numeric_limits<double>::infinity();
+            value[i  ] = +std::numeric_limits<T>::infinity();
+            value[i+D] = -std::numeric_limits<T>::infinity();
         }
     }
 
@@ -77,28 +79,21 @@ struct Bbox
         return *this;
     }
 
-    inline double min BOOST_PREVENT_MACRO_SUBSTITUTION (int i) const
+    inline T min BOOST_PREVENT_MACRO_SUBSTITUTION (int i) const
     {
         return value[i  ];
     }
-    inline double max BOOST_PREVENT_MACRO_SUBSTITUTION (int i) const
+    inline T max BOOST_PREVENT_MACRO_SUBSTITUTION (int i) const
     {
         return value[i+D];
     }
 
-    double value[2*D];
+    T value[2*D];
 };
 
-// template<int D>
-// std::ostream& operator<<(std::ostream& out, const Bbox<D>& bbox)
-// {
-//     for(int i=0; i<D; ++i)
-//         out << "[" << bbox.value[i] << ", " << bbox.value[i+D] << "]";
-//     return out;
-// }
 
-template<int D>
-std::ostream& operator<<(std::ostream& out, const Bbox<D>& bbox)
+template<int D, typename T>
+std::ostream& operator<<(std::ostream& out, const Bbox<D, T>& bbox)
 {
     for(int i=0; i<D; ++i)
         out  << bbox.value[i] << "  " << bbox.value[i+D] << " ";
@@ -106,8 +101,8 @@ std::ostream& operator<<(std::ostream& out, const Bbox<D>& bbox)
 }
 
 
-template<int D>
-std::istream& operator>>(std::istream& in, Bbox<D>& bbox)
+template<int D, typename T>
+std::istream& operator>>(std::istream& in, Bbox<D, T>& bbox)
 {
     for(int i=0; i<D; ++i)
         in  >> bbox.value[i] >> bbox.value[i+D];

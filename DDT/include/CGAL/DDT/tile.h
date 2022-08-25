@@ -525,7 +525,7 @@ public:
                         out_edges.insert(id(v));
                 }
     }
-
+/*
     void get_merge_graph_edges(std::set<Id>& out_edges, std::vector<Cell_const_handle>& finalized) const
     {
         for(auto cit = cells_begin(); cit != cells_end(); ++cit)
@@ -552,17 +552,18 @@ public:
             if(pair.first != id() && cell_is_active(pair.second, c)) return false;
         return true;
     }
+*/
 
-    const std::map<Id, Bbox<D>>& const_bbox() const
+    const std::map<Id, Bbox<D,double>>& bbox() const
     {
         return bbox_;
     }
 
-    std::map<Id, Bbox<D>>& bbox()
+
+    std::map<Id, Bbox<D,double>>& bbox()
     {
         return bbox_;
     }
-
 
     Vertex_const_handle locate_vertex(const Tile& t, Vertex_const_handle v) const
     {
@@ -632,9 +633,6 @@ public:
         return dt_.is_valid();
     }
 
-
-
-    std::map<Id, std::set<Point>> points_sent_;
 private:
     Traits traits;
     Id id_;
@@ -644,7 +642,7 @@ private:
     size_t number_of_main_facets_;
     size_t number_of_main_cells_;
 
-    std::map<Id, Bbox<D>> bbox_;
+    std::map<Id, Bbox<D, double>> bbox_;
     std::map<Id, std::set<Vertex_const_handle>> sent_;
 };
 

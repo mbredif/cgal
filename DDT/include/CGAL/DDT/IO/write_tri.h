@@ -23,7 +23,7 @@ namespace ddt
 {
 
 template<typename Tile>
-std::ostream & write_json(Tile & tile,std::string filename,std::ostream & ofile)
+std::ostream & write_json(const Tile & tile,std::string filename,std::ostream & ofile)
 {
 
     const int D = tile.dimension();
@@ -33,7 +33,7 @@ std::ostream & write_json(Tile & tile,std::string filename,std::ostream & ofile)
     boost::property_tree::ptree bbox_node;
     root_node.put("filename", filename);
     root_node.put("id", tile.id());
-    auto & bbox = tile.bbox();
+    auto & bbox = tile.const_bbox();
     for(auto iter = bbox.begin(); iter != bbox.end(); ++iter)
     {
         std::stringstream ss;

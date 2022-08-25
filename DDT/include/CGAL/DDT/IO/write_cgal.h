@@ -32,7 +32,7 @@ std::ostream & write_json(Tile & tile,std::string filename,std::ostream & ofile)
     root_node.put("nbmv", tile.number_of_main_vertices());
     root_node.put("nbmf", tile.number_of_main_facets());
 
-    auto & bbox = tile.const_bbox();
+    auto & bbox = tile.bbox();
     for(auto iter = bbox.begin(); iter != bbox.end(); ++iter)
     {
         std::stringstream ss;

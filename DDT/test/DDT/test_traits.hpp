@@ -52,7 +52,7 @@ int test_traits(const std::string& testname, int ND, int NP, bool do_test_io = f
 
     std::cout << "== Delaunay ==" << std::endl;
     double range = 1;
-    ddt::Bbox<Traits::D> bbox(range);
+    ddt::Bbox<Traits::D, double> bbox(range);
     Random_points points(Traits::D, range);
     Partitioner partitioner(bbox, ND);
     DDT tri1;

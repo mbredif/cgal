@@ -55,7 +55,7 @@ int main(int, char **)
     points.emplace_back(1, 1);
 
     double range = 3;
-    ddt::Bbox<Traits::D> bbox(range);
+    ddt::Bbox<Traits::D, double> bbox(range);
 
     Partitioner partitioner(bbox, ND, ND+Traits::D);
     DDT tri;

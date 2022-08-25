@@ -26,7 +26,7 @@ public:
     enum { D = Traits::D };
 
     template<typename Iterator>
-    grid_partitioner(const Bbox<D>& bbox, Iterator it, Iterator end)
+    grid_partitioner(const Bbox<D, double>& bbox, Iterator it, Iterator end)
     {
         M = 1;
         int n = 1;
@@ -40,7 +40,7 @@ public:
         }
     }
 
-    grid_partitioner(const Bbox<D>& bbox, int n)
+    grid_partitioner(const Bbox<D, double>& bbox, int n)
     {
         M = 1;
         for(int i=0; i<D; ++i)

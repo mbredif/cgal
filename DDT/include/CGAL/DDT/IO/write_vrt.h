@@ -273,7 +273,7 @@ void write_csv_tin(const Tile& tile, std::ostream& csv, bool main_only=false)
 template<typename Tile>
 void write_csv_bbox(const Tile& tile, std::ostream& csv)
 {
-    for(auto& pair : tile.const_bbox())
+    for(auto& pair : tile.bbox())
     {
         auto bboxid = pair.first;
         auto bbox   = pair.second;
