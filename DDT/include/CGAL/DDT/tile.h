@@ -496,7 +496,8 @@ public:
         return true;
     }
 
-    int insert(const std::vector<Point_id_source>& received, bool do_simplify = true)
+    template <class Points>
+    int insert(const /*std::vector<Point_id_source>*/ Points & received, bool do_simplify = true)
     {
         if(received.empty()) return 0;
         std::vector<std::pair<Point,Id>> points;

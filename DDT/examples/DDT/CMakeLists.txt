@@ -15,3 +15,15 @@ endif()
 create_single_source_cgal_program( "ddt_mt_2.cpp" )
 target_link_libraries(ddt_mt_2  PRIVATE Boost::filesystem Boost::program_options)
 
+option (USE_TBB "Use TBB " ON)
+if (USE_TBB)
+  find_package(TBB QUIET)
+endif()
+
+include(CGAL_TBB_support)
+if(TARGET CGAL::TBB_support)
+  target_link_libraries(ddt_mt_2 PUBLIC CGAL::TBB_support)
+else()
+  message(STATUS "ddt_mt_2 will be used without TBB support")
+endif()
+

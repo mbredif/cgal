@@ -14,11 +14,23 @@
 
 #if DDT_USE_THREADS
 
+#ifdef CGAL_LINKED_WITH_TBB
+
+#include <CGAL/DDT/scheduler/tbb_scheduler.h>
+namespace ddt
+{
+template <typename T> using Scheduler = ddt::tbb_scheduler<T>;
+}
+
+#else
+
 #include <CGAL/DDT/scheduler/multithread_scheduler.h>
 namespace ddt
 {
 template <typename T> using Scheduler = ddt::multithread_scheduler<T>;
 }
+
+#endif
 
 #else
 
