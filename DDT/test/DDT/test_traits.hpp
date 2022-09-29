@@ -38,7 +38,7 @@ bool is_euler_valid(T & tri)
 }
 
 template <typename T>
-int test_traits(const std::string& testname, int ND, int NP, bool do_test_io = false)
+int test_traits(const std::string& testname, int ND, int NP, bool do_test_io = true)
 {
     std::cout << "Test " << testname << std::endl;
     int result = 0;
@@ -84,13 +84,16 @@ int test_traits(const std::string& testname, int ND, int NP, bool do_test_io = f
     {
         std::cout << "== test io == " << std::endl;
         boost::filesystem::create_directories(testname + "/cgal");
-        std::cout << "write..." << std::endl;
+	boost::filesystem::create_directories(testname + "/cgal2");
+        std::cout << "write..." << std::endl;	
         ddt::write_cgal(tri1,testname + "/cgal");
 
         DDT tri2;
         std::cout << "read..." << std::endl;
         ddt::read_cgal(tri2,testname + "/cgal");
-
+        std::cout << "write again..." << std::endl;	
+        ddt::write_cgal(tri1,testname + "/cgal2");
+	
         result += dump_2d_vrt(tri2,testname + "/tri2");
         if (Traits::D == 2)
         {

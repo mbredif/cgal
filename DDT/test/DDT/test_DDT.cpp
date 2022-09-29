@@ -1,11 +1,11 @@
-typedef unsigned char Id;
-typedef unsigned char Flag;
+typedef int Id;
+typedef int Flag;
 
 #include <assert.h>
 #include <vector>
 #include <boost/filesystem.hpp>
 
-#include <CGAL/DDT/traits/cgal_traits_d.h>
+#include <CGAL/DDT/traits/cgal_traits_d.h>-
 typedef ddt::Cgal_traits<2,Id,Flag> Traits;
 
 #include <CGAL/DDT.h>

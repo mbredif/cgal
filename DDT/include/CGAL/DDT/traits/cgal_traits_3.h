@@ -14,12 +14,14 @@
 
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
 #include <CGAL/Delaunay_triangulation_3.h>
-#include <CGAL/Triangulation_vertex_base_with_info_3.h>
+// #include <CGAL/Triangulation_vertex_base_with_info_3.h>
 #include <CGAL/point_generators_3.h>
 
 #include <CGAL/DDT/data.h>
 #include <CGAL/DDT/bbox.h>
 #include <CGAL/DDT/iterator/Facet_const_iterator_3.h>
+#include <CGAL/DDT/traits/ddt_vertex_base_with_info_3.h>
+
 
 namespace ddt
 {
@@ -32,7 +34,7 @@ struct Cgal_traits_3
     typedef F                                                      Flag;
     typedef ddt::Data<Id, Flag>                                    Data;
     typedef CGAL::Exact_predicates_inexact_constructions_kernel    K;
-    typedef CGAL::Triangulation_vertex_base_with_info_3<Data, K>   Vb;
+    typedef CGAL::DDT_vertex_base_with_info_3<Data, K>   Vb;
     typedef CGAL::Delaunay_triangulation_cell_base_3<K>            Cb;
     typedef CGAL::Triangulation_data_structure_3<Vb, Cb>           TDS;
     typedef typename K::Point_3                                    Point;

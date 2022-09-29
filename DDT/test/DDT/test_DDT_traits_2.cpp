@@ -1,5 +1,5 @@
-typedef unsigned char Id;
-typedef unsigned char Flag;
+typedef int Id;
+typedef int Flag;
 
 #include <CGAL/DDT/traits/cgal_traits_2.h>
 typedef ddt::Cgal_traits_2<Id,Flag> Traits;

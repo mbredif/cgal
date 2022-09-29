@@ -278,17 +278,22 @@ public:
         size_t number_of_vertices = 0;
         size_t number_of_facets = 0;
         size_t number_of_cells = 0;
+	bool test_only_cgal = false;
         for(auto tile = tiles_begin(); tile != tiles_end(); ++tile)
         {
             if(!tile->is_valid())
             {
                 std::cerr << "Tile " << int(tile->id()) << " is invalid" << std::endl;
+		//assert(! "CGAL tile not valid" );
                 return false;
             }
+	    if(test_only_cgal){
+	      continue;
+	    }
             number_of_vertices += tile->number_of_main_vertices();
             number_of_facets += tile->number_of_main_facets();
             number_of_cells += tile->number_of_main_cells();
-
+	    
             for(auto v = tile->vertices_begin(); v != tile->vertices_end(); ++v)
             {
                 assert(tile->vertex_is_infinite(v) || (tile->vertex_is_local(v) + tile->vertex_is_foreign(v) == 1));
@@ -298,7 +303,7 @@ public:
                 auto t = get_tile(tid);
                 if(t->locate_vertex(*tile, v) == t->vertices_end())
                 {
-                    std::cerr << "locate_vertex failed" << std::endl;
+		    assert(! "locate_vertex failed" );
                     return false;
                 }
             }
@@ -322,8 +327,8 @@ public:
                     auto t = get_tile(tid);
                     if(t->locate_facet(*tile, f) == t->facets_end())
                     {
-                        std::cerr << "locate_facet failed" << std::endl;
-                        return false;
+		      assert(! "locate_facet failed" );
+		      return false;
                     }
                 }
 
@@ -346,15 +351,17 @@ public:
                     auto t = get_tile(tid);
                     if(t->locate_cell(*tile, c) == t->cells_end())
                     {
-                        std::cerr << "locate_cell failed" << std::endl;
+		      assert(! "locate_facet failed" );
                         return false;
                     }
                 }
             }
         }
+	if(!test_only_cgal){
         if (number_of_vertices != number_of_vertices_) { std::cerr << "incorrect number_of_vertices" << std::endl; return false; }
         if (number_of_facets != number_of_facets_) { std::cerr << "incorrect number_of_facets" << std::endl; return false; }
         if (number_of_cells != number_of_cells_) { std::cerr << "incorrect number_of_cells" << std::endl; return false; }
+	}
         return true;
     }
 

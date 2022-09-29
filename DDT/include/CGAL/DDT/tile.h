@@ -26,6 +26,8 @@
 namespace ddt
 {
 
+
+  
 template<class T>
 class Tile
 {
@@ -581,8 +583,8 @@ public:
         {
             if(traits.are_vertices_equal(t.dt_, v, dt_, vit))
                 return vit;
-        }
-        assert(false);
+        }	
+        assert(! "Cannot find vertex" );
         return vertices_end();
     }
 
@@ -656,6 +658,7 @@ private:
     std::map<Id, std::set<Vertex_const_handle>> sent_;
 };
 
+
 template<class T>
 std::istream& operator>> (std::istream& is,Tile<T> & tt)
 {
@@ -670,6 +673,8 @@ std::ostream& operator<< (std::ostream& os,const Tile<T> & tt)
     os << tt.triangulation();
     return os;
 }
+
+
 
 
 }

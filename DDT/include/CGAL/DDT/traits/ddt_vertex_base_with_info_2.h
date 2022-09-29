@@ -10,8 +10,8 @@
 //
 // Author(s)     : Mariette Yvinec, Sylvain Pion
 
-#ifndef CGAL_TRIANGULATION_VERTEX_BASE_WITH_INFO_2_H
-#define CGAL_TRIANGULATION_VERTEX_BASE_WITH_INFO_2_H
+#ifndef CGAL_DDT_VERTEX_BASE_WITH_INFO_2_H
+#define CGAL_DDT_VERTEX_BASE_WITH_INFO_2_H
 
 #include <CGAL/license/Triangulation_2.h>
 
@@ -22,7 +22,7 @@ namespace CGAL {
 
 template < typename Info_, typename GT,
            typename Vb = Triangulation_vertex_base_2<GT> >
-class Triangulation_vertex_base_with_info_2
+class DDT_vertex_base_with_info_2
   : public Vb
 {
   Info_ _info;
@@ -35,20 +35,20 @@ public:
   template < typename TDS2 >
   struct Rebind_TDS {
     typedef typename Vb::template Rebind_TDS<TDS2>::Other          Vb2;
-    typedef Triangulation_vertex_base_with_info_2<Info, GT, Vb2>   Other;
+    typedef DDT_vertex_base_with_info_2<Info, GT, Vb2>   Other;
   };
 
-  Triangulation_vertex_base_with_info_2()
+  DDT_vertex_base_with_info_2()
     : Vb() {}
 
-  Triangulation_vertex_base_with_info_2(const Point & p)
+  DDT_vertex_base_with_info_2(const Point & p)
     : Vb(p) {}
 
-  Triangulation_vertex_base_with_info_2(const Point & p, Face_handle c)
+  DDT_vertex_base_with_info_2(const Point & p, Face_handle c)
     : Vb(p, c) {}
 
   
-  Triangulation_vertex_base_with_info_2(Face_handle c)
+  DDT_vertex_base_with_info_2(Face_handle c)
     : Vb(c) {}
 
   const Info& info() const { return _info; }
@@ -58,7 +58,7 @@ public:
 
 template < typename Info_, typename GT,
            typename Vb = Triangulation_vertex_base_2<GT> >
-std::istream& operator>> (std::istream& is,Triangulation_vertex_base_with_info_2<Info_,GT,Vb> & vb)
+std::istream& operator>> (std::istream& is,DDT_vertex_base_with_info_2<Info_,GT,Vb> & vb)
 {
   is >> static_cast<Vb&>(vb);
   is >> vb.info();
@@ -67,7 +67,7 @@ std::istream& operator>> (std::istream& is,Triangulation_vertex_base_with_info_2
 
 template < typename Info_, typename GT,
            typename Vb = Triangulation_vertex_base_2<GT> >
-std::ostream& operator<< (std::ostream& os,Triangulation_vertex_base_with_info_2<Info_,GT,Vb> & vb)
+std::ostream& operator<< (std::ostream& os,DDT_vertex_base_with_info_2<Info_,GT,Vb> & vb)
 {
   os << static_cast<Vb&>(vb);	     
   os << vb.info();

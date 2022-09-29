@@ -60,6 +60,7 @@ int write_cgal_tile(const Tile& tile, std::string dirname)
     }
 
     //tile.write_cgal(ofile_tri);
+    ofile_tri.precision(17);
     ofile_tri << tile;
     ofile_tri.close();
     write_json(tile,filename,ofile_json);
