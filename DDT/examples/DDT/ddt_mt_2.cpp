@@ -19,6 +19,9 @@ typedef Traits::Random_points_in_box Random_points;
 #define DDT_USE_THREADS 1
 #include <CGAL/DDT/scheduler.h>
 typedef ddt::Tile<Traits> Tile;
+
+//#include <CGAL/DDT/scheduler/mpi_scheduler.h>
+//typedef ddt::mpi_scheduler<Tile> Scheduler;
 typedef ddt::Scheduler<Tile> Scheduler;
 
 #include <CGAL/DDT/serializer/file_serializer.h>
