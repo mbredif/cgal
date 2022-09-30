@@ -24,6 +24,7 @@
 The Distributed Delaunay Triangulation (DDT) package, ....
 
 \cgalClassifedRefPages
+- `toto()`
 
 \cgalCRPSection{Concepts}
 - `TriangulationTraits_2`
