@@ -1367,7 +1367,9 @@ operator>>(std::istream & is, Triangulation<TT, TDS> & tr)
     }
 
     // now, read the combinatorial information
-   return tr.tds().read_full_cells(is, vertices);
+   tr.tds().read_full_cells(is, vertices);
+
+   return is;
 }
 
 template < class TT, class TDS >

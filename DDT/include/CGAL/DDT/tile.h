@@ -642,7 +642,8 @@ public:
 
     bool is_valid() const
     {
-        return dt_.is_valid();
+      
+      return dt_.is_valid(true,5);
     }
 
 private:
