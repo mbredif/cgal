@@ -247,7 +247,7 @@ public:
     template<typename V>
     bool vertex_is_main(V v) const
     {
-        // TODO: define somehow the main infinite vertex
+        /// @todo define somehow the main infinite vertex
         return !vertex_is_infinite(v) && vertex_is_local(v) ;
     }
 
@@ -320,6 +320,8 @@ public:
         return !foreign;
     }
 
+    /// remove vertices that are adjacent to foreign cells only
+    /// returns the number of removed vertices
     int simplify()
     {
         // initialize flags to 1
@@ -559,7 +561,7 @@ public:
     bool cell_is_finalized(Cell_const_handle c) const
     {
         if(cell_is_foreign(c)) return false;
-        // TODO: acceleration data structure !!!
+        /// @todo acceleration data structure !!!
         for(auto pair : bbox_)
             if(pair.first != id() && cell_is_active(pair.second, c)) return false;
         return true;
@@ -606,6 +608,7 @@ public:
     Cell_const_handle locate_cell(const Tile& t, Cell_const_handle c) const
     {
         assert(!t.cell_is_foreign(c));
+        /// @todo locate the first vertex point of c in the other dt
         for(auto cit = cells_begin(); cit != cells_end(); ++cit )
         {
             if(traits.are_cells_equal(t.dt_, c, dt_, cit))

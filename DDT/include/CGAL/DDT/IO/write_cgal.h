@@ -59,6 +59,7 @@ int write_cgal_tile(const Tile& tile, std::string dirname)
         return 1;
     }
 
+    std::cout << filename << " : " << tile.is_valid() << std::endl;
     //tile.write_cgal(ofile_tri);
     ofile_tri.precision(17);
     ofile_tri << tile;

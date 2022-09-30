@@ -164,7 +164,7 @@ struct Cgal_traits_d
 
     inline Point circumcenter(const Delaunay_triangulation& dt, Cell_const_handle c) const
     {
-        // TODO
+        /// @todo
         return Point();
     }
 

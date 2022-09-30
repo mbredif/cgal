@@ -52,11 +52,15 @@ public:
         }
     }
 
+    /// @todo : use a predicate, may be approximate (p[i] is a double approximation)
     Id operator()(const Point& p) const
     {
         int id = 0;
         for(int i=0; i<D; ++i)
+        {
             id = id*N[i] + (int((p[i]-origin[i])*inv_step[i]) % N[i]);
+            /// @todo : check compare_x/y/z/d with neighbors to check approximation validity
+        }
         return id;
     }
     const int *begin() const { return N; }

@@ -189,12 +189,6 @@ public:
         return id;
     }
 
-    Vertex_const_iterator vertex (const int i) const
-    {
-        assert(tile_ != end_);
-        return Vertex_const_iterator(begin_, end_, tile_, tile_->vertex(cell_, i));
-    }
-
     Cell_const_iterator main() const
     {
         assert(tile_ != end_);

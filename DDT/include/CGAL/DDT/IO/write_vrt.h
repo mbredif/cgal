@@ -25,7 +25,7 @@
 #include <stdlib.h>
 #include <set>
 
-// TODO: tmp to workariound conf.hpp
+/// @todo tmp to workariound conf.hpp
 #ifndef STYLE_SOURCE_DIR
 #define STYLE_SOURCE_DIR ""
 #endif
@@ -351,8 +351,8 @@ void write_vrt_facet_range(Iterator begin, Iterator end, const std::string& file
     }
 }
 
-template<typename Iterator>
-void write_vrt_cell_range(Iterator begin, Iterator end, const std::string& filename)
+template<typename DDT, typename Iterator>
+void write_vrt_cell_range(DDT& ddt, Iterator begin, Iterator end, const std::string& filename)
 {
     std::ofstream csv;
     write_vrt_header_cell(csv, filename);
@@ -368,7 +368,7 @@ void write_vrt_cell_range(Iterator begin, Iterator end, const std::string& filen
         int local = 0;
         for(int i=0; i<=D+1; ++i) // repeat first to close the polygon
         {
-            auto v = iit->vertex(i % (D+1));
+            auto v = ddt.vertex(iit, i % (D+1));
             if(i>0)
             {
                 csv << ",";
@@ -394,7 +394,7 @@ void write_vrt_cell_range(Iterator begin, Iterator end, const std::string& filen
 // VRT+CSV writers (DDT)
 
 template<typename DDT>
-void write_vrt_vert(const DDT& ddt, const std::string& filename)
+void write_vrt_vert(DDT& ddt, const std::string& filename)
 {
     write_vrt_vert_range(ddt.vertices_begin(), ddt.vertices_end(), filename);
 }
@@ -406,9 +406,9 @@ void write_vrt_facet(const DDT& ddt, const std::string& filename)
 }
 
 template<typename DDT>
-void write_vrt_cell(const DDT& ddt, const std::string& filename)
+void write_vrt_cell(DDT& ddt, const std::string& filename)
 {
-    write_vrt_cell_range(ddt.cells_begin(), ddt.cells_end(), filename);
+    write_vrt_cell_range(ddt, ddt.cells_begin(), ddt.cells_end(), filename);
 }
 
 template<typename DDT>
@@ -481,7 +481,7 @@ void write_vrt_facets(const DDT& tri, const std::string& dirname)
 }
 
 template<typename DDT>
-void write_vrt_cells(const DDT& tri, const std::string& dirname)
+void write_vrt_cells(DDT& tri, const std::string& dirname)
 {
     boost::filesystem::path p(dirname);
     if(boost::filesystem::exists(p.parent_path()))

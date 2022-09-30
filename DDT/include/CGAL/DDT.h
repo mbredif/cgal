@@ -81,7 +81,7 @@ public:
     Mapped_iterator operator++(int) { return Map_iterator::operator++(0); }
 };
 
-template<typename _Traits, typename Scheduler, typename _Tile = ddt::Tile<_Traits>>
+template<typename _Traits, typename Scheduler, typename Serializer, typename _Tile = ddt::Tile<_Traits>>
 class DDT
 {
 public:
@@ -106,6 +106,7 @@ public:
     typedef std::pair<Tile_vertex_const_handle,Id>   Tile_vertex_const_handle_and_id;
     typedef std::tuple<Point,Id,Id>                  Point_id_source;
 
+    /// Const iterator over the local vertices of selected tiles
     typedef ddt::Vertex_const_iterator<DDT>          Vertex_const_iterator;
     typedef ddt::Facet_const_iterator <DDT>          Facet_const_iterator;
     typedef ddt::Cell_const_iterator  <DDT>          Cell_const_iterator;
@@ -115,6 +116,9 @@ public:
     typedef Mapped_iterator<typename Tile_container::iterator>              Tile_iterator ;
     typedef Key_const_iterator<typename Tile_container::const_iterator>     Tile_id_const_iterator ;
 
+    typedef std::set<Id> Tile_id_set;
+    typedef typename Tile_id_set::const_iterator Tile_id_set_const_iterator;
+
     enum { D = Traits::D };
 
     inline int maximal_dimension() const
@@ -122,9 +126,10 @@ public:
         return D;
     }
 
-    DDT(int n_threads=0) :
+    DDT(const Serializer& serializer, int n_threads=0) :
         tiles(),
         sch(n_threads),
+        serializer(serializer),
         number_of_vertices_(0),
         number_of_facets_  (0),
         number_of_cells_   (0)
@@ -134,6 +139,7 @@ public:
     DDT(const DDT& ddt) :
         tiles(ddt.tiles),
         sch(ddt.sch.number_of_threads()),
+        serializer(ddt.serializer),
         number_of_vertices_(ddt.number_of_vertices_),
         number_of_facets_  (ddt.number_of_facets_  ),
         number_of_cells_   (ddt.number_of_cells_   )
@@ -146,8 +152,9 @@ public:
     inline size_t number_of_tiles   () const { return tiles.size();   }
     inline size_t number_of_threads () const { return sch.number_of_threads(); }
 
-    Vertex_const_iterator vertices_begin() const { return Vertex_const_iterator(tiles_begin(), tiles_end()); }
-    Vertex_const_iterator vertices_end  () const { return Vertex_const_iterator(tiles_begin(), tiles_end(), tiles_end()); }
+    /// non-const because of automatic loading/unloading
+    Vertex_const_iterator vertices_begin() { return Vertex_const_iterator(*this, tile_ids.begin()); }
+    Vertex_const_iterator vertices_end  () { return Vertex_const_iterator(*this, tile_ids.end()); }
 
     Cell_const_iterator cells_begin() const { return Cell_const_iterator(tiles_begin(), tiles_end()); }
     Cell_const_iterator cells_end  () const { return Cell_const_iterator(tiles_begin(), tiles_end(), tiles_end()); }
@@ -155,8 +162,8 @@ public:
     Facet_const_iterator facets_begin() const { return Facet_const_iterator(tiles_begin(), tiles_end()); }
     Facet_const_iterator facets_end  () const { return Facet_const_iterator(tiles_begin(), tiles_end(), tiles_end()); }
 
-    Tile_id_const_iterator tile_ids_begin() const { return tiles.begin(); }
-    Tile_id_const_iterator tile_ids_end  () const { return tiles.end  (); }
+    Tile_id_set_const_iterator tile_ids_begin() const { return tile_ids.begin(); }
+    Tile_id_set_const_iterator tile_ids_end  () const { return tile_ids.end  (); }
 
     Tile_const_iterator tiles_begin  () const { return tiles.begin (); }
     Tile_const_iterator tiles_end    () const { return tiles.end   (); }
@@ -165,6 +172,7 @@ public:
     Tile_iterator tiles_begin  () { return tiles.begin (); }
     Tile_iterator tiles_end    () { return tiles.end   (); }
     Tile_iterator get_tile(Id id) { return tiles.find(id); }
+    bool is_loaded(Id id) const { return tiles.find(id) != tiles.end(); }
 
     int vertex_id(Vertex_const_iterator v) const
     {
@@ -181,12 +189,31 @@ public:
     int send_all_bbox_points()       { return sch.for_each(tiles_begin(), tiles_end(), sch.send_all_func(tile_ids_begin(), tile_ids_end(), &Tile::get_bbox_points)); }
     int splay_stars()       { return sch.for_each_rec(tiles_begin(), tiles_end(), sch.splay_func(&Tile::get_neighbors)); }
 
-    void init(int id)
+    void init(Id id)
     {
         tiles.emplace(id, id);
     }
 
-    void clear(int NT)
+    /// unload a tile from memory (no automatic saving)
+    void unload(Id id)
+    {
+        tiles.remove(id);
+    }
+
+    /// load the tile using the serializer, given its id.
+    void load(Id id)
+    {
+        /// @todo unload tiles if needed
+        tiles.emplace(id, serializer.load(id));
+    }
+
+    /// saves a tile using the serializer (no unloading)
+    void save(Id id)
+    {
+        serializer.save(tiles[id]);
+    }
+
+   /* void clear(int NT)
     {
         tiles.clear();
         for(int id=0; id<NT; ++id)
@@ -194,7 +221,7 @@ public:
             init(id);
         }
     }
-
+*/
     template<typename Iterator, typename Partitioner>
     void send_points(Iterator it, int count, Partitioner& part)
     {
@@ -278,22 +305,22 @@ public:
         size_t number_of_vertices = 0;
         size_t number_of_facets = 0;
         size_t number_of_cells = 0;
-	bool test_only_cgal = false;
+        bool test_only_cgal = false;
         for(auto tile = tiles_begin(); tile != tiles_end(); ++tile)
         {
             if(!tile->is_valid())
             {
                 std::cerr << "Tile " << int(tile->id()) << " is invalid" << std::endl;
-		//assert(! "CGAL tile not valid" );
+                //assert(! "CGAL tile not valid" );
                 return false;
             }
-	    if(test_only_cgal){
-	      continue;
-	    }
+            if(test_only_cgal){
+              continue;
+            }
             number_of_vertices += tile->number_of_main_vertices();
             number_of_facets += tile->number_of_main_facets();
             number_of_cells += tile->number_of_main_cells();
-	    
+
             for(auto v = tile->vertices_begin(); v != tile->vertices_end(); ++v)
             {
                 assert(tile->vertex_is_infinite(v) || (tile->vertex_is_local(v) + tile->vertex_is_foreign(v) == 1));
@@ -303,7 +330,7 @@ public:
                 auto t = get_tile(tid);
                 if(t->locate_vertex(*tile, v) == t->vertices_end())
                 {
-		    assert(! "locate_vertex failed" );
+                    assert(! "locate_vertex failed" );
                     return false;
                 }
             }
@@ -327,8 +354,8 @@ public:
                     auto t = get_tile(tid);
                     if(t->locate_facet(*tile, f) == t->facets_end())
                     {
-		      assert(! "locate_facet failed" );
-		      return false;
+                      assert(! "locate_facet failed" );
+                      return false;
                     }
                 }
 
@@ -351,25 +378,43 @@ public:
                     auto t = get_tile(tid);
                     if(t->locate_cell(*tile, c) == t->cells_end())
                     {
-		      assert(! "locate_facet failed" );
+                      assert(! "locate_facet failed" );
                         return false;
                     }
                 }
             }
         }
-	if(!test_only_cgal){
+    if(!test_only_cgal){
         if (number_of_vertices != number_of_vertices_) { std::cerr << "incorrect number_of_vertices" << std::endl; return false; }
         if (number_of_facets != number_of_facets_) { std::cerr << "incorrect number_of_facets" << std::endl; return false; }
         if (number_of_cells != number_of_cells_) { std::cerr << "incorrect number_of_cells" << std::endl; return false; }
-	}
+        }
         return true;
     }
 
+    Vertex_const_iterator main(const Vertex_const_iterator& vertex) const
+    {
+        assert(vertex.tile() != tiles.end());
+        if(vertex.is_main()) return vertex;
+        Id id = vertex.main_id();
+        if (!is_loaded(id) ) load(id);
+        return Vertex_const_iterator(tiles_begin(), tiles_end(), vertex.tile(), tiles[id]->locate_vertex(*vertex.tile(), vertex));
+    }
+
+    Vertex_const_iterator vertex (Cell_const_iterator& cell, const int i)
+    {
+        Tile_const_iterator tile = cell.tile();
+        assert(tile != tiles.end());
+        const Tile_cell_const_handle full_cell = cell->full_cell();
+        return Vertex_const_iterator(*this, tile_ids.find(tile->id()), tile, tile->vertex(full_cell, i));
+    }
 
 private:
 
-    Tile_container tiles;
+    Tile_container tiles; /// loaded tiles
+    Tile_id_set tile_ids; /// selected tiles (loaded/unloaded automatically)
     Scheduler sch;
+    Serializer serializer;
     size_t number_of_vertices_;
     size_t number_of_facets_;
     size_t number_of_cells_;

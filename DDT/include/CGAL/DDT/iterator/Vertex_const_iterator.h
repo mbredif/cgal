@@ -29,53 +29,51 @@ public:
     typedef typename DDT::Tile_vertex_const_iterator Tile_vertex_const_iterator;
     typedef typename DDT::Tile_const_iterator        Tile_const_iterator;
     typedef typename DDT::Point                      Point;
+    typedef typename DDT::Tile_id_set_const_iterator Tile_id_set_const_iterator;
 
 private:
-    Tile_const_iterator begin_;
-    Tile_const_iterator end_;
+    DDT& ddt;
+    Tile_id_set_const_iterator id_;
     Tile_const_iterator tile_;
     Tile_vertex_const_iterator vertex_;
 
 public:
-    Vertex_const_iterator(Tile_const_iterator begin, Tile_const_iterator end)
-        : begin_(begin), end_(end), tile_(begin), vertex_()
+    Vertex_const_iterator(DDT& ddt, Tile_id_set_const_iterator id)
+        : ddt(ddt), id_(id), tile_(), vertex_()
     {
-        if(tile_ != end_)
+        if(id_ != ddt.tile_ids_end())
         {
+            if(!ddt.is_loaded(*id_)) ddt.load(*id_);
+            tile_ = ((const DDT&)(ddt)).get_tile(*id_); /// @todo constness
             vertex_ = tile_->vertices_begin();
             advance_to_main();
         }
     }
 
-    Vertex_const_iterator(Tile_const_iterator begin, Tile_const_iterator end, Tile_const_iterator tile)
-        : begin_(begin), end_(end), tile_(tile), vertex_()
-    {
-        if(tile_ != end_)
-        {
-            vertex_ = tile_->vertices_begin();
-            advance_to_main();
-        }
-    }
-
-    Vertex_const_iterator(Tile_const_iterator begin, Tile_const_iterator end, Tile_const_iterator tile, Tile_vertex_const_iterator vertex)
-        : begin_(begin), end_(end), tile_(tile), vertex_(vertex)
+    Vertex_const_iterator(DDT& ddt, Tile_id_set_const_iterator id,
+                          Tile_const_iterator tile, Tile_vertex_const_iterator vertex)
+        : ddt(ddt), id_(id), tile_(tile), vertex_(vertex)
     {
         // do not enforce main here !
     }
 
     Vertex_const_iterator(const Vertex_const_iterator& v)
-        : begin_(v.begin_), end_(v.end_), tile_(v.tile_), vertex_(v.vertex_)
+        : ddt(v.ddt), id_(v.id_), tile_(v.tile_), vertex_(v.vertex_)
     {
         // do not enforce main here !
     }
 
     Vertex_const_iterator& advance_to_main()
     {
-        while(tile_ != end_)
+        while(id_ != ddt.tile_ids_end())
         {
             if(vertex_ == tile_->vertices_end())
             {
-                if (++tile_ != end_) vertex_ = tile_->vertices_begin();
+                if (++id_ != ddt.tile_ids_end()) {
+                    if(!ddt.is_loaded(*id_)) ddt.load(*id_);
+                    tile_ = ((const DDT&)(ddt)).get_tile(*id_); /// @todo constness
+                    vertex_ = tile_->vertices_begin();
+                }
             }
             else if(tile_->vertex_is_main(vertex_))
             {
@@ -91,7 +89,7 @@ public:
 
     Vertex_const_iterator& operator++()
     {
-        assert(tile_ != end_);
+        assert(id_ != ddt.tile_ids_end());
         ++vertex_;
         return advance_to_main();
     }
@@ -105,7 +103,7 @@ public:
 
     Vertex_const_iterator& operator+=(int n)
     {
-        assert(tile_ != end_);
+        assert(id_ != ddt.tile_ids_end());
         for(auto vit = tile_->vertices_begin(); vit != vertex_; ++vit)
             if(tile_->vertex_is_main(vit))
                 ++n;
@@ -125,31 +123,19 @@ public:
 
     bool operator==(const Vertex_const_iterator& rhs) const
     {
-        return begin_ == rhs.begin_
+        return &ddt == &(rhs.ddt)
                && tile_ == rhs.tile_
-               && end_ == rhs.end_
-               && (tile_ == end_ || vertex_==rhs.vertex_);
+               && id_ == rhs.id_
+               && (id_ == ddt.tile_ids_end() || vertex_ == rhs.vertex_);
     }
 
     bool operator!=(const Vertex_const_iterator& rhs) const { return !(*this == rhs); }
     Vertex_const_iterator& operator*() { return *this; }
     Vertex_const_iterator* operator->() { return this; }
 
-    Vertex_const_iterator main() const
-    {
-        assert(tile_ != end_);
-        if(is_main()) return *this;
-        Id id = main_id();
-        for(Tile_const_iterator tile = begin_; tile != end_; ++tile)
-            if (tile->id() == id)
-                return Vertex_const_iterator(begin_, end_, tile, tile->locate_vertex(*tile_, vertex_));
-        assert(false);
-        return Vertex_const_iterator(begin_, end_, end_);
-    }
-
     Id main_id() const
     {
-        assert(tile_ != end_);
+        assert(id_ == ddt.tile_ids_end());
         return tile_->id(vertex_);
     }
 
@@ -165,7 +151,7 @@ public:
 
     bool is_valid()    const
     {
-        return tile_ == end_ || vertex_ != tile_->vertices_end();
+        return id_ == ddt.tile_ids_end() || vertex_ != tile_->vertices_end();
     }
 };
 

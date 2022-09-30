@@ -20,10 +20,15 @@ typedef Traits::Random_points_in_box Random_points;
 #include <CGAL/DDT/scheduler.h>
 typedef ddt::Tile<Traits> Tile;
 typedef ddt::Scheduler<Tile> Scheduler;
-typedef ddt::DDT<Traits, Scheduler> DDT;
+
+#include <CGAL/DDT/serializer/file_serializer.h>
+typedef ddt::File_Serializer<Id,Tile> Serializer;
+
+typedef ddt::DDT<Traits, Scheduler, Serializer> DDT;
 #include <CGAL/DDT/IO/write_ply.h>
 #include <CGAL/DDT/IO/write_vrt.h>
 #include <CGAL/DDT/IO/logging.h>
+
 
 #include <boost/program_options.hpp>
 namespace po = boost::program_options;
@@ -77,7 +82,11 @@ int main(int argc, char **argv)
     ddt::Bbox<D, double> bbox(range);
     ddt::grid_partitioner<Traits> partitioner(bbox, NT.begin(), NT.end());
 
-    DDT tri(threads);
+    Serializer serializer;
+    serializer.add(0, "0.txt");
+    serializer.add(1, "1.txt");
+
+    DDT tri(serializer, threads);
 
     std::cout << "- Loglevel : " << loglevel << std::endl;
     std::cout << "- Range    : " << range << std::endl;

@@ -15,6 +15,7 @@
 #include <chrono>
 #include <random>
 
+/// @todo for testing purposes only (correct but bad performance)
 namespace ddt
 {
 
