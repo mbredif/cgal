@@ -1,4 +1,4 @@
-/// \defgroup PkgDDTRef 2D Triangulations Reference
+/// \defgroup PkgDDTRef Distributed Delaunay Triangulation Reference
 /// \defgroup PkgDDTConcepts Concepts
 /// \ingroup PkgDDTRef
 
@@ -24,6 +24,7 @@
 The Distributed Delaunay Triangulation (DDT) package, ....
 
 \cgalClassifedRefPages
+- `toto()`
 
 \cgalCRPSection{Concepts}
 - `TriangulationTraits_2`
