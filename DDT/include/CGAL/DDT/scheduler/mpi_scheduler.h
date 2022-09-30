@@ -23,7 +23,6 @@
 namespace ddt
 {
 
-
 /// @todo make the point, count and Id (de)serialization fully generic.
 template<typename T> char * save_value_1(char * buf, T t) {
     *buf++ = (char)(t);
@@ -108,7 +107,7 @@ struct mpi_scheduler
     {
         inbox[target].emplace_back(p,id,source);
     }
-
+    
     void send(const Point& p, Id id)
     {
         send(p,id,id,id);
