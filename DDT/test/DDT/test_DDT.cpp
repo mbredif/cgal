@@ -16,27 +16,11 @@ typedef ddt::Cgal_traits<2,Id,Flag> Traits;
 typedef ddt::Tile<Traits> Tile;
 typedef ddt::Scheduler<Tile> Scheduler;
 typedef ddt::grid_partitioner<Traits> Partitioner;
-typedef ddt::DDT<Traits, Scheduler> DDT;
+#include <CGAL/DDT/serializer/file_serializer.h>
+typedef ddt::File_Serializer<Id,Tile> Serializer;
+
+typedef ddt::DDT<Traits, Scheduler, Serializer> DDT;
 typedef Traits::Point Point;
-
-std::ostream& operator<<(std::ostream& out, DDT::Vertex_const_iterator v)
-{
-    if (v->is_infinite()) return out << "(inf)";
-    return out << v->point();
-}
-
-std::ostream& operator<<(std::ostream& out, DDT::Cell_const_iterator c)
-{
-    out << "C" << int(c->tile()->id()) << ": ";
-    for(int d = 0; d <= c->tile()->current_dimension(); ++d)
-        out << c->vertex(d) << "; ";
-    return out;
-}
-
-std::ostream& operator<<(std::ostream& out, DDT::Facet_const_iterator f)
-{
-    return out << "F" << f->index_of_covertex() << f->full_cell();
-}
 
 int main(int, char **)
 {
@@ -58,7 +42,8 @@ int main(int, char **)
     ddt::Bbox<Traits::D, double> bbox(range);
 
     Partitioner partitioner(bbox, ND, ND+Traits::D);
-    DDT tri;
+    Serializer serializer;
+    DDT tri(serializer);
     tri.send_points(points.begin(), points.size(), partitioner);
     tri.insert_received_points();
     tri.send_all_bbox_points();
@@ -120,7 +105,7 @@ int main(int, char **)
         }
         std::set<typename DDT::Cell_const_iterator> ring;
         tri.get_ring(cell, 1, ring);
-        write_vrt_cell_range(ring.begin(), ring.end(), outdir.string() + std::to_string(cid) + "_ring.vrt");
+        write_vrt_cell_range(tri, ring.begin(), ring.end(), outdir.string() + std::to_string(cid) + "_ring.vrt");
     }
 
     return 0;

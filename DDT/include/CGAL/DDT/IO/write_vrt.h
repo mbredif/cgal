@@ -304,8 +304,8 @@ void write_csv_bbox_vert(const Tile& tile, std::ostream& csv)
 
 // VRT+CSV writers (iterators)
 
-template<typename Iterator>
-void write_vrt_vert_range(Iterator begin, Iterator end, const std::string& filename)
+template<typename DDT, typename Iterator>
+void write_vrt_vert_range(DDT& ddt, Iterator begin, Iterator end, const std::string& filename)
 {
     std::ofstream csv;
     write_vrt_header_vert(csv, filename);
@@ -317,13 +317,13 @@ void write_vrt_vert_range(Iterator begin, Iterator end, const std::string& filen
         if(vit->is_infinite()) continue;
         csv << "POINT( ";
         for(int d=0; d<D; ++d)
-            csv << vit->point()[d] << " ";
+            csv << ddt.point(vit)[d] << " ";
         csv << ")," << int(vit->tile()->id()) << "," << int(vit->main_id()) << "\n";
     }
 }
 
-template<typename Iterator>
-void write_vrt_facet_range(Iterator begin, Iterator end, const std::string& filename)
+template<typename DDT, typename Iterator>
+void write_vrt_facet_range(DDT& ddt, Iterator begin, Iterator end, const std::string& filename)
 {
     std::ofstream csv;
     write_vrt_header_facet(csv, filename);
@@ -341,10 +341,10 @@ void write_vrt_facet_range(Iterator begin, Iterator end, const std::string& file
         for(int i=0; i<=D; ++i)
         {
             if(i == idx) continue;
-            auto v = cit->vertex(i);
+            auto v = ddt.vertex(cit, i);
             local += v->is_local();
             for(int d=0; d<D; ++d)
-                csv << v->point()[d] << " ";
+                csv << ddt.point(v)[d] << " ";
             if (++j < D) csv << ",";
         }
         csv << ")\"," << int(fit->tile()->id()) << "," << local << "\n";
@@ -368,13 +368,13 @@ void write_vrt_cell_range(DDT& ddt, Iterator begin, Iterator end, const std::str
         int local = 0;
         for(int i=0; i<=D+1; ++i) // repeat first to close the polygon
         {
-            auto v = ddt.vertex(iit, i % (D+1));
+            auto v = ddt.vertex(*iit, i % (D+1));
             if(i>0)
             {
                 csv << ",";
                 local += v->is_local();
             }
-            auto p = v->point();
+            auto p = ddt.point(v);
             for(int d=0; d<D; ++d) csv << p[d] << " ";
         }
         csv << "))\"," << int(iit->tile()->id()) << "," << int(local) << "," << int(iit->main_id());
@@ -396,13 +396,13 @@ void write_vrt_cell_range(DDT& ddt, Iterator begin, Iterator end, const std::str
 template<typename DDT>
 void write_vrt_vert(DDT& ddt, const std::string& filename)
 {
-    write_vrt_vert_range(ddt.vertices_begin(), ddt.vertices_end(), filename);
+    write_vrt_vert_range(ddt, ddt.vertices_begin(), ddt.vertices_end(), filename);
 }
 
 template<typename DDT>
-void write_vrt_facet(const DDT& ddt, const std::string& filename)
+void write_vrt_facet(DDT& ddt, const std::string& filename)
 {
-    write_vrt_facet_range(ddt.facets_begin(), ddt.facets_end(), filename);
+    write_vrt_facet_range(ddt, ddt.facets_begin(), ddt.facets_end(), filename);
 }
 
 template<typename DDT>
@@ -412,7 +412,7 @@ void write_vrt_cell(DDT& ddt, const std::string& filename)
 }
 
 template<typename DDT>
-void write_vrt_tin(const DDT& tri, const std::string& filename)
+void write_vrt_tin(DDT& tri, const std::string& filename)
 {
     std::ofstream csv;
     write_vrt_header_tin(csv, filename);
@@ -421,7 +421,7 @@ void write_vrt_tin(const DDT& tri, const std::string& filename)
 }
 
 template<typename DDT>
-void write_vrt_bbox(const DDT& tri, const std::string& filename)
+void write_vrt_bbox(DDT& tri, const std::string& filename)
 {
     std::ofstream csv;
     write_vrt_header_bbox(csv, filename);
@@ -430,7 +430,7 @@ void write_vrt_bbox(const DDT& tri, const std::string& filename)
 }
 
 template<typename DDT>
-void write_vrt_bbox_vert(const DDT& tri, const std::string& filename)
+void write_vrt_bbox_vert(DDT& tri, const std::string& filename)
 {
     std::ofstream csv;
     write_vrt_header_vert(csv, filename);
@@ -441,7 +441,7 @@ void write_vrt_bbox_vert(const DDT& tri, const std::string& filename)
 // VRT+CSV writers (DDT tiles)
 
 template<typename DDT>
-void write_vrt_verts(const DDT& tri, const std::string& dirname)
+void write_vrt_verts(DDT& tri, const std::string& dirname)
 {
     boost::filesystem::path p(dirname);
     if(boost::filesystem::exists(p.parent_path()))
@@ -461,7 +461,7 @@ void write_vrt_verts(const DDT& tri, const std::string& dirname)
 }
 
 template<typename DDT>
-void write_vrt_facets(const DDT& tri, const std::string& dirname)
+void write_vrt_facets(DDT& tri, const std::string& dirname)
 {
     boost::filesystem::path p(dirname);
     if(boost::filesystem::exists(p.parent_path()))

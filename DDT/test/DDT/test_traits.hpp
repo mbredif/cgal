@@ -7,6 +7,7 @@
 #include <CGAL/DDT/IO/read.h>
 #include <CGAL/DDT/partitioner/grid_partitioner.h>
 #include <CGAL/DDT/scheduler.h>
+#include <CGAL/DDT/serializer/file_serializer.h>
 #include <CGAL/DDT.h>
 
 template <typename T>
@@ -46,7 +47,8 @@ int test_traits(const std::string& testname, int ND, int NP, bool do_test_io = t
     typedef T Traits;
     typedef ddt::Tile<Traits> Tile;
     typedef ddt::Scheduler<Tile> Scheduler;
-    typedef ddt::DDT<Traits, Scheduler> DDT;
+    typedef ddt::File_Serializer<Id,Tile> Serializer;
+    typedef ddt::DDT<Traits, Scheduler, Serializer> DDT;
     typedef ddt::grid_partitioner<Traits> Partitioner;
     typedef typename Traits::Random_points_in_box Random_points;
 
@@ -55,7 +57,8 @@ int test_traits(const std::string& testname, int ND, int NP, bool do_test_io = t
     ddt::Bbox<Traits::D, double> bbox(range);
     Random_points points(Traits::D, range);
     Partitioner partitioner(bbox, ND);
-    DDT tri1;
+    Serializer serializer;
+    DDT tri1(serializer);
     tri1.send_points(points, NP, partitioner);
     tri1.insert_received_points();
     tri1.send_all_bbox_points();
@@ -75,7 +78,7 @@ int test_traits(const std::string& testname, int ND, int NP, bool do_test_io = t
     }
     else if (Traits::D == 2)
     {
-        result += dump_2d_vrt(tri1,testname + "/tri1");
+        result += dump_2d_vrt(tri1, testname + "/tri1");
         if(!is_euler_valid(tri1))
             return 1;
     }
@@ -86,18 +89,18 @@ int test_traits(const std::string& testname, int ND, int NP, bool do_test_io = t
         boost::filesystem::create_directories(testname + "/cgal");
 	boost::filesystem::create_directories(testname + "/cgal2");
         std::cout << "write..." << std::endl;	
-        ddt::write_cgal(tri1,testname + "/cgal");
+        ddt::write_cgal(tri1, testname + "/cgal");
 
-        DDT tri2;
+        DDT tri2(serializer);
         std::cout << "read..." << std::endl;
-        ddt::read_cgal(tri2,testname + "/cgal");
+        ddt::read_cgal(tri2, testname + "/cgal");
         std::cout << "write again..." << std::endl;	
-        ddt::write_cgal(tri1,testname + "/cgal2");
+        ddt::write_cgal(tri1, testname + "/cgal2");
 	
-        result += dump_2d_vrt(tri2,testname + "/tri2");
+        result += dump_2d_vrt(tri2, testname + "/tri2");
         if (Traits::D == 2)
         {
-            result += dump_2d_vrt(tri1,testname + "/tri1");
+            result += dump_2d_vrt(tri1, testname + "/tri1");
             if(!is_euler_valid(tri2))
                 result += 1;
         }
@@ -122,7 +125,7 @@ int test_traits(const std::string& testname, int ND, int NP, bool do_test_io = t
             std::set<typename DDT::Cell_const_iterator> ring;
             tri1.get_ring(finite_cell, deg, ring);
             boost::filesystem::create_directories(testname + "/ring/");
-            write_vrt_cell_range(ring.begin(), ring.end(), testname + "/ring/" +std::to_string(deg)+".vrt");
+            write_vrt_cell_range(tri1, ring.begin(), ring.end(), testname + "/ring/" +std::to_string(deg)+".vrt");
         }
     }
 

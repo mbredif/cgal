@@ -401,12 +401,16 @@ public:
         return Vertex_const_iterator(tiles_begin(), tiles_end(), vertex.tile(), tiles[id]->locate_vertex(*vertex.tile(), vertex));
     }
 
-    Vertex_const_iterator vertex (Cell_const_iterator& cell, const int i)
+    Vertex_const_iterator vertex (const Cell_const_iterator& cell, const int i)
     {
         Tile_const_iterator tile = cell.tile();
-        assert(tile != tiles.end());
-        const Tile_cell_const_handle full_cell = cell->full_cell();
+        Tile_cell_const_handle full_cell = cell.full_cell();
         return Vertex_const_iterator(*this, tile_ids.find(tile->id()), tile, tile->vertex(full_cell, i));
+    }
+
+    const Point& point(Vertex_const_iterator vertex)
+    {
+        return vertex.tile()->point(vertex.vertex());
     }
 
 private:
