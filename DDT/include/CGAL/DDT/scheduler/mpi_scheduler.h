@@ -23,6 +23,49 @@
 namespace ddt
 {
 
+
+/// @todo make the point, count and Id (de)serialization fully generic.
+template<typename T> char * save_value_1(char * buf, T t) {
+    *buf++ = (char)(t);
+    return buf;
+}
+
+template<typename T> char * load_value_1(char * buf, T& t) {
+    t = T(*buf++);
+    return buf;
+}
+
+
+template<typename T> char * save_value_4(char * buf, T t) {
+    *buf++ = (t      ) & 0xff;
+    *buf++ = (t >>  8) & 0xff;
+    *buf++ = (t >> 16) & 0xff;
+    *buf++ = (t >> 24) & 0xff;
+    return buf;
+}
+
+template<typename T> char * load_value_4(char * buf, T& t) {
+    t = *buf++;
+    t += (*buf++) <<  8;
+    t += (*buf++) << 16;
+    t += (*buf++) << 24;
+    return buf;
+}
+
+/// Points are supposed to be represented exactly with the 2 doubles p[0] and p[1]
+template<typename T> char * save_point(char * buf, T t) {
+    double coords[2] = { t[0], t[1] };
+    memcpy(buf, (char *)coords, 16);
+    return buf + 16;
+}
+
+template<typename T> char * load_point(char * buf, T& t) {
+    double coords[2];
+    memcpy((char *)coords, buf, 16);
+    t = T(coords[0], coords[1]);
+    return buf + 16;
+}
+
 template<typename T>
 struct mpi_scheduler
 {
@@ -65,7 +108,7 @@ struct mpi_scheduler
     {
         inbox[target].emplace_back(p,id,source);
     }
-    
+
     void send(const Point& p, Id id)
     {
         send(p,id,id,id);
@@ -124,7 +167,7 @@ struct mpi_scheduler
     template<typename Tile_iterator>
     int for_each(Tile_iterator begin, Tile_iterator end, const std::function<int(Tile&, bool)>& func, bool skip_tiles_receiving_no_points=false)
     {
-    	send_all_to_all();
+        send_all_to_all();
         int count = 0;
         for(Tile_iterator it = begin; it != end; ++it)
             count += func(*it, skip_tiles_receiving_no_points);
@@ -136,109 +179,139 @@ struct mpi_scheduler
     {
         int count = for_each(begin, end, func, false), c;
         do {
-		Tile_iterator itend = end;
-		for(Tile_iterator it = begin; it != itend; ++it)
-		{
-		    if (it == end) it = begin;
-		    if((c = func(*it, true)))
-		    {
-		        count += c;
-		        itend = it;
-		    }
-		}
-	} while (send_all_to_all() > 0);
+            Tile_iterator itend = end;
+            for(Tile_iterator it = begin; it != itend; ++it)
+            {
+                if (it == end) it = begin;
+                if((c = func(*it, true)))
+                {
+                    count += c;
+                    itend = it;
+                }
+            }
+        } while (send_all_to_all() > 0);
         return count;
     }
 
+    char *load_points(char *bytes)
+    {
+        Id id;
+        int count;
+        bytes = load_value_1(bytes, id);
+        bytes = load_value_4(bytes, count);
+        std::vector<Point_id_source>& box = inbox[id];
+        for(int i = 0; i< count; ++i) {
+            Point_id_source p;
+            bytes = load_point(bytes, std::get<0>(p));
+            bytes = load_value_1(bytes, std::get<1>(p)); // Id point id
+            bytes = load_value_1(bytes, std::get<2>(p)); // Id source
+            box.push_back(p);
+        }
+        // std::cout << processor_name << "[" << world_rank << "] " << count  << " points recieved by " << int(id) << std::endl;
+        return bytes;
+    }
 
-    /// @todo work in progress
-    /// @return no
+    char *save_points(char *bytes, Id id, const std::vector<Point_id_source>& msg) const 
+    {
+        int count = msg.size();
+        bytes = save_value_1(bytes, id);
+        bytes = save_value_4(bytes, count);
+        for(auto p : msg) {
+            bytes = save_point(bytes, std::get<0>(p));
+            bytes = save_value_1(bytes, std::get<1>(p)); // Id point id
+            bytes = save_value_1(bytes, std::get<2>(p)); // Id source
+        }
+        std::cout << processor_name << "[" << world_rank << "] " << count  << " points sent to " << int(id) << std::endl;
+        return bytes;
+    }
+
+    /// send the content of each non-local inbox to the relevant processing element.
+    /// @return maximum number of points sent from any one of the processing elements.
     int send_all_to_all() 
     {
-    	int id_size = 1; /// @todo serialized size of tile id
-    	int count_size = 4; /// @todo serialized size of point count
-    	int data_size = 1; /// @todo serialized size of a Point_id_source
+        int id_size = 1; /// @todo serialized size of tile id
+        int count_size = 4; /// @todo serialized size of point count
+        int point_size = 16; /// @todo serialized size of a Point
+        int data_size = point_size + 2*id_size; /// @todo serialized size of a Point_id_source
 
-    	// compute sendcounts
-    	std::vector<int> sendcounts(world_size, 0);
-    	for(auto it : inbox)
-    	{
-    		int r = rank(it.first);
-    		if(r == world_rank) continue; // local, no need to communicate !
-    		sendcounts[r] += id_size + count_size + it.second.size() * data_size;
-    	}
+        // compute sendcounts
+        std::vector<int> sendcounts(world_size, 0);
+        int max_count = 0;
+        for(auto it : inbox)
+        {
+            int r = rank(it.first);
+            if(r == world_rank) continue; // local, no need to communicate !
+            sendcounts[r] += id_size + count_size + it.second.size() * data_size;
+            if (max_count < it.second.size()) max_count = it.second.size();
+        }
 
-    	// compute sdispls
-    	std::vector<int> sdispls(world_size+1, 0);
-    	for(int i=0; i<world_size; ++i) sdispls[i+1] = sdispls[i] + sendcounts[i];
-    	
-    	int max_count;
-    	MPI_Allreduce(&sdispls[world_size], &max_count, 1, MPI_INT, MPI_MAX, MPI_COMM_WORLD);
-    	if(max_count == 0) return 0;
-    	
-    	
-    	// serialize inbox to sendbuf and empty inbox
-    	std::vector<unsigned char> sendbuf(sdispls[world_size], 0);
-    	std::vector<int> offset(world_size, 0);
-    	for(auto it : inbox)
-    	{
-    		Id id = it.first;
-    		int r = rank(id);
-    		if(r == world_rank) continue; // local, no need to communicate !
-    		int count = it.second.size();
-    		offset[r] += id_size + count_size + count * data_size;
-    		/// @todo starting at &sendbuf[offset[r]] :
-    		sendbuf[offset[r]] = (unsigned char)(id); /// serialize id
-    		sendbuf[offset[r]+id_size]   = (count >> 0) & 0xff; /// serialize count
-    		sendbuf[offset[r]+id_size+1] = (count >> 1) & 0xff; /// serialize count
-    		sendbuf[offset[r]+id_size+2] = (count >> 2) & 0xff; /// serialize count
-    		sendbuf[offset[r]+id_size+3] = (count >> 3) & 0xff; /// serialize count
-    		for(auto p : it.second)
-    		{
-    			/// serialize p
-    		}
-		std::cout << processor_name << "[" << world_rank << "] " << count  << " points sent to " << int(id) << std::endl;
-		it.second.clear();
-    	}
-    	// communicate sendcounts to know recvcounts
-    	std::vector<int> recvcounts(world_size, 0);
+        // compute sdispls
+        std::vector<int> sdispls(world_size+1, 0);
+        for(int i=0; i<world_size; ++i) sdispls[i+1] = sdispls[i] + sendcounts[i];
+
+        MPI_Allreduce(&max_count, &max_count, 1, MPI_INT, MPI_MAX, MPI_COMM_WORLD);
+        if(max_count == 0) return 0;
+
+
+        // serialize inbox to sendbuf and empty inbox
+        std::vector<char> sendbuf(sdispls[world_size], 0);
+        std::vector<int> offset(world_size, 0);
+        for(auto it : inbox)
+        {
+            Id id = it.first;
+            int r = rank(id);
+            if(r == world_rank) continue; // local, no need to communicate !
+            char *bytes = save_points(&sendbuf[offset[r]], id, it.second);
+            offset[r] = bytes - &sendbuf[0];
+            it.second.clear();
+        }
+
+        // communicate sendcounts to know recvcounts
+        std::vector<int> recvcounts(world_size, 0);
         MPI_Alltoall(
-        	&sendcounts[0], 1, MPI_INT, 
-        	&recvcounts[0], 1, MPI_INT, 
-        	MPI_COMM_WORLD);
-        
-    	// compute rdispls
-    	std::vector<int> rdispls(world_size+1, 0);
-    	for(int i=0; i<world_size; ++i) rdispls[i+1] = rdispls[i] + recvcounts[i];
-    	
-    	// send sendbuf to recvbuf
-    	std::vector<unsigned char> recvbuf(rdispls[world_size], 0);
+            &sendcounts[0], 1, MPI_INT, 
+            &recvcounts[0], 1, MPI_INT, 
+            MPI_COMM_WORLD);
+
+        // compute rdispls
+        std::vector<int> rdispls(world_size+1, 0);
+        for(int i=0; i<world_size; ++i) rdispls[i+1] = rdispls[i] + recvcounts[i];
+
+        // send sendbuf to recvbuf
+        std::vector<char> recvbuf(rdispls[world_size], 0);
         MPI_Alltoallv(
-        	&sendbuf[0], &sendcounts[0], &sdispls[0], MPI_UNSIGNED_CHAR,
-        	&recvbuf[0], &recvcounts[0], &rdispls[0], MPI_UNSIGNED_CHAR,
-        	MPI_COMM_WORLD);
-        
-       	// deserialize recvbuf to inbox
-       	int dbg_count = 0;
-    	for(int j = 0; j < rdispls[world_size]; )
-    	{
-		/// @todo starting at &recvbuf[j] :
-		Id id = Id(recvbuf[j]); /// deserialize 
-		int count = 0;
-		count += int(recvbuf[j+id_size+0]) << 0; /// deserialize
-		count += int(recvbuf[j+id_size+1]) << 1; /// deserialize
-		count += int(recvbuf[j+id_size+2]) << 2; /// deserialize
-		count += int(recvbuf[j+id_size+3]) << 3; /// deserialize
-		for(int k = 0; k < count; ++k) 
-		{
-    			Point_id_source p; /// @todo deserialize p
-    		}
-    		j += id_size + count_size + count * data_size;
-		dbg_count += count;
-	}
-	return max_count;
+            &sendbuf[0], &sendcounts[0], &sdispls[0], MPI_CHAR,
+            &recvbuf[0], &recvcounts[0], &rdispls[0], MPI_CHAR,
+            MPI_COMM_WORLD);
+
+        // deserialize recvbuf to inbox
+        char *bytes = &recvbuf[0];
+        char *end = bytes + recvbuf.size();
+        while( bytes < end) bytes = load_points(bytes);
+
+        // debug: write sent msg to file
+        if (false) {
+            std::string filename = "./";
+            std::ostringstream oss;
+            oss << "./send_" << world_rank << ".bin";
+            std::ofstream out(oss.str().c_str(), std::ios::binary);
+            out.write((const char*)(&sendbuf[0]), sendbuf.size());
+            out.close();
+        }
+
+        // debug: write received msg to file
+        if (false) {
+            std::string filename = "./";
+            std::ostringstream oss;
+            oss << "./recv_" << world_rank << ".bin";
+            std::ofstream out(oss.str().c_str(), std::ios::binary);
+            out.write((const char*)(&recvbuf[0]), recvbuf.size());
+            out.close();
+        }
+
+        return max_count;
     }
-    
+
 private:
     std::map<Id, std::vector<Point_id_source>> inbox;
     int world_size;
