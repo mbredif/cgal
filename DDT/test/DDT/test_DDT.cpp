@@ -72,19 +72,19 @@ int main(int, char **)
 
     for(auto facet = tri.facets_begin(); facet != tri.facets_end(); ++facet)
     {
-        assert(facet->is_valid());
-        assert(facet->is_main());
-        assert(!facet->is_foreign());
-        assert(facet->is_local() || facet->is_mixed());
-        assert(facet->neighbor()->neighbor()->main() == facet);
-        assert(facet->neighbor()->main()->neighbor()->main() == facet);
-        assert(facet->neighbor()->full_cell() != facet->full_cell());
-        assert(tri.main(facet->neighbor()->full_cell()) != tri.main(facet->full_cell()));
-        assert(facet->neighbor()->main() != facet);
-        assert(facet->neighbor()->main()->index_of_covertex() == facet->mirror_index());
-        assert(facet->neighbor()->mirror_index() == facet->index_of_covertex());
-        assert(tri.facet(facet->full_cell(), facet->index_of_covertex()) == facet);
-        assert(tri.main(facet->neighbor()->neighbor()->full_cell()) == tri.main(facet->full_cell()));
+        assert(facet.is_valid());
+        assert(tri.is_main(facet));
+        assert(!tri.is_foreign(facet));
+        assert(tri.is_local(facet) || tri.is_mixed(facet));
+        assert(tri.main(tri.neighbor(tri.neighbor(facet))) == facet);
+        assert(tri.main(tri.neighbor(tri.main(tri.neighbor(facet)))) == facet);
+        assert(tri.cell(tri.neighbor(facet)) != tri.cell(facet));
+        assert(tri.cell(tri.main(tri.neighbor(facet))) != tri.main(tri.cell(facet)));
+        assert(tri.main(tri.neighbor(facet)) != facet);
+        assert(tri.index_of_covertex(tri.main(tri.neighbor(facet))) == tri.mirror_index(facet));
+        assert(tri.mirror_index(tri.neighbor(facet)) == tri.index_of_covertex(facet));
+        assert(tri.facet(tri.cell(facet), tri.index_of_covertex(facet)) == facet);
+        assert(tri.main(tri.cell(tri.neighbor(tri.neighbor(facet)))) == tri.main(tri.cell(facet)));
     }
 
     int cid = 0;
@@ -96,7 +96,7 @@ int main(int, char **)
         for(int d = 0; d < 3; ++d)
         {
             auto celld = tri.neighbor(cell, d);
-            assert(tri.main(tri.facet(cell, d)->neighbor()->neighbor()->full_cell()) == cell);
+            assert(tri.main(tri.cell(tri.neighbor(tri.neighbor(tri.facet(cell, d))))) == cell);
             assert(cell != celld);
             assert(cell != tri.main(celld));
             assert(tri.main(celld) != tri.cells_end());

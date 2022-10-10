@@ -232,7 +232,7 @@ struct Cgal_traits_d
         return f->second;
     }
 
-    inline Cell_const_handle full_cell(const Delaunay_triangulation& dt, Facet_const_handle f) const
+    inline Cell_const_handle cell(const Delaunay_triangulation& dt, Facet_const_handle f) const
     {
         return f->first;
     }

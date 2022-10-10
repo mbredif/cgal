@@ -29,15 +29,15 @@
 namespace ddt
 {
 
-template<typename Iterator>
-void write_geojson_vert_range(Iterator begin, Iterator end, std::ostream & ofs, bool is_first = true)
+template<typename DDT, typename Iterator>
+void write_geojson_vert_range(const DDT& ddt, Iterator begin, Iterator end, std::ostream & ofs, bool is_first = true)
 {
     typedef typename Iterator::value_type Vertex_const_iterator;
     typedef typename Vertex_const_iterator::Traits Traits;
     int D = Traits::D;
     for(auto vit = begin; vit != end; ++vit)
     {
-        if(vit->is_infinite()) continue;
+        if(ddt.is_infinite(vit)) continue;
         if(!is_first)
             ofs << "," << std::endl;
         is_first=false;
@@ -47,20 +47,20 @@ void write_geojson_vert_range(Iterator begin, Iterator end, std::ostream & ofs, 
         ofs << "\"type\": \"Point\"," << std::endl;
         ofs << "\"coordinates\": [";
         for(int d=0; d<D-1; ++d)
-            ofs << vit->point()[d] << ",";
-        ofs << vit->point()[D-1] << "]" << std::endl;;
+            ofs << ddt.point(vit)[d] << ",";
+        ofs << ddt.point(vit)[D-1] << "]" << std::endl;;
         ofs << "}," << std::endl;
         ofs << "\"properties\": {" << std::endl;
-        ofs << "\"fill\":" << (vit->is_local() ? "\"red\"" : "\"blue\"") <<  "," << std::endl;
-        ofs << "\"tid\": " << int(vit->tile()->id()) <<  "," << std::endl;
-        ofs << "\"id\": " <<  int(vit->main_id())  << std::endl;
+        ofs << "\"fill\":" << (ddt.is_local(vit) ? "\"red\"" : "\"blue\"") <<  "," << std::endl;
+        ofs << "\"tid\": " << int(ddt.tile_id(vit)) <<  "," << std::endl;
+        ofs << "\"id\": " <<  int(ddt.main_id(vit))  << std::endl;
         ofs << "}" << std::endl;
         ofs << "}" << std::endl;
     }
 }
 
-template<typename Iterator>
-void write_geojson_cell_range(Iterator begin, Iterator end, std::ostream & ofs,bool is_first = true)
+template<typename DDT, typename Iterator>
+void write_geojson_cell_range(const DDT& ddt, Iterator begin, Iterator end, std::ostream & ofs,bool is_first = true)
 {
 
     typedef typename Iterator::value_type Cell_const_iterator;
@@ -70,7 +70,7 @@ void write_geojson_cell_range(Iterator begin, Iterator end, std::ostream & ofs,b
     int D = Traits::D;
     for(auto iit = begin; iit != end; ++iit)
     {
-        if(iit->is_infinite()) continue;
+        if(ddt.is_infinite(iit)) continue;
         if(!is_first)
             ofs << "," << std::endl;
         is_first=false;
@@ -83,13 +83,13 @@ void write_geojson_cell_range(Iterator begin, Iterator end, std::ostream & ofs,b
         ofs << "[[";
         for(int i=0; i<=D+1; ++i) // repeat first to close the polygon
         {
-            auto v = iit->vertex(i % (D+1));
+            auto v = ddt.vertex(iit, i % (D+1));
             if(i>0)
             {
                 ofs << "],[";
-                local += v->is_local();
+                local += ddt.is_local(v);
             }
-            auto p = v->point();
+            auto p = ddt.point(v);
             for(int d=0; d<D-1; ++d) ofs << p[d] << ",";
             ofs << p[D-1];
         }
@@ -115,11 +115,11 @@ void write_geojson_cell_range(Iterator begin, Iterator end, std::ostream & ofs,b
         if(true)
         {
 
-            if(!cmap.count(*iit)) cmap[*iit] = nextid++;
-            ofs << "\"id\": " << cmap[*iit] << "," << std::endl;
+            if(!cmap.count(iit)) cmap[iit] = nextid++;
+            ofs << "\"id\": " << cmap[iit] << "," << std::endl;
             for(int i = 0 ; i < D+1; i++)
             {
-                auto n0 = iit->neighbor(i)->main();
+                auto n0 = ddt.main(ddt.neighbor(iit, i));
                 int iid = -1;
                 if(!cmap.count(n0)) cmap[n0] = nextid++;
                 iid = cmap[n0];
@@ -139,8 +139,8 @@ void write_geojson_tri(const DDT& ddt, std::ostream & ofs)
     ofs << "{" << std::endl;
     ofs << "\"type\": \"FeatureCollection\"," << std::endl;
     ofs << "\"features\": [" << std::endl;
-    write_geojson_vert_range(ddt.vertices_begin(), ddt.vertices_end(), ofs,true);
-    write_geojson_cell_range(ddt.cells_begin(), ddt.cells_end(), ofs,false);
+    write_geojson_vert_range(ddt, ddt.vertices_begin(), ddt.vertices_end(), ofs,true);
+    write_geojson_cell_range(ddt, ddt.cells_begin(), ddt.cells_end(), ofs,false);
     ofs << "]" << std::endl;
     ofs << "}" << std::endl;
 }

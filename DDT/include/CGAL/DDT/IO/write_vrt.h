@@ -182,7 +182,7 @@ void write_csv_facet(const Tile& tile, std::ostream& csv, bool main_only=false)
     {
         if(tile.facet_is_infinite(fit)) continue;
         if(main_only && !tile.facet_is_main(fit)) continue;
-        auto cit = tile.full_cell(fit);
+        auto cit = tile.cell(fit);
         int idx = tile.index_of_covertex(fit);
         csv << "\"LINESTRING(";
         int local = 0;
@@ -332,9 +332,9 @@ void write_vrt_facet_range(DDT& ddt, Iterator begin, Iterator end, const std::st
     int D = Traits::D;
     for(auto fit = begin; fit != end; ++fit)
     {
-        if(fit->is_infinite()) continue;
-        auto cit = fit->full_cell();
-        int idx = fit->index_of_covertex();
+        if(ddt.is_infinite(fit)) continue;
+        auto cit = ddt.cell(fit);
+        int idx = ddt.index_of_covertex(fit);
         csv << "\"LINESTRING(";
         int local = 0;
         int j = 0;
@@ -347,7 +347,7 @@ void write_vrt_facet_range(DDT& ddt, Iterator begin, Iterator end, const std::st
                 csv << ddt.point(v)[d] << " ";
             if (++j < D) csv << ",";
         }
-        csv << ")\"," << int(fit->tile()->id()) << "," << local << "\n";
+        csv << ")\"," << int(fit.tile()->id()) << "," << local << "\n";
     }
 }
 

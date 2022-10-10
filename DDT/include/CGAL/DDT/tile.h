@@ -106,6 +106,25 @@ public:
         return mid;
     }
 
+    Id main_id(const Facet_const_iterator& f) const
+    {
+        bool first = true;
+        Id mid = 0;
+        int cid = index_of_covertex(f);
+        Cell_const_handle c = cell(f);
+        int D = current_dimension();
+        for(int i=0; i<=D; ++i)
+        {
+            if (i == cid) continue;
+            Vertex_const_handle v = vertex(c, i);
+            if (vertex_is_infinite(v)) continue;
+            Id vid = id(v);
+            if (first || vid < mid) { mid = vid; first = false; }
+        }
+        assert(!first);
+        return mid;
+    }
+
     inline void clear() { traits.clear(dt_); }
     template<class It> inline void insert(It begin, It end) { traits.insert(dt_, begin, end); }
     template<class It> inline void remove(It begin, It end) { traits.remove(dt_, begin, end); }
@@ -120,7 +139,7 @@ public:
 
     // Facet functions
     inline int index_of_covertex(Facet_const_handle f) const { return traits.index_of_covertex(dt_, f); }
-    inline Cell_const_handle full_cell(Facet_const_handle f) const { return traits.full_cell(dt_, f); }
+    inline Cell_const_handle cell(Facet_const_handle f) const { return traits.cell(dt_, f); }
 
     // Cell functions
     inline Vertex_const_handle vertex(Cell_const_handle c, int i) const { return traits.vertex(dt_, c, i); }
@@ -143,7 +162,7 @@ public:
     bool facet_is_local(F f) const
     {
         int icv = index_of_covertex(f);
-        auto c = full_cell(f);
+        auto c = cell(f);
         for(int i=0; i<=current_dimension(); ++i)
         {
             if (i == icv) continue;
@@ -158,7 +177,7 @@ public:
     bool facet_is_mixed(F f) const
     {
         int icv = index_of_covertex(f);
-        auto c = full_cell(f);
+        auto c = cell(f);
         bool local_found = false;
         bool foreign_found = false;
         for(int i=0; i <= current_dimension(); ++i)
@@ -184,7 +203,7 @@ public:
     bool facet_is_foreign(F f) const
     {
         int icv = index_of_covertex(f);
-        auto c = full_cell(f);
+        auto c = cell(f);
         for(int i=0; i<=current_dimension(); ++i)
         {
             if ( i == icv ) continue;
@@ -277,7 +296,7 @@ public:
     bool facet_is_main_c2(F f) const
     {
         int icv = index_of_covertex(f);
-        auto c1 = full_cell(f);
+        auto c1 = cell(f);
         auto c2 = neighbor(c1,icv);
         std::vector<int> lid;
         for(int i=0; i<=current_dimension(); ++i)
@@ -303,7 +322,7 @@ public:
     bool facet_is_main_c1(F f) const
     {
         int icv = index_of_covertex(f);
-        auto c = full_cell(f);
+        auto c = cell(f);
         bool foreign = true;
         for(int i=0; i<=current_dimension(); ++i)
         {
@@ -608,8 +627,8 @@ public:
 
     Facet_const_handle locate_facet(const Tile& t, Facet_const_handle f) const
     {
-        assert(!t.cell_is_foreign(t.full_cell(f)));
-        Cell_const_handle c = full_cell(f);
+        assert(!t.cell_is_foreign(t.cell(f)));
+        Cell_const_handle c = cell(f);
         Cell_const_handle d = locate_cell(t, c);
         Vertex_const_handle v = vertex(c, index_of_covertex(f));
         for(int i=0; i<=current_dimension(); ++i)
