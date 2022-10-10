@@ -63,11 +63,11 @@ int main(int, char **)
 
     for(auto vertex = tri.vertices_begin(); vertex != tri.vertices_end(); ++vertex)
     {
-        assert(vertex->is_valid());
-        assert(vertex->is_main());
-        assert(!vertex->is_foreign());
-        assert(!vertex->is_infinite());
-        assert(vertex->is_local());
+        assert(vertex.is_valid());
+        assert(tri.is_main(vertex));
+        assert(!tri.is_foreign(vertex));
+        assert(!tri.is_infinite(vertex));
+        assert(tri.is_local(vertex));
     }
 
     for(auto facet = tri.facets_begin(); facet != tri.facets_end(); ++facet)

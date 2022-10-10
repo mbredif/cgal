@@ -314,11 +314,11 @@ void write_vrt_vert_range(DDT& ddt, Iterator begin, Iterator end, const std::str
     int D = Traits::D;
     for(auto vit = begin; vit != end; ++vit)
     {
-        if(vit->is_infinite()) continue;
+        if(ddt.is_infinite(vit)) continue;
         csv << "POINT( ";
         for(int d=0; d<D; ++d)
             csv << ddt.point(vit)[d] << " ";
-        csv << ")," << int(vit->tile()->id()) << "," << int(vit->main_id()) << "\n";
+        csv << ")," << int(ddt.tile_id(vit)) << "," << int(ddt.main_id(vit)) << "\n";
     }
 }
 
@@ -342,7 +342,7 @@ void write_vrt_facet_range(DDT& ddt, Iterator begin, Iterator end, const std::st
         {
             if(i == idx) continue;
             auto v = ddt.vertex(cit, i);
-            local += v->is_local();
+            local += ddt.is_local(v);
             for(int d=0; d<D; ++d)
                 csv << ddt.point(v)[d] << " ";
             if (++j < D) csv << ",";
@@ -372,7 +372,7 @@ void write_vrt_cell_range(DDT& ddt, Iterator begin, Iterator end, const std::str
             if(i>0)
             {
                 csv << ",";
-                local += v->is_local();
+                local += ddt.is_local(v);
             }
             auto p = ddt.point(v);
             for(int d=0; d<D; ++d) csv << p[d] << " ";

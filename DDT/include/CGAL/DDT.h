@@ -116,8 +116,8 @@ public:
     typedef Mapped_iterator<typename Tile_container::iterator>              Tile_iterator ;
     typedef Key_const_iterator<typename Tile_container::const_iterator>     Tile_id_const_iterator ;
 
-    typedef std::set<Id> Tile_id_set;
-    typedef typename Tile_id_set::const_iterator Tile_id_set_const_iterator;
+    // typedef std::set<Id> Tile_id_set;
+    // typedef typename Tile_id_set::const_iterator Tile_id_set_const_iterator;
 
     enum { D = Traits::D };
 
@@ -153,8 +153,10 @@ public:
     inline size_t number_of_threads () const { return sch.number_of_threads(); }
 
     /// non-const because of automatic loading/unloading
-    Vertex_const_iterator vertices_begin() { return Vertex_const_iterator(*this, tile_ids.begin()); }
-    Vertex_const_iterator vertices_end  () { return Vertex_const_iterator(*this, tile_ids.end()); }
+    Vertex_const_iterator vertices_begin() const { return Vertex_const_iterator(tiles_begin(), tiles_end()); }
+    Vertex_const_iterator vertices_end  () const { return Vertex_const_iterator(tiles_end(), tiles_end()); }
+    // Vertex_const_iterator vertices_begin() { return Vertex_const_iterator(*this, tile_ids.begin()); }
+    // Vertex_const_iterator vertices_end  () { return Vertex_const_iterator(*this, tile_ids.end()); }
 
     Cell_const_iterator cells_begin() const { return Cell_const_iterator(tiles_begin(), tiles_end()); }
     Cell_const_iterator cells_end  () const { return Cell_const_iterator(tiles_begin(), tiles_end(), tiles_end()); }
@@ -162,8 +164,10 @@ public:
     Facet_const_iterator facets_begin() const { return Facet_const_iterator(tiles_begin(), tiles_end()); }
     Facet_const_iterator facets_end  () const { return Facet_const_iterator(tiles_begin(), tiles_end(), tiles_end()); }
 
-    Tile_id_set_const_iterator tile_ids_begin() const { return tile_ids.begin(); }
-    Tile_id_set_const_iterator tile_ids_end  () const { return tile_ids.end  (); }
+    Tile_id_const_iterator tile_ids_begin() const { return tiles.begin(); }
+    Tile_id_const_iterator tile_ids_end  () const { return tiles.end  (); }
+    // Tile_id_set_const_iterator tile_ids_begin() const { return tile_ids.begin(); }
+    // Tile_id_set_const_iterator tile_ids_end  () const { return tile_ids.end  (); }
 
     Tile_const_iterator tiles_begin  () const { return tiles.begin (); }
     Tile_const_iterator tiles_end    () const { return tiles.end   (); }
@@ -394,18 +398,22 @@ public:
 
     Vertex_const_iterator main(const Vertex_const_iterator& vertex) const
     {
+        if(vertex.is_main()) return vertex;
+        return vertex->main();
+        /*
         assert(vertex.tile() != tiles.end());
         if(vertex.is_main()) return vertex;
         Id id = vertex.main_id();
         if (!is_loaded(id) ) load(id);
         return Vertex_const_iterator(tiles_begin(), tiles_end(), vertex.tile(), tiles[id]->locate_vertex(*vertex.tile(), vertex));
+        */
     }
 
-    Vertex_const_iterator vertex (const Cell_const_iterator& cell, const int i)
+    Vertex_const_iterator vertex (const Cell_const_iterator& cell, const int i) const
     {
         Tile_const_iterator tile = cell.tile();
         Tile_cell_const_handle full_cell = cell.full_cell();
-        return Vertex_const_iterator(*this, tile_ids.find(tile->id()), tile, tile->vertex(full_cell, i));
+        return Vertex_const_iterator(tile, tiles_end(), tile->vertex(full_cell, i));
     }
 
     const Point& point(Vertex_const_iterator vertex)
@@ -413,10 +421,18 @@ public:
         return vertex.tile()->point(vertex.vertex());
     }
 
+    bool is_local(Vertex_const_iterator v)    const { return v.tile()->vertex_is_local(v.vertex()); }
+    bool is_foreign(Vertex_const_iterator v)  const { return v.tile()->vertex_is_foreign(v.vertex()); }
+    bool is_main(Vertex_const_iterator v)     const { return v.tile()->vertex_is_main(v.vertex()); }
+    bool is_infinite(Vertex_const_iterator v) const { return v.tile()->vertex_is_infinite(v.vertex()); }
+
+    Id main_id(Vertex_const_iterator v) const { return v.tile()->id(v.vertex()); }
+    Id tile_id(Vertex_const_iterator v) const { return v.tile()->id(); }
+
 private:
 
     Tile_container tiles; /// loaded tiles
-    Tile_id_set tile_ids; /// selected tiles (loaded/unloaded automatically)
+    //Tile_id_set tile_ids; /// selected tiles (loaded/unloaded automatically)
     Scheduler sch;
     Serializer serializer;
     size_t number_of_vertices_;
