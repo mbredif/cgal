@@ -27,7 +27,7 @@ namespace ddt
 {
 
 
-  
+
 template<class T>
 class Tile
 {
@@ -89,6 +89,22 @@ public:
 
     inline Id    id  (Vertex_const_handle v) const { assert(!vertex_is_infinite(v)); return traits.id  (v); }
     inline Flag& flag(Vertex_const_handle v) const { assert(!vertex_is_infinite(v)); return traits.flag(v); }
+
+    Id    main_id(Cell_const_handle c) const
+    {
+        bool first = true;
+        Id mid = 0;
+        int D = current_dimension();
+        for(int i=0; i<=D; ++i)
+        {
+            Vertex_const_handle v = vertex(c, i);
+            if(vertex_is_infinite(v)) continue;
+            Id vid = id(v);
+            if (first || vid < mid) { mid = vid; first = false; }
+        }
+        assert(!first);
+        return mid;
+    }
 
     inline void clear() { traits.clear(dt_); }
     template<class It> inline void insert(It begin, It end) { traits.insert(dt_, begin, end); }
@@ -585,7 +601,7 @@ public:
         {
             if(traits.are_vertices_equal(t.dt_, v, dt_, vit))
                 return vit;
-        }	
+        }
         assert(! "Cannot find vertex" );
         return vertices_end();
     }
@@ -645,7 +661,7 @@ public:
 
     bool is_valid() const
     {
-      
+
       return dt_.is_valid(true,5);
     }
 
@@ -666,7 +682,7 @@ private:
 template<class T>
 std::istream& operator>> (std::istream& is,Tile<T> & tt)
 {
-    
+
   is >> tt.triangulation();
   return is;
 }

@@ -363,12 +363,12 @@ void write_vrt_cell_range(DDT& ddt, Iterator begin, Iterator end, const std::str
     int D = Traits::D;
     for(auto iit = begin; iit != end; ++iit)
     {
-        if(iit->is_infinite()) continue;
+        if(ddt.is_infinite(iit)) continue;
         csv << "\"POLYGON((";
         int local = 0;
         for(int i=0; i<=D+1; ++i) // repeat first to close the polygon
         {
-            auto v = ddt.vertex(*iit, i % (D+1));
+            auto v = ddt.vertex(iit, i % (D+1));
             if(i>0)
             {
                 csv << ",";
@@ -377,15 +377,15 @@ void write_vrt_cell_range(DDT& ddt, Iterator begin, Iterator end, const std::str
             auto p = ddt.point(v);
             for(int d=0; d<D; ++d) csv << p[d] << " ";
         }
-        csv << "))\"," << int(iit->tile()->id()) << "," << int(local) << "," << int(iit->main_id());
-        auto n0 = iit->neighbor(0)->main();
-        auto n1 = iit->neighbor(1)->main();
-        auto n2 = iit->neighbor(2)->main();
-        if(!cmap.count(*iit)) cmap[*iit] = nextid++;
+        csv << "))\"," << int(ddt.tile_id(iit)) << "," << int(local) << "," << int(ddt.main_id(iit));
+        auto n0 = ddt.main(iit.neighbor(0));
+        auto n1 = ddt.main(iit.neighbor(1));
+        auto n2 = ddt.main(iit.neighbor(2));
+        if(!cmap.count(iit)) cmap[iit] = nextid++;
         if(!cmap.count(n0)) cmap[n0] = nextid++;
         if(!cmap.count(n1)) cmap[n1] = nextid++;
         if(!cmap.count(n2)) cmap[n2] = nextid++;
-        csv << "," << cmap[*iit] << "," << cmap[n0] << "," << cmap[n1] << "," << cmap[n2];
+        csv << "," << cmap[iit] << "," << cmap[n0] << "," << cmap[n1] << "," << cmap[n2];
         csv << "," << 0 << "," << 0 << "," << 0 << "," << 0;
         csv << "\n";
     }

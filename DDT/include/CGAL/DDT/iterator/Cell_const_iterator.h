@@ -146,8 +146,6 @@ public:
     }
 
     bool operator!=(const Cell_const_iterator& rhs) const { return !(*this == rhs); }
-    Cell_const_iterator& operator*() { return *this; }
-    Cell_const_iterator* operator->() { return this; }
 
     Facet_const_iterator facet(int i) const
     {
@@ -174,48 +172,8 @@ public:
         return facet(i)->main()->mirror_index();
     }
 
-    Id main_id() const
-    {
-        assert(tile_ != end_);
-        Id id = -1;
-        int D = tile_->current_dimension();
-        for(int i=0; i<=D; ++i)
-        {
-            auto v = tile_->vertex(cell_, i);
-            if(tile_->vertex_is_infinite(v)) continue;
-            Id vid = tile_->id(v);
-            if (id==-1 || vid < id) id = vid;
-        }
-        return id;
-    }
-
-    Cell_const_iterator main() const
-    {
-        assert(tile_ != end_);
-        Id id = main_id();
-        if (id == tile_->id()) return *this; // <=> is_main
-
-        for (Tile_const_iterator tile = begin_; tile != end_; ++tile)
-            if (id == tile->id())
-            {
-                Tile_cell_const_iterator c = tile->locate_cell(*tile_, cell_);
-                if (c==tile->cells_end()) return Cell_const_iterator(begin_, end_, end_);
-                return Cell_const_iterator(begin_, end_, tile, c);
-            }
-
-        assert(false);
-        // no tile has the main id in tiles
-        return Cell_const_iterator(begin_, end_, end_);
-    }
-
-    Tile_const_iterator    tile()      const { return tile_; }
-    Tile_cell_const_handle full_cell() const { return cell_; }
-
-    bool is_local()    const { return tile_->cell_is_local(cell_); }
-    bool is_mixed()    const { return tile_->cell_is_mixed(cell_); }
-    bool is_foreign()  const { return tile_->cell_is_foreign(cell_); }
-    bool is_main()     const { return tile_->cell_is_main(cell_); }
-    bool is_infinite() const { return tile_->cell_is_infinite(cell_); }
+    Tile_const_iterator    tile() const { return tile_; }
+    Tile_cell_const_handle cell() const { return cell_; }
 
     bool is_valid()    const
     {

@@ -79,33 +79,33 @@ int main(int, char **)
         assert(facet->neighbor()->neighbor()->main() == facet);
         assert(facet->neighbor()->main()->neighbor()->main() == facet);
         assert(facet->neighbor()->full_cell() != facet->full_cell());
-        assert(facet->neighbor()->full_cell()->main() != facet->full_cell()->main());
+        assert(tri.main(facet->neighbor()->full_cell()) != tri.main(facet->full_cell()));
         assert(facet->neighbor()->main() != facet);
         assert(facet->neighbor()->main()->index_of_covertex() == facet->mirror_index());
         assert(facet->neighbor()->mirror_index() == facet->index_of_covertex());
-        assert(facet->full_cell()->facet(facet->index_of_covertex()) == facet);
-        assert(facet->neighbor()->neighbor()->full_cell()->main() == facet->full_cell()->main());
+        assert(facet->full_cell().facet(facet->index_of_covertex()) == facet);
+        assert(tri.main(facet->neighbor()->neighbor()->full_cell()) == tri.main(facet->full_cell()));
     }
 
     int cid = 0;
     for(auto cell = tri.cells_begin(); cell != tri.cells_end(); ++cell, ++cid)
     {
-        assert(cell->is_valid());
-        assert(cell->is_main());
-        assert(!cell->is_foreign());
+        assert(cell.is_valid());
+        assert(tri.is_main(cell));
+        assert(!tri.is_foreign(cell));
         for(int d = 0; d < 3; ++d)
         {
-            auto celld = cell->neighbor(d);
-            assert(cell->facet(d)->neighbor()->neighbor()->full_cell()->main() == cell);
+            auto celld = cell.neighbor(d);
+            assert(tri.main(cell.facet(d)->neighbor()->neighbor()->full_cell()) == cell);
             assert(cell != celld);
-            assert(cell != celld->main());
-            assert(celld->main() != tri.cells_end());
-            assert(celld->main().is_main());
-            assert(celld->neighbor(cell->mirror_index(d))->main() == cell);
+            assert(cell != tri.main(celld));
+            assert(tri.main(celld) != tri.cells_end());
+            assert(tri.is_main(tri.main(celld)));
+            assert(tri.main(celld.neighbor(cell.mirror_index(d))) == cell);
         }
         std::set<typename DDT::Cell_const_iterator> ring;
         tri.get_ring(cell, 1, ring);
-        write_vrt_cell_range(tri, ring.begin(), ring.end(), outdir.string() + std::to_string(cid) + "_ring.vrt");
+        // write_vrt_cell_range(tri, ring.begin(), ring.end(), outdir.string() + std::to_string(cid) + "_ring.vrt");
     }
 
     return 0;

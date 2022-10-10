@@ -264,7 +264,7 @@ public:
     void get_ring(Cell_const_iterator c, int deg, std::set<Cell_const_iterator>& cset) const
     {
         std::set<Cell_const_iterator> seeds;
-        c = c->main();
+        c = main(c);
         cset.insert(c);
         seeds.insert(c);
         for(int i=0; i<deg; ++i)
@@ -282,7 +282,7 @@ public:
         {
             for(int d = 0; d <= D; d++)
             {
-                auto c = seed->neighbor(d)->main();
+                auto c = main(seed.neighbor(d));
                 if(seeds.find(c) == seeds.end())
                     next.insert(c);
             }
@@ -409,11 +409,21 @@ public:
         */
     }
 
-    Vertex_const_iterator vertex (const Cell_const_iterator& cell, const int i) const
+    Cell_const_iterator main(const Cell_const_iterator& c) const
     {
-        Tile_const_iterator tile = cell.tile();
-        Tile_cell_const_handle full_cell = cell.full_cell();
-        return Vertex_const_iterator(tile, tiles_end(), tile->vertex(full_cell, i));
+        Id id = main_id(c);
+        if (id == tile_id(c)) return c; // c is already main
+
+        Tile_const_iterator tile = get_tile(id);
+        Tile_cell_const_iterator cell = tile->locate_cell(*(c.tile()), c.cell());
+        if (cell==tile->cells_end()) return Cell_const_iterator(tiles_begin(), tiles_end(), tiles_end());
+        return Cell_const_iterator(tiles_begin(), tiles_end(), tile, cell);
+    }
+
+    Vertex_const_iterator vertex (const Cell_const_iterator& c, const int i) const
+    {
+        Tile_const_iterator tile = c.tile();
+        return Vertex_const_iterator(tile, tiles_end(), tile->vertex(c.cell(), i));
     }
 
     const Point& point(Vertex_const_iterator vertex)
@@ -428,6 +438,17 @@ public:
 
     Id main_id(Vertex_const_iterator v) const { return v.tile()->id(v.vertex()); }
     Id tile_id(Vertex_const_iterator v) const { return v.tile()->id(); }
+
+
+    bool is_local(Cell_const_iterator c)    const { return c.tile()->cell_is_local(c.cell()); }
+    bool is_mixed(Cell_const_iterator c)    const { return c.tile()->cell_is_mixed(c.cell()); }
+    bool is_foreign(Cell_const_iterator c)  const { return c.tile()->cell_is_foreign(c.cell()); }
+    bool is_main(Cell_const_iterator c)     const { return c.tile()->cell_is_main(c.cell()); }
+    bool is_infinite(Cell_const_iterator c) const { return c.tile()->cell_is_infinite(c.cell()); }
+
+
+    Id main_id(Cell_const_iterator c) const { return c.tile()->main_id(c.cell()); }
+    Id tile_id(Cell_const_iterator c) const { return c.tile()->id(); }
 
 private:
 
