@@ -217,15 +217,6 @@ public:
         serializer.save(tiles[id]);
     }
 
-   /* void clear(int NT)
-    {
-        tiles.clear();
-        for(int id=0; id<NT; ++id)
-        {
-            init(id);
-        }
-    }
-*/
     template<typename Iterator, typename Partitioner>
     void send_points(Iterator it, int count, Partitioner& part)
     {
@@ -388,15 +379,43 @@ public:
                 }
             }
         }
-    if(!test_only_cgal){
-        if (number_of_vertices != number_of_vertices_) { std::cerr << "incorrect number_of_vertices" << std::endl; return false; }
-        if (number_of_facets != number_of_facets_) { std::cerr << "incorrect number_of_facets" << std::endl; return false; }
-        if (number_of_cells != number_of_cells_) { std::cerr << "incorrect number_of_cells" << std::endl; return false; }
+        if(!test_only_cgal){
+            if (number_of_vertices != number_of_vertices_) { std::cerr << "incorrect number_of_vertices" << std::endl; return false; }
+            if (number_of_facets != number_of_facets_) { std::cerr << "incorrect number_of_facets" << std::endl; return false; }
+            if (number_of_cells != number_of_cells_) { std::cerr << "incorrect number_of_cells" << std::endl; return false; }
         }
         return true;
     }
 
-    /// Vertex iterator functions
+    bool is_local(const Vertex_const_iterator& v) const { return v.tile()->vertex_is_local(v.vertex()); }
+    bool is_local(const Facet_const_iterator&  f) const { return f.tile()->facet_is_local(f.facet()); }
+    bool is_local(const Cell_const_iterator&   c) const { return c.tile()->cell_is_local(c.cell()); }
+
+    // vertices are never mixed
+    bool is_mixed(const Facet_const_iterator& f) const { return f.tile()->facet_is_mixed(f.facet()); }
+    bool is_mixed(const Cell_const_iterator&  c) const { return c.tile()->cell_is_mixed(c.cell()); }
+
+    bool is_foreign(const Vertex_const_iterator& v) const { return v.tile()->vertex_is_foreign(v.vertex()); }
+    bool is_foreign(const Facet_const_iterator&  f) const { return f.tile()->facet_is_foreign(f.facet()); }
+    bool is_foreign(const Cell_const_iterator&   c) const { return c.tile()->cell_is_foreign(c.cell()); }
+
+    bool is_main(const Vertex_const_iterator& v) const { return v.tile()->vertex_is_main(v.vertex()); }
+    bool is_main(const Facet_const_iterator&  f) const { return f.tile()->facet_is_main(f.facet()); }
+    bool is_main(const Cell_const_iterator&   c) const { return c.tile()->cell_is_main(c.cell()); }
+
+    bool is_infinite(const Vertex_const_iterator& v) const { return v.tile()->vertex_is_infinite(v.vertex()); }
+    bool is_infinite(const Facet_const_iterator&  f) const { return f.tile()->facet_is_infinite(f.facet()); }
+    bool is_infinite(const Cell_const_iterator&   c) const { return c.tile()->cell_is_infinite(c.cell()); }
+
+    Id main_id(const Vertex_const_iterator&v) const { return v.tile()->id(v.vertex()); }
+    Id main_id(const Facet_const_iterator& f) const { return f.tile()->main_id(f.facet()); }
+    Id main_id(const Cell_const_iterator&  c) const { return c.tile()->main_id(c.cell()); }
+
+    Id tile_id(const Vertex_const_iterator& v) const { return v.tile()->id(); }
+    Id tile_id(const Facet_const_iterator&  f) const { return f.tile()->id(); }
+    Id tile_id(const Cell_const_iterator&   c) const { return c.tile()->id(); }
+
+    /// Main
     Vertex_const_iterator main(const Vertex_const_iterator& v) const
     {
         Id id = main_id(v);
@@ -407,6 +426,17 @@ public:
         Tile_vertex_const_iterator vertex = tile->locate_vertex(*(v.tile()), v.vertex());
         if (vertex==tile->vertices_end()) return vertices_end();
         return Vertex_const_iterator(tile, tiles_end(), vertex);
+    }
+
+    Facet_const_iterator main(const Facet_const_iterator& f) const
+    {
+        Id id = main_id(f);
+        if (id == tile_id(f)) return f; // f is already main
+
+        Tile_const_iterator tile = get_tile(id);
+        Tile_facet_const_iterator facet = tile->locate_facet(*(f.tile()), f.facet());
+        if (facet==tile->facets_end()) return facets_end();
+        return Facet_const_iterator(tile, tiles_end(), facet);
     }
 
     Cell_const_iterator main(const Cell_const_iterator& c) const
@@ -420,6 +450,7 @@ public:
         return Cell_const_iterator(tile, tiles_end(), cell);
     }
 
+    /// Vertex iterator functions
     Vertex_const_iterator vertex (const Cell_const_iterator& c, const int i) const
     {
         Tile_const_iterator tile = c.tile();
@@ -431,30 +462,7 @@ public:
         return vertex.tile()->point(vertex.vertex());
     }
 
-    bool is_local(Vertex_const_iterator v)    const { return v.tile()->vertex_is_local(v.vertex()); }
-    bool is_foreign(Vertex_const_iterator v)  const { return v.tile()->vertex_is_foreign(v.vertex()); }
-    bool is_main(Vertex_const_iterator v)     const { return v.tile()->vertex_is_main(v.vertex()); }
-    bool is_infinite(Vertex_const_iterator v) const { return v.tile()->vertex_is_infinite(v.vertex()); }
-
-    Id main_id(Vertex_const_iterator v) const { return v.tile()->id(v.vertex()); }
-    Id tile_id(Vertex_const_iterator v) const { return v.tile()->id(); }
-
-
-/// Facet iterator functions
-
-    Id main_id(const Facet_const_iterator& f) const { return f.tile()->main_id(f.facet()); }
-
-    Facet_const_iterator main(const Facet_const_iterator& f) const
-    {
-        Id id = main_id(f);
-        if (id == tile_id(f)) return f; // f is already main
-
-        Tile_const_iterator tile = get_tile(id);
-        Tile_facet_const_iterator facet = tile->locate_facet(*(f.tile()), f.facet());
-        if (facet==tile->facets_end()) return facets_end();
-        return Facet_const_iterator(tile, tiles_end(), facet);
-    }
-
+    /// Facet iterator functions
     Facet_const_iterator neighbor(const Facet_const_iterator& f) const
     {
         Tile_const_iterator tile = f.tile();
@@ -488,14 +496,6 @@ public:
         return tile->index_of_covertex(f.facet());
     }
 
-    bool is_local(const Facet_const_iterator& f)    const { return f.tile()->facet_is_local(f.facet()); }
-    bool is_mixed(const Facet_const_iterator& f)    const { return f.tile()->facet_is_mixed(f.facet()); }
-    bool is_foreign(const Facet_const_iterator& f)  const { return f.tile()->facet_is_foreign(f.facet()); }
-    bool is_main(const Facet_const_iterator& f)     const { return f.tile()->facet_is_main(f.facet()); }
-    bool is_infinite(const Facet_const_iterator& f) const { return f.tile()->facet_is_infinite(f.facet()); }
-
-    Id tile_id(const Facet_const_iterator& f) const { return f.tile()->id(); }
-
     /// Cell iterator functions
     Facet_const_iterator facet(const Cell_const_iterator& c, int i) const
     {
@@ -525,15 +525,6 @@ public:
         return mirror_index(main(facet(c,i)));
     }
 
-    bool is_local(Cell_const_iterator c)    const { return c.tile()->cell_is_local(c.cell()); }
-    bool is_mixed(Cell_const_iterator c)    const { return c.tile()->cell_is_mixed(c.cell()); }
-    bool is_foreign(Cell_const_iterator c)  const { return c.tile()->cell_is_foreign(c.cell()); }
-    bool is_main(Cell_const_iterator c)     const { return c.tile()->cell_is_main(c.cell()); }
-    bool is_infinite(Cell_const_iterator c) const { return c.tile()->cell_is_infinite(c.cell()); }
-
-
-    Id main_id(Cell_const_iterator c) const { return c.tile()->main_id(c.cell()); }
-    Id tile_id(Cell_const_iterator c) const { return c.tile()->id(); }
 
 private:
 
