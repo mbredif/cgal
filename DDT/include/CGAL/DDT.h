@@ -159,7 +159,7 @@ public:
     // Vertex_const_iterator vertices_end  () { return Vertex_const_iterator(*this, tile_ids.end()); }
 
     Cell_const_iterator cells_begin() const { return Cell_const_iterator(tiles_begin(), tiles_end()); }
-    Cell_const_iterator cells_end  () const { return Cell_const_iterator(tiles_begin(), tiles_end(), tiles_end()); }
+    Cell_const_iterator cells_end  () const { return Cell_const_iterator(tiles_end(), tiles_end()); }
 
     Facet_const_iterator facets_begin() const { return Facet_const_iterator(tiles_begin(), tiles_end()); }
     Facet_const_iterator facets_end  () const { return Facet_const_iterator(tiles_begin(), tiles_end(), tiles_end()); }
@@ -282,7 +282,7 @@ public:
         {
             for(int d = 0; d <= D; d++)
             {
-                auto c = main(seed.neighbor(d));
+                auto c = main(neighbor(seed, d));
                 if(seeds.find(c) == seeds.end())
                     next.insert(c);
             }
@@ -416,8 +416,8 @@ public:
 
         Tile_const_iterator tile = get_tile(id);
         Tile_cell_const_iterator cell = tile->locate_cell(*(c.tile()), c.cell());
-        if (cell==tile->cells_end()) return Cell_const_iterator(tiles_begin(), tiles_end(), tiles_end());
-        return Cell_const_iterator(tiles_begin(), tiles_end(), tile, cell);
+        if (cell==tile->cells_end()) return cells_end();
+        return Cell_const_iterator(tile, tiles_end(), cell);
     }
 
     Vertex_const_iterator vertex (const Cell_const_iterator& c, const int i) const
@@ -439,6 +439,34 @@ public:
     Id main_id(Vertex_const_iterator v) const { return v.tile()->id(v.vertex()); }
     Id tile_id(Vertex_const_iterator v) const { return v.tile()->id(); }
 
+
+    Facet_const_iterator facet(const Cell_const_iterator& c, int i) const
+    {
+        Tile_const_iterator tile = c.tile();
+        assert(tile != tiles_end());
+        return Facet_const_iterator(tiles_begin(), tiles_end(), tile, tile->facet(c.cell(), i));
+    }
+
+    Cell_const_iterator neighbor(const Cell_const_iterator& c, int i) const
+    {
+        Tile_const_iterator tile = c.tile();
+        assert(tile != tiles_end());
+        Tile_cell_const_iterator cell = c.cell()->neighbor(i);
+        if(!tile->cell_is_foreign(cell))
+            return Cell_const_iterator(tile, tiles_end(), cell);
+        // there is no representative of the neighbor in tile_
+        return (facet(c, i))->main()->neighbor()->full_cell();
+    }
+
+    int mirror_index(const Cell_const_iterator& c, int i) const
+    {
+        Tile_const_iterator tile = c.tile();
+        assert(tile != tiles_end());
+        Tile_cell_const_iterator cell = tile->neighbor(c.cell(), i);
+        if(!tile->cell_is_foreign(cell))
+            return tile->mirror_index(c.cell(), i);
+        return facet(c,i)->main()->mirror_index();
+    }
 
     bool is_local(Cell_const_iterator c)    const { return c.tile()->cell_is_local(c.cell()); }
     bool is_mixed(Cell_const_iterator c)    const { return c.tile()->cell_is_mixed(c.cell()); }

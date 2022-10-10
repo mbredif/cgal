@@ -127,8 +127,8 @@ public:
 
     bool operator!=(const Vertex_const_iterator& rhs) const { return !(*this == rhs); }
 
-    Tile_const_iterator        tile  () const { return tile_;   }
-    Tile_vertex_const_iterator vertex() const { return vertex_; }
+    const Tile_const_iterator&        tile  () const { return tile_;   }
+    const Tile_vertex_const_iterator& vertex() const { return vertex_; }
 
     bool is_valid()    const
     {

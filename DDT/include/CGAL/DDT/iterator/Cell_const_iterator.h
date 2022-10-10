@@ -26,21 +26,17 @@ public:
     using reference = value_type&;
 
     typedef typename DDT::Traits                    Traits;
-    typedef typename DDT::Tile_cell_const_handle    Tile_cell_const_handle;
     typedef typename DDT::Tile_cell_const_iterator  Tile_cell_const_iterator;
     typedef typename DDT::Tile_const_iterator       Tile_const_iterator;
-    typedef typename DDT::Vertex_const_iterator     Vertex_const_iterator;
-    typedef typename DDT::Facet_const_iterator      Facet_const_iterator;
 
 private:
-    Tile_const_iterator begin_;
-    Tile_const_iterator end_;
     Tile_const_iterator tile_;
+    Tile_const_iterator end_;
     Tile_cell_const_iterator cell_;
 
 public:
     Cell_const_iterator(Tile_const_iterator begin, Tile_const_iterator end)
-        : begin_(begin), end_(end), tile_(begin), cell_()
+        : tile_(begin), end_(end), cell_()
     {
         if(tile_ != end_)
         {
@@ -50,26 +46,15 @@ public:
         assert(is_valid());
     }
 
-    Cell_const_iterator(Tile_const_iterator begin, Tile_const_iterator end, Tile_const_iterator tile)
-        : begin_(begin), end_(end), tile_(tile), cell_()
-    {
-        if(tile_ != end_)
-        {
-            cell_ = tile_->cells_begin();
-            advance_to_main();
-        }
-        assert(is_valid());
-    }
-
-    Cell_const_iterator(Tile_const_iterator begin, Tile_const_iterator end, Tile_const_iterator tile, Tile_cell_const_iterator cell)
-        : begin_(begin), end_(end), tile_(tile), cell_(cell)
+    Cell_const_iterator(Tile_const_iterator tile, Tile_const_iterator end, Tile_cell_const_iterator cell)
+        : tile_(tile), end_(end), cell_(cell)
     {
         // do not enforce main here !
         assert(is_valid());
     }
 
     Cell_const_iterator(const Cell_const_iterator& c)
-        : begin_(c.begin_), end_(c.end_), tile_(c.tile_), cell_(c.cell_)
+        : tile_(c.tile_), end_(c.end_), cell_(c.cell_)
     {
         // do not enforce main here !
         assert(is_valid());
@@ -139,41 +124,15 @@ public:
 
     bool operator==(const Cell_const_iterator& rhs) const
     {
-        return begin_ == rhs.begin_
-               && tile_ == rhs.tile_
+        return tile_ == rhs.tile_
                && end_ == rhs.end_
                && (tile_ == end_ || cell_==rhs.cell_);
     }
 
     bool operator!=(const Cell_const_iterator& rhs) const { return !(*this == rhs); }
 
-    Facet_const_iterator facet(int i) const
-    {
-        assert(tile_ != end_);
-        return Facet_const_iterator(begin_, end_, tile_, tile_->facet(cell_, i));
-    }
-
-    Cell_const_iterator neighbor(int i) const
-    {
-        assert(tile_ != end_);
-        Tile_cell_const_iterator c = cell_->neighbor(i);
-        if(!tile_->cell_is_foreign(c))
-            return Cell_const_iterator(begin_, end_, tile_, c);
-        // there is no representative of the neighbor in tile_
-        return facet(i)->main()->neighbor()->full_cell();
-    }
-
-    int mirror_index(int i) const
-    {
-        assert(tile_ != end_);
-        Tile_cell_const_iterator c = cell_->neighbor(i);
-        if(!tile_->cell_is_foreign(c))
-            return tile_->mirror_index(cell_, i);
-        return facet(i)->main()->mirror_index();
-    }
-
-    Tile_const_iterator    tile() const { return tile_; }
-    Tile_cell_const_handle cell() const { return cell_; }
+    const Tile_const_iterator&    tile() const { return tile_; }
+    const Tile_cell_const_iterator& cell() const { return cell_; }
 
     bool is_valid()    const
     {

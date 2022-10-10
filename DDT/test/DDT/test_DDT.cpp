@@ -83,7 +83,7 @@ int main(int, char **)
         assert(facet->neighbor()->main() != facet);
         assert(facet->neighbor()->main()->index_of_covertex() == facet->mirror_index());
         assert(facet->neighbor()->mirror_index() == facet->index_of_covertex());
-        assert(facet->full_cell().facet(facet->index_of_covertex()) == facet);
+        assert(tri.facet(facet->full_cell(), facet->index_of_covertex()) == facet);
         assert(tri.main(facet->neighbor()->neighbor()->full_cell()) == tri.main(facet->full_cell()));
     }
 
@@ -95,13 +95,13 @@ int main(int, char **)
         assert(!tri.is_foreign(cell));
         for(int d = 0; d < 3; ++d)
         {
-            auto celld = cell.neighbor(d);
-            assert(tri.main(cell.facet(d)->neighbor()->neighbor()->full_cell()) == cell);
+            auto celld = tri.neighbor(cell, d);
+            assert(tri.main(tri.facet(cell, d)->neighbor()->neighbor()->full_cell()) == cell);
             assert(cell != celld);
             assert(cell != tri.main(celld));
             assert(tri.main(celld) != tri.cells_end());
             assert(tri.is_main(tri.main(celld)));
-            assert(tri.main(celld.neighbor(cell.mirror_index(d))) == cell);
+            assert(tri.main(tri.neighbor(celld, tri.mirror_index(cell, d))) == cell);
         }
         std::set<typename DDT::Cell_const_iterator> ring;
         tri.get_ring(cell, 1, ring);

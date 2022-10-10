@@ -174,7 +174,7 @@ public:
     inline Cell_const_iterator full_cell() const
     {
         assert(tile_ != end_);
-        return Cell_const_iterator(begin_, end_, tile_, tile_->full_cell(facet_));
+        return Cell_const_iterator(tile_, end_, tile_->full_cell(facet_));
     }
 
     inline int index_of_covertex() const
