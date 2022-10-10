@@ -35,29 +35,31 @@ private:
     Tile_vertex_const_iterator vertex_;
 
 public:
-    Vertex_const_iterator(Tile_const_iterator begin, Tile_const_iterator end)
-        : tile_(begin), end_(end), vertex_()
+    Vertex_const_iterator(Tile_const_iterator tile, Tile_const_iterator end)
+        : tile_(tile), end_(end), vertex_()
     {
-        if(begin != end)
+        if(tile_ != end_)
         {
             // if(!ddt_.is_loaded(*id_)) ddt_.load(*id_);
             // tile_ = ((const DDT&)(ddt_)).get_tile(*id_); /// @todo constness
             vertex_ = tile_->vertices_begin();
             advance_to_main();
         }
+        assert(is_valid());
     }
 
-    Vertex_const_iterator(Tile_const_iterator begin, Tile_const_iterator end,
-        Tile_vertex_const_iterator vertex)
-        : tile_(begin), end_(end), vertex_(vertex)
+    Vertex_const_iterator(Tile_const_iterator tile, Tile_const_iterator end, Tile_vertex_const_iterator vertex)
+        : tile_(tile), end_(end), vertex_(vertex)
     {
         // do not enforce main here !
+        assert(is_valid());
     }
 
     Vertex_const_iterator(const Vertex_const_iterator& v)
         : tile_(v.tile_), end_(v.end_), vertex_(v.vertex_)
     {
         // do not enforce main here !
+        assert(is_valid());
     }
 
     Vertex_const_iterator& advance_to_main()
@@ -120,7 +122,7 @@ public:
 
     bool operator==(const Vertex_const_iterator& rhs) const
     {
-        return    tile_ == rhs.tile_
+        return tile_ == rhs.tile_
                && end_ == rhs.end_
                && (tile_ == end_ || vertex_ == rhs.vertex_);
     }

@@ -162,7 +162,7 @@ public:
     Cell_const_iterator cells_end  () const { return Cell_const_iterator(tiles_end(), tiles_end()); }
 
     Facet_const_iterator facets_begin() const { return Facet_const_iterator(tiles_begin(), tiles_end()); }
-    Facet_const_iterator facets_end  () const { return Facet_const_iterator(tiles_begin(), tiles_end(), tiles_end()); }
+    Facet_const_iterator facets_end  () const { return Facet_const_iterator(tiles_end(), tiles_end()); }
 
     Tile_id_const_iterator tile_ids_begin() const { return tiles.begin(); }
     Tile_id_const_iterator tile_ids_end  () const { return tiles.end  (); }
@@ -452,7 +452,7 @@ public:
         Tile_const_iterator tile = get_tile(id);
         Tile_facet_const_iterator facet = tile->locate_facet(*(f.tile()), f.facet());
         if (facet==tile->facets_end()) return facets_end();
-        return Facet_const_iterator(tiles_begin(), tiles_end(), tile, facet);
+        return Facet_const_iterator(tile, tiles_end(), facet);
     }
 
     Facet_const_iterator neighbor(const Facet_const_iterator& f) const
@@ -464,7 +464,7 @@ public:
         Tile_cell_const_iterator n = tile->neighbor(c, i);
 
         if (!tile->cell_is_foreign(n))
-            return Facet_const_iterator(tiles_begin(), tiles_end(), tile, tile->facet(n, tile->mirror_index(c,i)));
+            return Facet_const_iterator(tile, tiles_end(), tile->facet(n, tile->mirror_index(c,i)));
 
         return neighbor(main(f));
     }
@@ -501,7 +501,7 @@ public:
     {
         Tile_const_iterator tile = c.tile();
         assert(tile != tiles_end());
-        return Facet_const_iterator(tiles_begin(), tiles_end(), tile, tile->facet(c.cell(), i));
+        return Facet_const_iterator(tile, tiles_end(), tile->facet(c.cell(), i));
     }
 
     Cell_const_iterator neighbor(const Cell_const_iterator& c, int i) const

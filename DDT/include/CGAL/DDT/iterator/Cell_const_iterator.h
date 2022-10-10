@@ -35,8 +35,8 @@ private:
     Tile_cell_const_iterator cell_;
 
 public:
-    Cell_const_iterator(Tile_const_iterator begin, Tile_const_iterator end)
-        : tile_(begin), end_(end), cell_()
+    Cell_const_iterator(Tile_const_iterator tile, Tile_const_iterator end)
+        : tile_(tile), end_(end), cell_()
     {
         if(tile_ != end_)
         {

@@ -32,14 +32,13 @@ public:
     typedef typename DDT::Cell_const_iterator       Cell_const_iterator;
 
 private:
-    Tile_const_iterator begin_;
-    Tile_const_iterator end_;
     Tile_const_iterator tile_;
+    Tile_const_iterator end_;
     Tile_facet_const_iterator facet_;
 
 public:
-    Facet_const_iterator(Tile_const_iterator begin, Tile_const_iterator end)
-        : begin_(begin), end_(end), tile_(begin), facet_()
+    Facet_const_iterator(Tile_const_iterator tile, Tile_const_iterator end)
+        : tile_(tile), end_(end), facet_()
     {
         if(tile_ != end_)
         {
@@ -49,26 +48,15 @@ public:
         assert(is_valid());
     }
 
-    Facet_const_iterator(Tile_const_iterator begin, Tile_const_iterator end, Tile_const_iterator tile)
-        : begin_(begin), end_(end), tile_(tile), facet_()
-    {
-        if(tile_ != end_)
-        {
-            facet_ = tile_->facets_begin();
-            advance_to_main();
-        }
-        assert(is_valid());
-    }
-
-    Facet_const_iterator(Tile_const_iterator begin, Tile_const_iterator end, Tile_const_iterator tile, Tile_facet_const_iterator facet)
-        : begin_(begin), end_(end), tile_(tile), facet_(facet)
+    Facet_const_iterator(Tile_const_iterator tile, Tile_const_iterator end, Tile_facet_const_iterator facet)
+        : tile_(tile), end_(end), facet_(facet)
     {
         // do not enforce main here !
         assert(is_valid());
     }
 
     Facet_const_iterator(const Facet_const_iterator& c)
-        : begin_(c.begin_), end_(c.end_), tile_(c.tile_), facet_(c.facet_)
+        : tile_(c.tile_), end_(c.end_), facet_(c.facet_)
     {
         // do not enforce main here !
         assert(is_valid());
@@ -109,8 +97,7 @@ public:
 
     bool operator==(const Facet_const_iterator& rhs) const
     {
-        return begin_ == rhs.begin_
-               && tile_ == rhs.tile_
+        return tile_ == rhs.tile_
                && end_ == rhs.end_
                && (tile_ == end_ || facet_ == rhs.facet_);
     }
