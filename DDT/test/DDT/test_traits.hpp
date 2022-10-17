@@ -87,16 +87,16 @@ int test_traits(const std::string& testname, int ND, int NP, bool do_test_io = t
     {
         std::cout << "== test io == " << std::endl;
         boost::filesystem::create_directories(testname + "/cgal");
-	boost::filesystem::create_directories(testname + "/cgal2");
-        std::cout << "write..." << std::endl;	
+        boost::filesystem::create_directories(testname + "/cgal2");
+        std::cout << "write..." << std::endl;
         ddt::write_cgal(tri1, testname + "/cgal");
 
         DDT tri2(serializer);
         std::cout << "read..." << std::endl;
         ddt::read_cgal(tri2, testname + "/cgal");
-        std::cout << "write again..." << std::endl;	
+        std::cout << "write again..." << std::endl;
         ddt::write_cgal(tri1, testname + "/cgal2");
-	
+
         result += dump_2d_vrt(tri2, testname + "/tri2");
         if (Traits::D == 2)
         {
@@ -112,7 +112,7 @@ int test_traits(const std::string& testname, int ND, int NP, bool do_test_io = t
         auto finite_cell = tri1.cells_begin();
         for(auto cell = tri1.cells_begin(); cell != tri1.cells_end(); ++cell)
         {
-            if (cell->is_infinite()) continue;
+            if (tri1.is_infinite(cell)) continue;
             std::set<typename DDT::Cell_const_iterator> ring;
             tri1.get_ring(cell, 1, ring);
             finite_cell = cell;
@@ -125,7 +125,7 @@ int test_traits(const std::string& testname, int ND, int NP, bool do_test_io = t
             std::set<typename DDT::Cell_const_iterator> ring;
             tri1.get_ring(finite_cell, deg, ring);
             boost::filesystem::create_directories(testname + "/ring/");
-            write_vrt_cell_range(tri1, ring.begin(), ring.end(), testname + "/ring/" +std::to_string(deg)+".vrt");
+            // write_vrt_cell_range(tri1, ring.begin(), ring.end(), testname + "/ring/" +std::to_string(deg)+".vrt");
         }
     }
 
@@ -141,4 +141,3 @@ int test_traits(const std::string& testname, int ND, int NP, bool do_test_io = t
 }
 
 #endif // DDT_TEST_HPP
-

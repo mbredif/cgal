@@ -51,19 +51,10 @@ int main(int, char **)
     tri.finalize();
     assert(tri.is_valid());
 
-    boost::filesystem::path outdir("./test_DDT_out/");
-    boost::filesystem::create_directories(outdir);
-    ddt::write_vrt_vert(tri, outdir.string() + "DDT_vert.vrt");
-    ddt::write_vrt_facet(tri, outdir.string() + "DDT_facet.vrt");
-    ddt::write_vrt_cell(tri, outdir.string() + "DDT_cell.vrt");
-    ddt::write_vrt_verts(tri, outdir.string());
-    ddt::write_vrt_facets(tri, outdir.string());
-    ddt::write_vrt_cells(tri, outdir.string());
-
-
     for(auto vertex = tri.vertices_begin(); vertex != tri.vertices_end(); ++vertex)
     {
         assert(vertex.is_valid());
+        assert(tri.is_valid(vertex));
         assert(tri.is_main(vertex));
         assert(!tri.is_foreign(vertex));
         assert(!tri.is_infinite(vertex));
@@ -72,25 +63,27 @@ int main(int, char **)
 
     for(auto facet = tri.facets_begin(); facet != tri.facets_end(); ++facet)
     {
+        auto facet2 = tri.neighbor(facet);
+        auto cell   = tri.cell(facet);
+        auto cell2  = tri.cell(facet2);
         assert(facet.is_valid());
         assert(tri.is_main(facet));
-        assert(!tri.is_foreign(facet));
-        assert(tri.is_local(facet) || tri.is_mixed(facet));
-        assert(tri.main(tri.neighbor(tri.neighbor(facet))) == facet);
-        assert(tri.main(tri.neighbor(tri.main(tri.neighbor(facet)))) == facet);
-        assert(tri.cell(tri.neighbor(facet)) != tri.cell(facet));
-        assert(tri.cell(tri.main(tri.neighbor(facet))) != tri.main(tri.cell(facet)));
-        assert(tri.main(tri.neighbor(facet)) != facet);
-        assert(tri.index_of_covertex(tri.main(tri.neighbor(facet))) == tri.mirror_index(facet));
-        assert(tri.mirror_index(tri.neighbor(facet)) == tri.index_of_covertex(facet));
-        assert(tri.facet(tri.cell(facet), tri.index_of_covertex(facet)) == facet);
-        assert(tri.main(tri.cell(tri.neighbor(tri.neighbor(facet)))) == tri.main(tri.cell(facet)));
+        assert(tri.is_valid(facet));
+        assert(!tri.is_foreign(cell));
+        assert(tri.main(tri.neighbor(facet2)) == facet);
+        assert(cell2 != cell);
+        assert(facet2 != facet);
+        assert(tri.index_of_covertex(facet2) == tri.mirror_index(facet));
+        assert(tri.mirror_index(facet2) == tri.index_of_covertex(facet));
+        assert(tri.locate(tri.facet(cell, tri.index_of_covertex(facet)), tri.tile_id(facet)) == facet);
+        assert(tri.locate(tri.neighbor(cell2, tri.mirror_index(facet)), tri.tile_id(cell)) == cell);
     }
 
     int cid = 0;
     for(auto cell = tri.cells_begin(); cell != tri.cells_end(); ++cell, ++cid)
     {
         assert(cell.is_valid());
+        assert(tri.is_valid(cell));
         assert(tri.is_main(cell));
         assert(!tri.is_foreign(cell));
         for(int d = 0; d < 3; ++d)
@@ -107,6 +100,17 @@ int main(int, char **)
         tri.get_ring(cell, 1, ring);
         // write_vrt_cell_range(tri, ring.begin(), ring.end(), outdir.string() + std::to_string(cid) + "_ring.vrt");
     }
+
+
+    boost::filesystem::path outdir("./test_DDT_out/");
+    boost::filesystem::create_directories(outdir);
+    ddt::write_vrt_vert(tri, outdir.string() + "DDT_vert.vrt");
+    ddt::write_vrt_facet(tri, outdir.string() + "DDT_facet.vrt");
+    ddt::write_vrt_cell(tri, outdir.string() + "DDT_cell.vrt");
+    ddt::write_vrt_verts(tri, outdir.string());
+    ddt::write_vrt_facets(tri, outdir.string());
+    ddt::write_vrt_cells(tri, outdir.string());
+
 
     return 0;
 }

@@ -186,7 +186,7 @@ public:
 
     int cell_id(Cell_const_iterator c) const
     {
-        return std::distance(cells_begin(), c->main());
+        return std::distance(cells_begin(), c.main());
     }
 
     int insert_received_points(bool do_simplify=true) { return sch.for_each(tiles_begin(), tiles_end(), sch.insert_func(do_simplify)); }
@@ -391,6 +391,10 @@ public:
     bool is_local(const Facet_const_iterator&  f) const { return f.tile()->facet_is_local(f.facet()); }
     bool is_local(const Cell_const_iterator&   c) const { return c.tile()->cell_is_local(c.cell()); }
 
+    bool is_valid(const Vertex_const_iterator& v) const { return v.tile()->vertex_is_valid(v.vertex()); }
+    bool is_valid(const Facet_const_iterator&  f) const { return f.tile()->facet_is_valid(f.facet()); }
+    bool is_valid(const Cell_const_iterator&   c) const { return c.tile()->cell_is_valid(c.cell()); }
+
     // vertices are never mixed
     bool is_mixed(const Facet_const_iterator& f) const { return f.tile()->facet_is_mixed(f.facet()); }
     bool is_mixed(const Cell_const_iterator&  c) const { return c.tile()->cell_is_mixed(c.cell()); }
@@ -408,18 +412,18 @@ public:
     bool is_infinite(const Cell_const_iterator&   c) const { return c.tile()->cell_is_infinite(c.cell()); }
 
     Id main_id(const Vertex_const_iterator&v) const { return v.tile()->id(v.vertex()); }
-    Id main_id(const Facet_const_iterator& f) const { return f.tile()->main_id(f.facet()); }
-    Id main_id(const Cell_const_iterator&  c) const { return c.tile()->main_id(c.cell()); }
+    Id main_id(const Facet_const_iterator& f) const { return f.tile()->minimum_id(f.facet()); }
+    Id main_id(const Cell_const_iterator&  c) const { return c.tile()->minimum_id(c.cell()); }
 
     Id tile_id(const Vertex_const_iterator& v) const { return v.tile()->id(); }
     Id tile_id(const Facet_const_iterator&  f) const { return f.tile()->id(); }
     Id tile_id(const Cell_const_iterator&   c) const { return c.tile()->id(); }
 
     /// Main
-    Vertex_const_iterator main(const Vertex_const_iterator& v) const
+    Vertex_const_iterator locate(const Vertex_const_iterator& v, Id id) const
     {
-        Id id = main_id(v);
-        if (id == tile_id(v)) return v; // v is already main
+        assert(is_valid(v));
+        if (id == tile_id(v)) return v; // v is already in tile id
 
         // if (!is_loaded(id) ) load(id);
         Tile_const_iterator tile = get_tile(id);
@@ -428,10 +432,10 @@ public:
         return Vertex_const_iterator(tile, tiles_end(), vertex);
     }
 
-    Facet_const_iterator main(const Facet_const_iterator& f) const
+    Facet_const_iterator locate(const Facet_const_iterator& f, Id id) const
     {
-        Id id = main_id(f);
-        if (id == tile_id(f)) return f; // f is already main
+        assert(is_valid(f));
+        if (id == tile_id(f)) return f; // f is already in tile id
 
         Tile_const_iterator tile = get_tile(id);
         Tile_facet_const_iterator facet = tile->locate_facet(*(f.tile()), f.facet());
@@ -439,10 +443,10 @@ public:
         return Facet_const_iterator(tile, tiles_end(), facet);
     }
 
-    Cell_const_iterator main(const Cell_const_iterator& c) const
+    Cell_const_iterator locate(const Cell_const_iterator& c, Id id) const
     {
-        Id id = main_id(c);
-        if (id == tile_id(c)) return c; // c is already main
+        assert(is_valid(c));
+        if (id == tile_id(c)) return c; // c is already in tile id
 
         Tile_const_iterator tile = get_tile(id);
         Tile_cell_const_iterator cell = tile->locate_cell(*(c.tile()), c.cell());
@@ -450,86 +454,131 @@ public:
         return Cell_const_iterator(tile, tiles_end(), cell);
     }
 
-    /// Vertex iterator functions
+    inline Vertex_const_iterator main(const Vertex_const_iterator& v) const { return locate(v, main_id(v)); }
+    inline Facet_const_iterator main(const Facet_const_iterator& f) const { return locate(f, main_id(f)); }
+    inline Cell_const_iterator main(const Cell_const_iterator& c) const { return locate(c, main_id(c)); }
+
+    /// Access the ith vertex of the cell c.
+    /// Result is consistent over all representatives of cell c, as its main representative is looked up.
     Vertex_const_iterator vertex (const Cell_const_iterator& c, const int i) const
     {
+        assert(is_valid(c));
+        return local_vertex(main(c), i);
+    }
+
+    /// Retrieve the point embedding of the vertex.
+    /// This can be done locally without considering the main tile of the vertex, as point coordinates
+    /// are replicated in all tile.
+    const Point& point(Vertex_const_iterator v)
+    {
+        assert(is_valid(v));
+        return v.tile()->point(v.vertex());
+    }
+
+    /// @returns the neighbor (=twin/opposite) facet. This operation is performed locally and the resulting facet belong
+    /// to the same tile as the input facet.
+    /// Precondition: the facet f is valid (ie: at least one of the facet points, the covertex and the mirror vertex is local)
+    Facet_const_iterator neighbor(const Facet_const_iterator& f) const
+    {
+        assert(is_valid(f));
+        Tile_const_iterator tile = f.tile();
+        assert(tile->facet_is_valid(f.facet()));
+        return Facet_const_iterator(tile, tiles_end(), tile->neighbor(f.facet()));
+    }
+
+    // Access the mirror index of facet f, such that cell(neighbor(f), mirror_index)==cell(f)
+    /// The main version of f is considered, as indices may not be consistent across
+    /// the cell representatives of f and its neighbor in other tiles
+    inline int mirror_index(const Facet_const_iterator& f) const
+    {
+        assert(is_valid(f));
+        return index_of_covertex(neighbor(f));
+    }
+
+    /// @returns the full cell that is adjacent to the input facet f and that joins the covertex with the vertices of f
+    Cell_const_iterator cell(const Facet_const_iterator& f) const
+    {
+        assert(is_valid(f));
+        if (is_foreign(f)) return local_cell(main(f));
+        return local_cell(f);
+    }
+
+    /// @returns the index of the covertex
+    inline int index_of_covertex(const Facet_const_iterator& f) const
+    {
+        assert(is_valid(f));
+        Tile_const_iterator tile = f.tile();
+        Tile_cell_const_iterator c = tile->cell(f.facet());
+        if(tile->cell_is_main(c)) return local_index_of_covertex(f);
+        return local_index_of_covertex(locate(f, tile->minimum_id(c)));
+    }
+
+    /// Cell iterator functions
+    inline Facet_const_iterator facet(const Cell_const_iterator& c, int i) const
+    {
+        assert(is_valid(c));
+        return local_facet(main(c),i);
+    }
+
+    inline Cell_const_iterator neighbor(const Cell_const_iterator& c, int i) const
+    {
+        assert(is_valid(c));
+        return cell(neighbor(facet(c, i)));
+    }
+
+    inline int mirror_index(const Cell_const_iterator& c, int i) const
+    {
+        assert(is_valid(c));
+        return mirror_index(facet(c,i));
+    }
+
+    /// Access the ith vectex of the cell c in its local tile.
+    /// Advanced use: Access is local, thus more more effective, but the vertex index i corresponds
+    /// to the index in the local tile representative of cell c, which may not be consistent with
+    /// the one its in main representative.
+    Vertex_const_iterator local_vertex (const Cell_const_iterator& c, const int i) const
+    {
+        assert(is_valid(c));
         Tile_const_iterator tile = c.tile();
         return Vertex_const_iterator(tile, tiles_end(), tile->vertex(c.cell(), i));
     }
 
-    const Point& point(Vertex_const_iterator vertex)
+    inline int local_index_of_covertex(const Facet_const_iterator& f) const
     {
-        return vertex.tile()->point(vertex.vertex());
-    }
-
-    /// Facet iterator functions
-    Facet_const_iterator neighbor(const Facet_const_iterator& f) const
-    {
+        assert(is_valid(f));
         Tile_const_iterator tile = f.tile();
-        assert(tile != tiles_end());
-        int i = tile->index_of_covertex(f.facet());
-        Tile_cell_const_iterator c = tile->cell(f.facet());
-        Tile_cell_const_iterator n = tile->neighbor(c, i);
-
-        if (!tile->cell_is_foreign(n))
-            return Facet_const_iterator(tile, tiles_end(), tile->facet(n, tile->mirror_index(c,i)));
-
-        return neighbor(main(f));
-    }
-
-    inline int mirror_index(const Facet_const_iterator& f) const
-    {
-        return index_of_covertex(neighbor(main(f)));
-    }
-
-    inline Cell_const_iterator cell(const Facet_const_iterator& f) const
-    {
-        Tile_const_iterator tile = f.tile();
-        assert(tile != tiles_end());
-        return Cell_const_iterator(tile, tiles_end(), tile->cell(f.facet()));
-    }
-
-    inline int index_of_covertex(const Facet_const_iterator& f) const
-    {
-        Tile_const_iterator tile = f.tile();
-        assert(tile != tiles_end());
         return tile->index_of_covertex(f.facet());
     }
 
-    /// Cell iterator functions
-    Facet_const_iterator facet(const Cell_const_iterator& c, int i) const
+    Facet_const_iterator local_facet(const Cell_const_iterator& c, int i) const
     {
+        assert(is_valid(c));
         Tile_const_iterator tile = c.tile();
-        assert(tile != tiles_end());
         return Facet_const_iterator(tile, tiles_end(), tile->facet(c.cell(), i));
     }
 
-    Cell_const_iterator neighbor(const Cell_const_iterator& c, int i) const
+    inline int local_mirror_index(const Facet_const_iterator& f) const
     {
-        Tile_const_iterator tile = c.tile();
-        assert(tile != tiles_end());
-        Tile_cell_const_iterator tcell = c.cell()->neighbor(i);
-        if(!tile->cell_is_foreign(tcell))
-            return Cell_const_iterator(tile, tiles_end(), tcell);
-        // there is no representative of the neighbor in tile
-        return cell(neighbor(main(facet(c, i))));
+        assert(is_valid(f));
+        Tile_const_iterator tile = f.tile();
+        Tile_cell_const_iterator c = tile->cell(f.facet());
+        assert(!tile->cell_is_foreign(c));
+        return tile->mirror_index(c,tile->index_of_covertex(f.facet()));
     }
 
-    int mirror_index(const Cell_const_iterator& c, int i) const
+    /// @returns the full cell that is adjacent to the input facet f and that joins the covertex with the vertices of f
+    Cell_const_iterator local_cell(const Facet_const_iterator& f) const
     {
-        Tile_const_iterator tile = c.tile();
-        assert(tile != tiles_end());
-        Tile_cell_const_iterator cell = tile->neighbor(c.cell(), i);
-        if(!tile->cell_is_foreign(cell))
-            return tile->mirror_index(c.cell(), i);
-        return mirror_index(main(facet(c,i)));
+        assert(is_valid(f));
+        Tile_const_iterator tile = f.tile();
+        Tile_cell_const_iterator c = tile->cell(f.facet());
+        assert(!tile->cell_is_foreign(c));
+        return Cell_const_iterator(tile, tiles_end(), c);
     }
-
 
 private:
 
     Tile_container tiles; /// loaded tiles
-    //Tile_id_set tile_ids; /// selected tiles (loaded/unloaded automatically)
     Scheduler sch;
     Serializer serializer;
     size_t number_of_vertices_;

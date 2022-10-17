@@ -237,6 +237,24 @@ struct Cgal_traits_d
         return f->first;
     }
 
+    inline Vertex_const_handle covertex(const Delaunay_triangulation& dt, Facet_const_handle f) const
+    {
+        return vertex(dt, f->first, f->second);
+    }
+
+    inline Vertex_const_handle mirror_vertex(const Delaunay_triangulation& dt, Facet_const_handle f) const
+    {
+        Cell_const_iterator c = f->first;
+        return vertex(dt, c->neighbor(f->second), c->mirror_index(f->second));
+    }
+
+    Facet_const_handle neighbor(const Delaunay_triangulation& dt, Facet_const_handle f) const
+    {
+        Cell_const_iterator c = f->first;
+        Facet g(c->neighbor(f->second), c->mirror_index(f->second));
+        return Facet_const_iterator(dt.tds(), g);
+    }
+
     inline int mirror_index(const Delaunay_triangulation& dt, Cell_const_handle c, int i) const
     {
         return c->mirror_index(i);

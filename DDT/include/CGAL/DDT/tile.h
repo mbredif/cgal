@@ -90,9 +90,9 @@ public:
     inline Id    id  (Vertex_const_handle v) const { assert(!vertex_is_infinite(v)); return traits.id  (v); }
     inline Flag& flag(Vertex_const_handle v) const { assert(!vertex_is_infinite(v)); return traits.flag(v); }
 
-    Id    main_id(Cell_const_handle c) const
+    Id minimum_id(Cell_const_handle c) const
     {
-        bool first = true;
+        bool valid = false;
         Id mid = 0;
         int D = current_dimension();
         for(int i=0; i<=D; ++i)
@@ -100,18 +100,18 @@ public:
             Vertex_const_handle v = vertex(c, i);
             if(vertex_is_infinite(v)) continue;
             Id vid = id(v);
-            if (first || vid < mid) { mid = vid; first = false; }
+            if (!valid || vid < mid) { mid = vid; valid = true; }
         }
-        assert(!first);
+        assert(valid);
         return mid;
     }
 
-    Id main_id(const Facet_const_iterator& f) const
+    Id minimum_id(const Facet_const_iterator& f) const
     {
-        bool first = true;
-        Id mid = 0;
         int cid = index_of_covertex(f);
         Cell_const_handle c = cell(f);
+        bool valid = false;
+        Id mid = 0;
         int D = current_dimension();
         for(int i=0; i<=D; ++i)
         {
@@ -119,9 +119,9 @@ public:
             Vertex_const_handle v = vertex(c, i);
             if (vertex_is_infinite(v)) continue;
             Id vid = id(v);
-            if (first || vid < mid) { mid = vid; first = false; }
+            if (!valid || vid < mid) { mid = vid; valid = true; }
         }
-        assert(!first);
+        assert(valid);
         return mid;
     }
 
@@ -137,9 +137,16 @@ public:
     inline bool facet_is_infinite (Facet_const_handle  f) const { return traits.facet_is_infinite (dt_, f); }
     inline bool cell_is_infinite  (Cell_const_handle   c) const { return traits.cell_is_infinite  (dt_, c); }
 
+    inline bool vertex_is_valid(Vertex_const_handle v) const { return !vertex_is_infinite(v); }
+    inline bool facet_is_valid(Facet_const_handle f) const { return !cell_is_foreign(cell(f)) || !vertex_is_foreign(mirror_vertex(f)); }
+    inline bool cell_is_valid(Cell_const_handle c) const { return !cell_is_foreign(c); }
+
     // Facet functions
     inline int index_of_covertex(Facet_const_handle f) const { return traits.index_of_covertex(dt_, f); }
+    inline Vertex_const_handle covertex(Facet_const_handle f) const { return traits.covertex(dt_, f); }
+    inline Vertex_const_handle mirror_vertex(Facet_const_handle f) const { return traits.mirror_vertex(dt_, f); }
     inline Cell_const_handle cell(Facet_const_handle f) const { return traits.cell(dt_, f); }
+    inline Facet_const_handle neighbor(Facet_const_handle f) const { return traits.neighbor(dt_, f); }
 
     // Cell functions
     inline Vertex_const_handle vertex(Cell_const_handle c, int i) const { return traits.vertex(dt_, c, i); }
@@ -288,38 +295,6 @@ public:
 
     template<typename F>
     bool facet_is_main(F f) const
-    {
-        return facet_is_main_c2(f);
-    }
-
-    template<typename F>
-    bool facet_is_main_c2(F f) const
-    {
-        int icv = index_of_covertex(f);
-        auto c1 = cell(f);
-        auto c2 = neighbor(c1,icv);
-        std::vector<int> lid;
-        for(int i=0; i<=current_dimension(); ++i)
-        {
-            if (i == icv) continue;
-            auto v = vertex(c1,i);
-            if (vertex_is_infinite(v)) continue;
-            Id vid = id(v);
-            lid.push_back(vid);
-        }
-        std::sort(lid.begin(),lid.end());
-        for(uint i=0; i < lid.size(); ++i)
-        {
-            int vid = lid[i];
-            if(!cell_is_foreign_in_tile(c1,vid) && !cell_is_foreign_in_tile(c2,vid))
-                return vid == id();
-        }
-        return false;
-    }
-
-
-    template<typename F>
-    bool facet_is_main_c1(F f) const
     {
         int icv = index_of_covertex(f);
         auto c = cell(f);
@@ -627,10 +602,12 @@ public:
 
     Facet_const_handle locate_facet(const Tile& t, Facet_const_handle f) const
     {
-        assert(!t.cell_is_foreign(t.cell(f)));
-        Cell_const_handle c = cell(f);
+        assert(t.facet_is_valid(f));
+        Cell_const_handle c = t.cell(f);
+        if(t.cell_is_foreign(c)) return neighbor(locate_facet(t, t.neighbor(f)));
+        assert(!t.cell_is_foreign(c));
         Cell_const_handle d = locate_cell(t, c);
-        Vertex_const_handle v = vertex(c, index_of_covertex(f));
+        Vertex_const_handle v = t.vertex(c, t.index_of_covertex(f));
         for(int i=0; i<=current_dimension(); ++i)
         {
             if(traits.are_vertices_equal(t.dt_, v, dt_, vertex(d, i)))

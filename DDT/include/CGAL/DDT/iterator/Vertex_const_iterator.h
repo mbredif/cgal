@@ -40,8 +40,6 @@ public:
     {
         if(tile_ != end_)
         {
-            // if(!ddt_.is_loaded(*id_)) ddt_.load(*id_);
-            // tile_ = ((const DDT&)(ddt_)).get_tile(*id_); /// @todo constness
             vertex_ = tile_->vertices_begin();
             advance_to_main();
         }
@@ -88,7 +86,6 @@ public:
 
     Vertex_const_iterator& operator++()
     {
-        //assert(id_ != ddt_.tile_ids_end());
         ++vertex_;
         return advance_to_main();
     }
@@ -102,7 +99,6 @@ public:
 
     Vertex_const_iterator& operator+=(int n)
     {
-        //assert(id_ != ddt_.tile_ids_end());
         for(auto vit = tile_->vertices_begin(); vit != vertex_; ++vit)
             if(tile_->vertex_is_main(vit))
                 ++n;
