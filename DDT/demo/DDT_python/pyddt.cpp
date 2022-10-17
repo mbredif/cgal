@@ -173,44 +173,43 @@ private:
 public:
     py_DDT(int n_threads=0) : DDT(n_threads) {}
 
-    boost::python::tuple vertex(int id) const
+    boost::python::tuple py_vertex(int id) const
     {
-        Vertex_const_iterator vit = vertices_begin();
-        vit += id;
-        Tile_vertex_const_handle v = vit.vertex();
-        Tile_const_iterator tile = vit.tile();
-        Point p = v->point();
-        return boost::python::make_tuple(p[0], p[1], tile->id(v));
+        Vertex_const_iterator v = vertices_begin();
+        v += id;
+        Point p = point(v);
+        return boost::python::make_tuple(p[0], p[1], tile_id(v));
     }
 
-    boost::python::tuple cell(int id) const
+    boost::python::tuple py_cell(int id) const
     {
-        Cell_const_iterator cit = cells_begin();
-        cit += id;
-        Tile_const_iterator tile = cit.tile();
+        Cell_const_iterator c = cells_begin();
+        c += id;
+        Tile_const_iterator tile = c.tile();
         std::vector<int> vid;
         assert(tile->current_dimension() == 2);
         for(int d = 0; d <= tile->current_dimension(); d++)
         {
-            Vertex_const_iterator vit = cit->vertex(d)->main();
+            Vertex_const_iterator vit = main(vertex(c, d));
             vid.push_back(vertex_id(vit));
         }
 
         return boost::python::make_tuple(vid[0], vid[1], vid[2]);
     }
 
-    void write_vrt_ring(int id, int deg)
-    {
-        auto c = cells_begin();
-        c += id;
-        std::string filename(std::string("./vrt/ring_") +
-                             std::to_string(id)+ "_" + std::to_string(deg) +
-                             std::string(".vrt"));
+//    void write_vrt_ring(int id, int deg)
+//    {
+//        auto c = cells_begin();
+//        c += id;
+//        std::string filename(std::string("./vrt/ring_") +
+//                             std::to_string(id)+ "_" + std::to_string(deg) +
+//                             std::string(".vrt"));
 
-        std::set<Cell_const_iterator> lnb;
-        get_ring(c, deg, lnb);
-        write_vrt_cell_range(lnb.begin(), lnb.end(), filename);
-    }
+//        std::set<Cell_const_iterator> lnb;
+//        get_ring(c, deg, lnb);
+//        write_vrt_cell_range(lnb.begin(), lnb.end(), filename);
+//    }
+
 };
 
 #include <CGAL/DDT/partitioner/const_partitioner.h>
@@ -262,16 +261,16 @@ BOOST_PYTHON_MODULE(pyddt)
 
     py_DDT::Tile_const_iterator (py_DDT::*DDT_tiles_begin)() const = &py_DDT::tiles_begin;
     py_DDT::Tile_const_iterator (py_DDT::*DDT_tiles_end)()   const = &py_DDT::tiles_end;
+    bool (py_DDT::*DDT_is_valid)()   const = &py_DDT::is_valid;
 
     class_<py_DDT>("DDT", init<int>())
-    .def("clear", &py_DDT::clear)
     .def("send_points", &send_points<py_point_iterator, list, Random_partitioner>)
     .def("send_points", &send_points<py_point_iterator, list, Grid_partitioner>)
     .def("send_points", &py_DDT::send_points<Random_points, Random_partitioner>)
     .def("send_points", &py_DDT::send_points<Random_points, Grid_partitioner>)
-    .def("insert_received_points", &py_DDT::insert_received_points)
-    .def("send_all_bbox_points", &py_DDT::send_all_bbox_points)
-    .def("splay_stars", &py_DDT::splay_stars)
+    //.def("insert_received_points", &py_DDT::insert_received_points)
+    //.def("send_all_bbox_points", &py_DDT::send_all_bbox_points)
+    //.def("splay_stars", &py_DDT::splay_stars)
     .def("read_cgal", &ddt::read_cgal<py_DDT>)
     .def("write_ply", &ddt::write_ply<py_DDT>)
     .def("write_cgal", &ddt::write_cgal<py_DDT>)
@@ -285,16 +284,16 @@ BOOST_PYTHON_MODULE(pyddt)
     .def("write_vrt_tin", &ddt::write_vrt_tin<py_DDT>)
     .def("write_json_tri",&ddt::write_geojson_tri<py_DDT>)
     .def("write_adjacency_graph_dot", &ddt::write_adjacency_graph_dot<py_DDT>)
-    .def("write_vrt_ring", &py_DDT::write_vrt_ring)
+//    .def("write_vrt_ring", &py_DDT::write_vrt_ring)
     .def("number_of_cells", &py_DDT::number_of_cells)
     .def("number_of_vertices", &py_DDT::number_of_vertices)
     .def("number_of_facets", &py_DDT::number_of_facets)
     .def("is_adjacency_graph_symmetric", &py_DDT::is_adjacency_graph_symmetric)
     .def("tiles", range(DDT_tiles_begin, DDT_tiles_end))
-    .def("cells", range(&py_DDT::cells_begin,&py_DDT::cells_end))
-    .def("vertex", &py_DDT::vertex)
-    .def("cell", &py_DDT::cell)
-    .def("is_valid", &py_DDT::is_valid)
+    // .def("cells", range(&py_DDT::cells_begin,&py_DDT::cells_end)) // Cell_iterator::operator* does not exist
+    .def("vertex", &py_DDT::py_vertex)
+    .def("cell", &py_DDT::py_cell)
+    .def("is_valid", DDT_is_valid)
     .def("finalize", &py_DDT::finalize)
     ;
 

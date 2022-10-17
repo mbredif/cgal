@@ -181,12 +181,12 @@ public:
     int vertex_id(Vertex_const_iterator v) const
     {
         if (is_infinite(v)) return -1;
-        return std::distance(vertices_begin(), v.main());
+        return std::distance(vertices_begin(), main(v));
     }
 
     int cell_id(Cell_const_iterator c) const
     {
-        return std::distance(cells_begin(), c.main());
+        return std::distance(cells_begin(), main(c));
     }
 
     int insert_received_points(bool do_simplify=true) { return sch.for_each(tiles_begin(), tiles_end(), sch.insert_func(do_simplify)); }
@@ -469,7 +469,7 @@ public:
     /// Retrieve the point embedding of the vertex.
     /// This can be done locally without considering the main tile of the vertex, as point coordinates
     /// are replicated in all tile.
-    const Point& point(Vertex_const_iterator v)
+    const Point& point(Vertex_const_iterator v) const
     {
         assert(is_valid(v));
         return v.tile()->point(v.vertex());
