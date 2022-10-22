@@ -3,14 +3,14 @@
 \ingroup PkgDDTConcepts
 \cgalConcept
 
-The concept `TileContainer` describes the requirements for the
+The concept `PointIdRange` describes the requirements for the
 ...
 
 \cgalHasModel `ddt::DDT`
 
 */
 
-class TileContainer {
+class PointIdRange {
 public:
 
 /// \name Types
@@ -20,7 +20,7 @@ public:
     Must be the same as the point type `TriangulationTraits_2::Point_2`
     defined by the geometric traits class of the triangulation.
     */
-    typedef unspecified_type Tile;
+    typedef unspecified_type Point;
 
     /*!
     Must be the same as the point type `TriangulationTraits_2::Point_2`

@@ -3,14 +3,14 @@
 \ingroup PkgDDTConcepts
 \cgalConcept
 
-The concept `TileContainer` describes the requirements for the
+The concept `Scheduler` describes the requirements for the
 ...
 
 \cgalHasModel `ddt::DDT`
 
 */
 
-class TileContainer {
+class Scheduler {
 public:
 
 /// \name Types
