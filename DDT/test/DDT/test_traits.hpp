@@ -9,6 +9,7 @@
 #include <CGAL/DDT/scheduler.h>
 #include <CGAL/DDT/serializer/file_serializer.h>
 #include <CGAL/DDT.h>
+#include <CGAL/DDT/distributed_Delaunay_triangulation.h>
 
 template <typename T>
 int dump_2d_vrt(T & tri,const std::string& testname)
@@ -48,7 +49,7 @@ int test_traits(const std::string& testname, int ND, int NP, bool do_test_io = t
     typedef ddt::Tile<Traits> Tile;
     typedef ddt::Scheduler<Tile> Scheduler;
     typedef ddt::File_Serializer<Id,Tile> Serializer;
-    typedef ddt::DDT<Traits, Scheduler, Serializer> DDT;
+    typedef ddt::DDT<Traits, Serializer> DDT;
     typedef ddt::grid_partitioner<Traits> Partitioner;
     typedef typename Traits::Random_points_in_box Random_points;
 
@@ -59,11 +60,8 @@ int test_traits(const std::string& testname, int ND, int NP, bool do_test_io = t
     Partitioner partitioner(bbox, ND);
     Serializer serializer;
     DDT tri1(serializer);
-    tri1.send_points(points, NP, partitioner);
-    tri1.insert_received_points();
-    tri1.send_all_bbox_points();
-    tri1.splay_stars();
-    tri1.finalize();
+    Scheduler scheduler;
+    CGAL::ddt::insert(tri1, scheduler, points, NP, partitioner);
     if(!tri1.is_valid())
     {
         std::cerr << "tri is not valid" << std::endl;

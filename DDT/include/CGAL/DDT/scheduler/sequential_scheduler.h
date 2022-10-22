@@ -28,7 +28,7 @@ struct sequential_scheduler
     typedef typename Tile::Point Point;
     typedef typename Tile::Id Id;
 
-    sequential_scheduler(int /*unused*/) {}
+    sequential_scheduler(int /*unused*/ = 0) {}
     inline int number_of_threads() const
     {
         return 1;

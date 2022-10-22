@@ -12,11 +12,13 @@ size_t local_insert_received(TileContainer& tc, Scheduler& sch, bool do_simplify
 
 template<typename TileContainer, typename Scheduler>
 size_t send_all_bbox_points(TileContainer& tc, Scheduler& sch)       {
+    typedef typename TileContainer::Tile Tile;
     return sch.for_each(tc, sch.send_all_func(tc.tile_ids_begin(), tc.tile_ids_end(), &Tile::get_bbox_points), true);
 }
 
 template<typename TileContainer, typename Scheduler>
 size_t splay_stars(TileContainer& tc, Scheduler& sch)       {
+    typedef typename TileContainer::Tile Tile;
     return sch.for_each_rec(tc, sch.splay_func(&Tile::get_neighbors));
 }
 

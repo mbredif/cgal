@@ -126,7 +126,7 @@ public:
         return D;
     }
 
-    DDT(const Serializer& serializer, int n_threads=0) :
+    DDT(Serializer& serializer) :
         tiles(),
         serializer(serializer),
         number_of_vertices_(0),
@@ -135,7 +135,7 @@ public:
     {
     }
 
-    DDT(const DDT& ddt) :
+/*    DDT(const DDT& ddt) :
         tiles(ddt.tiles),
         serializer(ddt.serializer),
         number_of_vertices_(ddt.number_of_vertices_),
@@ -143,7 +143,7 @@ public:
         number_of_cells_   (ddt.number_of_cells_   )
     {
     }
-
+*/
     inline size_t number_of_cells   () const { return number_of_cells_;    }
     inline size_t number_of_vertices() const { return number_of_vertices_; }
     inline size_t number_of_facets  () const { return number_of_facets_;   }
@@ -569,7 +569,7 @@ private:
 
     // tile container
     Tile_container tiles; /// loaded tiles
-    Serializer serializer;
+    Serializer& serializer;
 
 
     size_t number_of_vertices_;

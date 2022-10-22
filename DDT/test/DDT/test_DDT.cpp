@@ -12,6 +12,7 @@ typedef ddt::Cgal_traits<2,Id,Flag> Traits;
 #include <CGAL/DDT/scheduler.h>
 #include <CGAL/DDT/partitioner/grid_partitioner.h>
 #include <CGAL/DDT/IO/write_vrt.h>
+#include <CGAL/DDT/distributed_Delaunay_triangulation.h>
 
 typedef ddt::Tile<Traits> Tile;
 typedef ddt::Scheduler<Tile> Scheduler;
@@ -19,7 +20,7 @@ typedef ddt::grid_partitioner<Traits> Partitioner;
 #include <CGAL/DDT/serializer/file_serializer.h>
 typedef ddt::File_Serializer<Id,Tile> Serializer;
 
-typedef ddt::DDT<Traits, Scheduler, Serializer> DDT;
+typedef ddt::DDT<Traits, Serializer> DDT;
 typedef Traits::Point Point;
 
 int main(int, char **)
@@ -44,11 +45,8 @@ int main(int, char **)
     Partitioner partitioner(bbox, ND, ND+Traits::D);
     Serializer serializer;
     DDT tri(serializer);
-    tri.send_points(points.begin(), points.size(), partitioner);
-    tri.insert_received_points();
-    tri.send_all_bbox_points();
-    tri.splay_stars();
-    tri.finalize();
+    Scheduler scheduler;
+    CGAL::ddt::insert(tri, scheduler, points.begin(), points.size(), partitioner);
     assert(tri.is_valid());
 
     for(auto vertex = tri.vertices_begin(); vertex != tri.vertices_end(); ++vertex)
@@ -94,7 +92,7 @@ int main(int, char **)
             assert(cell != tri.main(celld));
             assert(tri.main(celld) != tri.cells_end());
             assert(tri.is_main(tri.main(celld)));
-            assert(tri.main(tri.neighbor(celld, tri.mirror_index(cell, d))) == cell);
+            assert(tri.main(tri.neighbor(celld, tri.mirror_index(cell, d))) == cell); /// @todo change ==
         }
         std::set<typename DDT::Cell_const_iterator> ring;
         tri.get_ring(cell, 1, ring);
