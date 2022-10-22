@@ -81,7 +81,7 @@ public:
     Mapped_iterator operator++(int) { return Map_iterator::operator++(0); }
 };
 
-template<typename _Traits, typename Scheduler, typename Serializer, typename _Tile = ddt::Tile<_Traits>>
+template<typename _Traits, typename Serializer, typename _Tile = ddt::Tile<_Traits>>
 class DDT
 {
 public:
@@ -128,7 +128,6 @@ public:
 
     DDT(const Serializer& serializer, int n_threads=0) :
         tiles(),
-        sch(n_threads),
         serializer(serializer),
         number_of_vertices_(0),
         number_of_facets_  (0),
@@ -138,7 +137,6 @@ public:
 
     DDT(const DDT& ddt) :
         tiles(ddt.tiles),
-        sch(ddt.sch.number_of_threads()),
         serializer(ddt.serializer),
         number_of_vertices_(ddt.number_of_vertices_),
         number_of_facets_  (ddt.number_of_facets_  ),
@@ -150,7 +148,6 @@ public:
     inline size_t number_of_vertices() const { return number_of_vertices_; }
     inline size_t number_of_facets  () const { return number_of_facets_;   }
     inline size_t number_of_tiles   () const { return tiles.size();   }
-    inline size_t number_of_threads () const { return sch.number_of_threads(); }
 
     /// non-const because of automatic loading/unloading
     Vertex_const_iterator vertices_begin() const { return Vertex_const_iterator(tiles_begin(), tiles_end()); }
@@ -189,10 +186,6 @@ public:
         return std::distance(cells_begin(), main(c));
     }
 
-    int insert_received_points(bool do_simplify=true) { return sch.for_each(tiles_begin(), tiles_end(), sch.insert_func(do_simplify)); }
-    int send_all_bbox_points()       { return sch.for_each(tiles_begin(), tiles_end(), sch.send_all_func(tile_ids_begin(), tile_ids_end(), &Tile::get_bbox_points)); }
-    int splay_stars()       { return sch.for_each_rec(tiles_begin(), tiles_end(), sch.splay_func(&Tile::get_neighbors)); }
-
     void init(Id id)
     {
         tiles.emplace(id, id);
@@ -215,19 +208,6 @@ public:
     void save(Id id)
     {
         serializer.save(tiles[id]);
-    }
-
-    template<typename Iterator, typename Partitioner>
-    void send_points(Iterator it, int count, Partitioner& part)
-    {
-        for(; count; --count, ++it)
-        {
-            Point p(*it);
-            int id = part(p);
-            if (tiles.find(id) == tiles.end())
-                init(id);
-            sch.send(p,id);
-        }
     }
 
     void get_adjacency_graph(std::unordered_multimap<Id,Id>& edges) const
@@ -391,9 +371,9 @@ public:
     bool is_local(const Facet_const_iterator&  f) const { return f.tile()->facet_is_local(f.facet()); }
     bool is_local(const Cell_const_iterator&   c) const { return c.tile()->cell_is_local(c.cell()); }
 
-    bool is_valid(const Vertex_const_iterator& v) const { return v.tile()->vertex_is_valid(v.vertex()); }
-    bool is_valid(const Facet_const_iterator&  f) const { return f.tile()->facet_is_valid(f.facet()); }
-    bool is_valid(const Cell_const_iterator&   c) const { return c.tile()->cell_is_valid(c.cell()); }
+    bool is_valid(const Vertex_const_iterator& v) const { return v.tile()->vertex_is_valid(v.vertex()); } // + tile toujours chargée ?
+    bool is_valid(const Facet_const_iterator&  f) const { return f.tile()->facet_is_valid(f.facet()); } // + tile toujours chargée ?
+    bool is_valid(const Cell_const_iterator&   c) const { return c.tile()->cell_is_valid(c.cell()); } // + tile toujours chargée ?
 
     // vertices are never mixed
     bool is_mixed(const Facet_const_iterator& f) const { return f.tile()->facet_is_mixed(f.facet()); }
@@ -457,6 +437,15 @@ public:
     inline Vertex_const_iterator main(const Vertex_const_iterator& v) const { return locate(v, main_id(v)); }
     inline Facet_const_iterator main(const Facet_const_iterator& f) const { return locate(f, main_id(f)); }
     inline Cell_const_iterator main(const Cell_const_iterator& c) const { return locate(c, main_id(c)); }
+
+
+    // mirror_vertex(facet)  absent
+    // mirror_index(facet) ok
+    // mirror_facet(facet) <- neighbor(facet)
+
+    // c1 == c2 ? global, représente la meme tuile : main(c1)==main(c2)
+
+    // attention à la perennité des handles (tile is possibly unloaded), ou alors lock ou shared pointer.
 
     /// Access the ith vertex of the cell c.
     /// Result is consistent over all representatives of cell c, as its main representative is looked up.
@@ -578,9 +567,11 @@ public:
 
 private:
 
+    // tile container
     Tile_container tiles; /// loaded tiles
-    Scheduler sch;
     Serializer serializer;
+
+
     size_t number_of_vertices_;
     size_t number_of_facets_;
     size_t number_of_cells_;

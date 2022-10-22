@@ -99,64 +99,68 @@ struct tbb_scheduler
         };
     }
 
-    template<typename Tile_iterator>
-    int for_each(Tile_iterator begin, Tile_iterator end, const std::function<int(Tile&, bool)>& func, bool skip_tiles_receiving_no_points=false)
+    template<typename TileContainer>
+    int for_each(TileContainer& tc, const std::function<int(Tile&, bool)>& func, bool all_tiles)
     {
-        std::vector<std::reference_wrapper<Tile>> tiles(begin, end);
-
+        std::vector<Id> ids;
+        if (all_tiles) {
+            ids.assign(tc.tile_ids_begin(), tc.tile_ids_end());
+        } else {
+            for(auto it : inbox) {
+                if (!it.second.empty()) {
+                    Id id = it.first;
+                    ids.push_back(id);
+                    if(!tc.is_loaded(id)) tc.init(id); /// @todo : load !
+                }
+            }
+        }
         int count = tbb::parallel_reduce(
-              tbb::blocked_range<int>(0,tiles.size()),
+              tbb::blocked_range<int>(0,ids.size()),
               0,
               [&](tbb::blocked_range<int> r, double running_total)
               {
                   int c = 0;
                   for (int i=r.begin(); i<r.end(); ++i)
                   {
-                      c+=func(tiles[i].get(), false);
+                      c+=func(*(tc.get_tile(ids[i])), false);
                   }
                   return c;
               }, std::plus<int>() );
         return count;
     }
-    /*
-        // barrier between each epoch
-        template<typename Tile_iterator>
-        int for_each_rec(Tile_iterator begin, Tile_iterator end, const std::function<int(Tile&, bool)>& func)
-        {
-            int count = for_each(begin, end, func), c;
-            while((c = for_each(begin, end, func, true)))
-                count += c;
-            return count;
-        }
-    */
 
     // no barrier between each epoch, busy tiles are skipped
-    template<typename Tile_iterator>
-    int for_each_rec(Tile_iterator begin, Tile_iterator end, const std::function<int(Tile&, bool)>& func)
+    template<typename TileContainer>
+    int for_each_rec(TileContainer& tc, const std::function<int(Tile&, bool)>& func)
     {
-        if (begin == end) return 0;
-        std::vector<std::reference_wrapper<Tile>> tiles(begin, end);
 
-        int count = 0;
-        int checkcount = 0;
+        int count = 0, c = 0;
         do{
-              int checkcount = tbb::parallel_reduce(
-              tbb::blocked_range<int>(0,tiles.size()),
-              0,
-              [&](tbb::blocked_range<int> r, double running_total)
+          std::vector<Id> ids;
+          for(auto it : inbox) {
+              if (!it.second.empty()) {
+                  Id id = it.first;
+                  ids.push_back(id);
+                  if(!tc.is_loaded(id)) tc.init(id); /// @todo : load !
+              }
+          }
+          c = tbb::parallel_reduce(
+          tbb::blocked_range<int>(0,ids.size()),
+          0,
+          [&](tbb::blocked_range<int> r, double running_total)
+          {
+              int c = 0;
+              for (int i=r.begin(); i<r.end(); ++i)
               {
-                  int c = 0;
-                  for (int i=r.begin(); i<r.end(); ++i)
-                  {
-                      c+=func(tiles[i].get(), false);
-                  }
-                  return c;
-              }, std::plus<int>() );
-              count += checkcount;
-        } while (checkcount!=0);
-
+                  c+=func(*(tc.get_tile(ids[i])), false);
+              }
+              return c;
+          }, std::plus<int>() );
+          count += c;
+        } while (c!=0);
         return count;
     }
+
 private:
     std::map<Id, tbb::concurrent_vector<Point_id_source>> inbox;
     int n_threads; // SL: useful?

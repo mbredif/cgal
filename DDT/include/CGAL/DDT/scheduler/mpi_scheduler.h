@@ -163,32 +163,46 @@ struct mpi_scheduler
         };
     }
 
-    template<typename Tile_iterator>
-    int for_each(Tile_iterator begin, Tile_iterator end, const std::function<int(Tile&, bool)>& func, bool skip_tiles_receiving_no_points=false)
+    template<typename TileContainer>
+    int for_each(TileContainer& tc, const std::function<int(Tile&, bool)>& func, bool all_tiles)
     {
         send_all_to_all();
-        int count = 0;
-        for(Tile_iterator it = begin; it != end; ++it)
-            count += func(*it, skip_tiles_receiving_no_points);
-        return count;
-    }
-    // cycles indefinitely, and stops when the last N tiles reported a count of 0
-    template<typename Tile_iterator>
-    int for_each_rec(Tile_iterator begin, Tile_iterator end, const std::function<int(Tile&, bool)>& func)
-    {
-        int count = for_each(begin, end, func, false), c;
-        do {
-            Tile_iterator itend = end;
-            for(Tile_iterator it = begin; it != itend; ++it)
-            {
-                if (it == end) it = begin;
-                if((c = func(*it, true)))
-                {
-                    count += c;
-                    itend = it;
+
+        std::vector<Id> ids;
+        if (all_tiles) {
+            ids.assign(tc.tile_ids_begin(), tc.tile_ids_end());
+        } else {
+            for(const auto& it : inbox) {
+                if (!it.second.empty()) {
+                    Id id = it.first;
+                    ids.push_back(id);
+                    if(!tc.is_loaded(id)) tc.init(id); /// @todo : load !
                 }
             }
-        } while (send_all_to_all() > 0);
+        }
+        int count = 0;
+        for(Id id : ids)
+            count += func(*(tc.get_tile(id)), false);
+        return count;
+    }
+
+    // cycles indefinitely, and stops when the last N tiles reported a count of 0
+    template<typename TileContainer>
+    int for_each_rec(TileContainer& tc, const std::function<int(Tile&, bool)>& func)
+    {
+        int count = 0;
+        do {
+            int c = 0;
+            do {
+                c = 0;
+                for(const auto& it : inbox) {
+                    Id id = it.first;
+                    if (!it.second.empty() && rank(id) == world_rank)
+                        c += func(*(tc.get_tile(id)), false);
+                }
+                count += c;
+            } while (c != 0);
+        } while (send_all_to_all() != 0);
         return count;
     }
 
@@ -236,7 +250,7 @@ struct mpi_scheduler
         // compute sendcounts
         std::vector<int> sendcounts(world_size, 0);
         int max_count = 0;
-        for(auto it : inbox)
+        for(const auto& it : inbox)
         {
             int r = rank(it.first);
             if(r == world_rank) continue; // local, no need to communicate !

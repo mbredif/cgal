@@ -72,40 +72,36 @@ struct sequential_scheduler
         };
     }
 
-    template<typename Tile_iterator>
-    int for_each(Tile_iterator begin, Tile_iterator end, const std::function<int(Tile&, bool)>& func, bool skip_tiles_receiving_no_points=false)
+    template<typename TileContainer>
+    int for_each(TileContainer& tc, const std::function<int(Tile&, bool)>& func, bool all_tiles)
     {
-        int count = 0;
-        for(Tile_iterator it = begin; it != end; ++it)
-            count += func(*it, skip_tiles_receiving_no_points);
-        return count;
-    }
-    /*
-        // stops only after processing entire all tiles an equal amount of iterations
-        template<typename Tile_iterator>
-        int for_each_rec(Tile_iterator begin, Tile_iterator end, const std::function<int(Tile&, bool)>& func)
-        {
-            int count = for_each(begin, end, func, false), c;
-            while((c = for_each(begin, end, func, true)))
-                count += c;
-            return count;
-        }
-    */
-    // cycles indefinitely, and stops when the last N tiles reported a count of 0
-    template<typename Tile_iterator>
-    int for_each_rec(Tile_iterator begin, Tile_iterator end, const std::function<int(Tile&, bool)>& func)
-    {
-        int count = for_each(begin, end, func, false), c;
-        Tile_iterator itend = end;
-        for(Tile_iterator it = begin; it != itend; ++it)
-        {
-            if (it == end) it = begin;
-            if((c = func(*it, true)))
-            {
-                count += c;
-                itend = it;
+        std::vector<Id> ids;
+        if (all_tiles) {
+            ids.assign(tc.tile_ids_begin(), tc.tile_ids_end());
+        } else {
+            for(auto it : inbox) {
+                if (!it.second.empty()) {
+                    Id id = it.first;
+                    ids.push_back(id);
+                    if(!tc.is_loaded(id)) tc.init(id); /// @todo : load !
+                }
             }
         }
+        int count = 0;
+        for(Id id : ids)
+            count += func(*(tc.get_tile(id)), false);
+        return count;
+    }
+
+    // cycles indefinitely, and stops when the last N tiles reported a count of 0
+    template<typename TileContainer>
+    int for_each_rec(TileContainer& tc, const std::function<int(Tile&, bool)>& func)
+    {
+        int count = 0, c;
+        do {
+            c = for_each(tc, func, false);
+            count += c;
+        } while (c != 0);
         return count;
     }
 

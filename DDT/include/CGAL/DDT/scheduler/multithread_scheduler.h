@@ -101,76 +101,60 @@ struct multithread_scheduler
         };
     }
 
-    template<typename Tile_iterator>
-    int for_each(Tile_iterator begin, Tile_iterator end, const std::function<int(Tile&, bool)>& func, bool skip_tiles_receiving_no_points=false)
+    template<typename TileContainer>
+    int for_each(TileContainer& tc, const std::function<int(Tile&, bool)>& func, bool all_tiles)
     {
+        std::vector<Id> ids;
+        if (all_tiles) {
+            ids.assign(tc.tile_ids_begin(), tc.tile_ids_end());
+        } else {
+            for(const auto& it : inbox) {
+                if (!it.second.empty()) {
+                    Id id = it.first;
+                    ids.push_back(id);
+                    if(!tc.is_loaded(id)) tc.init(id); /// @todo : load !
+                }
+            }
+        }
         std::vector<std::future<int>> futures;
-        for(Tile_iterator it = begin; it != end; ++it)
-            futures.push_back(pool.submit(func, std::ref(*it), skip_tiles_receiving_no_points));
+        for(Id id : ids)
+            futures.push_back(pool.submit(func, std::ref(*(tc.get_tile(id))), false));
         int count = 0;
         for(auto& f: futures) count += f.get();
         return count;
     }
-    /*
-        // barrier between each epoch
-        template<typename Tile_iterator>
-        int for_each_rec(Tile_iterator begin, Tile_iterator end, const std::function<int(Tile&, bool)>& func)
-        {
-            int count = for_each(begin, end, func), c;
-            while((c = for_each(begin, end, func, true)))
-                count += c;
-            return count;
-        }
-    */
 
     // no barrier between each epoch, busy tiles are skipped
-    template<typename Tile_iterator>
-    int for_each_rec(Tile_iterator begin, Tile_iterator end, const std::function<int(Tile&, bool)>& func)
+    template<typename TileContainer>
+    int for_each_rec(TileContainer& tc, const std::function<int(Tile&, bool)>& func)
     {
-        if (begin == end) return 0;
-        int count = 0, tilecount, checkcount;
-        do
-        {
-            std::map<Id, std::future<int>> futures;
-            for(Tile_iterator it = begin; it != end; ++it)
+        int count = 0;
+        std::map<Id, std::future<int>> futures;
+        do {
+            auto fit = futures.begin();
+            while(fit!=futures.end())
             {
-                futures[it->id()] = pool.submit(func, std::ref(*it), false);
-            }
-            bool loop = true;
-            Tile_iterator it = begin, itend = begin;
-            while(loop || it != itend)
-            {
-                loop = false;
-                if (futures[it->id()].wait_for(timeout_) != std::future_status::ready)
-                {
-                    itend = it;
-                    if (++itend == end) itend = begin;
-                    loop = true;
+                if (fit->second.wait_for(timeout_) != std::future_status::ready) {
+                    ++fit;
+                } else {
+                    count += fit->second.get();
+                    futures.erase(fit++);
                 }
-                else
-                {
-                    tilecount = futures[it->id()].get();
-                    if (tilecount)
-                    {
-                        count += tilecount;
-                        itend = it;
-                        if (++itend == end) itend = begin;
-                        loop = true;
-                    }
-                    futures[it->id()] = pool.submit(func, std::ref(*it), true);
-                }
-                if (++it == end) it = begin;
             }
-            checkcount = 0;
-            for(Tile_iterator it = begin; it != end; ++it)
+            ;
+            for(const auto& it : inbox)
             {
-                checkcount += futures[it->id()].get();
+                Id id = it.first;
+                if (!it.second.empty() && futures.count(id) == 0)
+                {
+                    if(!tc.is_loaded(id)) tc.init(id); /// @todo : load !
+                    futures[id] = pool.submit(func, std::ref(*(tc.get_tile(id))), false);
+                }
             }
-            count += checkcount;
-        }
-        while (checkcount);
+        } while (!futures.empty());
         return count;
     }
+
 private:
     std::map<Id, safe<std::vector<Point_id_source>>> inbox;
     thread_pool pool;

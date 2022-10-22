@@ -17,21 +17,23 @@ typedef Traits::Random_points_in_box Random_points;
 #include <CGAL/DDT/partitioner/grid_partitioner.h>
 #include <CGAL/DDT.h>
 #define DDT_USE_THREADS 1
-#include <CGAL/DDT/scheduler.h>
+//#include <CGAL/DDT/scheduler.h>
 typedef ddt::Tile<Traits> Tile;
 
+#include <CGAL/DDT/scheduler/tbb_scheduler.h>
 //#include <CGAL/DDT/scheduler/mpi_scheduler.h>
 //typedef ddt::mpi_scheduler<Tile> Scheduler;
-typedef ddt::Scheduler<Tile> Scheduler;
+typedef ddt::tbb_scheduler<Tile> Scheduler;
 
 #include <CGAL/DDT/serializer/file_serializer.h>
 typedef ddt::File_Serializer<Id,Tile> Serializer;
 
-typedef ddt::DDT<Traits, Scheduler, Serializer> DDT;
+typedef ddt::DDT<Traits, Serializer> DDT;
 #include <CGAL/DDT/IO/write_ply.h>
 #include <CGAL/DDT/IO/write_vrt.h>
 #include <CGAL/DDT/IO/logging.h>
 
+#include <CGAL/DDT/distributed_Delaunay_triangulation.h>
 
 #include <boost/program_options.hpp>
 namespace po = boost::program_options;
@@ -88,19 +90,21 @@ int main(int argc, char **argv)
     Serializer serializer;
     serializer.add(0, "0.txt");
     serializer.add(1, "1.txt");
-
-    DDT tri(serializer, threads);
+    DDT tri(serializer);
+    Scheduler scheduler(threads);
 
     std::cout << "- Loglevel : " << loglevel << std::endl;
     std::cout << "- Range    : " << range << std::endl;
     std::cout << "- Points   : " << NP << std::endl;
-    std::cout << "- Threads  : " << tri.number_of_threads() << std::endl;
+    std::cout << "- Threads  : " << scheduler.number_of_threads() << std::endl;
     std::cout << "- Out dir  : " << (out.empty() ? "[no output]" : out) << std::endl;
     std::cout << "- Tiles    : " << partitioner.size() << " ( ";
     std::copy(partitioner.begin(), partitioner.end(), std::ostream_iterator<int>(std::cout, " "));
     std::cout << ")" << std::endl;
 
     Random_points points(D, range);
+    CGAL::ddt::insert(tri, scheduler, points, NP, partitioner);
+    /*
     {
         ddt::logging<> log("Overall      ", loglevel);
         log.step("Send Points");
@@ -114,6 +118,7 @@ int main(int argc, char **argv)
         log.step("Finalize     ");
         tri.finalize();
     }
+    */
 
     if ( vm.count("out")  )
     {

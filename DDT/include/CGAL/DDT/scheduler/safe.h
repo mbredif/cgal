@@ -20,7 +20,7 @@ class safe
 {
 private:
     Container m_container;
-    std::mutex m_mutex;
+    mutable std::mutex m_mutex;
 public:
     typedef typename Container::value_type value_type;
     typedef typename Container::size_type size_type;
@@ -30,13 +30,13 @@ public:
 
     ~safe() {}
 
-    bool empty()
+    bool empty() const
     {
         std::unique_lock<std::mutex> lock(m_mutex);
         return m_container.empty();
     }
 
-    size_type size()
+    size_type size() const
     {
         std::unique_lock<std::mutex> lock(m_mutex);
         return m_container.size();
