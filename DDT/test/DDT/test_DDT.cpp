@@ -101,6 +101,9 @@ int main(int, char **)
             assert(tri.main(cd) != tri.cells_end());
             assert(tri.is_main(tri.main(cd)));
             assert(tri.neighbor(cd, tri.mirror_index(cell, d)) == cell);
+            assert(tri.mirror_vertex(tri.mirror_facet(fd)) == vd);
+            assert(tri.covertex(tri.mirror_facet(fd)) == tri.vertex(cd, tri.mirror_index(fd)));
+            assert(tri.covertex(fd) == tri.vertex(cell, tri.mirror_index(tri.mirror_facet(fd))));
         }
         std::set<typename DDT::Cell_const_iterator> ring;
         tri.get_ring(cell, 1, ring);
