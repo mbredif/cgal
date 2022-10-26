@@ -43,7 +43,7 @@ size_t insert_received(TileContainer& tc, Scheduler& sch){
 template<typename TileContainer, typename Scheduler, typename Point, typename Id>
 typename TileContainer::Vertex_const_iterator insert(TileContainer& tc, Scheduler& sch, const Point& point, Id id){
     sch.send(point, id);
-    return insert_received_points(tc, sch);
+    return insert_received(tc, sch);
 }
 
 /// \ingroup PkgDDTRef
@@ -54,7 +54,7 @@ template<typename TileContainer, typename Scheduler, typename PointIdRange>
 size_t insert(TileContainer& tc, Scheduler& sch, const PointIdRange& range) {
     for (auto point_id : range)
         sch.send(point_id.first, point_id.second);
-    return insert_received_points(tc, sch);
+    return insert_received(tc, sch);
 }
 
 /// \ingroup PkgDDTRef
@@ -78,6 +78,3 @@ size_t insert(TileContainer& tc, Scheduler& sch, Iterator it, int count, Partiti
 
 }
 
-
-// Vertex_const_iterator insert(TileContainer& tc, Scheduler& sc, const Point&, ID )
-// size_t insert(TileContainer& tc, Scheduler& sc, const PointRange&)

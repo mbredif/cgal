@@ -28,16 +28,16 @@ struct sequential_scheduler
     typedef typename Tile::Point Point;
     typedef typename Tile::Id Id;
 
-    sequential_scheduler(int /*unused*/ = 0) {}
+    sequential_scheduler() {}
     inline int number_of_threads() const
     {
         return 1;
     }
 
-    std::function<int(Tile&, bool)>
+    std::function<int(Tile&)>
     insert_func(bool do_simplify)
     {
-        return [this, do_simplify](Tile& tile, bool /*unused*/)
+        return [this, do_simplify](Tile& tile)
         {
             std::vector<Point_id_source> received;
             inbox[tile.id()].swap(received);
@@ -46,14 +46,14 @@ struct sequential_scheduler
     }
 
     template<typename F>
-    std::function<int(Tile&, bool)>
-    splay_func(F&& f, bool skip_tiles_receiving_no_points = false)
+    std::function<int(Tile&)>
+    splay_func(F&& f)
     {
-        return [this,f](Tile& tile, bool skip_tiles_receiving_no_points)
+        return [this,f](Tile& tile)
         {
             std::vector<Point_id_source> received;
             inbox[tile.id()].swap(received);
-            if(!tile.insert(received) && skip_tiles_receiving_no_points) return 0;
+            if(!tile.insert(received)) return 0;
             std::vector<Vertex_const_handle_and_id> outgoing;
             (tile.*f)(outgoing);
             return tile.send_one(inbox, outgoing);
@@ -61,10 +61,10 @@ struct sequential_scheduler
     }
 
     template<typename Id_iterator, typename F>
-    std::function<int(Tile&, bool)>
+    std::function<int(Tile&)>
     send_all_func(Id_iterator begin, Id_iterator end, F&& f)
     {
-        return [this,f,begin,end](Tile& tile, bool /*unused*/)
+        return [this,f,begin,end](Tile& tile)
         {
             std::vector<Vertex_const_handle> vertices;
             (tile.*f)(vertices);
@@ -73,7 +73,7 @@ struct sequential_scheduler
     }
 
     template<typename TileContainer>
-    int for_each(TileContainer& tc, const std::function<int(Tile&, bool)>& func, bool all_tiles)
+    int for_each(TileContainer& tc, const std::function<int(Tile&)>& func, bool all_tiles)
     {
         std::vector<Id> ids;
         if (all_tiles) {
@@ -89,13 +89,13 @@ struct sequential_scheduler
         }
         int count = 0;
         for(Id id : ids)
-            count += func(*(tc.get_tile(id)), false);
+            count += func(*(tc.get_tile(id)));
         return count;
     }
 
     // cycles indefinitely, and stops when the last N tiles reported a count of 0
     template<typename TileContainer>
-    int for_each_rec(TileContainer& tc, const std::function<int(Tile&, bool)>& func)
+    int for_each_rec(TileContainer& tc, const std::function<int(Tile&)>& func)
     {
         int count = 0, c;
         do {

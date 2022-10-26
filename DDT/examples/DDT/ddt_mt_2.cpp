@@ -21,9 +21,9 @@ typedef Traits::Random_points_in_box Random_points;
 typedef ddt::Tile<Traits> Tile;
 
 #include <CGAL/DDT/scheduler/tbb_scheduler.h>
+typedef ddt::tbb_scheduler<Tile> Scheduler;
 //#include <CGAL/DDT/scheduler/mpi_scheduler.h>
 //typedef ddt::mpi_scheduler<Tile> Scheduler;
-typedef ddt::tbb_scheduler<Tile> Scheduler;
 
 #include <CGAL/DDT/serializer/file_serializer.h>
 typedef ddt::File_Serializer<Id,Tile> Serializer;
@@ -42,7 +42,7 @@ int main(int argc, char **argv)
 {
     enum { D = Traits::D };
 
-    int NP, threads, loglevel;
+    int NP, loglevel;
     std::vector<int> NT;
     std::string out;
     double range;
@@ -53,7 +53,7 @@ int main(int argc, char **argv)
     ("check", "check validity")
     ("points,p", po::value<int>(&NP)->default_value(10000), "number of points")
     ("log,l", po::value<int>(&loglevel)->default_value(0), "log level")
-    ("threads,j", po::value<int>(&threads)->default_value(0), "number of threads (0=all)")
+    //("threads,j", po::value<int>(&threads)->default_value(0), "number of threads (0=all)")
     ("tiles,t", po::value<std::vector<int>>(&NT), "number of tiles")
     ("range,r", po::value<double>(&range)->default_value(1), "range")
     ("out,o", po::value<std::string>(&out), "output directory")
@@ -91,7 +91,7 @@ int main(int argc, char **argv)
     serializer.add(0, "0.txt");
     serializer.add(1, "1.txt");
     DDT tri(serializer);
-    Scheduler scheduler(threads);
+    Scheduler scheduler;
 
     std::cout << "- Loglevel : " << loglevel << std::endl;
     std::cout << "- Range    : " << range << std::endl;

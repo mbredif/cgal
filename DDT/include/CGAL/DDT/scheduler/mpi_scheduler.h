@@ -75,7 +75,7 @@ struct mpi_scheduler
     typedef typename Tile::Point Point;
     typedef typename Tile::Id Id;
 
-    mpi_scheduler(int /*unused*/) {
+    mpi_scheduler() {
         // Initialize the MPI environment
         MPI_Init(NULL, NULL);
 
@@ -125,10 +125,10 @@ struct mpi_scheduler
         return rank(id) == world_rank;
     }
 
-    std::function<int(Tile&, bool)>
+    std::function<int(Tile&)>
     insert_func(bool do_simplify)
     {
-        return [this, do_simplify](Tile& tile, bool /*unused*/)
+        return [this, do_simplify](Tile& tile)
         {
             std::vector<Point_id_source> received;
             inbox[tile.id()].swap(received);
@@ -137,14 +137,14 @@ struct mpi_scheduler
     }
 
     template<typename F>
-    std::function<int(Tile&, bool)>
-    splay_func(F&& f, bool skip_tiles_receiving_no_points = false)
+    std::function<int(Tile&)>
+    splay_func(F&& f)
     {
-        return [this,f](Tile& tile, bool skip_tiles_receiving_no_points)
+        return [this,f](Tile& tile)
         {
             std::vector<Point_id_source> received;
             inbox[tile.id()].swap(received);
-            if(!tile.insert(received) && skip_tiles_receiving_no_points) return 0;
+            if(!tile.insert(received)) return 0;
             std::vector<Vertex_const_handle_and_id> outgoing;
             (tile.*f)(outgoing);
             return tile.send_one(inbox, outgoing);
@@ -152,10 +152,10 @@ struct mpi_scheduler
     }
 
     template<typename Id_iterator, typename F>
-    std::function<int(Tile&, bool)>
+    std::function<int(Tile&)>
     send_all_func(Id_iterator begin, Id_iterator end, F&& f)
     {
-        return [this,f,begin,end](Tile& tile, bool /*unused*/)
+        return [this,f,begin,end](Tile& tile)
         {
             std::vector<Vertex_const_handle> vertices;
             (tile.*f)(vertices);
@@ -164,7 +164,7 @@ struct mpi_scheduler
     }
 
     template<typename TileContainer>
-    int for_each(TileContainer& tc, const std::function<int(Tile&, bool)>& func, bool all_tiles)
+    int for_each(TileContainer& tc, const std::function<int(Tile&)>& func, bool all_tiles)
     {
         send_all_to_all();
 
@@ -182,13 +182,13 @@ struct mpi_scheduler
         }
         int count = 0;
         for(Id id : ids)
-            count += func(*(tc.get_tile(id)), false);
+            count += func(*(tc.get_tile(id)));
         return count;
     }
 
     // cycles indefinitely, and stops when the last N tiles reported a count of 0
     template<typename TileContainer>
-    int for_each_rec(TileContainer& tc, const std::function<int(Tile&, bool)>& func)
+    int for_each_rec(TileContainer& tc, const std::function<int(Tile&)>& func)
     {
         int count = 0;
         do {
@@ -198,7 +198,7 @@ struct mpi_scheduler
                 for(const auto& it : inbox) {
                     Id id = it.first;
                     if (!it.second.empty() && rank(id) == world_rank)
-                        c += func(*(tc.get_tile(id)), false);
+                        c += func(*(tc.get_tile(id)));
                 }
                 count += c;
             } while (c != 0);
@@ -210,14 +210,14 @@ struct mpi_scheduler
     {
         Id id;
         int count;
-        bytes = load_value_1(bytes, id);
+        bytes = load_value_4(bytes, id);
         bytes = load_value_4(bytes, count);
         std::vector<Point_id_source>& box = inbox[id];
         for(int i = 0; i< count; ++i) {
             Point_id_source p;
             bytes = load_point(bytes, std::get<0>(p));
-            bytes = load_value_1(bytes, std::get<1>(p)); // Id point id
-            bytes = load_value_1(bytes, std::get<2>(p)); // Id source
+            bytes = load_value_4(bytes, std::get<1>(p)); // Id point id
+            bytes = load_value_4(bytes, std::get<2>(p)); // Id source
             box.push_back(p);
         }
         // std::cout << processor_name << "[" << world_rank << "] " << count  << " points recieved by " << int(id) << std::endl;
@@ -227,14 +227,14 @@ struct mpi_scheduler
     char *save_points(char *bytes, Id id, const std::vector<Point_id_source>& msg) const 
     {
         int count = msg.size();
-        bytes = save_value_1(bytes, id);
+        bytes = save_value_4(bytes, id);
         bytes = save_value_4(bytes, count);
         for(auto p : msg) {
             bytes = save_point(bytes, std::get<0>(p));
-            bytes = save_value_1(bytes, std::get<1>(p)); // Id point id
-            bytes = save_value_1(bytes, std::get<2>(p)); // Id source
+            bytes = save_value_4(bytes, std::get<1>(p)); // Id point id
+            bytes = save_value_4(bytes, std::get<2>(p)); // Id source
         }
-        std::cout << processor_name << "[" << world_rank << "] " << count  << " points sent to " << int(id) << std::endl;
+        //std::cout << processor_name << "[" << world_rank << "] " << count  << " points sent to " << int(id) << std::endl;
         return bytes;
     }
 
@@ -242,7 +242,13 @@ struct mpi_scheduler
     /// @return maximum number of points sent from any one of the processing elements.
     int send_all_to_all() 
     {
-        int id_size = 1; /// @todo serialized size of tile id
+        std::cout << processor_name << "[" << world_rank << "] ";
+        for(const auto& it:inbox) {
+            std::cout << int(it.first) << ":" << it.second.size() << " ";
+        }
+        std::cout << "-> " << std::flush;
+        std::cout << std::endl;
+        int id_size = 4; /// @todo serialized size of tile id
         int count_size = 4; /// @todo serialized size of point count
         int point_size = 16; /// @todo serialized size of a Point
         int data_size = point_size + 2*id_size; /// @todo serialized size of a Point_id_source
@@ -321,6 +327,10 @@ struct mpi_scheduler
             out.write((const char*)(&recvbuf[0]), recvbuf.size());
             out.close();
         }
+        for(const auto& it:inbox) {
+            std::cout << int(it.first) << ":" << it.second.size() << " ";
+        }
+        std::cout << std::endl;
 
         return max_count;
     }

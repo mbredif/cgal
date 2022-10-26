@@ -9,13 +9,19 @@ typedef int Flag;
 typedef ddt::Cgal_traits<2,Id,Flag> Traits;
 
 #include <CGAL/DDT.h>
-#include <CGAL/DDT/scheduler.h>
 #include <CGAL/DDT/partitioner/grid_partitioner.h>
 #include <CGAL/DDT/IO/write_vrt.h>
 #include <CGAL/DDT/distributed_Delaunay_triangulation.h>
 
 typedef ddt::Tile<Traits> Tile;
-typedef ddt::Scheduler<Tile> Scheduler;
+//#include <CGAL/DDT/scheduler/sequential_scheduler.h>
+//typedef ddt::sequential_scheduler<Tile> Scheduler;
+#include <CGAL/DDT/scheduler/multithread_scheduler.h>
+typedef ddt::multithread_scheduler<Tile> Scheduler;
+//#include <CGAL/DDT/scheduler/tbb_scheduler.h>
+//typedef ddt::tbb_scheduler<Tile> Scheduler;
+//#include <CGAL/DDT/scheduler/mpi_scheduler.h>
+//typedef ddt::mpi_scheduler<Tile> Scheduler;
 typedef ddt::grid_partitioner<Traits> Partitioner;
 #include <CGAL/DDT/serializer/file_serializer.h>
 typedef ddt::File_Serializer<Id,Tile> Serializer;

@@ -21,6 +21,7 @@
 #include <chrono>
 #include <tbb/concurrent_vector.h>
 #include <tbb/parallel_reduce.h>
+#include <tbb/task_arena.h>
 
 namespace ddt
 {
@@ -34,13 +35,12 @@ struct tbb_scheduler
     typedef typename Tile::Point_id_source Point_id_source;
     typedef typename Tile::Point Point;
     typedef typename Tile::Id Id;
-    tbb_scheduler(int n_threads)
-      : n_threads(n_threads)
+    tbb_scheduler()
     {}
 
     inline int number_of_threads() const
     {
-        return n_threads;
+        return tbb::this_task_arena::max_concurrency();
     }
 
     void send(const Point& p, Id id, Id source, Id target)
@@ -53,10 +53,10 @@ struct tbb_scheduler
         send(p,id,id,id);
     }
 
-    std::function<int(Tile&, bool)>
+    std::function<int(Tile&)>
     insert_func(bool do_simplify)
     {
-        return [this, do_simplify](Tile& tile, bool /*unused*/ )
+        return [this, do_simplify](Tile& tile)
         {
             tbb::concurrent_vector<Point_id_source> received;
             inbox[tile.id()].swap(received);
@@ -65,14 +65,14 @@ struct tbb_scheduler
     }
 
     template<typename F>
-    std::function<int(Tile&, bool)>
-    splay_func(F&& f, bool skip_tiles_receiving_no_points = false)
+    std::function<int(Tile&)>
+    splay_func(F&& f)
     {
-        return [this,f](Tile& tile, bool skip_tiles_receiving_no_points)
+        return [this,f](Tile& tile)
         {
             tbb::concurrent_vector<Point_id_source> received;
             inbox[tile.id()].swap(received);
-            if(!tile.insert(received) && skip_tiles_receiving_no_points) return 0;
+            if(!tile.insert(received)) return 0;
             std::vector<Vertex_const_handle_and_id> vertices;
             (tile.*f)(vertices);
             std::map<Id, std::vector<Point_id_source>> outgoing;
@@ -84,10 +84,10 @@ struct tbb_scheduler
     }
 
     template<typename Id_iterator, typename F>
-    std::function<int(Tile&, bool)>
+    std::function<int(Tile&)>
     send_all_func(Id_iterator begin, Id_iterator end, F&& f)
     {
-        return [this,f,begin,end](Tile& tile, bool /*unused*/)
+        return [this,f,begin,end](Tile& tile)
         {
             std::vector<Vertex_const_handle> vertices;
             (tile.*f)(vertices);
@@ -100,7 +100,7 @@ struct tbb_scheduler
     }
 
     template<typename TileContainer>
-    int for_each(TileContainer& tc, const std::function<int(Tile&, bool)>& func, bool all_tiles)
+    int for_each(TileContainer& tc, const std::function<int(Tile&)>& func, bool all_tiles)
     {
         std::vector<Id> ids;
         if (all_tiles) {
@@ -122,7 +122,7 @@ struct tbb_scheduler
                   int c = 0;
                   for (int i=r.begin(); i<r.end(); ++i)
                   {
-                      c+=func(*(tc.get_tile(ids[i])), false);
+                      c+=func(*(tc.get_tile(ids[i])));
                   }
                   return c;
               }, std::plus<int>() );
@@ -131,7 +131,7 @@ struct tbb_scheduler
 
     // no barrier between each epoch, busy tiles are skipped
     template<typename TileContainer>
-    int for_each_rec(TileContainer& tc, const std::function<int(Tile&, bool)>& func)
+    int for_each_rec(TileContainer& tc, const std::function<int(Tile&)>& func)
     {
 
         int count = 0, c = 0;
@@ -152,7 +152,7 @@ struct tbb_scheduler
               int c = 0;
               for (int i=r.begin(); i<r.end(); ++i)
               {
-                  c+=func(*(tc.get_tile(ids[i])), false);
+                  c+=func(*(tc.get_tile(ids[i])));
               }
               return c;
           }, std::plus<int>() );
@@ -163,7 +163,6 @@ struct tbb_scheduler
 
 private:
     std::map<Id, tbb::concurrent_vector<Point_id_source>> inbox;
-    int n_threads; // SL: useful?
 };
 
 }

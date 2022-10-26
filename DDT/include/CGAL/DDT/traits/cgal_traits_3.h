@@ -203,12 +203,12 @@ struct Cgal_traits_3
         auto c2 = f2->first;
         int icv1 = f1->second;
         int icv2 = f2->second;
-        for(int i1 = 0; i1 < t1.current_dimension(); ++i1 )
+        for(int i1 = 0; i1 < t1.dimension(); ++i1 )
         {
             if(i1 == icv1) continue;
             auto v1 = c1->vertex(i1);
             bool found = false;
-            for(int i2 = 0; i2 < t2.current_dimension(); ++i2 )
+            for(int i2 = 0; i2 < t2.dimension(); ++i2 )
             {
                 if(i2 == icv2) continue;
                 auto v2 = c2->vertex(i2);
