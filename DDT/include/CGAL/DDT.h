@@ -438,11 +438,6 @@ public:
     inline Facet_const_iterator main(const Facet_const_iterator& f) const { return locate(f, main_id(f)); }
     inline Cell_const_iterator main(const Cell_const_iterator& c) const { return locate(c, main_id(c)); }
 
-
-    // mirror_vertex(facet)  absent
-    // mirror_index(facet) ok
-    // mirror_facet(facet) <- neighbor(facet)
-
     // c1 == c2 ? global, représente la meme tuile : main(c1)==main(c2)
 
     // attention à la perennité des handles (tile is possibly unloaded), ou alors lock ou shared pointer.
@@ -452,7 +447,7 @@ public:
     Vertex_const_iterator vertex (const Cell_const_iterator& c, const int i) const
     {
         assert(is_valid(c));
-        return local_vertex(main(c), i);
+        return local_vertex(main(c), i); // i is defined wrt the main representative
     }
 
     /// Retrieve the point embedding of the vertex.
@@ -464,32 +459,34 @@ public:
         return v.tile()->point(v.vertex());
     }
 
-    /// @returns the neighbor (=twin/opposite) facet. This operation is performed locally and the resulting facet belong
+    /// @returns the mirror facet. This operation is performed locally: the resulting facet belongs
     /// to the same tile as the input facet.
     /// Precondition: the facet f is valid (ie: at least one of the facet points, the covertex and the mirror vertex is local)
-    Facet_const_iterator neighbor(const Facet_const_iterator& f) const
+    Facet_const_iterator mirror_facet(const Facet_const_iterator& f) const
     {
         assert(is_valid(f));
         Tile_const_iterator tile = f.tile();
         assert(tile->facet_is_valid(f.facet()));
-        return Facet_const_iterator(tile, tiles_end(), tile->neighbor(f.facet()));
+        return Facet_const_iterator(tile, tiles_end(), tile->mirror_facet(f.facet()));
     }
 
-    // Access the mirror index of facet f, such that cell(neighbor(f), mirror_index)==cell(f)
+    // Access the mirror index of facet f, such that neighbor(cell(mirror_facet(f)), mirror_index)==cell(f)
     /// The main version of f is considered, as indices may not be consistent across
-    /// the cell representatives of f and its neighbor in other tiles
+    /// the cell representatives of f and its mirror facets in other tiles
     inline int mirror_index(const Facet_const_iterator& f) const
     {
         assert(is_valid(f));
-        return index_of_covertex(neighbor(f));
+        return index_of_covertex(mirror_facet(f));
     }
 
     /// @returns the full cell that is adjacent to the input facet f and that joins the covertex with the vertices of f
     Cell_const_iterator cell(const Facet_const_iterator& f) const
     {
         assert(is_valid(f));
-        if (is_foreign(f)) return local_cell(main(f));
-        return local_cell(f);
+        Tile_const_iterator tile = f.tile();
+        Tile_cell_const_iterator c = tile->cell(f.facet());
+        if(tile->cell_is_foreign(c)) return local_cell(main(f)); // any non foreign representative could do
+        return Cell_const_iterator(tile, tiles_end(), c);
     }
 
     /// @returns the index of the covertex
@@ -502,17 +499,32 @@ public:
         return local_index_of_covertex(locate(f, tile->minimum_id(c)));
     }
 
+    Vertex_const_iterator covertex(const Facet_const_iterator& f) const
+    {
+        assert(is_valid(f));
+        Tile_const_iterator tile = f.tile();
+        Tile_cell_const_iterator c = tile->cell(f.facet());
+        if(tile->cell_is_foreign(c)) return local_covertex(main(f)); // any non foreign representative could do
+        return Vertex_const_iterator(tile, tiles_end(), tile->covertex(f.facet()));
+    }
+
+    Vertex_const_iterator mirror_vertex(const Facet_const_iterator& f) const
+    {
+        return covertex(mirror_facet(f));
+    }
+
+
     /// Cell iterator functions
     inline Facet_const_iterator facet(const Cell_const_iterator& c, int i) const
     {
         assert(is_valid(c));
-        return local_facet(main(c),i);
+        return local_facet(main(c),i); // i is defined wrt the main representative
     }
 
     inline Cell_const_iterator neighbor(const Cell_const_iterator& c, int i) const
     {
         assert(is_valid(c));
-        return cell(neighbor(facet(c, i)));
+        return cell(mirror_facet(facet(c, i)));
     }
 
     inline int mirror_index(const Cell_const_iterator& c, int i) const
@@ -563,6 +575,15 @@ public:
         Tile_cell_const_iterator c = tile->cell(f.facet());
         assert(!tile->cell_is_foreign(c));
         return Cell_const_iterator(tile, tiles_end(), c);
+    }
+
+    Vertex_const_iterator local_covertex(const Facet_const_iterator& f) const
+    {
+        assert(is_valid(f));
+        Tile_const_iterator tile = f.tile();
+        Tile_cell_const_iterator c = tile->cell(f.facet());
+        assert(!tile->cell_is_foreign(c));
+        return Vertex_const_iterator(tile, tiles_end(), tile->covertex(f.facet()));
     }
 
 private:

@@ -61,20 +61,22 @@ int main(int, char **)
 
     for(auto facet = tri.facets_begin(); facet != tri.facets_end(); ++facet)
     {
-        auto facet2 = tri.neighbor(facet);
+        auto facet2 = tri.mirror_facet(facet);
         auto cell   = tri.cell(facet);
         auto cell2  = tri.cell(facet2);
         assert(facet.is_valid());
         assert(tri.is_main(facet));
         assert(tri.is_valid(facet));
         assert(!tri.is_foreign(cell));
-        assert(tri.main(tri.neighbor(facet2)) == facet);
+        assert(tri.main(tri.mirror_facet(facet2)) == facet);
         assert(cell2 != cell);
         assert(facet2 != facet);
         assert(tri.index_of_covertex(facet2) == tri.mirror_index(facet));
         assert(tri.mirror_index(facet2) == tri.index_of_covertex(facet));
         assert(tri.locate(tri.facet(cell, tri.index_of_covertex(facet)), tri.tile_id(facet)) == facet);
         assert(tri.locate(tri.neighbor(cell2, tri.mirror_index(facet)), tri.tile_id(cell)) == cell);
+        assert(tri.covertex(facet) == tri.mirror_vertex(facet2));
+        assert(tri.covertex(facet2) == tri.mirror_vertex(facet));
     }
 
     int cid = 0;
@@ -87,7 +89,7 @@ int main(int, char **)
         for(int d = 0; d < 3; ++d)
         {
             auto celld = tri.neighbor(cell, d);
-            assert(tri.main(tri.cell(tri.neighbor(tri.neighbor(tri.facet(cell, d))))) == cell);
+            assert(tri.main(tri.cell(tri.mirror_facet(tri.mirror_facet(tri.facet(cell, d))))) == cell);
             assert(cell != celld);
             assert(cell != tri.main(celld));
             assert(tri.main(celld) != tri.cells_end());

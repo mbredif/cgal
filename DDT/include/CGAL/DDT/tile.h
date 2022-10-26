@@ -146,7 +146,8 @@ public:
     inline Vertex_const_handle covertex(Facet_const_handle f) const { return traits.covertex(dt_, f); }
     inline Vertex_const_handle mirror_vertex(Facet_const_handle f) const { return traits.mirror_vertex(dt_, f); }
     inline Cell_const_handle cell(Facet_const_handle f) const { return traits.cell(dt_, f); }
-    inline Facet_const_handle neighbor(Facet_const_handle f) const { return traits.neighbor(dt_, f); }
+    inline Facet_const_handle mirror_facet(Facet_const_handle f) const { return traits.mirror_facet(dt_, f); }
+    inline int mirror_index(Facet_const_handle f) const { return traits.mirror_index(dt_, f); }
 
     // Cell functions
     inline Vertex_const_handle vertex(Cell_const_handle c, int i) const { return traits.vertex(dt_, c, i); }
@@ -604,7 +605,7 @@ public:
     {
         assert(t.facet_is_valid(f));
         Cell_const_handle c = t.cell(f);
-        if(t.cell_is_foreign(c)) return neighbor(locate_facet(t, t.neighbor(f)));
+        if(t.cell_is_foreign(c)) return mirror_facet(locate_facet(t, t.mirror_facet(f)));
         assert(!t.cell_is_foreign(c));
         Cell_const_handle d = locate_cell(t, c);
         Vertex_const_handle v = t.vertex(c, t.index_of_covertex(f));

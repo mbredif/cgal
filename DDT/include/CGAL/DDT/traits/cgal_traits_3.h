@@ -241,11 +241,16 @@ struct Cgal_traits_3
         return f->first;
     }
 
-    Facet_const_handle neighbor(const Delaunay_triangulation& dt, Facet_const_handle f) const
+    Facet_const_handle mirror_facet(const Delaunay_triangulation& dt, Facet_const_handle f) const
     {
         Cell_const_iterator c = f->first;
         Facet g(c->neighbor(f->second), dt.mirror_index(c, f->second));
         return Facet_const_iterator(dt.tds(), g);
+    }
+    
+    inline int mirror_index(const Delaunay_triangulation& dt, Facet_const_handle f) const
+    {
+        return dt.mirror_index(f->first, f->second);
     }
 
     inline int mirror_index(const Delaunay_triangulation& dt, Cell_const_handle c, int i) const
