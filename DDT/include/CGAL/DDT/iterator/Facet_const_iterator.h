@@ -95,11 +95,12 @@ public:
         return tmp;
     }
 
-    bool operator==(const Facet_const_iterator& rhs) const
+    bool operator==(const Facet_const_iterator& f) const
     {
-        return tile_ == rhs.tile_
-               && end_ == rhs.end_
-               && (tile_ == end_ || facet_ == rhs.facet_);
+        if (end_ != f.end_) return false;
+        if (tile_ == end_ || f.tile_ == end_) return tile_ == f.tile_; // == end_ == f.end_
+        if (tile_ == f.tile_) return facet_==f.facet_;
+        return tile_->are_facets_equal(facet_, *(f.tile_), f.facet_);
     }
 
     bool operator!=(const Facet_const_iterator& rhs) const { return !(*this == rhs); }

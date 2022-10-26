@@ -191,6 +191,7 @@ public:
         tiles.emplace(id, id);
     }
 
+    /// @todo attention à la perennité des handles (tile is possibly unloaded), ou alors lock ou shared pointer.
     /// unload a tile from memory (no automatic saving)
     void unload(Id id)
     {
@@ -438,9 +439,12 @@ public:
     inline Facet_const_iterator main(const Facet_const_iterator& f) const { return locate(f, main_id(f)); }
     inline Cell_const_iterator main(const Cell_const_iterator& c) const { return locate(c, main_id(c)); }
 
-    // c1 == c2 ? global, représente la meme tuile : main(c1)==main(c2)
-
-    // attention à la perennité des handles (tile is possibly unloaded), ou alors lock ou shared pointer.
+    inline Vertex_const_iterator infinite_vertex() const
+    {
+        assert(!tiles.empty());
+        Tile_const_iterator tile = tiles_begin();
+        return Vertex_const_iterator(tile, tiles_end(), tile->infinite_vertex());
+    }
 
     /// Access the ith vertex of the cell c.
     /// Result is consistent over all representatives of cell c, as its main representative is looked up.

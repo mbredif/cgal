@@ -68,7 +68,7 @@ int main(int, char **)
         assert(tri.is_main(facet));
         assert(tri.is_valid(facet));
         assert(!tri.is_foreign(cell));
-        assert(tri.main(tri.mirror_facet(facet2)) == facet);
+        assert(tri.mirror_facet(facet2) == facet);
         assert(cell2 != cell);
         assert(facet2 != facet);
         assert(tri.index_of_covertex(facet2) == tri.mirror_index(facet));
@@ -88,13 +88,19 @@ int main(int, char **)
         assert(!tri.is_foreign(cell));
         for(int d = 0; d < 3; ++d)
         {
-            auto celld = tri.neighbor(cell, d);
-            assert(tri.main(tri.cell(tri.mirror_facet(tri.mirror_facet(tri.facet(cell, d))))) == cell);
-            assert(cell != celld);
-            assert(cell != tri.main(celld));
-            assert(tri.main(celld) != tri.cells_end());
-            assert(tri.is_main(tri.main(celld)));
-            assert(tri.main(tri.neighbor(celld, tri.mirror_index(cell, d))) == cell); /// @todo change ==
+            auto vd = tri.vertex(cell, d);
+            auto fd = tri.facet(cell, d);
+            auto cd = tri.neighbor(cell, d);
+            assert(tri.is_infinite(vd) ? vd == tri.infinite_vertex() : vd == tri.main(vd));
+            assert(fd == tri.main(fd));
+            assert(cd == tri.main(cd));
+            assert(tri.cell(tri.mirror_facet(tri.mirror_facet(fd))) == cell);
+            assert(cell != cd);
+            assert(cell != tri.main(cd));
+            assert(cd != tri.cells_end());
+            assert(tri.main(cd) != tri.cells_end());
+            assert(tri.is_main(tri.main(cd)));
+            assert(tri.neighbor(cd, tri.mirror_index(cell, d)) == cell);
         }
         std::set<typename DDT::Cell_const_iterator> ring;
         tri.get_ring(cell, 1, ring);

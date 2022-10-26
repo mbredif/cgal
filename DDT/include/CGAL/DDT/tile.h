@@ -590,14 +590,26 @@ public:
         return bbox_;
     }
 
-    Vertex_const_handle locate_vertex(const Tile& t, Vertex_const_handle v) const
+    bool are_vertices_equal(Vertex_const_handle v, const Tile& t, Vertex_const_handle tv) const
     {
-        for(auto vit = vertices_begin(); vit != vertices_end(); ++vit )
-        {
-            if(traits.are_vertices_equal(t.dt_, v, dt_, vit))
-                return vit;
-        }
-        assert(! "Cannot find vertex" );
+        return traits.are_vertices_equal(dt_, v, t.dt_, tv);
+    }
+
+    bool are_facets_equal(Facet_const_handle f, const Tile& t, Facet_const_handle tf) const
+    {
+        return traits.are_facets_equal(dt_, f, t.dt_, tf);
+    }
+
+    bool are_cells_equal(Cell_const_handle c, const Tile& t, Cell_const_handle tc) const
+    {
+        return traits.are_cells_equal(dt_, c, t.dt_, tc);
+    }
+
+    Vertex_const_handle locate_vertex(const Tile& t, Vertex_const_handle tv) const
+    {
+        for(auto v = vertices_begin(); v != vertices_end(); ++v )
+            if(are_vertices_equal(v, t, tv))
+                return v;
         return vertices_end();
     }
 
@@ -614,20 +626,16 @@ public:
             if(traits.are_vertices_equal(t.dt_, v, dt_, vertex(d, i)))
                 return facet(d, i);
         }
-        assert(false);
         return facets_end();
     }
 
-    Cell_const_handle locate_cell(const Tile& t, Cell_const_handle c) const
+    Cell_const_handle locate_cell(const Tile& t, Cell_const_handle tc) const
     {
-        assert(!t.cell_is_foreign(c));
+        assert(!t.cell_is_foreign(tc));
         /// @todo locate the first vertex point of c in the other dt
-        for(auto cit = cells_begin(); cit != cells_end(); ++cit )
-        {
-            if(traits.are_cells_equal(t.dt_, c, dt_, cit))
-                return cit;
-        }
-        assert(false);
+        for(auto c = cells_begin(); c != cells_end(); ++c )
+            if(are_cells_equal(c, t, tc))
+                return c;
         return cells_end();
     }
 

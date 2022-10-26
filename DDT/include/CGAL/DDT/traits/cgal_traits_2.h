@@ -189,16 +189,41 @@ struct Cgal_traits_2
         return CGAL::to_double(p[i]);
     }
 
-    template<typename V>
-    bool are_vertices_equal(const Delaunay_triangulation& t1, V v1, const Delaunay_triangulation& t2, V v2) const
+    bool are_vertices_equal(const Delaunay_triangulation& t1, Vertex_const_handle v1, const Delaunay_triangulation& t2, Vertex_const_handle v2) const
     {
         bool inf1 = vertex_is_infinite(t1, v1);
         bool inf2 = vertex_is_infinite(t2, v2);
         return (inf1 || inf2) ? (inf1 == inf2) : v1->point() == v2->point();
     }
 
-    template<typename C>
-    bool are_cells_equal(const Delaunay_triangulation& t1, C c1, const Delaunay_triangulation& t2, C c2) const
+    bool are_facets_equal(const Delaunay_triangulation& t1, Facet_const_handle f1, const Delaunay_triangulation& t2, Facet_const_handle f2) const
+    {
+        auto c1 = f1->first;
+        auto c2 = f2->first;
+        int icv1 = f1->second;
+        int icv2 = f2->second;
+        for(int i1 = 0; i1 < t1.current_dimension(); ++i1 )
+        {
+            if(i1 == icv1) continue;
+            auto v1 = c1->vertex(i1);
+            bool found = false;
+            for(int i2 = 0; i2 < t2.current_dimension(); ++i2 )
+            {
+                if(i2 == icv2) continue;
+                auto v2 = c2->vertex(i2);
+                if(are_vertices_equal(t1, v1, t2, v2))
+                {
+                    found = true;
+                    break;
+                }
+            }
+            if(!found)
+                return false;
+        }
+        return true;
+    }
+
+    bool are_cells_equal(const Delaunay_triangulation& t1, Cell_const_handle c1, const Delaunay_triangulation& t2, Cell_const_handle c2) const
     {
         for(int i1=0; i1<=D; ++i1)
         {

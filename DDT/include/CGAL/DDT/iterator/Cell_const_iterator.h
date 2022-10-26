@@ -122,11 +122,12 @@ public:
         return *this;
     }
 
-    bool operator==(const Cell_const_iterator& rhs) const
+    bool operator==(const Cell_const_iterator& c) const
     {
-        return tile_ == rhs.tile_
-               && end_ == rhs.end_
-               && (tile_ == end_ || cell_==rhs.cell_);
+        if (end_ != c.end_) return false;
+        if (tile_ == end_ || c.tile_ == end_) return tile_ == c.tile_; // == end_ == c.end_
+        if (tile_ == c.tile_) return cell_==c.cell_;
+        return tile_->are_cells_equal(cell_, *(c.tile_), c.cell_);
     }
 
     bool operator!=(const Cell_const_iterator& rhs) const { return !(*this == rhs); }

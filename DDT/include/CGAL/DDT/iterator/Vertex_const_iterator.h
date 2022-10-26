@@ -116,11 +116,12 @@ public:
         return *this;
     }
 
-    bool operator==(const Vertex_const_iterator& rhs) const
+    bool operator==(const Vertex_const_iterator& v) const
     {
-        return tile_ == rhs.tile_
-               && end_ == rhs.end_
-               && (tile_ == end_ || vertex_ == rhs.vertex_);
+        if (end_ != v.end_) return false;
+        if (tile_ == end_ || v.tile_ == end_) return tile_ == v.tile_; // == end_ == v.end_
+        if (tile_ == v.tile_) return vertex_==v.vertex_;
+        return tile_->are_vertices_equal(vertex_, *(v.tile_), v.vertex_);
     }
 
     bool operator!=(const Vertex_const_iterator& rhs) const { return !(*this == rhs); }
