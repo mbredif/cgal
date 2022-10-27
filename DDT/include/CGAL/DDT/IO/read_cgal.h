@@ -76,10 +76,10 @@ int read_cgal_tile(Tile& tile, const std::string& dirname)
     return 0;
 }
 
-template<typename DDT>
-int read_cgal(DDT& tri, const std::string& dirname)
+template<typename TileContainer>
+int read_cgal(TileContainer& tc, const std::string& dirname)
 {
-    typedef typename DDT::Id Id;
+    typedef typename TileContainer::Id Id;
     boost::property_tree::ptree root_node;
     std::string json_name = dirname + "/tiles.json";
     std::ifstream ifile_json(json_name, std::ifstream::in);
@@ -87,13 +87,12 @@ int read_cgal(DDT& tri, const std::string& dirname)
     for (auto its : root_node.get_child("tiles"))
     {
         Id tid = std::stoi(its.first);
-        tri.init(tid);
-        auto tile  = tri.get_tile(tid);
+        tc.init(tid);
+        auto tile  = tc.get_tile(tid);
         read_cgal_tile(*tile,dirname);
     }
-    tri.finalize();
-    std::cout << tri.is_valid() << std::endl;
-    //assert(tri.is_valid());
+    tc.finalize();
+    std::cout << tc.is_valid() << std::endl;
     return 0;
 }
 

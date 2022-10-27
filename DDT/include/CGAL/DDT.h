@@ -16,6 +16,7 @@
 #include <CGAL/DDT/iterator/Facet_const_iterator.h>
 #include <CGAL/DDT/iterator/Cell_const_iterator.h>
 #include <CGAL/DDT/tile.h>
+#include <CGAL/DDT/tile_container.h>
 
 #include <string>
 #include <unordered_map>
@@ -24,69 +25,13 @@
 namespace ddt
 {
 
-template<typename Map_const_iterator>
-class Key_const_iterator : public Map_const_iterator
-{
-public:
-    using iterator_category = std::forward_iterator_tag;
-    using value_type = typename Map_const_iterator::value_type::first_type;
-    using difference_type = std::ptrdiff_t;
-    using pointer = const value_type*;
-    using reference = const value_type&;
-
-    Key_const_iterator ( ) : Map_const_iterator ( ) { }
-    Key_const_iterator ( Map_const_iterator it_ ) : Map_const_iterator ( it_ ) { }
-
-    pointer operator -> ( ) const { return &(Map_const_iterator::operator->()->first); }
-    reference operator * ( ) const { return Map_const_iterator::operator*().first; }
-    Key_const_iterator operator++() { return Map_const_iterator::operator++(); }
-    Key_const_iterator operator++(int) { return Map_const_iterator::operator++(0); }
-};
-
-template<typename Map_const_iterator>
-class Mapped_const_iterator : public Map_const_iterator
-{
-public:
-    using iterator_category = std::forward_iterator_tag;
-    using value_type = typename Map_const_iterator::value_type::second_type;
-    using difference_type = std::ptrdiff_t;
-    using pointer = const value_type*;
-    using reference = const value_type&;
-
-    Mapped_const_iterator ( ) : Map_const_iterator ( ) { }
-    Mapped_const_iterator ( Map_const_iterator it_ ) : Map_const_iterator ( it_ ) { }
-
-    pointer operator -> ( ) const { return &(Map_const_iterator::operator->()->second); }
-    reference operator * ( ) const { return Map_const_iterator::operator*().second; }
-    Mapped_const_iterator operator++() { return Map_const_iterator::operator++(); }
-    Mapped_const_iterator operator++(int) { return Map_const_iterator::operator++(0); }
-};
-
-template<typename Map_iterator>
-class Mapped_iterator : public Map_iterator
-{
-public:
-    using iterator_category = std::forward_iterator_tag;
-    using value_type = typename Map_iterator::value_type::second_type;
-    using difference_type = std::ptrdiff_t;
-    using pointer = value_type*;
-    using reference = value_type&;
-
-    Mapped_iterator ( ) : Map_iterator ( ) { }
-    Mapped_iterator ( Map_iterator it_ ) : Map_iterator ( it_ ) { }
-
-    pointer operator -> ( ) { return &(Map_iterator::operator->()->second); }
-    reference operator * ( ) { return Map_iterator::operator*().second; }
-    Mapped_iterator operator++() { return Map_iterator::operator++(); }
-    Mapped_iterator operator++(int) { return Map_iterator::operator++(0); }
-};
-
-template<typename _Traits, typename Serializer, typename _Tile = ddt::Tile<_Traits>>
+template<typename TileContainer>
 class DDT
 {
 public:
-    typedef _Traits                                  Traits;
-    typedef _Tile                                    Tile;
+    typedef TileContainer                            Tile_container;
+    typedef typename Tile_container::Traits          Traits;
+    typedef typename Tile_container::Tile            Tile;
 
     typedef typename Traits::Point                   Point;
     typedef typename Traits::Id                      Id;
@@ -101,6 +46,7 @@ public:
     typedef typename Traits::Facet_handle            Tile_facet_handle;
     typedef typename Traits::Facet_const_handle      Tile_facet_const_handle;
     typedef typename Traits::Facet_const_iterator    Tile_facet_const_iterator;
+    typedef typename Tile_container::Tile_const_iterator  Tile_const_iterator;
 
     typedef std::pair<Tile_cell_const_handle,Id>     Tile_cell_const_handle_and_id;
     typedef std::pair<Tile_vertex_const_handle,Id>   Tile_vertex_const_handle_and_id;
@@ -111,14 +57,6 @@ public:
     typedef ddt::Facet_const_iterator <DDT>          Facet_const_iterator;
     typedef ddt::Cell_const_iterator  <DDT>          Cell_const_iterator;
 
-    typedef std::map<Id, Tile>                                              Tile_container;
-    typedef Mapped_const_iterator<typename Tile_container::const_iterator>  Tile_const_iterator ;
-    typedef Mapped_iterator<typename Tile_container::iterator>              Tile_iterator ;
-    typedef Key_const_iterator<typename Tile_container::const_iterator>     Tile_id_const_iterator ;
-
-    // typedef std::set<Id> Tile_id_set;
-    // typedef typename Tile_id_set::const_iterator Tile_id_set_const_iterator;
-
     enum { D = Traits::D };
 
     inline int maximal_dimension() const
@@ -126,54 +64,23 @@ public:
         return D;
     }
 
-    DDT(Serializer& serializer) :
-        tiles(),
-        serializer(serializer),
-        number_of_vertices_(0),
-        number_of_facets_  (0),
-        number_of_cells_   (0)
+    DDT(TileContainer& tc) :
+        tiles(tc)
     {
     }
 
-/*    DDT(const DDT& ddt) :
-        tiles(ddt.tiles),
-        serializer(ddt.serializer),
-        number_of_vertices_(ddt.number_of_vertices_),
-        number_of_facets_  (ddt.number_of_facets_  ),
-        number_of_cells_   (ddt.number_of_cells_   )
-    {
-    }
-*/
-    inline size_t number_of_cells   () const { return number_of_cells_;    }
-    inline size_t number_of_vertices() const { return number_of_vertices_; }
-    inline size_t number_of_facets  () const { return number_of_facets_;   }
-    inline size_t number_of_tiles   () const { return tiles.size();   }
+    inline size_t number_of_cells   () const { return tiles.number_of_cells();    }
+    inline size_t number_of_vertices() const { return tiles.number_of_vertices(); }
+    inline size_t number_of_facets  () const { return tiles.number_of_facets();   }
 
-    /// non-const because of automatic loading/unloading
-    Vertex_const_iterator vertices_begin() const { return Vertex_const_iterator(tiles_begin(), tiles_end()); }
-    Vertex_const_iterator vertices_end  () const { return Vertex_const_iterator(tiles_end(), tiles_end()); }
-    // Vertex_const_iterator vertices_begin() { return Vertex_const_iterator(*this, tile_ids.begin()); }
-    // Vertex_const_iterator vertices_end  () { return Vertex_const_iterator(*this, tile_ids.end()); }
+    Vertex_const_iterator vertices_begin() const { return Vertex_const_iterator(tiles.cbegin(), tiles.cend()); }
+    Vertex_const_iterator vertices_end  () const { return Vertex_const_iterator(tiles.cend(), tiles.cend()); }
 
-    Cell_const_iterator cells_begin() const { return Cell_const_iterator(tiles_begin(), tiles_end()); }
-    Cell_const_iterator cells_end  () const { return Cell_const_iterator(tiles_end(), tiles_end()); }
+    Cell_const_iterator cells_begin() const { return Cell_const_iterator(tiles.cbegin(), tiles.cend()); }
+    Cell_const_iterator cells_end  () const { return Cell_const_iterator(tiles.cend(), tiles.cend()); }
 
-    Facet_const_iterator facets_begin() const { return Facet_const_iterator(tiles_begin(), tiles_end()); }
-    Facet_const_iterator facets_end  () const { return Facet_const_iterator(tiles_end(), tiles_end()); }
-
-    Tile_id_const_iterator tile_ids_begin() const { return tiles.begin(); }
-    Tile_id_const_iterator tile_ids_end  () const { return tiles.end  (); }
-    // Tile_id_set_const_iterator tile_ids_begin() const { return tile_ids.begin(); }
-    // Tile_id_set_const_iterator tile_ids_end  () const { return tile_ids.end  (); }
-
-    Tile_const_iterator tiles_begin  () const { return tiles.begin (); }
-    Tile_const_iterator tiles_end    () const { return tiles.end   (); }
-    Tile_const_iterator get_tile(Id id) const { return tiles.find(id); }
-
-    Tile_iterator tiles_begin  () { return tiles.begin (); }
-    Tile_iterator tiles_end    () { return tiles.end   (); }
-    Tile_iterator get_tile(Id id) { return tiles.find(id); }
-    bool is_loaded(Id id) const { return tiles.find(id) != tiles.end(); }
+    Facet_const_iterator facets_begin() const { return Facet_const_iterator(tiles.cbegin(), tiles.cend()); }
+    Facet_const_iterator facets_end  () const { return Facet_const_iterator(tiles.cend(), tiles.cend()); }
 
     int vertex_id(Vertex_const_iterator v) const
     {
@@ -184,53 +91,6 @@ public:
     int cell_id(Cell_const_iterator c) const
     {
         return std::distance(cells_begin(), main(c));
-    }
-
-    void init(Id id)
-    {
-        tiles.emplace(id, id);
-    }
-
-    /// @todo attention à la perennité des handles (tile is possibly unloaded), ou alors lock ou shared pointer.
-    /// unload a tile from memory (no automatic saving)
-    void unload(Id id)
-    {
-        tiles.remove(id);
-    }
-
-    /// load the tile using the serializer, given its id.
-    void load(Id id)
-    {
-        /// @todo unload tiles if needed
-        tiles.emplace(id, serializer.load(id));
-    }
-
-    /// saves a tile using the serializer (no unloading)
-    void save(Id id)
-    {
-        serializer.save(tiles[id]);
-    }
-
-    void get_adjacency_graph(std::unordered_multimap<Id,Id>& edges) const
-    {
-        for(auto tile = tiles_begin(); tile != tiles_end(); ++tile)
-        {
-            std::set<Id> out_edges;
-            tile->get_adjacency_graph_edges(out_edges);
-            Id source = tile->id();
-            for(Id target : out_edges)
-                edges.emplace(source, target);
-        }
-    }
-
-    bool is_adjacency_graph_symmetric() const
-    {
-        std::unordered_multimap<Id,Id> edges;
-        std::unordered_multimap<Id,Id> reversed;
-        get_adjacency_graph(edges);
-        for(auto& edge : edges)
-            reversed.emplace(edge.second, edge.first);
-        return edges == reversed;
     }
 
     void get_ring(Cell_const_iterator c, int deg, std::set<Cell_const_iterator>& cset) const
@@ -261,49 +121,19 @@ public:
         }
     }
 
-    void finalize()
-    {
-        number_of_vertices_ = 0;
-        number_of_facets_ = 0;
-        number_of_cells_ = 0;
-        for(auto tile = tiles_begin(); tile != tiles_end(); ++tile)
-        {
-            tile->finalize();
-            number_of_vertices_ += tile->number_of_main_vertices();
-            number_of_facets_ += tile->number_of_main_facets();
-            number_of_cells_ += tile->number_of_main_cells();
-        }
-    }
-
 
     bool is_valid() const
     {
-        size_t number_of_vertices = 0;
-        size_t number_of_facets = 0;
-        size_t number_of_cells = 0;
-        bool test_only_cgal = false;
-        for(auto tile = tiles_begin(); tile != tiles_end(); ++tile)
+        if (!tiles.is_valid()) return false;
+        for(auto tile = tiles.begin(); tile != tiles.end(); ++tile)
         {
-            if(!tile->is_valid())
-            {
-                std::cerr << "Tile " << int(tile->id()) << " is invalid" << std::endl;
-                //assert(! "CGAL tile not valid" );
-                return false;
-            }
-            if(test_only_cgal){
-              continue;
-            }
-            number_of_vertices += tile->number_of_main_vertices();
-            number_of_facets += tile->number_of_main_facets();
-            number_of_cells += tile->number_of_main_cells();
-
             for(auto v = tile->vertices_begin(); v != tile->vertices_end(); ++v)
             {
                 assert(tile->vertex_is_infinite(v) || (tile->vertex_is_local(v) + tile->vertex_is_foreign(v) == 1));
                 if(tile->vertex_is_infinite(v)) continue;
                 Id tid = tile->id(v);
                 if(tid == tile->id()) continue;
-                auto t = get_tile(tid);
+                auto t = tiles.get_tile(tid);
                 if(t->locate_vertex(*tile, v) == t->vertices_end())
                 {
                     assert(! "locate_vertex failed" );
@@ -327,7 +157,7 @@ public:
                 }
                 for(auto tid : tids)
                 {
-                    auto t = get_tile(tid);
+                    auto t = tiles.get_tile(tid);
                     if(t->locate_facet(*tile, f) == t->facets_end())
                     {
                       assert(! "locate_facet failed" );
@@ -351,7 +181,7 @@ public:
                 }
                 for(auto tid : tids)
                 {
-                    auto t = get_tile(tid);
+                    auto t = tiles.get_tile(tid);
                     if(t->locate_cell(*tile, c) == t->cells_end())
                     {
                       assert(! "locate_facet failed" );
@@ -359,11 +189,6 @@ public:
                     }
                 }
             }
-        }
-        if(!test_only_cgal){
-            if (number_of_vertices != number_of_vertices_) { std::cerr << "incorrect number_of_vertices" << std::endl; return false; }
-            if (number_of_facets != number_of_facets_) { std::cerr << "incorrect number_of_facets" << std::endl; return false; }
-            if (number_of_cells != number_of_cells_) { std::cerr << "incorrect number_of_cells" << std::endl; return false; }
         }
         return true;
     }
@@ -407,10 +232,11 @@ public:
         if (id == tile_id(v)) return v; // v is already in tile id
 
         // if (!is_loaded(id) ) load(id);
-        Tile_const_iterator tile = get_tile(id);
+        Tile_container const& t = tiles; // why do we need this in a const function ?
+        Tile_const_iterator tile = t.get_tile(id);
         Tile_vertex_const_iterator vertex = tile->locate_vertex(*(v.tile()), v.vertex());
         if (vertex==tile->vertices_end()) return vertices_end();
-        return Vertex_const_iterator(tile, tiles_end(), vertex);
+        return Vertex_const_iterator(tile, tiles.cend(), vertex);
     }
 
     Facet_const_iterator locate(const Facet_const_iterator& f, Id id) const
@@ -418,10 +244,11 @@ public:
         assert(is_valid(f));
         if (id == tile_id(f)) return f; // f is already in tile id
 
-        Tile_const_iterator tile = get_tile(id);
+        Tile_container const& t = tiles; // why do we need this in a const function ?
+        Tile_const_iterator tile = t.get_tile(id);
         Tile_facet_const_iterator facet = tile->locate_facet(*(f.tile()), f.facet());
         if (facet==tile->facets_end()) return facets_end();
-        return Facet_const_iterator(tile, tiles_end(), facet);
+        return Facet_const_iterator(tile, tiles.cend(), facet);
     }
 
     Cell_const_iterator locate(const Cell_const_iterator& c, Id id) const
@@ -429,10 +256,11 @@ public:
         assert(is_valid(c));
         if (id == tile_id(c)) return c; // c is already in tile id
 
-        Tile_const_iterator tile = get_tile(id);
+        Tile_container const& t = tiles; // why do we need this in a const function ?
+        Tile_const_iterator tile = t.get_tile(id);
         Tile_cell_const_iterator cell = tile->locate_cell(*(c.tile()), c.cell());
         if (cell==tile->cells_end()) return cells_end();
-        return Cell_const_iterator(tile, tiles_end(), cell);
+        return Cell_const_iterator(tile, tiles.cend(), cell);
     }
 
     inline Vertex_const_iterator main(const Vertex_const_iterator& v) const { return locate(v, main_id(v)); }
@@ -442,8 +270,8 @@ public:
     inline Vertex_const_iterator infinite_vertex() const
     {
         assert(!tiles.empty());
-        Tile_const_iterator tile = tiles_begin();
-        return Vertex_const_iterator(tile, tiles_end(), tile->infinite_vertex());
+        Tile_const_iterator tile = tiles.cbegin();
+        return Vertex_const_iterator(tile, tiles.cend(), tile->infinite_vertex());
     }
 
     /// Access the ith vertex of the cell c.
@@ -471,7 +299,7 @@ public:
         assert(is_valid(f));
         Tile_const_iterator tile = f.tile();
         assert(tile->facet_is_valid(f.facet()));
-        return Facet_const_iterator(tile, tiles_end(), tile->mirror_facet(f.facet()));
+        return Facet_const_iterator(tile, tiles.cend(), tile->mirror_facet(f.facet()));
     }
 
     // Access the mirror index of facet f, such that neighbor(cell(mirror_facet(f)), mirror_index)==cell(f)
@@ -490,7 +318,7 @@ public:
         Tile_const_iterator tile = f.tile();
         Tile_cell_const_iterator c = tile->cell(f.facet());
         if(tile->cell_is_foreign(c)) return local_cell(main(f)); // any non foreign representative could do
-        return Cell_const_iterator(tile, tiles_end(), c);
+        return Cell_const_iterator(tile, tiles.cend(), c);
     }
 
     /// @returns the index of the covertex
@@ -509,7 +337,7 @@ public:
         Tile_const_iterator tile = f.tile();
         Tile_cell_const_iterator c = tile->cell(f.facet());
         if(tile->cell_is_foreign(c)) return local_covertex(main(f)); // any non foreign representative could do
-        return Vertex_const_iterator(tile, tiles_end(), tile->covertex(f.facet()));
+        return Vertex_const_iterator(tile, tiles.cend(), tile->covertex(f.facet()));
     }
 
     Vertex_const_iterator mirror_vertex(const Facet_const_iterator& f) const
@@ -545,7 +373,7 @@ public:
     {
         assert(is_valid(c));
         Tile_const_iterator tile = c.tile();
-        return Vertex_const_iterator(tile, tiles_end(), tile->vertex(c.cell(), i));
+        return Vertex_const_iterator(tile, tiles.cend(), tile->vertex(c.cell(), i));
     }
 
     inline int local_index_of_covertex(const Facet_const_iterator& f) const
@@ -559,7 +387,7 @@ public:
     {
         assert(is_valid(c));
         Tile_const_iterator tile = c.tile();
-        return Facet_const_iterator(tile, tiles_end(), tile->facet(c.cell(), i));
+        return Facet_const_iterator(tile, tiles.cend(), tile->facet(c.cell(), i));
     }
 
     inline int local_mirror_index(const Facet_const_iterator& f) const
@@ -578,7 +406,7 @@ public:
         Tile_const_iterator tile = f.tile();
         Tile_cell_const_iterator c = tile->cell(f.facet());
         assert(!tile->cell_is_foreign(c));
-        return Cell_const_iterator(tile, tiles_end(), c);
+        return Cell_const_iterator(tile, tiles.cend(), c);
     }
 
     Vertex_const_iterator local_covertex(const Facet_const_iterator& f) const
@@ -587,20 +415,11 @@ public:
         Tile_const_iterator tile = f.tile();
         Tile_cell_const_iterator c = tile->cell(f.facet());
         assert(!tile->cell_is_foreign(c));
-        return Vertex_const_iterator(tile, tiles_end(), tile->covertex(f.facet()));
+        return Vertex_const_iterator(tile, tiles.cend(), tile->covertex(f.facet()));
     }
 
 private:
-
-    // tile container
-    Tile_container tiles; /// loaded tiles
-    Serializer& serializer;
-
-
-    size_t number_of_vertices_;
-    size_t number_of_facets_;
-    size_t number_of_cells_;
-
+    Tile_container& tiles; /// loaded tiles
 };
 
 }

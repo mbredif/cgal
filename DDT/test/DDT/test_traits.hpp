@@ -10,18 +10,19 @@
 #include <CGAL/DDT/serializer/file_serializer.h>
 #include <CGAL/DDT.h>
 #include <CGAL/DDT/distributed_Delaunay_triangulation.h>
+#include <CGAL/DDT/tile_container.h>
 
-template <typename T>
-int dump_2d_vrt(T & tri,const std::string& testname)
+template <typename T, typename TC>
+int dump_2d_vrt(T & tri, TC& tiles, const std::string& testname)
 {
     boost::filesystem::create_directories(testname);
     std::cout << "== write_vrt ==" << std::endl;
     ddt::write_vrt_vert(tri, testname+"_vert.vrt");
     ddt::write_vrt_facet(tri, testname+"_facet.vrt");
     ddt::write_vrt_cell(tri, testname+"_cell.vrt");
-    ddt::write_vrt_cells(tri, testname);
-    ddt::write_vrt_verts(tri, testname);
-    ddt::write_vrt_facets(tri, testname);
+    ddt::write_vrt_cells(tiles, testname);
+    ddt::write_vrt_verts(tiles, testname);
+    ddt::write_vrt_facets(tiles, testname);
     return 0;
 
 }
@@ -49,7 +50,8 @@ int test_traits(const std::string& testname, int ND, int NP, bool do_test_io = t
     typedef ddt::Tile<Traits> Tile;
     typedef ddt::Scheduler<Tile> Scheduler;
     typedef ddt::File_Serializer<Id,Tile> Serializer;
-    typedef ddt::DDT<Traits, Serializer> DDT;
+    typedef ddt::tile_container<Traits, Serializer> TileContainer;
+    typedef ddt::DDT<TileContainer> DDT;
     typedef ddt::grid_partitioner<Traits> Partitioner;
     typedef typename Traits::Random_points_in_box Random_points;
 
@@ -59,9 +61,10 @@ int test_traits(const std::string& testname, int ND, int NP, bool do_test_io = t
     Random_points points(Traits::D, range);
     Partitioner partitioner(bbox, ND);
     Serializer serializer;
-    DDT tri1(serializer);
+    TileContainer tiles1(serializer);
+    DDT tri1(tiles1);
     Scheduler scheduler;
-    CGAL::ddt::insert(tri1, scheduler, points, NP, partitioner);
+    CGAL::ddt::insert(tiles1, scheduler, points, NP, partitioner);
     if(!tri1.is_valid())
     {
         std::cerr << "tri is not valid" << std::endl;
@@ -72,11 +75,11 @@ int test_traits(const std::string& testname, int ND, int NP, bool do_test_io = t
     if (Traits::D == 3)
     {
         std::cout << "== write_ply ==" << std::endl;
-        ddt::write_ply(tri1, testname + "/out.ply");
+        ddt::write_ply(tiles1, testname + "/out.ply");
     }
     else if (Traits::D == 2)
     {
-        result += dump_2d_vrt(tri1, testname + "/tri1");
+        result += dump_2d_vrt(tri1, tiles1, testname + "/tri1");
         if(!is_euler_valid(tri1))
             return 1;
     }
@@ -87,18 +90,19 @@ int test_traits(const std::string& testname, int ND, int NP, bool do_test_io = t
         boost::filesystem::create_directories(testname + "/cgal");
         boost::filesystem::create_directories(testname + "/cgal2");
         std::cout << "write..." << std::endl;
-        ddt::write_cgal(tri1, testname + "/cgal");
+        ddt::write_cgal(tiles1, testname + "/cgal");
 
-        DDT tri2(serializer);
+        TileContainer tiles2(serializer);
+        DDT tri2(tiles2);
         std::cout << "read..." << std::endl;
-        ddt::read_cgal(tri2, testname + "/cgal");
+        ddt::read_cgal(tiles2, testname + "/cgal");
         std::cout << "write again..." << std::endl;
-        ddt::write_cgal(tri1, testname + "/cgal2");
+        ddt::write_cgal(tiles1, testname + "/cgal2");
 
-        result += dump_2d_vrt(tri2, testname + "/tri2");
+        result += dump_2d_vrt(tri2, tiles2, testname + "/tri2");
         if (Traits::D == 2)
         {
-            result += dump_2d_vrt(tri1, testname + "/tri1");
+            result += dump_2d_vrt(tri1, tiles1, testname + "/tri1");
             if(!is_euler_valid(tri2))
                 result += 1;
         }

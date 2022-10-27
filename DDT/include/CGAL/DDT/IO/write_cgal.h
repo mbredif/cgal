@@ -101,13 +101,13 @@ int write_iedge_tile(const Tile& tile, std::string dirname)
     return 0;
 }
 
-template<typename DDT>
-int write_cgal(const DDT& tri, const std::string& dirname)
+template<typename TileContainer>
+int write_cgal(const TileContainer& tc, const std::string& dirname)
 {
     boost::property_tree::ptree root_node;
     boost::property_tree::ptree tiles_node;
 
-    for(auto  tile = tri.tiles_begin(); tile != tri.tiles_end(); ++tile)
+    for(auto  tile = tc.cbegin(); tile != tc.cend(); ++tile)
     {
         std::string fpath = std::to_string(tile->id())  + ".bin";
         tiles_node.put(std::to_string(tile->id()),fpath);
@@ -121,16 +121,16 @@ int write_cgal(const DDT& tri, const std::string& dirname)
 
 
     int i = 0;
-    for(auto tile = tri.tiles_begin(); tile != tri.tiles_end(); ++tile)
+    for(auto tile = tc.cbegin(); tile != tc.cend(); ++tile)
         i += write_cgal_tile(*tile, dirname);
     return i;
 }
 
-template<typename DDT>
-int write_iedge(const DDT& tri, const std::string& dirname)
+template<typename TileContainer>
+int write_iedge(const TileContainer& tc, const std::string& dirname)
 {
     int i = 0;
-    for(auto tile = tri.tiles_begin(); tile != tri.tiles_end(); ++tile)
+    for(auto tile = tc.cbegin(); tile != tc.cend(); ++tile)
         i += write_iedge_tile(*tile, dirname);
     return i;
 }

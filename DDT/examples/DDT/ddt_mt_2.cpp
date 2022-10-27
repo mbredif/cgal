@@ -28,7 +28,9 @@ typedef ddt::tbb_scheduler<Tile> Scheduler;
 #include <CGAL/DDT/serializer/file_serializer.h>
 typedef ddt::File_Serializer<Id,Tile> Serializer;
 
-typedef ddt::DDT<Traits, Serializer> DDT;
+#include <CGAL/DDT/tile_container.h>
+typedef ddt::tile_container<Traits, Serializer> TileContainer;
+typedef ddt::DDT<TileContainer> DDT;
 #include <CGAL/DDT/IO/write_ply.h>
 #include <CGAL/DDT/IO/write_vrt.h>
 #include <CGAL/DDT/IO/logging.h>
@@ -90,7 +92,8 @@ int main(int argc, char **argv)
     Serializer serializer;
     serializer.add(0, "0.txt");
     serializer.add(1, "1.txt");
-    DDT tri(serializer);
+    TileContainer tiles(serializer);
+    DDT tri(tiles);
     Scheduler scheduler;
 
     std::cout << "- Loglevel : " << loglevel << std::endl;
@@ -103,27 +106,12 @@ int main(int argc, char **argv)
     std::cout << ")" << std::endl;
 
     Random_points points(D, range);
-    CGAL::ddt::insert(tri, scheduler, points, NP, partitioner);
-    /*
-    {
-        ddt::logging<> log("Overall      ", loglevel);
-        log.step("Send Points");
-        tri.send_points(points, NP, partitioner);
-        log.step("Insert Points");
-        tri.insert_received_points(false);
-        log.step("Send   Bbox  ");
-        tri.send_all_bbox_points();
-        log.step("Splay  Stars");
-        tri.splay_stars();
-        log.step("Finalize     ");
-        tri.finalize();
-    }
-    */
+    CGAL::ddt::insert(tiles, scheduler, points, NP, partitioner);
 
     if ( vm.count("out")  )
     {
         ddt::logging<> log("Writing      ", loglevel);
-        ddt::write_ply(tri, out+".ply");
+        ddt::write_ply(tiles, out+".ply");
         ddt::write_vrt_cell(tri, out+"_c.vrt");
         ddt::write_vrt_vert(tri, out+"_v.vrt");
     }

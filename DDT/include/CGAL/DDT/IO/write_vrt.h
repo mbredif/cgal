@@ -440,13 +440,13 @@ void write_vrt_bbox_vert(DDT& tri, const std::string& filename)
 
 // VRT+CSV writers (DDT tiles)
 
-template<typename DDT>
-void write_vrt_verts(DDT& tri, const std::string& dirname)
+template<typename TileContainer>
+void write_vrt_verts(TileContainer& tc, const std::string& dirname)
 {
     boost::filesystem::path p(dirname);
     if(boost::filesystem::exists(p.parent_path()))
     {
-        for(auto tile = tri.tiles_begin(); tile != tri.tiles_end(); ++tile)
+        for(auto tile = tc.cbegin(); tile != tc.cend(); ++tile)
         {
             std::string filename(dirname + std::string("/tile_verts") + std::to_string(tile->id()) + ".vrt");
             std::ofstream csv;
@@ -460,13 +460,13 @@ void write_vrt_verts(DDT& tri, const std::string& dirname)
     }
 }
 
-template<typename DDT>
-void write_vrt_facets(DDT& tri, const std::string& dirname)
+template<typename TileContainer>
+void write_vrt_facets(TileContainer& tc, const std::string& dirname)
 {
     boost::filesystem::path p(dirname);
     if(boost::filesystem::exists(p.parent_path()))
     {
-        for(auto tile = tri.tiles_begin(); tile != tri.tiles_end(); ++tile)
+        for(auto tile = tc.cbegin(); tile != tc.cend(); ++tile)
         {
             std::string filename(dirname  + std::string("/tile_facets_") + std::to_string(tile->id()) + ".vrt");
             std::ofstream csv;
@@ -480,13 +480,13 @@ void write_vrt_facets(DDT& tri, const std::string& dirname)
     }
 }
 
-template<typename DDT>
-void write_vrt_cells(DDT& tri, const std::string& dirname)
+template<typename TileContainer>
+void write_vrt_cells(TileContainer& tc, const std::string& dirname)
 {
     boost::filesystem::path p(dirname);
     if(boost::filesystem::exists(p.parent_path()))
     {
-        for(auto tile = tri.tiles_begin(); tile != tri.tiles_end(); ++tile)
+        for(auto tile = tc.cbegin(); tile != tc.cend(); ++tile)
         {
             std::string filename(dirname + std::string("/tile_cell_") +  std::to_string(tile->id()) + ".vrt");
             std::ofstream csv;

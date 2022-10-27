@@ -31,21 +31,21 @@ inline void write_ply_header_end(std::ostream& out)
     out << "end_header" << std::endl;
 }
 
-template<typename DDT>
-void write_ply_element_cell(const DDT& tri, std::ostream& out)
+template<typename TileContainer>
+void write_ply_element_cell(const TileContainer& tc, std::ostream& out)
 {
-    int nc = tri.number_of_cells();
+    int nc = tc.number_of_cells();
     out << "element face " << nc << std::endl;
     out << "property list uint8 int vertex_indices" << std::endl;
     out << "property uint8 tile" << std::endl;
     out << "property uint8 local" << std::endl;
 }
 
-template<typename DDT>
-void write_ply_element_vert(const DDT& tri, std::ostream& out)
+template<typename TileContainer>
+void write_ply_element_vert(const TileContainer& tc, std::ostream& out)
 {
-    int D = tri.maximal_dimension();
-    int nv = tri.number_of_vertices();
+    int D = tc.maximal_dimension();
+    int nv = tc.number_of_vertices();
     out << "element vertex " << nv << std::endl;
     out << "property float32 x" << std::endl;
     out << "property float32 y" << std::endl;
@@ -102,41 +102,41 @@ void write_ply_property_vert(const Tile& tile, std::ostream& out)
     }
 }
 
-template<typename DDT>
-void write_ply_cell(const DDT& tri, const std::string& filename)
+template<typename TileContainer>
+void write_ply_cell(const TileContainer& tc, const std::string& filename)
 {
     std::ofstream out(filename, std::ios::binary);
     write_ply_header_begin(out);
-    write_ply_element_cell(tri, out);
+    write_ply_element_cell(tc, out);
     write_ply_header_end(out);
-    for(auto tile = tri.tiles_begin(); tile != tri.tiles_end(); ++tile)
+    for(auto tile = tc.begin(); tile != tc.end(); ++tile)
         write_ply_property_cell(*tile, out);
     out.close();
 }
 
-template<typename DDT>
-void write_ply_vert(const DDT& tri, const std::string& filename)
+template<typename TileContainer>
+void write_ply_vert(const TileContainer& tc, const std::string& filename)
 {
     std::ofstream out(filename, std::ios::binary);
     write_ply_header_begin(out);
-    write_ply_element_vert(tri, out);
+    write_ply_element_vert(tc, out);
     write_ply_header_end(out);
-    for(auto tile = tri.tiles_begin(); tile != tri.tiles_end(); ++tile)
+    for(auto tile = tc.begin(); tile != tc.end(); ++tile)
         write_ply_property_vert(*tile, out);
     out.close();
 }
 
-template<typename DDT>
-void write_ply(const DDT& tri, const std::string& filename)
+template<typename TileContainer>
+void write_ply(const TileContainer& tc, const std::string& filename)
 {
     std::ofstream out(filename, std::ios::binary);
     write_ply_header_begin(out);
-    write_ply_element_vert(tri, out);
-    write_ply_element_cell(tri, out);
+    write_ply_element_vert(tc, out);
+    write_ply_element_cell(tc, out);
     write_ply_header_end(out);
-    for(auto tile = tri.tiles_begin(); tile != tri.tiles_end(); ++tile)
+    for(auto tile = tc.begin(); tile != tc.end(); ++tile)
         write_ply_property_vert(*tile, out);
-    for(auto tile = tri.tiles_begin(); tile != tri.tiles_end(); ++tile)
+    for(auto tile = tc.begin(); tile != tc.end(); ++tile)
         write_ply_property_cell(*tile, out);
     out.close();
 }
