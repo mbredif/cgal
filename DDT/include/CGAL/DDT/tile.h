@@ -42,7 +42,7 @@ public:
     typedef typename Traits::Vertex_const_handle     Vertex_const_handle;
     typedef typename Traits::Vertex_const_iterator   Vertex_const_iterator;
     typedef std::pair<Vertex_const_handle,Id>        Vertex_const_handle_and_id;
-    typedef std::tuple<Point,Id,Id>                  Point_id_source;
+    typedef std::tuple<Point,Id>                     Point_id;
     typedef typename Traits::Cell_handle             Cell_handle;
     typedef typename Traits::Cell_const_handle       Cell_const_handle;
     typedef typename Traits::Cell_const_iterator     Cell_const_iterator;
@@ -452,7 +452,7 @@ public:
         }
     }
 /*
-    void get_neighbors_pid(std::map<Id, std::vector<Point_id_source>> & outbox)
+    void get_neighbors_pid(std::map<Id, std::vector<Point_id>> & outbox)
     {
 
         for(auto cit = cells_begin(); cit != cells_end(); ++cit)
@@ -478,7 +478,7 @@ public:
 */
 
     int send_one(
-        std::map<Id, std::vector<Point_id_source>>& inbox,
+        std::map<Id, std::vector<Point_id>>& inbox,
         const std::vector<Vertex_const_handle_and_id>& outbox
     )
     {
@@ -490,7 +490,7 @@ public:
 
     template<typename Id_iterator>
     int send_all(
-        std::map<Id, std::vector<Point_id_source>>& inbox,
+        std::map<Id, std::vector<Point_id>>& inbox,
         const std::vector<Vertex_const_handle>& outbox,
         Id_iterator begin,
         Id_iterator end
@@ -504,19 +504,19 @@ public:
     }
 
     inline bool send_vertex(
-        std::map<Id, std::vector<Point_id_source>>& inbox, Vertex_const_handle vh, Id source, Id target)
+        std::map<Id, std::vector<Point_id>>& inbox, Vertex_const_handle vh, Id source, Id target)
     {
         if(vertex_is_infinite(vh))
             return false;
         Id vid = id(vh);
         if(target==vid || target == source || !sent_[target].insert(vh).second)
             return false;
-        inbox[target].emplace_back(point(vh),vid,source);
+        inbox[target].emplace_back(point(vh),vid);
         return true;
     }
 
     template <class Points>
-    int insert(const /*std::vector<Point_id_source>*/ Points & received, bool do_simplify = true)
+    int insert(const /*std::vector<Point_id>*/ Points & received, bool do_simplify = true)
     {
         if(received.empty()) return 0;
         std::vector<std::pair<Point,Id>> points;

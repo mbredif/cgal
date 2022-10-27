@@ -32,7 +32,7 @@ struct tbb_scheduler
     typedef T Tile;
     typedef typename Tile::Vertex_const_handle_and_id Vertex_const_handle_and_id;
     typedef typename Tile::Vertex_const_handle Vertex_const_handle;
-    typedef typename Tile::Point_id_source Point_id_source;
+    typedef typename Tile::Point_id Point_id;
     typedef typename Tile::Point Point;
     typedef typename Tile::Id Id;
     tbb_scheduler()
@@ -43,14 +43,14 @@ struct tbb_scheduler
         return tbb::this_task_arena::max_concurrency();
     }
 
-    void send(const Point& p, Id id, Id source, Id target)
+    void send(const Point& p, Id id, Id target)
     {
-        inbox[target].emplace_back(p,id,source);
+        inbox[target].emplace_back(p,id);
     }
 
     void send(const Point& p, Id id)
     {
-        send(p,id,id,id);
+        send(p,id,id);
     }
 
     std::function<int(Tile&)>
@@ -58,7 +58,7 @@ struct tbb_scheduler
     {
         return [this, do_simplify](Tile& tile)
         {
-            tbb::concurrent_vector<Point_id_source> received;
+            tbb::concurrent_vector<Point_id> received;
             inbox[tile.id()].swap(received);
             return int(tile.insert(received, do_simplify));
         };
@@ -70,12 +70,12 @@ struct tbb_scheduler
     {
         return [this,f](Tile& tile)
         {
-            tbb::concurrent_vector<Point_id_source> received;
+            tbb::concurrent_vector<Point_id> received;
             inbox[tile.id()].swap(received);
             if(!tile.insert(received)) return 0;
             std::vector<Vertex_const_handle_and_id> vertices;
             (tile.*f)(vertices);
-            std::map<Id, std::vector<Point_id_source>> outgoing;
+            std::map<Id, std::vector<Point_id>> outgoing;
             int count = tile.send_one(outgoing, vertices);
             for(auto& p : outgoing)
               inbox[p.first].grow_by(p.second.begin(), p.second.end());
@@ -91,7 +91,7 @@ struct tbb_scheduler
         {
             std::vector<Vertex_const_handle> vertices;
             (tile.*f)(vertices);
-            std::map<Id, std::vector<Point_id_source>> outgoing;
+            std::map<Id, std::vector<Point_id>> outgoing;
             int count = tile.send_all(outgoing, vertices, begin, end);
             for(auto& p : outgoing)
               inbox[p.first].grow_by(p.second.begin(), p.second.end());
@@ -162,7 +162,7 @@ struct tbb_scheduler
     }
 
 private:
-    std::map<Id, tbb::concurrent_vector<Point_id_source>> inbox;
+    std::map<Id, tbb::concurrent_vector<Point_id>> inbox;
 };
 
 }

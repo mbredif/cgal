@@ -26,7 +26,7 @@ struct multithread_scheduler
     typedef T Tile;
     typedef typename Tile::Vertex_const_handle_and_id Vertex_const_handle_and_id;
     typedef typename Tile::Vertex_const_handle Vertex_const_handle;
-    typedef typename Tile::Point_id_source Point_id_source;
+    typedef typename Tile::Point_id Point_id;
     typedef typename Tile::Point Point;
     typedef typename Tile::Id Id;
     multithread_scheduler(int n_threads = 0) : pool(n_threads), timeout_(1)
@@ -47,14 +47,14 @@ struct multithread_scheduler
         pool.shutdown();
     }
 
-    void send(const Point& p, Id id, Id source, Id target)
+    void send(const Point& p, Id id, Id target)
     {
-        inbox[target].emplace_back(p,id,source);
+        inbox[target].emplace_back(p,id);
     }
 
     void send(const Point& p, Id id)
     {
-        send(p,id,id,id);
+        send(p,id,id);
     }
 
     std::function<int(Tile&)>
@@ -62,7 +62,7 @@ struct multithread_scheduler
     {
         return [this, do_simplify](Tile& tile)
         {
-            std::vector<Point_id_source> received;
+            std::vector<Point_id> received;
             inbox[tile.id()].swap(received);
             return int(tile.insert(received, do_simplify));
         };
@@ -74,12 +74,12 @@ struct multithread_scheduler
     {
         return [this,f](Tile& tile)
         {
-            std::vector<Point_id_source> received;
+            std::vector<Point_id> received;
             inbox[tile.id()].swap(received);
             if(!tile.insert(received)) return 0;
             std::vector<Vertex_const_handle_and_id> vertices;
             (tile.*f)(vertices);
-            std::map<Id, std::vector<Point_id_source>> outgoing;
+            std::map<Id, std::vector<Point_id>> outgoing;
             int count = tile.send_one(outgoing, vertices);
             for(auto& p : outgoing) inbox[p.first].append(p.second);
             return count;
@@ -94,7 +94,7 @@ struct multithread_scheduler
         {
             std::vector<Vertex_const_handle> vertices;
             (tile.*f)(vertices);
-            std::map<Id, std::vector<Point_id_source>> outgoing;
+            std::map<Id, std::vector<Point_id>> outgoing;
             int count = tile.send_all(outgoing, vertices, begin, end);
             for(auto& p : outgoing) inbox[p.first].append(p.second);
             return count;
@@ -156,7 +156,7 @@ struct multithread_scheduler
     }
 
 private:
-    std::map<Id, safe<std::vector<Point_id_source>>> inbox;
+    std::map<Id, safe<std::vector<Point_id>>> inbox;
     thread_pool pool;
     std::chrono::milliseconds timeout_;
 };

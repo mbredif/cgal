@@ -71,7 +71,7 @@ struct mpi_scheduler
     typedef T Tile;
     typedef typename Tile::Vertex_const_handle_and_id Vertex_const_handle_and_id;
     typedef typename Tile::Vertex_const_handle Vertex_const_handle;
-    typedef typename Tile::Point_id_source Point_id_source;
+    typedef typename Tile::Point_id Point_id;
     typedef typename Tile::Point Point;
     typedef typename Tile::Id Id;
 
@@ -103,14 +103,14 @@ struct mpi_scheduler
         return world_size;
     }
 
-    void send(const Point& p, Id id, Id source, Id target)
+    void send(const Point& p, Id id, Id target)
     {
-        inbox[target].emplace_back(p,id,source);
+        inbox[target].emplace_back(p,id);
     }
     
     void send(const Point& p, Id id)
     {
-        send(p,id,id,id);
+        send(p,id,id);
     }
 
     inline int rank(Id id) const
@@ -130,7 +130,7 @@ struct mpi_scheduler
     {
         return [this, do_simplify](Tile& tile)
         {
-            std::vector<Point_id_source> received;
+            std::vector<Point_id> received;
             inbox[tile.id()].swap(received);
             return int(tile.insert(received, do_simplify));
         };
@@ -142,7 +142,7 @@ struct mpi_scheduler
     {
         return [this,f](Tile& tile)
         {
-            std::vector<Point_id_source> received;
+            std::vector<Point_id> received;
             inbox[tile.id()].swap(received);
             if(!tile.insert(received)) return 0;
             std::vector<Vertex_const_handle_and_id> outgoing;
@@ -212,19 +212,18 @@ struct mpi_scheduler
         int count;
         bytes = load_value_4(bytes, id);
         bytes = load_value_4(bytes, count);
-        std::vector<Point_id_source>& box = inbox[id];
+        std::vector<Point_id>& box = inbox[id];
         for(int i = 0; i< count; ++i) {
-            Point_id_source p;
+            Point_id p;
             bytes = load_point(bytes, std::get<0>(p));
             bytes = load_value_4(bytes, std::get<1>(p)); // Id point id
-            bytes = load_value_4(bytes, std::get<2>(p)); // Id source
             box.push_back(p);
         }
         // std::cout << processor_name << "[" << world_rank << "] " << count  << " points recieved by " << int(id) << std::endl;
         return bytes;
     }
 
-    char *save_points(char *bytes, Id id, const std::vector<Point_id_source>& msg) const 
+    char *save_points(char *bytes, Id id, const std::vector<Point_id>& msg) const
     {
         int count = msg.size();
         bytes = save_value_4(bytes, id);
@@ -232,7 +231,6 @@ struct mpi_scheduler
         for(auto p : msg) {
             bytes = save_point(bytes, std::get<0>(p));
             bytes = save_value_4(bytes, std::get<1>(p)); // Id point id
-            bytes = save_value_4(bytes, std::get<2>(p)); // Id source
         }
         //std::cout << processor_name << "[" << world_rank << "] " << count  << " points sent to " << int(id) << std::endl;
         return bytes;
@@ -251,7 +249,7 @@ struct mpi_scheduler
         int id_size = 4; /// @todo serialized size of tile id
         int count_size = 4; /// @todo serialized size of point count
         int point_size = 16; /// @todo serialized size of a Point
-        int data_size = point_size + 2*id_size; /// @todo serialized size of a Point_id_source
+        int data_size = point_size + id_size; /// @todo serialized size of a Point_id
 
         // compute sendcounts
         std::vector<int> sendcounts(world_size, 0);
@@ -336,7 +334,7 @@ struct mpi_scheduler
     }
 
 private:
-    std::map<Id, std::vector<Point_id_source>> inbox;
+    std::map<Id, std::vector<Point_id>> inbox;
     int world_size;
     int world_rank;
     char processor_name[MPI_MAX_PROCESSOR_NAME];

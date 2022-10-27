@@ -60,7 +60,7 @@ public:
 
     typedef std::pair<Tile_cell_const_handle,Id>     Tile_cell_const_handle_and_id;
     typedef std::pair<Tile_vertex_const_handle,Id>   Tile_vertex_const_handle_and_id;
-    typedef std::tuple<Point,Id,Id>                  Point_id_source;
+    typedef std::tuple<Point,Id>                     Point_id;
 
     typedef ddt::Vertex_const_iterator<DDT>          Vertex_const_iterator;
     typedef ddt::Facet_const_iterator <DDT>          Facet_const_iterator;
