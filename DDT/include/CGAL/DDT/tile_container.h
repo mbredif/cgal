@@ -126,7 +126,9 @@ public:
     tile_container(Serializer& serializer) :
         tiles(),
         serializer(serializer),
-        number_of_vertices_(0),
+        number_of_finite_vertices_(0),
+        number_of_finite_facets_  (0),
+        number_of_finite_cells_   (0),
         number_of_facets_  (0),
         number_of_cells_   (0)
     {
@@ -199,26 +201,35 @@ public:
 
     void finalize()
     {
-        number_of_vertices_ = 0;
+        number_of_finite_vertices_ = 0;
+        number_of_finite_facets_ = 0;
+        number_of_finite_cells_ = 0;
         number_of_facets_ = 0;
         number_of_cells_ = 0;
         for(Tile_iterator tile = begin(); tile != end(); ++tile)
         {
             tile->finalize();
-            number_of_vertices_ += tile->number_of_main_vertices();
+            number_of_finite_vertices_ += tile->number_of_main_finite_vertices();
+            number_of_finite_facets_ += tile->number_of_main_finite_facets();
+            number_of_finite_cells_ += tile->number_of_main_finite_cells();
             number_of_facets_ += tile->number_of_main_facets();
             number_of_cells_ += tile->number_of_main_cells();
         }
     }
 
-    inline size_t number_of_cells   () const { return number_of_cells_;    }
-    inline size_t number_of_vertices() const { return number_of_vertices_; }
+    inline size_t number_of_finite_vertices() const { return number_of_finite_vertices_; }
+    inline size_t number_of_finite_facets  () const { return number_of_finite_facets_;   }
+    inline size_t number_of_finite_cells   () const { return number_of_finite_cells_;    }
+    inline size_t number_of_vertices() const { return number_of_finite_vertices_ + 1; }
     inline size_t number_of_facets  () const { return number_of_facets_;   }
+    inline size_t number_of_cells   () const { return number_of_cells_;    }
 
 
     bool is_valid() const
     {
-        size_t number_of_vertices = 0;
+        size_t number_of_finite_vertices = 0;
+        size_t number_of_finite_facets = 0;
+        size_t number_of_finite_cells = 0;
         size_t number_of_facets = 0;
         size_t number_of_cells = 0;
         for(auto tile = begin(); tile != end(); ++tile)
@@ -229,11 +240,15 @@ public:
                 //assert(! "CGAL tile not valid" );
                 return false;
             }
-            number_of_vertices += tile->number_of_main_vertices();
+            number_of_finite_vertices += tile->number_of_main_finite_vertices();
+            number_of_finite_facets += tile->number_of_main_finite_facets();
+            number_of_finite_cells += tile->number_of_main_finite_cells();
             number_of_facets += tile->number_of_main_facets();
             number_of_cells += tile->number_of_main_cells();
         }
-        if (number_of_vertices != number_of_vertices_) { std::cerr << "incorrect number_of_vertices" << std::endl; return false; }
+        if (number_of_finite_vertices != number_of_finite_vertices_) { std::cerr << "incorrect number_of_finite_vertices" << std::endl; return false; }
+        if (number_of_finite_facets != number_of_finite_facets_) { std::cerr << "incorrect number_of_finite_facets" << std::endl; return false; }
+        if (number_of_finite_cells != number_of_finite_cells_) { std::cerr << "incorrect number_of_finite_cells" << std::endl; return false; }
         if (number_of_facets != number_of_facets_) { std::cerr << "incorrect number_of_facets" << std::endl; return false; }
         if (number_of_cells != number_of_cells_) { std::cerr << "incorrect number_of_cells" << std::endl; return false; }
         return true;
@@ -243,7 +258,9 @@ private:
     Container tiles; /// loaded tiles
     Serializer& serializer;
 
-    size_t number_of_vertices_;
+    size_t number_of_finite_vertices_;
+    size_t number_of_finite_facets_;
+    size_t number_of_finite_cells_;
     size_t number_of_facets_;
     size_t number_of_cells_;
 };

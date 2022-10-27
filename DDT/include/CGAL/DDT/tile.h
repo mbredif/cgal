@@ -54,7 +54,9 @@ public:
     Tile(Id id, int dimension = D)
         : id_(id),
           dt_(traits.triangulation(dimension)),
-          number_of_main_vertices_(0),
+          number_of_main_finite_vertices_(0),
+          number_of_main_finite_facets_(0),
+          number_of_main_finite_cells_(0),
           number_of_main_facets_(0),
           number_of_main_cells_(0)
     {}
@@ -83,9 +85,11 @@ public:
     inline size_t number_of_vertices() const { return traits.number_of_vertices(dt_); }
     inline size_t number_of_cells   () const { return traits.number_of_cells   (dt_); }
 
-    inline size_t number_of_main_vertices() const { return number_of_main_vertices_; }
     inline size_t number_of_main_facets  () const { return number_of_main_facets_;   }
     inline size_t number_of_main_cells   () const { return number_of_main_cells_;    }
+    inline size_t number_of_main_finite_vertices() const { return number_of_main_finite_vertices_; }
+    inline size_t number_of_main_finite_facets  () const { return number_of_main_finite_facets_;   }
+    inline size_t number_of_main_finite_cells   () const { return number_of_main_finite_cells_;    }
 
     inline Id    id  (Vertex_const_handle v) const { assert(!vertex_is_infinite(v)); return traits.id  (v); }
     inline Flag& flag(Vertex_const_handle v) const { assert(!vertex_is_infinite(v)); return traits.flag(v); }
@@ -642,24 +646,35 @@ public:
     void finalize()
     {
 
-        number_of_main_vertices_ = 0;
+        number_of_main_finite_vertices_ = 0;
+        number_of_main_finite_facets_ = 0;
+        number_of_main_finite_cells_ = 0;
+        number_of_main_facets_ = 0;
+        number_of_main_cells_ = 0;
+
         for(auto vit = vertices_begin(); vit != vertices_end(); ++vit)
         {
             if(vertex_is_main(vit))
-                ++number_of_main_vertices_;
+                ++number_of_main_finite_vertices_;
         }
-        number_of_main_facets_ = 0;
         for(auto fit = facets_begin(); fit != facets_end(); ++fit )
         {
             if(facet_is_main(fit))
+            {
                 ++number_of_main_facets_;
+                if(!facet_is_infinite(fit))
+                    ++number_of_main_finite_facets_;
+            }
         }
 
-        number_of_main_cells_ = 0;
         for(auto cit = cells_begin(); cit != cells_end(); ++cit)
         {
             if(cell_is_main(cit))
+            {
                 ++number_of_main_cells_;
+                if(!cell_is_infinite(cit))
+                    ++number_of_main_finite_cells_;
+            }
         }
     }
 
@@ -675,7 +690,9 @@ private:
     Id id_;
     DT dt_;
 
-    size_t number_of_main_vertices_;
+    size_t number_of_main_finite_vertices_;
+    size_t number_of_main_finite_facets_;
+    size_t number_of_main_finite_cells_;
     size_t number_of_main_facets_;
     size_t number_of_main_cells_;
 

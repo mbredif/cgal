@@ -65,9 +65,9 @@ int read_cgal_tile(Tile& tile, const std::string& dirname)
     ifile_tri >> tile;
     ifile_tri.close();
     std::cout << filename << " : id=" << int(tile.id()) << " valid=" << tile.is_valid();
-    std::cout << " nv="<<tile.number_of_main_vertices()<<"/"<<tile.number_of_vertices();
-    std::cout << " nf="<<tile.number_of_main_facets();
-    std::cout << " nc="<<tile.number_of_main_cells()<<"/"<<tile.number_of_cells() << std::endl;
+    std::cout << " nv="<<tile.number_of_main_finite_vertices()<<"/"<<tile.number_of_vertices();
+    std::cout << " nf="<<tile.number_of_main_finite_facets();
+    std::cout << " nc="<<tile.number_of_main_finite_cells()<<"/"<<tile.number_of_cells() << std::endl;
 
     std::ifstream ifile_json(json_name, std::ifstream::in);
     read_json(tile,ifile_json);
