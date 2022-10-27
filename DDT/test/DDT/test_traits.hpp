@@ -31,13 +31,20 @@ template <typename T>
 bool is_euler_valid(T & tri)
 {
     std::cout << "== Euler ==" << std::endl;
-    int nv = tri.number_of_vertices();
-    int nf = tri.number_of_facets();
-    int nc = tri.number_of_cells();
+
+    int nv = tri.number_of_finite_vertices();
+    int nf = tri.number_of_finite_facets();
+    int nc = tri.number_of_finite_cells();
+    int finite_euler = nv - nf + nc;
+    std::cout <<nv<<"-"<<nf<<"+"<<nc<<"="<<finite_euler <<  " (euler characteristic of finite elements should be 1)" << std::endl;
+
+    nv = tri.number_of_vertices();
+    nf = tri.number_of_facets();
+    nc = tri.number_of_cells();
     int euler = nv - nf + nc;
-    std::cout <<nv<<"-"<<nf<<"+"<<nc<<"="<<euler <<  std::endl;
-    // should have been 2, but the infinite vertices is not counted yet
-    return  (euler == 1);
+    std::cout <<nv<<"-"<<nf<<"+"<<nc<<"="<<euler << " (euler characteristic of both finite and infinite elements should be 2)"  << std::endl;
+
+    return  (finite_euler == 1 && euler == 2);
 }
 
 template <typename T>
