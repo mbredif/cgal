@@ -659,7 +659,6 @@ private:
     size_t number_of_main_cells_;
 
     std::map<Id, Bbox<D, double>> bbox_;
-    std::map<Id, std::set<Vertex_const_handle>> sent_;
 };
 
 
