@@ -24,6 +24,7 @@ private:
 public:
     typedef typename Container::value_type value_type;
     typedef typename Container::size_type size_type;
+
     safe() {}
 
     safe(const safe& other) = delete;

@@ -20,6 +20,10 @@ typedef Traits::Random_points_in_box Random_points;
 //#include <CGAL/DDT/scheduler.h>
 typedef ddt::Tile<Traits> Tile;
 
+//#include <CGAL/DDT/scheduler/sequential_scheduler.h>
+//typedef ddt::sequential_scheduler<Tile> Scheduler;
+//#include <CGAL/DDT/scheduler/multithread_scheduler.h>
+//typedef ddt::multithread_scheduler<Tile> Scheduler;
 #include <CGAL/DDT/scheduler/tbb_scheduler.h>
 typedef ddt::tbb_scheduler<Tile> Scheduler;
 //#include <CGAL/DDT/scheduler/mpi_scheduler.h>

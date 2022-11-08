@@ -113,6 +113,37 @@ struct mpi_scheduler
         send(p,id,id);
     }
 
+    bool send_vertex(const Tile& tile, Vertex_const_handle v, Id target)
+    {
+        if (tile.vertex_is_infinite(v)) return false;
+        Id source = tile.id();
+        Id vid = tile.id(v);
+        if(target==vid || target == source || !sent_[target].insert(v).second)
+            return false;
+        send(tile.point(v), vid, target);
+        return true;
+    }
+
+    int send_one(const Tile& tile, std::vector<Vertex_const_handle_and_id>& outbox)
+    {
+        Id source = tile.id();
+        int count = 0;
+        for(auto& vi : outbox)
+            count += send_vertex(tile, vi.first, vi.second);
+        return count;
+    }
+
+    template<typename Id_iterator>
+    int send_all(const Tile& tile, std::vector<Vertex_const_handle>& outbox, Id_iterator begin, Id_iterator end)
+    {
+        Id source = tile.id();
+        int count = 0;
+        for(Vertex_const_handle v : outbox)
+            for(Id_iterator target = begin; target != end; ++target)
+                count += send_vertex(tile, v, *target);
+        return count;
+    }
+
     inline int rank(Id id) const
     {
         // Surely not the most optimal repartition of tile ids across processing elements
@@ -126,13 +157,13 @@ struct mpi_scheduler
     }
 
     std::function<int(Tile&)>
-    insert_func(bool do_simplify)
+    insert_func()
     {
-        return [this, do_simplify](Tile& tile)
+        return [this](Tile& tile)
         {
             std::vector<Point_id> received;
             inbox[tile.id()].swap(received);
-            return int(tile.insert(received, do_simplify));
+            return int(tile.insert(received));
         };
     }
 
@@ -147,7 +178,7 @@ struct mpi_scheduler
             if(!tile.insert(received)) return 0;
             std::vector<Vertex_const_handle_and_id> outgoing;
             (tile.*f)(outgoing);
-            return tile.send_one(inbox, outgoing);
+            return send_one(tile, outgoing);
         };
     }
 
@@ -159,7 +190,7 @@ struct mpi_scheduler
         {
             std::vector<Vertex_const_handle> vertices;
             (tile.*f)(vertices);
-            return tile.send_all(inbox, vertices, begin, end);
+            return send_all(tile, vertices, begin, end);
         };
     }
 
@@ -335,6 +366,7 @@ struct mpi_scheduler
 
 private:
     std::map<Id, std::vector<Point_id>> inbox;
+    std::map<Id, std::set<Vertex_const_handle>> sent_;
     int world_size;
     int world_rank;
     char processor_name[MPI_MAX_PROCESSOR_NAME];

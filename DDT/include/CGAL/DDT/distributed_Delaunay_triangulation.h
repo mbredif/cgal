@@ -3,11 +3,9 @@ namespace CGAL {
 
 namespace ddt {
 
-
-
 template<typename TileContainer, typename Scheduler>
-size_t local_insert_received(TileContainer& tc, Scheduler& sch, bool do_simplify=true) {
-    return sch.for_each(tc, sch.insert_func(do_simplify), false);
+size_t local_insert_received(TileContainer& tc, Scheduler& sch) {
+    return sch.for_each(tc, sch.insert_func(), false);
 }
 
 template<typename TileContainer, typename Scheduler>
@@ -19,7 +17,7 @@ size_t send_all_bbox_points(TileContainer& tc, Scheduler& sch)       {
 template<typename TileContainer, typename Scheduler>
 size_t splay_stars(TileContainer& tc, Scheduler& sch)       {
     typedef typename TileContainer::Tile Tile;
-    return sch.for_each_rec(tc, sch.splay_func(&Tile::get_neighbors));
+    return sch.for_each_rec(tc, sch.splay_func(&Tile::get_finite_neighbors));
 }
 
 /// \ingroup PkgDDTRef
