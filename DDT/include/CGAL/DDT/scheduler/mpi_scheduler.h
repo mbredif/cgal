@@ -154,27 +154,28 @@ struct mpi_scheduler
         return rank(id) == world_rank;
     }
 
-    template<typename TileContainer>
-    int for_each(TileContainer& tc, const std::function<int(Tile&)>& func, bool all_tiles)
+    template<typename TileContainer, typename Id_iterator>
+    int for_each(TileContainer& tc, Id_iterator begin, Id_iterator end, const std::function<int(Tile&)>& func, bool sync = true)
     {
-        send_all_to_all();
-
-        std::vector<Id> ids;
-        if (all_tiles) {
-            ids.assign(tc.tile_ids_begin(), tc.tile_ids_end());
-        } else {
-            for(const auto& it : inbox) {
-                if (!it.second.empty()) {
-                    Id id = it.first;
-                    ids.push_back(id);
-                    if(!tc.is_loaded(id)) tc.init(id); /// @todo : load !
-                }
-            }
-        }
+        if (sync) send_all_to_all();
         int count = 0;
-        for(Id id : ids)
-            count += func(*(tc.get_tile(id)));
+        for(Id_iterator it = begin; it != end; ++it)
+            count += func(*(tc.get_tile(*it)));
         return count;
+    }
+
+    template<typename TileContainer>
+    int for_each(TileContainer& tc, const std::function<int(Tile&)>& func, bool sync = true)
+    {
+        if (sync) send_all_to_all();
+        std::vector<Id> ids;
+        for(auto& it : inbox) {
+            if (it.second.empty()) continue;
+            Id id = it.first;
+            ids.push_back(id);
+            if(!tc.is_loaded(id)) tc.init(id); /// @todo : load !
+        }
+        return for_each(tc, ids.begin(), ids.end(), func, false);
     }
 
     // cycles indefinitely, and stops when the last N tiles reported a count of 0

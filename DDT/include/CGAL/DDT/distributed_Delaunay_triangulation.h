@@ -27,7 +27,7 @@ size_t local_insert_received(TileContainer& tc, Scheduler& sch) {
         Point_id_container received;
         sch.receive(tile.id(), received);
         return int(tile.insert(received));
-    }, false);
+    });
 }
 
 template<typename TileContainer, typename Scheduler>
@@ -37,12 +37,12 @@ size_t send_all_bbox_points(TileContainer& tc, Scheduler& sch)       {
     typedef typename Tile::Vertex_const_handle Vertex_const_handle;
     Tile_id_const_iterator begin = tc.tile_ids_begin();
     Tile_id_const_iterator end = tc.tile_ids_end();
-    return sch.for_each(tc, [&sch, begin, end](Tile& tile)
+    return sch.for_each(tc, begin, end, [&sch, begin, end](Tile& tile)
     {
         std::vector<Vertex_const_handle> vertices;
         tile.get_bbox_points(vertices);
         return sch.send_all(tile, vertices, begin, end);
-    }, true);
+    });
 }
 
 template<typename TileContainer, typename Scheduler>

@@ -37,6 +37,11 @@ struct sequential_scheduler
 
     inline void receive(Id id, Point_id_container& received) { inbox[id].swap(received); }
 
+    void send(const Point& p, Id id, Id target)
+    {
+        inbox[target].emplace_back(p,id);
+    }
+
     bool send_vertex(const Tile& tile, Vertex_const_handle v, Id target)
     {
         if (tile.vertex_is_infinite(v)) return false;
@@ -68,25 +73,26 @@ struct sequential_scheduler
         return count;
     }
 
+    template<typename TileContainer, typename Id_iterator>
+    int for_each(TileContainer& tc, Id_iterator begin, Id_iterator end, const std::function<int(Tile&)>& func)
+    {
+        int count = 0;
+        for(Id_iterator it = begin; it != end; ++it)
+            count += func(*(tc.get_tile(*it)));
+        return count;
+    }
+
     template<typename TileContainer>
-    int for_each(TileContainer& tc, const std::function<int(Tile&)>& func, bool all_tiles)
+    int for_each(TileContainer& tc, const std::function<int(Tile&)>& func)
     {
         std::vector<Id> ids;
-        if (all_tiles) {
-            ids.assign(tc.tile_ids_begin(), tc.tile_ids_end());
-        } else {
-            for(auto it : inbox) {
-                if (!it.second.empty()) {
-                    Id id = it.first;
-                    ids.push_back(id);
-                    if(!tc.is_loaded(id)) tc.init(id); /// @todo : load !
-                }
-            }
+        for(auto& it : inbox) {
+            if (it.second.empty()) continue;
+            Id id = it.first;
+            ids.push_back(id);
+            if(!tc.is_loaded(id)) tc.init(id); /// @todo : load !
         }
-        int count = 0;
-        for(Id id : ids)
-            count += func(*(tc.get_tile(id)));
-        return count;
+        return for_each(tc, ids.begin(), ids.end(), func);
     }
 
     // cycles indefinitely, and stops when the last N tiles reported a count of 0
@@ -95,15 +101,10 @@ struct sequential_scheduler
     {
         int count = 0, c;
         do {
-            c = for_each(tc, func, false);
+            c = for_each(tc, func);
             count += c;
         } while (c != 0);
         return count;
-    }
-
-    void send(const Point& p, Id id, Id target)
-    {
-        inbox[target].emplace_back(p,id);
     }
 
 private:

@@ -90,25 +90,14 @@ struct tbb_scheduler
         return count;
     }
 
-    template<typename TileContainer>
-    int for_each(TileContainer& tc, const std::function<int(Tile&)>& func, bool all_tiles)
+    template<typename TileContainer, typename Id_iterator>
+    int for_each(TileContainer& tc, Id_iterator begin, Id_iterator end, const std::function<int(Tile&)>& func)
     {
-        std::vector<Id> ids;
-        if (all_tiles) {
-            ids.assign(tc.tile_ids_begin(), tc.tile_ids_end());
-        } else {
-            for(auto it : inbox) {
-                if (!it.second.empty()) {
-                    Id id = it.first;
-                    ids.push_back(id);
-                    if(!tc.is_loaded(id)) tc.init(id); /// @todo : load !
-                }
-            }
-        }
         // ensure sent_ has all the id inserted to prevent race conditions
-        for(Id id : ids)
-            sent_.emplace(id, std::map<Id, std::set<Vertex_const_handle>>{});
+        for(Id_iterator it = begin; it != end; ++it)
+            sent_.emplace(*it, std::map<Id, std::set<Vertex_const_handle>>{});
 
+        std::vector<Id> ids(begin, end);
         int count = tbb::parallel_reduce(
               tbb::blocked_range<int>(0,ids.size()),
               0,
@@ -122,6 +111,19 @@ struct tbb_scheduler
                   return c;
               }, std::plus<int>() );
         return count;
+    }
+
+    template<typename TileContainer>
+    int for_each(TileContainer& tc, const std::function<int(Tile&)>& func)
+    {
+        std::vector<Id> ids;
+        for(auto& it : inbox) {
+            if (it.second.empty()) continue;
+            Id id = it.first;
+            ids.push_back(id);
+            if(!tc.is_loaded(id)) tc.init(id); /// @todo : load !
+        }
+        return for_each(tc, ids.begin(), ids.end(), func);
     }
 
     // no barrier between each epoch, busy tiles are skipped
