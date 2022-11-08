@@ -1,3 +1,18 @@
+// Copyright (c) 2022 Institut Géographique National - IGN (France)
+// All rights reserved.
+//
+// This file is part of CGAL (www.cgal.org).
+//
+// $URL$
+// $Id$
+// SPDX-License-Identifier: GPL-3.0-or-later OR LicenseRef-Commercial
+//
+// Author(s)     : Mathieu Brédif and Laurent Caraffa
+
+#ifndef CGAL_DDT_DISTRIBUTED_DELAUNAY_TRIANGULATION_H
+#define CGAL_DDT_DISTRIBUTED_DELAUNAY_TRIANGULATION_H
+
+#include <vector>
 
 namespace CGAL {
 
@@ -5,19 +20,45 @@ namespace ddt {
 
 template<typename TileContainer, typename Scheduler>
 size_t local_insert_received(TileContainer& tc, Scheduler& sch) {
-    return sch.for_each(tc, sch.insert_func(), false);
+    typedef typename TileContainer::Tile Tile;
+    typedef typename Scheduler::Point_id_container Point_id_container;
+    return sch.for_each(tc, [&sch](Tile& tile)
+    {
+        Point_id_container received;
+        sch.receive(tile.id(), received);
+        return int(tile.insert(received));
+    }, false);
 }
 
 template<typename TileContainer, typename Scheduler>
 size_t send_all_bbox_points(TileContainer& tc, Scheduler& sch)       {
     typedef typename TileContainer::Tile Tile;
-    return sch.for_each(tc, sch.send_all_func(tc.tile_ids_begin(), tc.tile_ids_end(), &Tile::get_bbox_points), true);
+    typedef typename TileContainer::Tile_id_const_iterator Tile_id_const_iterator;
+    typedef typename Tile::Vertex_const_handle Vertex_const_handle;
+    Tile_id_const_iterator begin = tc.tile_ids_begin();
+    Tile_id_const_iterator end = tc.tile_ids_end();
+    return sch.for_each(tc, [&sch, begin, end](Tile& tile)
+    {
+        std::vector<Vertex_const_handle> vertices;
+        tile.get_bbox_points(vertices);
+        return sch.send_all(tile, vertices, begin, end);
+    }, true);
 }
 
 template<typename TileContainer, typename Scheduler>
 size_t splay_stars(TileContainer& tc, Scheduler& sch)       {
     typedef typename TileContainer::Tile Tile;
-    return sch.for_each_rec(tc, sch.splay_func(&Tile::get_finite_neighbors));
+    typedef typename Scheduler::Point_id_container Point_id_container;
+    typedef typename Tile::Vertex_const_handle_and_id Vertex_const_handle_and_id;
+    return sch.for_each_rec(tc, [&sch](Tile& tile)
+    {
+        Point_id_container received;
+        sch.receive(tile.id(), received);
+        if(!tile.insert(received)) return 0;
+        std::vector<Vertex_const_handle_and_id> outgoing;
+        tile.get_finite_neighbors(outgoing);
+        return sch.send_one(tile, outgoing);
+    });
 }
 
 /// \ingroup PkgDDTRef
@@ -65,7 +106,7 @@ size_t insert(TileContainer& tc, Scheduler& sch, Iterator it, int count, Partiti
     {
         auto p(*it);
         auto id = part(p);
-        sch.send(p, id);
+        sch.send(p, id, id);
     }
     return insert_received(tc, sch);
 }
@@ -76,3 +117,4 @@ size_t insert(TileContainer& tc, Scheduler& sch, Iterator it, int count, Partiti
 
 }
 
+#endif // CGAL_DDT_DISTRIBUTED_DELAUNAY_TRIANGULATION_H

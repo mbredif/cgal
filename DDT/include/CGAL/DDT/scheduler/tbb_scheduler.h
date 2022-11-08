@@ -36,6 +36,8 @@ struct tbb_scheduler
     typedef typename Tile::Point_id Point_id;
     typedef typename Tile::Point Point;
     typedef typename Tile::Id Id;
+    typedef tbb::concurrent_vector<Point_id> Point_id_container;
+
     tbb_scheduler()
     {}
 
@@ -44,14 +46,11 @@ struct tbb_scheduler
         return tbb::this_task_arena::max_concurrency();
     }
 
+    inline void receive(Id id, Point_id_container& received) { inbox[id].swap(received); }
+
     void send(const Point& p, Id id, Id target)
     {
         inbox[target].emplace_back(p,id);
-    }
-
-    void send(const Point& p, Id id)
-    {
-        send(p,id,id);
     }
 
     bool send_vertex(const Tile& tile, Vertex_const_handle v, Id target, std::map<Id, std::vector<Point_id>>& outbox)
@@ -89,44 +88,6 @@ struct tbb_scheduler
         for(auto& o : outbox)
             inbox[o.first].grow_by(o.second.begin(), o.second.end());
         return count;
-    }
-
-    std::function<int(Tile&)>
-    insert_func()
-    {
-        return [this](Tile& tile)
-        {
-            tbb::concurrent_vector<Point_id> received;
-            inbox[tile.id()].swap(received);
-            return int(tile.insert(received));
-        };
-    }
-
-    template<typename F>
-    std::function<int(Tile&)>
-    splay_func(F&& f)
-    {
-        return [this,f](Tile& tile)
-        {
-            tbb::concurrent_vector<Point_id> received;
-            inbox[tile.id()].swap(received);
-            if(!tile.insert(received)) return 0;
-            std::vector<Vertex_const_handle_and_id> vertices;
-            (tile.*f)(vertices);
-            return send_one(tile, vertices);
-        };
-    }
-
-    template<typename Id_iterator, typename F>
-    std::function<int(Tile&)>
-    send_all_func(Id_iterator begin, Id_iterator end, F&& f)
-    {
-        return [this,f,begin,end](Tile& tile)
-        {
-            std::vector<Vertex_const_handle> vertices;
-            (tile.*f)(vertices);
-            return send_all(tile, vertices, begin, end);
-        };
     }
 
     template<typename TileContainer>
@@ -196,7 +157,7 @@ struct tbb_scheduler
     }
 
 private:
-    std::map<Id, tbb::concurrent_vector<Point_id>> inbox;
+    std::map<Id, Point_id_container> inbox;
     std::map<Id, std::map<Id, std::set<Vertex_const_handle>>> sent_; // no race condition, as the first Id is the source tile id
 };
 
