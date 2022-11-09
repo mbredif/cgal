@@ -3,34 +3,19 @@
 \ingroup PkgDDTConcepts
 \cgalConcept
 
-The concept `TileContainer` describes the requirements for the
-...
+The concept `TileContainer` describes the requirements for a container of tiles
 
-\cgalHasModel `ddt::DDT`
+\cgalHasModel `ddt::tile_container`
 
 */
+
+namespace ddt
+{
 
 class TileContainer {
 public:
 
-/// \name Types
-/// @{
-
-    /*!
-    Must be the same as the point type `TriangulationTraits_2::Point_2`
-    defined by the geometric traits class of the triangulation.
-    */
-    typedef unspecified_type Tile;
-
-    /*!
-    Must be the same as the point type `TriangulationTraits_2::Point_2`
-    defined by the geometric traits class of the triangulation.
-    */
-    typedef unspecified_type Id;
-
-/// @}
-
-/// \name Access Functions
+/// \name TODO
 /// @{
 
 
@@ -39,3 +24,4 @@ public:
 
 }; /* end TileContainer */
 
+}

@@ -10,6 +10,9 @@ The concept `PointIdRange` describes the requirements for the
 
 */
 
+namespace ddt
+{
+
 class PointIdRange {
 public:
 
@@ -39,3 +42,4 @@ public:
 
 }; /* end TileContainer */
 
+}

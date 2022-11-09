@@ -12,6 +12,9 @@ The concept `TriangulationTraits` describes the requirements of a traits that ad
 
 */
 
+namespace ddt
+{
+
 class TriangulationTraits {
 public:
 
@@ -151,3 +154,5 @@ public:
 
     }; /* end TriangulationTraits */
 };
+
+}
