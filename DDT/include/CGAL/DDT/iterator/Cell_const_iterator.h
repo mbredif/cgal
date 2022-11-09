@@ -15,19 +15,19 @@
 namespace ddt
 {
 
-template<typename DDT>
+template<typename TileContainer>
 class Cell_const_iterator
 {
 public:
     using iterator_category = std::forward_iterator_tag;
-    using value_type = Cell_const_iterator<DDT>;
+    using value_type = Cell_const_iterator<TileContainer>; /// @todo: unused, no operator*(), do we need a cell handle?
     using difference_type = std::ptrdiff_t;
     using pointer = value_type*;
     using reference = value_type&;
 
-    typedef typename DDT::Traits                    Traits;
-    typedef typename DDT::Tile_cell_const_iterator  Tile_cell_const_iterator;
-    typedef typename DDT::Tile_const_iterator       Tile_const_iterator;
+    typedef typename TileContainer::Traits                    Traits;
+    typedef typename TileContainer::Tile_cell_const_iterator  Tile_cell_const_iterator;
+    typedef typename TileContainer::Tile_const_iterator       Tile_const_iterator;
 
 private:
     Tile_const_iterator tile_;

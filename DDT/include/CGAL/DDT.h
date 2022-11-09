@@ -28,52 +28,30 @@ The DDT class wraps a TileContainer to expose a triangulation interface.
 template<typename TileContainer>
 class DDT
 {
-public:
+private:
+    typedef typename TileContainer::Traits              Traits;
+    typedef typename TileContainer::Tile_const_iterator Tile_const_iterator;
+    typedef typename Traits::Vertex_const_iterator      Tile_vertex_const_iterator;
+    typedef typename Traits::Cell_const_iterator        Tile_cell_const_iterator;
+    typedef typename Traits::Facet_const_iterator       Tile_facet_const_iterator;
 
-    /// \name Types
-    /// @{
+public:
+/// \name Types
+/// @{
 
     typedef TileContainer                            Tile_container;
-    typedef typename Tile_container::Traits          Traits;
-    typedef typename Tile_container::Tile            Tile;
-
     typedef typename Traits::Point                   Point;
     typedef typename Traits::Id                      Id;
-    typedef typename Traits::Delaunay_triangulation  DT;
-    typedef typename Traits::Vertex_handle           Tile_vertex_handle;
-    typedef typename Traits::Vertex_iterator         Tile_vertex_iterator;
-    typedef typename Traits::Vertex_const_handle     Tile_vertex_const_handle;
-    typedef typename Traits::Vertex_const_iterator   Tile_vertex_const_iterator;
-    typedef typename Traits::Cell_handle             Tile_cell_handle;
-    typedef typename Traits::Cell_const_handle       Tile_cell_const_handle;
-    typedef typename Traits::Cell_const_iterator     Tile_cell_const_iterator;
-    typedef typename Traits::Facet_handle            Tile_facet_handle;
-    typedef typename Traits::Facet_const_handle      Tile_facet_const_handle;
-    typedef typename Traits::Facet_const_iterator    Tile_facet_const_iterator;
-    typedef typename Tile_container::Tile_const_iterator  Tile_const_iterator;
 
-    typedef std::pair<Tile_cell_const_handle,Id>     Tile_cell_const_handle_and_id;
-    typedef std::pair<Tile_vertex_const_handle,Id>   Tile_vertex_const_handle_and_id;
-    typedef std::tuple<Point,Id>                     Point_id;
+    typedef ddt::Vertex_const_iterator<TileContainer> Vertex_const_iterator;
+    typedef ddt::Facet_const_iterator <TileContainer> Facet_const_iterator;
+    typedef ddt::Cell_const_iterator  <TileContainer> Cell_const_iterator;
+/// @}
 
-    typedef ddt::Vertex_const_iterator<DDT>          Vertex_const_iterator;
-    typedef ddt::Facet_const_iterator <DDT>          Facet_const_iterator;
-    typedef ddt::Cell_const_iterator  <DDT>          Cell_const_iterator;
-
-    enum { D = Traits::D };
-
-    /// @}
-
-    inline int maximal_dimension() const
-    {
-        return D;
-    }
-
-    DDT(TileContainer& tc) :
-        tiles(tc)
-    {
-    }
-
+    /// contructor
+    DDT(TileContainer& tc) : tiles(tc) {}
+    /// the dimension of the triangulation
+    inline int maximal_dimension() const { return tiles.maximal_dimension(); }
     /// The number of finite cells in the triangulation, including cells incident to the vertex at infinity.
     inline size_t number_of_finite_cells   () const { return tiles.number_of_finite_cells();    }
     /// The number of finite vertices in the triangulation, including the vertex at infinity.
@@ -145,7 +123,7 @@ public:
     {
         for(auto seed : seeds)
         {
-            for(int d = 0; d <= D; d++)
+            for(int d = 0; d <= maximal_dimension(); d++)
             {
                 auto c = main(neighbor(seed, d));
                 if(seeds.find(c) == seeds.end())
