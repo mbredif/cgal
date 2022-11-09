@@ -15,12 +15,6 @@
 #include <CGAL/DDT/iterator/Vertex_const_iterator.h>
 #include <CGAL/DDT/iterator/Facet_const_iterator.h>
 #include <CGAL/DDT/iterator/Cell_const_iterator.h>
-#include <CGAL/DDT/tile.h>
-#include <CGAL/DDT/tile_container.h>
-
-#include <string>
-#include <unordered_map>
-
 
 namespace ddt
 {

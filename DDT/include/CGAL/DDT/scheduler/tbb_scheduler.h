@@ -19,7 +19,6 @@
 #include <map>
 #include <set>
 #include <vector>
-#include <chrono>
 #include <tbb/concurrent_vector.h>
 #include <tbb/parallel_reduce.h>
 #include <tbb/task_arena.h>

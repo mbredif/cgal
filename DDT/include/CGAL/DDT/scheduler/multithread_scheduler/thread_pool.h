@@ -21,7 +21,9 @@
 #include <vector>
 #include <queue>
 
-#include <CGAL/DDT/scheduler/safe.h>
+#include <CGAL/DDT/scheduler/multithread_scheduler/safe.h>
+
+namespace ddt {
 
 class thread_pool
 {
@@ -127,5 +129,7 @@ public:
         return task_ptr->get_future();
     }
 };
+
+}
 
 #endif // CGAL_DDT_SCHEDULER_THREAD_POOL_H

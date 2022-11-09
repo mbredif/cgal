@@ -16,7 +16,7 @@
 #include <set>
 #include <vector>
 #include <chrono>
-#include <CGAL/DDT/scheduler/thread_pool.h>
+#include <CGAL/DDT/scheduler/multithread_scheduler/thread_pool.h>
 
 namespace ddt
 {

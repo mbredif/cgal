@@ -17,7 +17,7 @@ typedef Traits::Random_points_in_box Random_points;
 #include <CGAL/DDT/partitioner/grid_partitioner.h>
 #include <CGAL/DDT.h>
 #define DDT_USE_THREADS 1
-//#include <CGAL/DDT/scheduler.h>
+#include <CGAL/DDT/tile_container.h>
 typedef ddt::Tile<Traits> Tile;
 
 //#include <CGAL/DDT/scheduler/sequential_scheduler.h>
@@ -32,7 +32,6 @@ typedef ddt::tbb_scheduler<Tile> Scheduler;
 #include <CGAL/DDT/serializer/file_serializer.h>
 typedef ddt::File_Serializer<Id,Tile> Serializer;
 
-#include <CGAL/DDT/tile_container.h>
 typedef ddt::tile_container<Traits, Serializer> TileContainer;
 typedef ddt::DDT<TileContainer> DDT;
 #include <CGAL/DDT/IO/write_ply.h>
