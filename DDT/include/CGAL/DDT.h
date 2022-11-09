@@ -89,6 +89,7 @@ public:
 
     /// \name Global Identifiers
     /// @{
+
     /// Get a global id of the vertex iterator using its distance to vertices_begin. (implementation is linear in the returned id)
     int vertex_id(Vertex_const_iterator v) const
     {
@@ -101,6 +102,7 @@ public:
     {
         return std::distance(cells_begin(), main(c));
     }
+    /// @}
 
     /// Get in the cell set cset, the cells that are at deg hops from the input cell c.
     void get_ring(Cell_const_iterator c, int deg, std::set<Cell_const_iterator>& cset) const
@@ -246,6 +248,7 @@ public:
 
     /// \name Iterator Location
     /// @{
+
     /// Get a vertex iterator equivalent to v in tile id. They represent the same vertex of the global triangulation.
     Vertex_const_iterator locate(const Vertex_const_iterator& v, Id id) const
     {
@@ -293,6 +296,7 @@ public:
     /// get the main representative of a cell iterator
     inline Cell_const_iterator main(const Cell_const_iterator& c) const { return locate(c, main_id(c)); }
 
+    /// @}
 
 
     /// \name Iterator operations
@@ -408,10 +412,12 @@ public:
         assert(is_valid(c));
         return mirror_index(facet(c,i));
     }
+    /// @}
 
     /// \name Iterator Local operations
     /// @{
-    /// Access the ith vectex of the cell c in its local tile.
+
+    /// Access the ith vertex of the cell c in its local tile.
     /// Advanced use: Access is local, thus more more effective, but the vertex index i corresponds
     /// to the index in the local tile representative of cell c, which may not be consistent with
     /// the vertex ordering in its main representative.
