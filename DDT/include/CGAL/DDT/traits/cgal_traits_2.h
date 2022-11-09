@@ -66,7 +66,7 @@ struct Cgal_traits_2
         Random_points_in_box(double g) : CGAL::Random_points_in_square_2<Point>(g) {}
     };
 
-    Delaunay_triangulation triangulation(int dimension) const
+    Delaunay_triangulation triangulation(int dimension = D) const
     {
         assert(dimension == D);
         return Delaunay_triangulation();
