@@ -18,7 +18,7 @@
 
 namespace CGAL {
 
-/// \ingroup PkgDDTClasses
+/// \ingroup PkgDDTRef
 /// \tparam TileContainer is a container that abstracts the storage of the triangulation tiles.
 /// The Distributed_Delaunay_triangulation class wraps a TileContainer to expose a triangulation interface.
 template<typename TileContainer>
@@ -242,11 +242,14 @@ public:
     Id tile_id(const Cell_const_iterator&   c) const { return c.tile()->id(); }
     /// @}
 
-    /// \name Iterator Location
+    /// \name Iterator relocation
     /// @{
+    /// `change_tile` functions return an alternative iterator that represents the same simplex,
+    /// but that lives in the tile with the provided Id.
+    /// If the simplex is not represented there, the end iterator is returned
 
     /// Get a vertex iterator equivalent to v in tile id. They represent the same vertex of the global triangulation.
-    Vertex_const_iterator locate(const Vertex_const_iterator& v, Id id) const
+    Vertex_const_iterator relocate(const Vertex_const_iterator& v, Id id) const
     {
         assert(is_valid(v));
         if (id == tile_id(v)) return v; // v is already in tile id
@@ -260,7 +263,7 @@ public:
     }
 
     /// Get a facet iterator equivalent to f in tile id. They represent the same facet of the global triangulation.
-    Facet_const_iterator locate(const Facet_const_iterator& f, Id id) const
+    Facet_const_iterator relocate(const Facet_const_iterator& f, Id id) const
     {
         assert(is_valid(f));
         if (id == tile_id(f)) return f; // f is already in tile id
@@ -273,7 +276,7 @@ public:
     }
 
     /// get a cell iterator equivalent to c in tile id. They represent the same cell of the global triangulation.
-    Cell_const_iterator locate(const Cell_const_iterator& c, Id id) const
+    Cell_const_iterator relocate(const Cell_const_iterator& c, Id id) const
     {
         assert(is_valid(c));
         if (id == tile_id(c)) return c; // c is already in tile id
@@ -286,11 +289,11 @@ public:
     }
 
     /// get the main representative of a vertex iterator
-    inline Vertex_const_iterator main(const Vertex_const_iterator& v) const { return locate(v, main_id(v)); }
+    inline Vertex_const_iterator main(const Vertex_const_iterator& v) const { return relocate(v, main_id(v)); }
     /// get the main representative of a facet iterator
-    inline Facet_const_iterator main(const Facet_const_iterator& f) const { return locate(f, main_id(f)); }
+    inline Facet_const_iterator main(const Facet_const_iterator& f) const { return relocate(f, main_id(f)); }
     /// get the main representative of a cell iterator
-    inline Cell_const_iterator main(const Cell_const_iterator& c) const { return locate(c, main_id(c)); }
+    inline Cell_const_iterator main(const Cell_const_iterator& c) const { return relocate(c, main_id(c)); }
 
     /// @}
 
@@ -363,7 +366,7 @@ public:
         Tile_const_iterator tile = f.tile();
         Tile_cell_const_iterator c = tile->cell(f.facet());
         if(tile->cell_is_main(c)) return local_index_of_covertex(f);
-        return local_index_of_covertex(locate(f, tile->minimum_id(c)));
+        return local_index_of_covertex(relocate(f, tile->minimum_id(c)));
     }
 
     /// @returns the covertex of a facet f
@@ -412,6 +415,14 @@ public:
 
     /// \name Iterator Local operations
     /// @{
+    /// \cgalAdvancedBegin
+    /// The local_ functions are useful for advanced uses where the function calls can be done locally on the tile triangulation, without changing tile.
+    /// This is more efficient if the operation is garanteed to be local.
+    /// Functions that have an input or output vertex index yield different results if performed locally,
+    /// as the vertex ordering in cells is not garanteed to be consistent across tiles. In some cases however, like
+    /// iterating over the vertices of a cell, a globally consistent indexing of the cell vertices may not be required
+    /// and the local indexing of the local functions may be used instead for better performance.
+    /// \cgalAdvancedEnd
 
     /// Access the ith vertex of the cell c in its local tile.
     /// Advanced use: Access is local, thus more more effective, but the vertex index i corresponds
@@ -480,6 +491,7 @@ public:
         assert(!tile->cell_is_foreign(c));
         return Vertex_const_iterator(tile, tiles.cend(), tile->covertex(f.facet()));
     }
+    /// @}
 
 private:
     Tile_container& tiles; /// loaded tiles

@@ -86,8 +86,8 @@ int main(int, char **)
         assert(facet2 != facet);
         assert(tri.index_of_covertex(facet2) == tri.mirror_index(facet));
         assert(tri.mirror_index(facet2) == tri.index_of_covertex(facet));
-        assert(tri.locate(tri.facet(cell, tri.index_of_covertex(facet)), tri.tile_id(facet)) == facet);
-        assert(tri.locate(tri.neighbor(cell2, tri.mirror_index(facet)), tri.tile_id(cell)) == cell);
+        assert(tri.relocate(tri.facet(cell, tri.index_of_covertex(facet)), tri.tile_id(facet)) == facet);
+        assert(tri.relocate(tri.neighbor(cell2, tri.mirror_index(facet)), tri.tile_id(cell)) == cell);
         assert(tri.covertex(facet) == tri.mirror_vertex(facet2));
         assert(tri.covertex(facet2) == tri.mirror_vertex(facet));
     }

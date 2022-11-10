@@ -64,7 +64,7 @@ size_t splay_stars(TileContainer& tc, Scheduler& sch)       {
     });
 }
 
-/// \ingroup PkgDDTRef
+/// \ingroup PkgDDTInsert
 /// Inserts the recieved points, in the Delaunay triangulation stored in the tile container.
 /// The scheduler provides the distribution environment (single thread, multithread, MPI...)
 /// @returns the vertex const iterator to the inserted point, or the already existing point if if it was already present
@@ -78,7 +78,7 @@ size_t insert_received(TileContainer& tc, Scheduler& sch){
 }
 
 
-/// \ingroup PkgDDTRef
+/// \ingroup PkgDDTInsert
 /// Inserts the given point in the tile given by the given id, in the Delaunay triangulation stored in the tile container.
 /// The scheduler provides the distribution environment (single thread, multithread, MPI...)
 /// @returns the vertex const iterator to the inserted point, or the already existing point if if it was already present
@@ -88,7 +88,7 @@ typename TileContainer::Vertex_const_iterator insert(TileContainer& tc, Schedule
     return insert_received(tc, sch);
 }
 
-/// \ingroup PkgDDTRef
+/// \ingroup PkgDDTInsert
 /// Inserts the points of the provided point+id range in the tiles given by the given ids, in the Delaunay triangulation stored in the tile container.
 /// The scheduler provides the distribution environment (single thread, multithread, MPI...)
 /// @returns the number of newly inserted vertices
@@ -99,7 +99,7 @@ size_t insert(TileContainer& tc, Scheduler& sch, const PointIdRange& range) {
     return insert_received(tc, sch);
 }
 
-/// \ingroup PkgDDTRef
+/// \ingroup PkgDDTInsert
 /// Inserts the points of the provided point range in the tiles given by the partitioning function, in the Delaunay triangulation stored in the tile container.
 /// The scheduler provides the distribution environment (single thread, multithread, MPI...)
 /// @returns the number of newly inserted vertices
@@ -113,7 +113,7 @@ size_t insert(TileContainer& tc, Scheduler& sch, PointRange points, Partitioner&
     return insert_received(tc, sch);
 }
 
-/// \ingroup PkgDDTRef
+/// \ingroup PkgDDTInsert
 /// Inserts the points of the provided point range in the tiles given by the partitioning function, in the Delaunay triangulation stored in the tile container.
 /// The scheduler provides the distribution environment (single thread, multithread, MPI...)
 /// @returns the number of newly inserted vertices

@@ -99,7 +99,7 @@ The \ref CGAL::DDT::Tile "Tile" class encapsulates :
 
 It exposes the insert function of the DT and manages tile ids and automatic simplification of foreign cells.
 
-As mentioned mixed simplices may be duplicated in multiple tiles. **Locate** functions are provided to find the corresponding simplex handle in another tile, if present. This is valuable to get the **main** simplex in another tile corresponding to a given non-main simplex. Currently, only the brute force approach is implemented.
+As mentioned mixed simplices may be duplicated in multiple tiles. `Distributed_Delaunay_triangulation::relocate` functions are provided to find the corresponding simplex handle in another tile, if present. This is valuable to get the **main** simplex in another tile corresponding to a given non-main simplex. Currently, only the brute force approach is implemented.
 
 The ostream operator<< is overloaded, so that a tile can be written in a ascii/binary format.
 
