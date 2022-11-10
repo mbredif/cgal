@@ -22,9 +22,8 @@
 #include <CGAL/DDT/iterator/Facet_const_iterator_3.h>
 #include <CGAL/DDT/traits/ddt_vertex_base_with_info_3.h>
 
-
-namespace ddt
-{
+namespace CGAL {
+namespace DDT {
 
 template<typename I, typename F>
 struct Cgal_traits_3
@@ -32,7 +31,7 @@ struct Cgal_traits_3
     enum { D = 3 };
     typedef I                                                      Id;
     typedef F                                                      Flag;
-    typedef ddt::Data<Id, Flag>                                    Data;
+    typedef CGAL::DDT::Data<Id, Flag>                                    Data;
     typedef CGAL::Exact_predicates_inexact_constructions_kernel    K;
     typedef CGAL::DDT_vertex_base_with_info_3<Data, K>   Vb;
     typedef CGAL::Delaunay_triangulation_cell_base_3<K>            Cb;
@@ -295,6 +294,7 @@ struct Cgal_traits_3
     }
 };
 
+}
 }
 
 #endif // CGAL_DDT_CGAL_TRAITS_3_H

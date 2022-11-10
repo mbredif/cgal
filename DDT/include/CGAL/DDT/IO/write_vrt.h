@@ -30,8 +30,8 @@
 #define STYLE_SOURCE_DIR ""
 #endif
 
-namespace ddt
-{
+namespace CGAL {
+namespace DDT {
 
 // VRT header writers
 
@@ -500,6 +500,7 @@ void write_vrt_cells(TileContainer& tc, const std::string& dirname)
     }
 }
 
+}
 }
 
 #endif // CGAL_DDT_WRITE_VRT_H

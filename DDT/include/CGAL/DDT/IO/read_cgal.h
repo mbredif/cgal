@@ -24,9 +24,8 @@
 #include <string>
 #include <fstream>
 
-
-namespace ddt
-{
+namespace CGAL {
+namespace DDT {
 
 template<typename Tile>
 std::istream& read_json(Tile & tile,std::istream&  ifile)
@@ -96,6 +95,7 @@ int read_cgal(TileContainer& tc, const std::string& dirname)
     return 0;
 }
 
+}
 }
 
 #endif // CGAL_DDT_READ_CGAL_H

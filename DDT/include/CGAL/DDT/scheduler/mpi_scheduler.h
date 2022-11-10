@@ -20,8 +20,8 @@
 #include <map>
 #include <vector>
 
-namespace ddt
-{
+namespace CGAL {
+namespace DDT {
 
 /// @todo make the point, count and Id (de)serialization fully generic.
 template<typename T> char * save_value_1(char * buf, T t) {
@@ -333,6 +333,7 @@ private:
     char processor_name[MPI_MAX_PROCESSOR_NAME];
 };
 
+}
 }
 
 #endif // CGAL_DDT_SCHEDULER_MPI_SCHEDULER_H

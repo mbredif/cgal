@@ -14,8 +14,6 @@
 #define CGAL_TRIANGULATION_VERTEX_BASE_WITH_INFO_3_H
 
 #include <CGAL/license/Triangulation_3.h>
-
-
 #include <CGAL/Triangulation_vertex_base_3.h>
 
 namespace CGAL {

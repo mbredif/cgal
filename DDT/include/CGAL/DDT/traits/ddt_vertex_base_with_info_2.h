@@ -14,8 +14,6 @@
 #define CGAL_DDT_VERTEX_BASE_WITH_INFO_2_H
 
 #include <CGAL/license/Triangulation_2.h>
-
-
 #include <CGAL/Triangulation_vertex_base_2.h>
 
 namespace CGAL {

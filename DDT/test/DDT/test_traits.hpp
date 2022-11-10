@@ -8,21 +8,21 @@
 #include <CGAL/DDT/partitioner/grid_partitioner.h>
 #include <CGAL/DDT/scheduler.h>
 #include <CGAL/DDT/serializer/file_serializer.h>
-#include <CGAL/DDT.h>
-#include <CGAL/DDT/distributed_Delaunay_triangulation.h>
+#include <CGAL/DDT/insert.h>
 #include <CGAL/DDT/tile_container.h>
+#include <CGAL/Distributed_Delaunay_triangulation.h>
 
 template <typename T, typename TC>
 int dump_2d_vrt(T & tri, TC& tiles, const std::string& testname)
 {
     boost::filesystem::create_directories(testname);
     std::cout << "== write_vrt ==" << std::endl;
-    ddt::write_vrt_vert(tri, testname+"_vert.vrt");
-    ddt::write_vrt_facet(tri, testname+"_facet.vrt");
-    ddt::write_vrt_cell(tri, testname+"_cell.vrt");
-    ddt::write_vrt_cells(tiles, testname);
-    ddt::write_vrt_verts(tiles, testname);
-    ddt::write_vrt_facets(tiles, testname);
+    CGAL::DDT::write_vrt_vert(tri, testname+"_vert.vrt");
+    CGAL::DDT::write_vrt_facet(tri, testname+"_facet.vrt");
+    CGAL::DDT::write_vrt_cell(tri, testname+"_cell.vrt");
+    CGAL::DDT::write_vrt_cells(tiles, testname);
+    CGAL::DDT::write_vrt_verts(tiles, testname);
+    CGAL::DDT::write_vrt_facets(tiles, testname);
     return 0;
 
 }
@@ -54,24 +54,24 @@ int test_traits(const std::string& testname, int ND, int NP, bool do_test_io = t
     int result = 0;
 
     typedef T Traits;
-    typedef ddt::Tile<Traits> Tile;
-    typedef ddt::Scheduler<Tile> Scheduler;
-    typedef ddt::File_Serializer<Id,Tile> Serializer;
-    typedef ddt::tile_container<Traits, Serializer> TileContainer;
-    typedef ddt::DDT<TileContainer> DDT;
-    typedef ddt::grid_partitioner<Traits> Partitioner;
+    typedef CGAL::DDT::Tile<Traits> Tile;
+    typedef CGAL::DDT::Scheduler<Tile> Scheduler;
+    typedef CGAL::DDT::File_Serializer<Id,Tile> Serializer;
+    typedef CGAL::DDT::tile_container<Traits, Serializer> TileContainer;
+    typedef CGAL::Distributed_Delaunay_triangulation<TileContainer> Distributed_Delaunay_triangulation;
+    typedef CGAL::DDT::grid_partitioner<Traits> Partitioner;
     typedef typename Traits::Random_points_in_box Random_points;
 
     std::cout << "== Delaunay ==" << std::endl;
     double range = 1;
-    ddt::Bbox<Traits::D, double> bbox(range);
+    CGAL::DDT::Bbox<Traits::D, double> bbox(range);
     Random_points points(Traits::D, range);
     Partitioner partitioner(bbox, ND);
     Serializer serializer;
     TileContainer tiles1(serializer);
-    DDT tri1(tiles1);
     Scheduler scheduler;
-    CGAL::ddt::insert(tiles1, scheduler, points, NP, partitioner);
+    CGAL::DDT::insert(tiles1, scheduler, points, NP, partitioner);
+    CGAL::Distributed_Delaunay_triangulation tri1(tiles1);
     if(!tri1.is_valid())
     {
         std::cerr << "tri is not valid" << std::endl;
@@ -82,7 +82,7 @@ int test_traits(const std::string& testname, int ND, int NP, bool do_test_io = t
     if (Traits::D == 3)
     {
         std::cout << "== write_ply ==" << std::endl;
-        ddt::write_ply(tiles1, testname + "/out.ply");
+        CGAL::DDT::write_ply(tiles1, testname + "/out.ply");
     }
     else if (Traits::D == 2)
     {
@@ -97,14 +97,14 @@ int test_traits(const std::string& testname, int ND, int NP, bool do_test_io = t
         boost::filesystem::create_directories(testname + "/cgal");
         boost::filesystem::create_directories(testname + "/cgal2");
         std::cout << "write..." << std::endl;
-        ddt::write_cgal(tiles1, testname + "/cgal");
+        CGAL::DDT::write_cgal(tiles1, testname + "/cgal");
 
         TileContainer tiles2(serializer);
-        DDT tri2(tiles2);
+        CGAL::Distributed_Delaunay_triangulation tri2(tiles2);
         std::cout << "read..." << std::endl;
-        ddt::read_cgal(tiles2, testname + "/cgal");
+        CGAL::DDT::read_cgal(tiles2, testname + "/cgal");
         std::cout << "write again..." << std::endl;
-        ddt::write_cgal(tiles1, testname + "/cgal2");
+        CGAL::DDT::write_cgal(tiles1, testname + "/cgal2");
 
         result += dump_2d_vrt(tri2, tiles2, testname + "/tri2");
         if (Traits::D == 2)
@@ -122,7 +122,7 @@ int test_traits(const std::string& testname, int ND, int NP, bool do_test_io = t
         for(auto cell = tri1.cells_begin(); cell != tri1.cells_end(); ++cell)
         {
             if (tri1.is_infinite(cell)) continue;
-            std::set<typename DDT::Cell_const_iterator> ring;
+            std::set<typename Distributed_Delaunay_triangulation::Cell_const_iterator> ring;
             tri1.get_ring(cell, 1, ring);
             finite_cell = cell;
             break;
@@ -131,7 +131,7 @@ int test_traits(const std::string& testname, int ND, int NP, bool do_test_io = t
 
         for(int deg = 1; deg < 30; deg += 5)
         {
-            std::set<typename DDT::Cell_const_iterator> ring;
+            std::set<typename Distributed_Delaunay_triangulation::Cell_const_iterator> ring;
             tri1.get_ring(finite_cell, deg, ring);
             boost::filesystem::create_directories(testname + "/ring/");
             // write_vrt_cell_range(tri1, ring.begin(), ring.end(), testname + "/ring/" +std::to_string(deg)+".vrt");

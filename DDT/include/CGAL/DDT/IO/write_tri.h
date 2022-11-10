@@ -19,8 +19,8 @@
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
 
-namespace ddt
-{
+namespace CGAL {
+namespace DDT {
 
 template<typename Tile>
 std::ostream & write_json(const Tile & tile,std::string filename,std::ostream & ofile)
@@ -104,6 +104,7 @@ read_tri(std::string dirname)
     };
 }
 
+}
 }
 
 #endif // CGAL_DDT_WRITE_TRI_H

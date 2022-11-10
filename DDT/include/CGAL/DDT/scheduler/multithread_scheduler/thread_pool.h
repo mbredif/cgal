@@ -23,7 +23,8 @@
 
 #include <CGAL/DDT/scheduler/multithread_scheduler/safe.h>
 
-namespace ddt {
+namespace CGAL {
+namespace DDT {
 
 class thread_pool
 {
@@ -130,6 +131,7 @@ public:
     }
 };
 
+}
 }
 
 #endif // CGAL_DDT_SCHEDULER_THREAD_POOL_H

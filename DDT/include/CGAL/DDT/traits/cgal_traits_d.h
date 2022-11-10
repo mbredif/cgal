@@ -29,8 +29,8 @@
 
 typedef std::numeric_limits< double > dbl;
 
-namespace ddt
-{
+namespace CGAL {
+namespace DDT {
 
 template<typename I, typename F, typename Dim = CGAL::Dynamic_dimension_tag>
 struct Cgal_traits_d
@@ -38,7 +38,7 @@ struct Cgal_traits_d
     typedef Dim                                                    Dim_tag;
     typedef I                                                      Id;
     typedef F                                                      Flag;
-    typedef ddt::Data<Id, Flag>                                    Data;
+    typedef CGAL::DDT::Data<Id, Flag>                                    Data;
     typedef CGAL::Epick_d<Dim_tag>                                 K;
     typedef CGAL::Triangulation_vertex<K,Data>                     Vb;
     typedef CGAL::Triangulation_full_cell<K>                       Cb;
@@ -550,6 +550,7 @@ struct Cgal_traits : public Cgal_traits_d<I,F,CGAL::Dimension_tag<N>>
     enum { D = N };
 };
 
+}
 }
 
 #endif // CGAL_DDT_CGAL_TRAITS_D_H

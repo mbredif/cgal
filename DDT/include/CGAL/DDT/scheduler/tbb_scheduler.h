@@ -23,8 +23,8 @@
 #include <tbb/parallel_reduce.h>
 #include <tbb/task_arena.h>
 
-namespace ddt
-{
+namespace CGAL {
+namespace DDT {
 
 template<typename T>
 struct tbb_scheduler
@@ -162,6 +162,7 @@ private:
     std::map<Id, std::map<Id, std::set<Vertex_const_handle>>> sent_; // no race condition, as the first Id is the source tile id
 };
 
+}
 }
 
 #endif // CGAL_DDT_SCHEDULER_TBB_SCHEDULER_H

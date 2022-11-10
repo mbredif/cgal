@@ -15,8 +15,8 @@
 #include <map>
 #include <vector>
 
-namespace ddt
-{
+namespace CGAL {
+namespace DDT {
 
 template<typename T>
 struct sequential_scheduler
@@ -112,6 +112,7 @@ private:
     std::map<Id, std::set<Vertex_const_handle>> sent_;
 };
 
+}
 }
 
 #endif // CGAL_DDT_SCHEDULER_SEQUENTIAL_SCHEDULER_H

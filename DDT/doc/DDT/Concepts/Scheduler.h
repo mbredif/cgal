@@ -6,15 +6,15 @@
 The concept `Scheduler` describes the requirements for the
 ...
 
-\cgalHasModel `ddt::sequential_scheduler`
-\cgalHasModel `ddt::multithread_scheduler`
-\cgalHasModel `ddt::tbb_scheduler`
-\cgalHasModel `ddt::mpi_scheduler` (wip)
+\cgalHasModel `CGAL::DDT::sequential_scheduler`
+\cgalHasModel `CGAL::DDT::multithread_scheduler`
+\cgalHasModel `CGAL::DDT::tbb_scheduler`
+\cgalHasModel `CGAL::DDT::mpi_scheduler` (wip)
 
 */
 
-namespace ddt
-{
+namespace CGAL {
+namespace DDT {
 
 class Scheduler {
 public:
@@ -115,4 +115,5 @@ public:
 
 }; /* end Scheduler */
 
+}
 }

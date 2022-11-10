@@ -12,8 +12,8 @@
 #ifndef CGAL_DDT_CELL_CONST_ITERATOR_H
 #define CGAL_DDT_CELL_CONST_ITERATOR_H
 
-namespace ddt
-{
+namespace CGAL {
+namespace DDT {
 
 template<typename TileContainer>
 class Cell_const_iterator
@@ -141,6 +141,7 @@ public:
     }
 };
 
+}
 }
 
 #endif // CGAL_DDT_CELL_CONST_ITERATOR_H

@@ -15,8 +15,7 @@
 #include <vector>
 
 namespace CGAL {
-
-namespace ddt {
+namespace DDT {
 
 template<typename TileContainer, typename Scheduler>
 size_t local_insert_received(TileContainer& tc, Scheduler& sch) {
@@ -111,10 +110,7 @@ size_t insert(TileContainer& tc, Scheduler& sch, Iterator it, int count, Partiti
     return insert_received(tc, sch);
 }
 
-
-
 }
-
 }
 
 #endif // CGAL_DDT_DISTRIBUTED_DELAUNAY_TRIANGULATION_H

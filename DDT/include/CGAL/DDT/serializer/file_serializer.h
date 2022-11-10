@@ -12,8 +12,8 @@
 #ifndef CGAL_DDT_FILE_SERIALIZER_H
 #define CGAL_DDT_FILE_SERIALIZER_H
 
-namespace ddt
-{
+namespace CGAL {
+namespace DDT {
 
 template<typename Id, typename Tile>
 class File_Serializer
@@ -42,6 +42,7 @@ private:
     std::map<Id,std::string> files;
 };
 
+}
 }
 
 #endif // CGAL_DDT_FILE_SERIALIZER_H

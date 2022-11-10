@@ -12,8 +12,8 @@
 #ifndef CGAL_DDT_FACET_CONST_ITERATOR_D_H
 #define CGAL_DDT_FACET_CONST_ITERATOR_D_H
 
-namespace ddt
-{
+namespace CGAL {
+namespace DDT {
 
 template<typename TDS>
 class Facet_const_iterator_d
@@ -129,7 +129,7 @@ private:
     int cur_dim_;
 };
 
-
+}
 }
 
 #endif // CGAL_DDT_FACET_CONST_ITERATOR_D_H

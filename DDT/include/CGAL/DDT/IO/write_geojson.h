@@ -26,8 +26,8 @@
 
 
 // https://en.wikipedia.org/wiki/GeoJSON
-namespace ddt
-{
+namespace CGAL {
+namespace DDT {
 
 template<typename DDT, typename Iterator>
 void write_geojson_vert_range(const DDT& ddt, Iterator begin, Iterator end, std::ostream & ofs, bool is_first = true)
@@ -158,9 +158,7 @@ void write_geojson_tile(const tile& tt, std::ostream & ofs)
     ofs << "}" << std::endl;
 }
 
-
-
-
+}
 }
 
 #endif // CGAL_DDT_WRITE_GEOJSON_H

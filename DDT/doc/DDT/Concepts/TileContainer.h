@@ -5,12 +5,12 @@
 
 The concept `TileContainer` describes the requirements for a container of tiles
 
-\cgalHasModel `ddt::tile_container`
+\cgalHasModel `CGAL::DDT::tile_container`
 
 */
 
-namespace ddt
-{
+namespace CGAL {
+namespace DDT {
 
 class TileContainer {
 public:
@@ -24,4 +24,5 @@ public:
 
 }; /* end TileContainer */
 
+}
 }

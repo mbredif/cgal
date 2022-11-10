@@ -14,8 +14,8 @@
 
 #include <CGAL/DDT/bbox.h>
 
-namespace ddt
-{
+namespace CGAL {
+namespace DDT {
 
 template<typename Traits>
 class grid_partitioner
@@ -73,6 +73,7 @@ private:
     double origin[D];
 };
 
+}
 }
 
 #endif // CGAL_DDT_PARITIONER_GRID_PARTITIONER_H

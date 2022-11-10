@@ -16,8 +16,8 @@
 #include <fstream>
 #include <map>
 
-namespace ddt
-{
+namespace CGAL {
+namespace DDT {
 
 inline void write_ply_header_begin(std::ostream& out)
 {
@@ -141,6 +141,7 @@ void write_ply(const TileContainer& tc, const std::string& filename)
     out.close();
 }
 
+}
 }
 
 #endif // CGAL_DDT_WRITE_PLY_H

@@ -16,8 +16,8 @@
 #include <random>
 
 /// @todo for testing purposes only (correct but bad performance)
-namespace ddt
-{
+namespace CGAL {
+namespace DDT {
 
 template<typename Traits, typename Generator = std::default_random_engine>
 class random_partitioner
@@ -49,6 +49,7 @@ private:
     Generator generator;
 };
 
+}
 }
 
 #endif // CGAL_DDT_PARITIONER_RANDOM_PARTITIONER_H

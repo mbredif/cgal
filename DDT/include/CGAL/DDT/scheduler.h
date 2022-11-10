@@ -17,29 +17,29 @@
 #ifdef CGAL_LINKED_WITH_TBB
 
 #include <CGAL/DDT/scheduler/tbb_scheduler.h>
-namespace ddt
-{
-template <typename T> using Scheduler = ddt::tbb_scheduler<T>;
+namespace CGAL {
+namespace DDT {
+template <typename T> using Scheduler = CGAL::DDT::tbb_scheduler<T>;
 }
-
+}
 #else
 
 #include <CGAL/DDT/scheduler/multithread_scheduler.h>
-namespace ddt
-{
-template <typename T> using Scheduler = ddt::multithread_scheduler<T>;
+namespace CGAL {
+namespace DDT {
+template <typename T> using Scheduler = CGAL::DDT::multithread_scheduler<T>;
 }
-
+}
 #endif
 
 #else
 
 #include <CGAL/DDT/scheduler/sequential_scheduler.h>
-namespace ddt
-{
-template <typename T> using Scheduler = ddt::sequential_scheduler<T>;
+namespace CGAL {
+namespace DDT {
+template <typename T> using Scheduler = CGAL::DDT::sequential_scheduler<T>;
 }
-
+}
 #endif
 
 #endif // CGAL_DDT_SCHEDULER_H

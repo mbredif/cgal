@@ -17,8 +17,8 @@
 #include <limits>
 #include <iostream>
 
-namespace ddt
-{
+namespace CGAL {
+namespace DDT {
 
 template<int D, typename T>
 struct Bbox
@@ -109,7 +109,7 @@ std::istream& operator>>(std::istream& in, Bbox<D, T>& bbox)
     return in;
 }
 
-
+}
 }
 
 #endif // CGAL_DDT_BBOX_H

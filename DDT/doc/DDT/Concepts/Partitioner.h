@@ -6,14 +6,14 @@
 The concept `Partitioner` describes the requirements for the
 ...
 
-\cgalHasModel `ddt::const_partitioner`
-\cgalHasModel `ddt::grid_partitioner`
-\cgalHasModel `ddt::random_partitioner`
+\cgalHasModel `CGAL::DDT::const_partitioner`
+\cgalHasModel `CGAL::DDT::grid_partitioner`
+\cgalHasModel `CGAL::DDT::random_partitioner`
 
 */
 
-namespace ddt
-{
+namespace CGAL {
+namespace DDT {
 
 class Partitioner {
 public:
@@ -48,4 +48,5 @@ inline Id operator()(const Point& p) const;
 
 }; /* end Partitioner */
 
+}
 }

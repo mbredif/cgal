@@ -18,8 +18,8 @@
 #include <chrono>
 #include <CGAL/DDT/scheduler/multithread_scheduler/thread_pool.h>
 
-namespace ddt
-{
+namespace CGAL {
+namespace DDT {
 
 template<typename T>
 struct multithread_scheduler
@@ -159,6 +159,7 @@ private:
     std::chrono::milliseconds timeout_;
 };
 
+}
 }
 
 #endif // CGAL_DDT_SCHEDULER_MULTITHREAD_SCHEDULER_H

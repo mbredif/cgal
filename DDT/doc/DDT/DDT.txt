@@ -90,9 +90,9 @@ General info about the code :
 \subsection SSection_DDT_Files Files
 
 \subsubsection SSSection_DDT_Tile Tile.hpp
-The \ref ddt::Tile "Tile" class encapsulates :
+The \ref CGAL::DDT::Tile "Tile" class encapsulates :
   - The tile identifier.
-  - The Delaunay tile-triangulation, obviously. In order to keep track of the tile id of foreign points, the vertices are templated with a data attribute to hold this id ( \ref ddt::Data "data.hpp" ). The access is provided by a function of the trait : id(Vertex_handle v) . However, other storage policies are possible , such as storing the tile ids of the vertices outside the DT in an external data structure, which would save space by not storing the id of local vertices.
+  - The Delaunay tile-triangulation, obviously. In order to keep track of the tile id of foreign points, the vertices are templated with a data attribute to hold this id ( \ref CGAL::DDT::Data "data.hpp" ). The access is provided by a function of the trait : id(Vertex_handle v) . However, other storage policies are possible , such as storing the tile ids of the vertices outside the DT in an external data structure, which would save space by not storing the id of local vertices.
   - The number of main vertices, facets and cells in the tile-triangulation (cached for performance)
   - An archive of its local points it already sent to which tile, preventing any resending.
   - The bounding boxes of all other tiles, if known (for legacy reasons, if needed, they might be better placed in the DDT class...)
@@ -104,14 +104,14 @@ As mentioned mixed simplices may be duplicated in multiple tiles. **Locate** fun
 The ostream operator<< is overloaded, so that a tile can be written in a ascii/binary format.
 
 \subsubsection SSSection_DDT_DDT DDT.hpp
-The \ref ddt::DDT "DDT" class is a view on the distributed Delaynay Triangulation, in the sense that, if enough memory is available, it could load all the tiles and provide operations such as (batch) point insertion seamlessly to the user. However, it has the possibility to load only a subset of the tiles, which is interesting when memory resources are insufficient and for future extensions (streaming processing, dynamic loading/unloading...)
+The \ref CGAL::Distributed_Delaunay_triangulation "DDT" class is a view on the distributed Delaynay Triangulation, in the sense that, if enough memory is available, it could load all the tiles and provide operations such as (batch) point insertion seamlessly to the user. However, it has the possibility to load only a subset of the tiles, which is interesting when memory resources are insufficient and for future extensions (streaming processing, dynamic loading/unloading...)
 
 \subsubsection SSSection_DDT_Iterators Iterators
 Iterators are provided to enumerate the main simplices of the loaded tiles in a DDT.
 
-- \ref ddt::Cell_const_iterator "Cell_const_iterator.hpp"
-- \ref ddt::Vertex_const_iterator "Vertex_const_iterator.hpp"
-- \ref ddt::Facet_const_iterator "Facet_const_iterator.hpp"
+- \ref CGAL::DDT::Cell_const_iterator "Cell_const_iterator.hpp"
+- \ref CGAL::DDT::Vertex_const_iterator "Vertex_const_iterator.hpp"
+- \ref CGAL::DDT::Facet_const_iterator "Facet_const_iterator.hpp"
 
 These iterators are implemented by maintaining a local filtered iterator over the main simplices and an iterator over the tiles.
 It thus iterates over the  **main** simplices of each loaded tiles in turn.
@@ -120,7 +120,7 @@ In order to iterate over each main simplex of the overall DT in parallel, the lo
 
 \subsubsection SSSection_DDT_Traits  Traits*.hpp
 	The trait classes provide glue layers that hide or adapt the API discrepancies between DT implementations, so that the rest of the code is agnostic of the exact DT implementation : CGAL 2D, CGAL 3D, CGAL nD... (there used to be a geogram trait as well!)
-	See for instance the nD trait \ref ddt::Cgal_traits_d "cgal_traits_d.hpp"
+        See for instance the nD trait \ref CGAL::DDT::Cgal_traits_d "cgal_traits_d.hpp"
 
 
 \subsection SSection_DDT_Schedulers Schedulers

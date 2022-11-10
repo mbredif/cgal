@@ -11,11 +11,11 @@ typedef int Flag;
 //
 
 #include <CGAL/DDT/traits/cgal_traits_d.h>
-typedef ddt::Cgal_traits<2,Id,Flag> Traits;
+typedef CGAL::DDT::Cgal_traits<2,Id,Flag> Traits;
 typedef Traits::Random_points_in_box Random_points;
 
 
-typedef ddt::Tile<Traits> Tile;
+typedef CGAL::DDT::Tile<Traits> Tile;
 
 class py_vertex_iterator
 {
@@ -162,13 +162,13 @@ public:
 };
 
 #include <CGAL/DDT/scheduler/multithread_scheduler.h>
-typedef ddt::multithread_scheduler<py_tile> Scheduler;
+typedef CGAL::DDT::multithread_scheduler<py_tile> Scheduler;
 
 #include <CGAL/DDT.h>
-class py_DDT : public ddt::DDT<Traits, Scheduler, py_tile>
+class py_DDT : public CGAL::DDT::DDT<Traits, Scheduler, py_tile>
 {
 private:
-    typedef ddt::DDT<Traits, Scheduler, py_tile> DDT;
+    typedef CGAL::DDT::DDT<Traits, Scheduler, py_tile> DDT;
 
 public:
     py_DDT(int n_threads=0) : DDT(n_threads) {}
@@ -215,11 +215,11 @@ public:
 #include <CGAL/DDT/partitioner/const_partitioner.h>
 #include <CGAL/DDT/partitioner/grid_partitioner.h>
 #include <CGAL/DDT/partitioner/random_partitioner.h>
-typedef ddt::const_partitioner<Traits> Const_partitioner;
-typedef ddt::grid_partitioner<Traits> Grid_partitioner;
-typedef ddt::random_partitioner<Traits> Random_partitioner;
+typedef CGAL::DDT::const_partitioner<Traits> Const_partitioner;
+typedef CGAL::DDT::grid_partitioner<Traits> Grid_partitioner;
+typedef CGAL::DDT::random_partitioner<Traits> Random_partitioner;
 
-typedef ddt::Bbox<Traits::D, double> Bbox;
+typedef CGAL::DDT::Bbox<Traits::D, double> Bbox;
 
 template<typename Iterator, typename Param, typename Partitioner>
 inline void send_points(py_DDT& tri, Param p, int count, Partitioner& part)
@@ -271,19 +271,19 @@ BOOST_PYTHON_MODULE(pyddt)
     //.def("insert_received_points", &py_DDT::insert_received_points)
     //.def("send_all_bbox_points", &py_DDT::send_all_bbox_points)
     //.def("splay_stars", &py_DDT::splay_stars)
-    .def("read_cgal", &ddt::read_cgal<py_DDT>)
-    .def("write_ply", &ddt::write_ply<py_DDT>)
-    .def("write_cgal", &ddt::write_cgal<py_DDT>)
-    .def("write_vrt_vert", &ddt::write_vrt_vert<py_DDT>)
-    .def("write_vrt_cell", &ddt::write_vrt_cell<py_DDT>)
-    .def("write_vrt_facet", &ddt::write_vrt_facet<py_DDT>)
-    .def("write_vrt_cells", &ddt::write_vrt_cells<py_DDT>)
-    .def("write_vrt_verts", &ddt::write_vrt_verts<py_DDT>)
-    .def("write_vrt_bbox_vert", &ddt::write_vrt_bbox_vert<py_DDT>)
-    .def("write_vrt_bbox", &ddt::write_vrt_bbox<py_DDT>)
-    .def("write_vrt_tin", &ddt::write_vrt_tin<py_DDT>)
-    .def("write_json_tri",&ddt::write_geojson_tri<py_DDT>)
-    .def("write_adjacency_graph_dot", &ddt::write_adjacency_graph_dot<py_DDT>)
+    .def("read_cgal", &CGAL::DDT::read_cgal<py_DDT>)
+    .def("write_ply", &CGAL::DDT::write_ply<py_DDT>)
+    .def("write_cgal", &CGAL::DDT::write_cgal<py_DDT>)
+    .def("write_vrt_vert", &CGAL::DDT::write_vrt_vert<py_DDT>)
+    .def("write_vrt_cell", &CGAL::DDT::write_vrt_cell<py_DDT>)
+    .def("write_vrt_facet", &CGAL::DDT::write_vrt_facet<py_DDT>)
+    .def("write_vrt_cells", &CGAL::DDT::write_vrt_cells<py_DDT>)
+    .def("write_vrt_verts", &CGAL::DDT::write_vrt_verts<py_DDT>)
+    .def("write_vrt_bbox_vert", &CGAL::DDT::write_vrt_bbox_vert<py_DDT>)
+    .def("write_vrt_bbox", &CGAL::DDT::write_vrt_bbox<py_DDT>)
+    .def("write_vrt_tin", &CGAL::DDT::write_vrt_tin<py_DDT>)
+    .def("write_json_tri",&CGAL::DDT::write_geojson_tri<py_DDT>)
+    .def("write_adjacency_graph_dot", &CGAL::DDT::write_adjacency_graph_dot<py_DDT>)
 //    .def("write_vrt_ring", &py_DDT::write_vrt_ring)
     .def("number_of_cells", &py_DDT::number_of_cells)
     .def("number_of_vertices", &py_DDT::number_of_vertices)

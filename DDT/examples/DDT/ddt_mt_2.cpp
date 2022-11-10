@@ -5,40 +5,40 @@ typedef unsigned char Flag;
 //#include <CGAL/DDT/traits/cgal_traits_3.h>
 //#include <CGAL/DDT/traits/cgal_traits_d.h>
 
-typedef ddt::Cgal_traits_2<Id,Flag> Traits;
-//typedef ddt::Cgal_traits_3<Id,Flag> Traits;
-//typedef ddt::Cgal_traits_d<Id,Flag> Traits; // dynamic
-//typedef ddt::Cgal_traits<2,Id,Flag> Traits;
-//typedef ddt::Cgal_traits<3,Id,Flag> Traits;
-//typedef ddt::Cgal_traits<4,Id,Flag> Traits;
+typedef CGAL::DDT::Cgal_traits_2<Id,Flag> Traits;
+//typedef CGAL::DDT::Cgal_traits_3<Id,Flag> Traits;
+//typedef CGAL::DDT::Cgal_traits_d<Id,Flag> Traits; // dynamic
+//typedef CGAL::DDT::Cgal_traits<2,Id,Flag> Traits;
+//typedef CGAL::DDT::Cgal_traits<3,Id,Flag> Traits;
+//typedef CGAL::DDT::Cgal_traits<4,Id,Flag> Traits;
 
 typedef Traits::Random_points_in_box Random_points;
 
 #include <CGAL/DDT/partitioner/grid_partitioner.h>
-#include <CGAL/DDT.h>
 #define DDT_USE_THREADS 1
 #include <CGAL/DDT/tile_container.h>
-typedef ddt::Tile<Traits> Tile;
+typedef CGAL::DDT::Tile<Traits> Tile;
 
 //#include <CGAL/DDT/scheduler/sequential_scheduler.h>
-//typedef ddt::sequential_scheduler<Tile> Scheduler;
+//typedef CGAL::DDT::sequential_scheduler<Tile> Scheduler;
 //#include <CGAL/DDT/scheduler/multithread_scheduler.h>
-//typedef ddt::multithread_scheduler<Tile> Scheduler;
+//typedef CGAL::DDT::multithread_scheduler<Tile> Scheduler;
 #include <CGAL/DDT/scheduler/tbb_scheduler.h>
-typedef ddt::tbb_scheduler<Tile> Scheduler;
+typedef CGAL::DDT::tbb_scheduler<Tile> Scheduler;
 //#include <CGAL/DDT/scheduler/mpi_scheduler.h>
-//typedef ddt::mpi_scheduler<Tile> Scheduler;
+//typedef CGAL::DDT::mpi_scheduler<Tile> Scheduler;
 
 #include <CGAL/DDT/serializer/file_serializer.h>
-typedef ddt::File_Serializer<Id,Tile> Serializer;
+typedef CGAL::DDT::File_Serializer<Id,Tile> Serializer;
 
-typedef ddt::tile_container<Traits, Serializer> TileContainer;
-typedef ddt::DDT<TileContainer> DDT;
+typedef CGAL::DDT::tile_container<Traits, Serializer> TileContainer;
+#include <CGAL/Distributed_Delaunay_triangulation.h>
+typedef CGAL::Distributed_Delaunay_triangulation<TileContainer> Distributed_Delaunay_triangulation;
 #include <CGAL/DDT/IO/write_ply.h>
 #include <CGAL/DDT/IO/write_vrt.h>
 #include <CGAL/DDT/IO/logging.h>
 
-#include <CGAL/DDT/distributed_Delaunay_triangulation.h>
+#include <CGAL/DDT/insert.h>
 
 #include <boost/program_options.hpp>
 namespace po = boost::program_options;
@@ -89,14 +89,13 @@ int main(int argc, char **argv)
         std::cerr << desc << std::endl;
         return -1;
     }
-    ddt::Bbox<D, double> bbox(range);
-    ddt::grid_partitioner<Traits> partitioner(bbox, NT.begin(), NT.end());
+    CGAL::DDT::Bbox<D, double> bbox(range);
+    CGAL::DDT::grid_partitioner<Traits> partitioner(bbox, NT.begin(), NT.end());
 
     Serializer serializer;
     serializer.add(0, "0.txt");
     serializer.add(1, "1.txt");
     TileContainer tiles(serializer);
-    DDT tri(tiles);
     Scheduler scheduler;
 
     std::cout << "- Loglevel : " << loglevel << std::endl;
@@ -109,19 +108,21 @@ int main(int argc, char **argv)
     std::cout << ")" << std::endl;
 
     Random_points points(D, range);
-    CGAL::ddt::insert(tiles, scheduler, points, NP, partitioner);
+    CGAL::DDT::insert(tiles, scheduler, points, NP, partitioner);
+    Distributed_Delaunay_triangulation tri(tiles);
 
     if ( vm.count("out")  )
     {
-        ddt::logging<> log("Writing      ", loglevel);
-        ddt::write_ply(tiles, out+".ply");
-        ddt::write_vrt_cell(tri, out+"_c.vrt");
-        ddt::write_vrt_vert(tri, out+"_v.vrt");
+        CGAL::DDT::logging<> log("Writing      ", loglevel);
+        CGAL::DDT::write_ply(tiles, out+".ply");
+
+        CGAL::DDT::write_vrt_cell(tri, out+"_c.vrt");
+        CGAL::DDT::write_vrt_vert(tri, out+"_v.vrt");
     }
 
     if ( vm.count("check")  )
     {
-        ddt::logging<> log("Validity     ", loglevel);
+        CGAL::DDT::logging<> log("Validity     ", loglevel);
         std::cout << "Validity     \t" << (tri.is_valid() ? "OK" : "ERROR!") << std::endl;
     }
     return 0;

@@ -2,7 +2,7 @@ typedef int Id;
 typedef int Flag;
 
 #include <CGAL/DDT/traits/cgal_traits_2.h>
-typedef ddt::Cgal_traits_2<Id,Flag> Traits;
+typedef CGAL::DDT::Cgal_traits_2<Id,Flag> Traits;
 
 #include "test_traits.hpp"
 

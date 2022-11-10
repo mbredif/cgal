@@ -5,15 +5,15 @@
 
 The concept `TriangulationTraits` describes the requirements of a traits that adapts a Delaunay Triangulation implementation.
 
-\cgalHasModel `ddt::Cgal_traits_2`
-\cgalHasModel `ddt::Cgal_traits_3`
-\cgalHasModel `ddt::Cgal_traits_d`
-\cgalHasModel `ddt::Cgal_traits`
+\cgalHasModel `CGAL::DDT::Cgal_traits_2`
+\cgalHasModel `CGAL::DDT::Cgal_traits_3`
+\cgalHasModel `CGAL::DDT::Cgal_traits_d`
+\cgalHasModel `CGAL::DDT::Cgal_traits`
 
 */
 
-namespace ddt
-{
+namespace CGAL {
+namespace DDT {
 
 class TriangulationTraits {
 public:
@@ -155,4 +155,5 @@ public:
     }; /* end TriangulationTraits */
 };
 
+}
 }

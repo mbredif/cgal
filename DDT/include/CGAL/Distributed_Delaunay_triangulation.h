@@ -9,24 +9,23 @@
 //
 // Author(s)     : Mathieu Brédif and Laurent Caraffa
 
-#ifndef CGAL_DDT_H
-#define CGAL_DDT_H
+#ifndef CGAL_DISTRIBUTED_DELAUNAY_TRIANGULATION_H
+#define CGAL_DISTRIBUTED_DELAUNAY_TRIANGULATION_H
 
 #include <CGAL/DDT/iterator/Vertex_const_iterator.h>
 #include <CGAL/DDT/iterator/Facet_const_iterator.h>
 #include <CGAL/DDT/iterator/Cell_const_iterator.h>
 
-namespace ddt
-{
+namespace CGAL {
 
 /*!
 \ingroup PkgDDTClasses
-\tparam TileContainer is a container that asbstracts the storage of the triangulation tiles.
-The DDT class wraps a TileContainer to expose a triangulation interface.
+\tparam TileContainer is a container that abstracts the storage of the triangulation tiles.
+The Distributed_Delaunay_triangulation class wraps a TileContainer to expose a triangulation interface.
 */
 
 template<typename TileContainer>
-class DDT
+class Distributed_Delaunay_triangulation
 {
 private:
     typedef typename TileContainer::Traits              Traits;
@@ -43,13 +42,13 @@ public:
     typedef typename Traits::Point                   Point;
     typedef typename Traits::Id                      Id;
 
-    typedef ddt::Vertex_const_iterator<TileContainer> Vertex_const_iterator;
-    typedef ddt::Facet_const_iterator <TileContainer> Facet_const_iterator;
-    typedef ddt::Cell_const_iterator  <TileContainer> Cell_const_iterator;
+    typedef CGAL::DDT::Vertex_const_iterator<TileContainer> Vertex_const_iterator;
+    typedef CGAL::DDT::Facet_const_iterator <TileContainer> Facet_const_iterator;
+    typedef CGAL::DDT::Cell_const_iterator  <TileContainer> Cell_const_iterator;
 /// @}
 
     /// contructor
-    DDT(TileContainer& tc) : tiles(tc) {}
+    Distributed_Delaunay_triangulation(TileContainer& tc) : tiles(tc) {}
     /// the dimension of the triangulation
     inline int maximal_dimension() const { return tiles.maximal_dimension(); }
     /// The number of finite cells in the triangulation, including cells incident to the vertex at infinity.
@@ -135,7 +134,7 @@ public:
     }
 
 
-    /// checks the validity of the DDT
+    /// checks the validity of the Distributed_Delaunay_triangulation
     bool is_valid() const
     {
         if (!tiles.is_valid()) return false;
@@ -491,4 +490,4 @@ private:
 
 }
 
-#endif // CGAL_DDT_H
+#endif // CGAL_DISTRIBUTED_DELAUNAY_TRIANGULATION_H

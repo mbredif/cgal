@@ -15,8 +15,8 @@
 #include <CGAL/DDT/tile.h>
 #include <map>
 
-namespace ddt
-{
+namespace CGAL {
+namespace DDT {
 
 template<typename Map_const_iterator>
 class Key_const_iterator
@@ -87,7 +87,7 @@ private:
     Map_iterator it;
 };
 
-template<typename _Traits, typename Serializer, typename _Tile = ddt::Tile<_Traits>>
+template<typename _Traits, typename Serializer, typename _Tile = CGAL::DDT::Tile<_Traits>>
 class tile_container
 {
 public:
@@ -161,6 +161,7 @@ public:
     /// unload a tile from memory (no automatic saving)
     void unload(Id id)
     {
+        save(id);
         tiles.remove(id);
     }
 
@@ -265,6 +266,7 @@ private:
     size_t number_of_cells_;
 };
 
+}
 }
 
 #endif // CGAL_DDT_TILE_CONTAINER_H

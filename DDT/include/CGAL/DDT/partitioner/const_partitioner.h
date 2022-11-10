@@ -12,8 +12,8 @@
 #ifndef CGAL_DDT_PARITIONER_CONST_PARTITIONER_H
 #define CGAL_DDT_PARITIONER_CONST_PARTITIONER_H
 
-namespace ddt
-{
+namespace CGAL {
+namespace DDT {
 
 template<typename Traits>
 class const_partitioner
@@ -33,6 +33,7 @@ private:
     Id id_;
 };
 
+}
 }
 
 #endif // CGAL_DDT_PARITIONER_CONST_PARTITIONER_H

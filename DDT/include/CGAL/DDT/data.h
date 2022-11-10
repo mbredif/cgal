@@ -15,8 +15,8 @@
 #include <iostream>
 #include <CGAL/IO/io.h>
 
-namespace ddt
-{
+namespace CGAL {
+namespace DDT {
 
 template<typename I, typename F>
 struct Data
@@ -70,7 +70,7 @@ operator>>(std::istream & is,  Data<I,F> & dd)
     return is;
 }
 
-
+}
 }
 
 #endif // CGAL_DDT_DATA_H

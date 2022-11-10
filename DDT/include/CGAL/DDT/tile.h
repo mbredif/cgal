@@ -20,11 +20,8 @@
 #include <iostream>
 #include <assert.h>
 
-
-namespace ddt
-{
-
-
+namespace CGAL {
+namespace DDT {
 
 template<class T>
 class Tile
@@ -675,9 +672,7 @@ std::ostream& operator<< (std::ostream& os,const Tile<T> & tt)
     return os;
 }
 
-
-
-
+}
 }
 
 #endif // CGAL_DDT_TILE_H

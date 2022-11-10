@@ -15,8 +15,8 @@
 #include <chrono>
 #include <iostream>
 
-namespace ddt
-{
+namespace CGAL {
+namespace DDT {
 
 template <int ID=0>
 class logging
@@ -67,6 +67,7 @@ private:
     std::string overall;
 };
 
+}
 }
 
 #endif // CGAL_DDT_LOGGING_H

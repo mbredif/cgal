@@ -14,7 +14,8 @@
 
 #include <mutex>
 
-namespace ddt {
+namespace CGAL {
+namespace DDT {
 
 // Thread safe implementation of a Queue using a std::queue
 template <typename Container>
@@ -80,6 +81,7 @@ public:
     }
 };
 
+}
 }
 
 #endif // CGAL_DDT_SCHEDULER_SAFE_H

@@ -6,30 +6,34 @@ typedef int Flag;
 #include <boost/filesystem.hpp>
 
 #include <CGAL/DDT/traits/cgal_traits_d.h>
-typedef ddt::Cgal_traits<2,Id,Flag> Traits;
-
-#include <CGAL/DDT.h>
-#include <CGAL/DDT/partitioner/grid_partitioner.h>
-#include <CGAL/DDT/IO/write_vrt.h>
-#include <CGAL/DDT/distributed_Delaunay_triangulation.h>
-#include <CGAL/DDT/tile_container.h>
-
-typedef ddt::Tile<Traits> Tile;
-//#include <CGAL/DDT/scheduler/sequential_scheduler.h>
-//typedef ddt::sequential_scheduler<Tile> Scheduler;
-#include <CGAL/DDT/scheduler/multithread_scheduler.h>
-typedef ddt::multithread_scheduler<Tile> Scheduler;
-//#include <CGAL/DDT/scheduler/tbb_scheduler.h>
-//typedef ddt::tbb_scheduler<Tile> Scheduler;
-//#include <CGAL/DDT/scheduler/mpi_scheduler.h>
-//typedef ddt::mpi_scheduler<Tile> Scheduler;
-typedef ddt::grid_partitioner<Traits> Partitioner;
-#include <CGAL/DDT/serializer/file_serializer.h>
-typedef ddt::File_Serializer<Id,Tile> Serializer;
-
-typedef ddt::tile_container<Traits, Serializer> TileContainer;
-typedef ddt::DDT<TileContainer> DDT;
+typedef CGAL::DDT::Cgal_traits<2,Id,Flag> Traits;
 typedef Traits::Point Point;
+
+#include <CGAL/DDT/tile_container.h>
+#include <CGAL/DDT/serializer/file_serializer.h>
+typedef CGAL::DDT::Tile<Traits> Tile;
+typedef CGAL::DDT::File_Serializer<Id,Tile> Serializer;
+typedef CGAL::DDT::tile_container<Traits, Serializer> TileContainer;
+
+//#include <CGAL/DDT/scheduler/sequential_scheduler.h>
+//typedef CGAL::DDT::sequential_scheduler<Tile> Scheduler;
+#include <CGAL/DDT/scheduler/multithread_scheduler.h>
+typedef CGAL::DDT::multithread_scheduler<Tile> Scheduler;
+//#include <CGAL/DDT/scheduler/tbb_scheduler.h>
+//typedef CGAL::DDT::tbb_scheduler<Tile> Scheduler;
+//#include <CGAL/DDT/scheduler/mpi_scheduler.h>
+//typedef CGAL::DDT::mpi_scheduler<Tile> Scheduler;
+
+#include <CGAL/DDT/partitioner/grid_partitioner.h>
+typedef CGAL::DDT::grid_partitioner<Traits> Partitioner;
+
+
+#include <CGAL/Distributed_Delaunay_triangulation.h>
+typedef CGAL::Distributed_Delaunay_triangulation<TileContainer> Distributed_Delaunay_triangulation;
+
+#include <CGAL/DDT/insert.h>
+
+#include <CGAL/DDT/IO/write_vrt.h>
 
 int main(int, char **)
 {
@@ -48,14 +52,14 @@ int main(int, char **)
     points.emplace_back(1, 1);
 
     double range = 3;
-    ddt::Bbox<Traits::D, double> bbox(range);
+    CGAL::DDT::Bbox<Traits::D, double> bbox(range);
 
     Partitioner partitioner(bbox, ND, ND+Traits::D);
     Serializer serializer;
     TileContainer tiles(serializer);
-    DDT tri(tiles);
     Scheduler scheduler;
-    CGAL::ddt::insert(tiles, scheduler, points.begin(), points.size(), partitioner);
+    CGAL::DDT::insert(tiles, scheduler, points.begin(), points.size(), partitioner);
+    CGAL::Distributed_Delaunay_triangulation tri(tiles);
     assert(tri.is_valid());
 
     for(auto vertex = tri.vertices_begin(); vertex != tri.vertices_end(); ++vertex)
@@ -114,7 +118,7 @@ int main(int, char **)
             assert(tri.covertex(tri.mirror_facet(fd)) == tri.vertex(cd, tri.mirror_index(fd)));
             assert(tri.covertex(fd) == tri.vertex(cell, tri.mirror_index(tri.mirror_facet(fd))));
         }
-        std::set<typename DDT::Cell_const_iterator> ring;
+        std::set<typename Distributed_Delaunay_triangulation::Cell_const_iterator> ring;
         tri.get_ring(cell, 1, ring);
         // write_vrt_cell_range(tri, ring.begin(), ring.end(), outdir.string() + std::to_string(cid) + "_ring.vrt");
     }
@@ -122,12 +126,12 @@ int main(int, char **)
 
     boost::filesystem::path outdir("./test_DDT_out/");
     boost::filesystem::create_directories(outdir);
-    ddt::write_vrt_vert(tri, outdir.string() + "DDT_vert.vrt");
-    ddt::write_vrt_facet(tri, outdir.string() + "DDT_facet.vrt");
-    ddt::write_vrt_cell(tri, outdir.string() + "DDT_cell.vrt");
-    ddt::write_vrt_verts(tiles, outdir.string());
-    ddt::write_vrt_facets(tiles, outdir.string());
-    ddt::write_vrt_cells(tiles, outdir.string());
+    CGAL::DDT::write_vrt_vert(tri, outdir.string() + "DDT_vert.vrt");
+    CGAL::DDT::write_vrt_facet(tri, outdir.string() + "DDT_facet.vrt");
+    CGAL::DDT::write_vrt_cell(tri, outdir.string() + "DDT_cell.vrt");
+    CGAL::DDT::write_vrt_verts(tiles, outdir.string());
+    CGAL::DDT::write_vrt_facets(tiles, outdir.string());
+    CGAL::DDT::write_vrt_cells(tiles, outdir.string());
 
 
     return 0;

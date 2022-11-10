@@ -18,8 +18,8 @@
 #include <string>
 #include <fstream>
 
-namespace ddt
-{
+namespace CGAL {
+namespace DDT {
 
 template<typename Tile>
 std::ostream & write_json(Tile & tile,std::string filename,std::ostream & ofile)
@@ -135,6 +135,7 @@ int write_iedge(const TileContainer& tc, const std::string& dirname)
     return i;
 }
 
+}
 }
 
 #endif // CGAL_DDT_WRITE_CGAL_H

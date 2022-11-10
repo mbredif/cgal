@@ -12,8 +12,8 @@
 #ifndef CGAL_DDT_FACET_CONST_ITERATOR_3_H
 #define CGAL_DDT_FACET_CONST_ITERATOR_3_H
 
-namespace ddt
-{
+namespace CGAL {
+namespace DDT {
 
 template <typename TDS> using Cell_const_iterator_3 = typename TDS::Cell_iterator;
 template <typename TDS> using Facet_3 = std::pair<Cell_const_iterator_3<TDS>, int>;
@@ -126,7 +126,7 @@ private:
     Facet ft_;
 };
 
-
+}
 }
 
 #endif // CGAL_DDT_FACET_CONST_ITERATOR_3_H

@@ -16,8 +16,8 @@
 #include <unordered_map>
 #include <string>
 
-namespace ddt
-{
+namespace CGAL {
+namespace DDT {
 
 template<typename DDT>
 void write_adjacency_graph_dot(const DDT& tri, const std::string& dot, bool oriented=false)
@@ -33,6 +33,7 @@ void write_adjacency_graph_dot(const DDT& tri, const std::string& dot, bool orie
     out << "}";
 }
 
+}
 }
 
 #endif // CGAL_DDT_WRITE_DOT_H

@@ -12,8 +12,8 @@
 #ifndef CGAL_DDT_FACET_CONST_ITERATOR_H
 #define CGAL_DDT_FACET_CONST_ITERATOR_H
 
-namespace ddt
-{
+namespace CGAL {
+namespace DDT {
 
 template<typename TileContainer>
 class Facet_const_iterator
@@ -112,6 +112,7 @@ public:
     }
 };
 
+}
 }
 
 #endif // CGAL_DDT_FACET_CONST_ITERATOR_H

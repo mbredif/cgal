@@ -22,8 +22,11 @@
 #include <CGAL/DDT/iterator/Facet_const_iterator_2.h>
 #include <CGAL/DDT/traits/ddt_vertex_base_with_info_2.h>
 
-namespace ddt
-{
+namespace CGAL {
+namespace DDT {
+
+/// \ingroup PkgDDTRef
+/// \cgalModels TriangulationTraits
 
 /// @todo mettre le vertex en parametre template (dans tous les traits)
 template<typename I, typename F>
@@ -32,7 +35,7 @@ struct Cgal_traits_2
     enum { D = 2 };
     typedef I                                                      Id;
     typedef F                                                      Flag;
-    typedef ddt::Data<Id, Flag>                                    Data;
+    typedef CGAL::DDT::Data<Id, Flag>                                    Data;
     typedef CGAL::Exact_predicates_inexact_constructions_kernel    K;
     typedef CGAL::DDT_vertex_base_with_info_2<Data, K>   Vb;
     typedef CGAL::Triangulation_data_structure_2<Vb>               TDS;
@@ -296,6 +299,7 @@ struct Cgal_traits_2
     }
 };
 
+}
 }
 
 #endif // CGAL_DDT_CGAL_TRAITS_2_H
