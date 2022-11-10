@@ -2,7 +2,19 @@
 /// \defgroup PkgDDTConcepts Concepts
 /// \ingroup PkgDDTRef
 
-/// \defgroup PkgDDTClasses Triangulation Classes
+/// \defgroup PkgDDTSchedulerClasses Scheduler Classes
+/// \ingroup PkgDDTRef
+
+/// \defgroup PkgDDTTraitsClasses Triangulation Traits Classes
+/// \ingroup PkgDDTRef
+
+/// \defgroup PkgDDTPartitionerClasses Partitioner Classes
+/// \ingroup PkgDDTRef
+
+/// \defgroup PkgDDTIteratorClasses Iterator Classes
+/// \ingroup PkgDDTRef
+
+/// \defgroup PkgDDTMisc Miscellaneous
 /// \ingroup PkgDDTRef
 
 /*!
@@ -32,6 +44,7 @@ The Distributed Delaunay Triangulation (DDT) package, ....
 
 \cgalCRPSection{Classes}
 - `CGAL::DDT::Tile<TriangulationTraits>`
-- `CGAL::DDT::Distributed_Delaunay_triangulation<TileContainer>`
+- `CGAL::Distributed_Delaunay_triangulation<TileContainer>`
+
 */
 

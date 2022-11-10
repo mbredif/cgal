@@ -18,7 +18,7 @@
 namespace CGAL {
 namespace DDT {
 
-/// \ingroup PkgDDTRef
+/// \ingroup PkgDDTPartitionerClasses
 /// \cgalModels Partitioner
 /// For testing purposes only (correct but bad performance)
 template<typename Traits, typename Generator = std::default_random_engine>

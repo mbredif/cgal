@@ -18,6 +18,8 @@
 namespace CGAL {
 namespace DDT {
 
+/// \ingroup PkgDDTMisc
+/// A pair used to store the flag and Id data of a vertex in the distributed Delaunay triangulation
 template<typename I, typename F>
 struct Data
 {

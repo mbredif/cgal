@@ -65,7 +65,7 @@ template<typename T> char * load_point(char * buf, T& t) {
     return buf + 16;
 }
 
-/// \ingroup PkgDDTRef
+/// \ingroup PkgDDTSchedulerClasses
 /// \cgalModels Scheduler
 template<typename T>
 struct mpi_scheduler

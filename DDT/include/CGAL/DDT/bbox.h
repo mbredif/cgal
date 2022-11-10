@@ -20,6 +20,8 @@
 namespace CGAL {
 namespace DDT {
 
+/// \ingroup PkgDDTMisc
+/// A D-dimensional axis aligned box
 template<int D, typename T>
 struct Bbox
 {

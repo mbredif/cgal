@@ -21,7 +21,7 @@
 namespace CGAL {
 namespace DDT {
 
-/// \ingroup PkgDDTRef
+/// \ingroup PkgDDTSchedulerClasses
 /// \cgalModels Scheduler
 template<typename T>
 struct multithread_scheduler
@@ -34,6 +34,7 @@ struct multithread_scheduler
     typedef typename Tile::Id Id;
     typedef std::vector<Point_id> Point_id_container;
 
+    /// constructor
     multithread_scheduler(int n_threads = 0) : pool(n_threads), timeout_(1)
     {
         pool.init();

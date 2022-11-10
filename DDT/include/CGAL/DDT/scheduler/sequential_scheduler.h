@@ -18,7 +18,7 @@
 namespace CGAL {
 namespace DDT {
 
-/// \ingroup PkgDDTRef
+/// \ingroup PkgDDTSchedulerClasses
 /// \cgalModels Scheduler
 template<typename T>
 struct sequential_scheduler
@@ -31,6 +31,7 @@ struct sequential_scheduler
     typedef typename Tile::Id Id;
     typedef std::vector<Point_id> Point_id_container;
 
+    /// constructor
     sequential_scheduler() {}
     inline int number_of_threads() const
     {

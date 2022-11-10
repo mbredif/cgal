@@ -18,6 +18,8 @@
 
 namespace CGAL {
 
+/// \ingroup PkgDDTMisc
+/// A vertex with info for Triangulation_3
 template < typename Info_, typename GT,
            typename Vb = Triangulation_vertex_base_3<GT> >
 class DDT_vertex_base_with_info_3

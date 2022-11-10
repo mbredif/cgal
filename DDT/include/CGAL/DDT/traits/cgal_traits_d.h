@@ -32,7 +32,7 @@ typedef std::numeric_limits< double > dbl;
 namespace CGAL {
 namespace DDT {
 
-/// \ingroup PkgDDTRef
+/// \ingroup PkgDDTTraitsClasses
 /// \cgalModels TriangulationTraits
 template<typename I, typename F, typename Dim = CGAL::Dynamic_dimension_tag>
 struct Cgal_traits_d
@@ -546,7 +546,7 @@ struct Cgal_traits_d
 
 };
 
-/// \ingroup PkgDDTRef
+/// \ingroup PkgDDTTraitsClasses
 /// \cgalModels TriangulationTraits
 template<unsigned int N, typename I, typename F>
 struct Cgal_traits : public Cgal_traits_d<I,F,CGAL::Dimension_tag<N>>

@@ -15,6 +15,8 @@
 namespace CGAL {
 namespace DDT {
 
+/// \ingroup PkgDDTIteratorClasses
+/// A const iterator to the vertex of a distributed Delaunay triangulation
 template<typename TileContainer>
 class Vertex_const_iterator
 {
