@@ -543,6 +543,15 @@ struct Cgal_traits_d
         return ifile;
     }
 
+    Vertex_const_handle locate_vertex(const Delaunay_triangulation& dt, const Point& p) const
+    {
+        typename Delaunay_triangulation::Locate_type  lt;
+        typename Delaunay_triangulation::Face f(dt.maximal_dimension());
+        typename Delaunay_triangulation::Facet ft;
+        Cell_handle c = dt.locate(p, lt, f, ft);
+        if(lt!=Delaunay_triangulation::ON_VERTEX) return infinite_vertex(dt);
+        return f.vertex(0);
+    }
 
 };
 

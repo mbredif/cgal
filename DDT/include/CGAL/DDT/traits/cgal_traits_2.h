@@ -296,6 +296,15 @@ struct Cgal_traits_2
         Facet f(c, i);
         return Facet_const_iterator(dt.tds(), f);
     }
+
+    Vertex_const_handle locate_vertex(const Delaunay_triangulation& dt, const Point& p) const
+    {
+        typename Delaunay_triangulation::Locate_type  lt;
+        int li;
+        Cell_handle c = dt.locate(p, lt, li);
+        if(lt!=Delaunay_triangulation::VERTEX) return infinite_vertex(dt);
+        return vertex(dt, c, li);
+    }
 };
 
 }

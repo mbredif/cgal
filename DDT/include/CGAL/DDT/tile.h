@@ -570,21 +570,35 @@ public:
         return traits.are_cells_equal(dt_, c, t.dt_, tc);
     }
 
-    Vertex_const_handle locate_vertex(const Tile& t, Vertex_const_handle tv) const
+
+    Vertex_const_handle locate_vertex(const Point& p) const
+    {
+        return traits.locate_vertex(dt_, p);
+    }
+
+    Vertex_const_handle relocate_vertex(const Tile& t, Vertex_const_handle v) const
+    {
+        if(t.vertex_is_infinite(v)) return infinite_vertex();
+        return locate_vertex(t.point(v));
+    }
+
+    /*
+    Vertex_const_handle relocate_vertex(const Tile& t, Vertex_const_handle tv) const
     {
         for(auto v = vertices_begin(); v != vertices_end(); ++v )
             if(are_vertices_equal(v, t, tv))
                 return v;
         return vertices_end();
     }
+    */
 
-    Facet_const_handle locate_facet(const Tile& t, Facet_const_handle f) const
+    Facet_const_handle relocate_facet(const Tile& t, Facet_const_handle f) const
     {
         assert(t.facet_is_valid(f));
         Cell_const_handle c = t.cell(f);
-        if(t.cell_is_foreign(c)) return mirror_facet(locate_facet(t, t.mirror_facet(f)));
+        if(t.cell_is_foreign(c)) return mirror_facet(relocate_facet(t, t.mirror_facet(f)));
         assert(!t.cell_is_foreign(c));
-        Cell_const_handle d = locate_cell(t, c);
+        Cell_const_handle d = relocate_cell(t, c);
         Vertex_const_handle v = t.vertex(c, t.index_of_covertex(f));
         for(int i=0; i<=current_dimension(); ++i)
         {
@@ -594,7 +608,7 @@ public:
         return facets_end();
     }
 
-    Cell_const_handle locate_cell(const Tile& t, Cell_const_handle tc) const
+    Cell_const_handle relocate_cell(const Tile& t, Cell_const_handle tc) const
     {
         assert(!t.cell_is_foreign(tc));
         /// @todo locate the first vertex point of c in the other dt

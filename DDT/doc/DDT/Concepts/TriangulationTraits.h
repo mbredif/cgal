@@ -124,6 +124,8 @@ public:
     Point circumcenter(const Delaunay_triangulation& dt, Cell_const_handle c) const;
     /// get the ith coodinate of a point as a (possibly approximated) double
     double coord(const Delaunay_triangulation& dt, const Point& p, int i) const;
+    /// locate the vertex which point is equal to p, otherwise return the infinite vertex
+    Vertex_const_handle locate_vertex(const Delaunay_triangulation& dt, const Point& p) const;
 /// @}
 
 
