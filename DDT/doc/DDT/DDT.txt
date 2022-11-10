@@ -104,7 +104,7 @@ As mentioned mixed simplices may be duplicated in multiple tiles. **Locate** fun
 The ostream operator<< is overloaded, so that a tile can be written in a ascii/binary format.
 
 \subsubsection SSSection_DDT_DDT DDT.hpp
-The \ref CGAL::Distributed_Delaunay_triangulation "DDT" class is a view on the distributed Delaynay Triangulation, in the sense that, if enough memory is available, it could load all the tiles and provide operations such as (batch) point insertion seamlessly to the user. However, it has the possibility to load only a subset of the tiles, which is interesting when memory resources are insufficient and for future extensions (streaming processing, dynamic loading/unloading...)
+The \ref CGAL::Distributed_Delaunay_triangulation class is a view on the distributed Delaynay Triangulation, in the sense that, if enough memory is available, it could load all the tiles and provide operations such as (batch) point insertion seamlessly to the user. However, it has the possibility to load only a subset of the tiles, which is interesting when memory resources are insufficient and for future extensions (streaming processing, dynamic loading/unloading...)
 
 \subsubsection SSSection_DDT_Iterators Iterators
 Iterators are provided to enumerate the main simplices of the loaded tiles in a DDT.

@@ -27,7 +27,6 @@ namespace DDT {
 
 /// \ingroup PkgDDTRef
 /// \cgalModels TriangulationTraits
-
 /// @todo mettre le vertex en parametre template (dans tous les traits)
 template<typename I, typename F>
 struct Cgal_traits_2

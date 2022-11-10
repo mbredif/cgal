@@ -23,6 +23,9 @@
 namespace CGAL {
 namespace DDT {
 
+/// \ingroup PkgDDTClasses
+/// \tparam T is a model of the TriangulationTraits concept
+/// The Tile stores a local Delaunay triangulation
 template<class T>
 class Tile
 {
@@ -46,6 +49,7 @@ public:
     typedef std::pair<Cell_const_handle,Id>          Cell_const_handle_and_id;
     enum { D = Traits::D };
 
+    /// constructor
     Tile(Id id, int dimension = D)
         : id_(id),
           dt_(traits.triangulation(dimension)),
@@ -140,7 +144,7 @@ public:
     inline bool facet_is_valid(Facet_const_handle f) const { return !cell_is_foreign(cell(f)) || !vertex_is_foreign(mirror_vertex(f)); }
     inline bool cell_is_valid(Cell_const_handle c) const { return !cell_is_foreign(c); }
 
-    // Facet functions
+    /// Facet functions
     inline int index_of_covertex(Facet_const_handle f) const { return traits.index_of_covertex(dt_, f); }
     inline Vertex_const_handle covertex(Facet_const_handle f) const { return traits.covertex(dt_, f); }
     inline Vertex_const_handle mirror_vertex(Facet_const_handle f) const { return traits.mirror_vertex(dt_, f); }
@@ -148,7 +152,7 @@ public:
     inline Facet_const_handle mirror_facet(Facet_const_handle f) const { return traits.mirror_facet(dt_, f); }
     inline int mirror_index(Facet_const_handle f) const { return traits.mirror_index(dt_, f); }
 
-    // Cell functions
+    /// Cell functions
     inline Vertex_const_handle vertex(Cell_const_handle c, int i) const { return traits.vertex(dt_, c, i); }
     inline Facet_const_iterator facet(Cell_const_handle c, int i) const { return traits.facet(dt_, c, i); }
     inline int mirror_index(Cell_const_handle c, int i) const { return traits.mirror_index(dt_, c, i); }

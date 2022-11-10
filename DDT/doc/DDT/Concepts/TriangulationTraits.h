@@ -12,38 +12,55 @@ The concept `TriangulationTraits` describes the requirements of a traits that ad
 
 */
 
-namespace CGAL {
-namespace DDT {
-
 class TriangulationTraits {
 public:
 
 /// \name Types
 /// @{
-
+///
+    /// Point embedding of a vertex
     typedef unspecified_type Point;
+    /// Tile identifier type
     typedef unspecified_type Id;
+    /// Type of a per-vertex user storage
     typedef unspecified_type Flag;
+    /// Triangulation Data Structure
     typedef unspecified_type TDS;
 
+    /// Const iterator to a vertex
     typedef unspecified_type Vertex_const_iterator;
+    /// Const handle to a vertex
     typedef unspecified_type Vertex_const_handle;
+    /// Iterator to a vertex
     typedef unspecified_type Vertex_iterator;
+    /// Handle to a vertex
     typedef unspecified_type Vertex_handle;
 
+    /// Const iterator to a cell
     typedef unspecified_type Cell_const_iterator;
+    /// Const handle to a cell
     typedef unspecified_type Cell_const_handle;
+    /// Iterator to a cell
     typedef unspecified_type Cell_iterator;
+    /// Handle to a cell
     typedef unspecified_type Cell_handle;
 
+    /// Facet
     typedef unspecified_type Facet;
+    /// Const iterator to a facet
     typedef unspecified_type Facet_const_iterator;
+    /// Const handle to a facet
     typedef unspecified_type Facet_const_handle;
+    /// Iterator to a facet
     typedef unspecified_type Facet_iterator;
+    /// Handle to a facet
     typedef unspecified_type Facet_handle;
 
+    /// The adapted Delaunay Triangulation
     typedef unspecified_type Delaunay_triangulation;
+    /// Random point generator, in a ball
     typedef unspecified_type Random_points_in_ball;
+    /// Random point generator, in a box
     typedef unspecified_type Random_points_in_box;
 
 /// @}
@@ -154,6 +171,3 @@ public:
 
     }; /* end TriangulationTraits */
 };
-
-}
-}

@@ -87,6 +87,7 @@ private:
     Map_iterator it;
 };
 
+/// \ingroup PkgDDTClasses
 template<typename _Traits, typename Serializer, typename _Tile = CGAL::DDT::Tile<_Traits>>
 class tile_container
 {

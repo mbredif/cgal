@@ -21,6 +21,8 @@
 namespace CGAL {
 namespace DDT {
 
+/// \ingroup PkgDDTRef
+/// \cgalModels Scheduler
 template<typename T>
 struct multithread_scheduler
 {

@@ -26,31 +26,12 @@ The Distributed Delaunay Triangulation (DDT) package, ....
 \cgalClassifedRefPages
 
 \cgalCRPSection{Concepts}
-- `TriangulationTraits_2`
-- `DelaunayTriangulationTraits_2`
-- `RegularTriangulationTraits_2`
-- `ConstrainedTriangulationTraits_2`
-- `ConstrainedDelaunayTriangulationTraits_2`
+- `TriangulationTraits`
+- `Scheduler`
+- `TileContainer`
 
 \cgalCRPSection{Classes}
-
-- `CGAL::Triangulation_2<Traits,Tds>`
-- `CGAL::Delaunay_triangulation_2<Traits,Tds>`
-- `CGAL::Regular_triangulation_2<Traits,Tds>`
-- `CGAL::Constrained_triangulation_2<Traits,Tds,Itag>`
-- `CGAL::Constrained_Delaunay_triangulation_2<Traits,Tds,Itag>`
-- `CGAL::Constrained_triangulation_plus_2<Tr>`
-- `CGAL::Triangulation_hierarchy_2<Tr>`
-
-- `CGAL::Triangulation_face_base_2<Traits,Fb>`
-- `CGAL::Triangulation_vertex_base_2<Traits,Vb>`
-- `CGAL::Regular_triangulation_face_base_2<Traits,Fb>`
-- `CGAL::Regular_triangulation_vertex_base_2<Traits,Vb>`
-- `CGAL::Constrained_triangulation_face_base_2<Traits,Fb>`
-- `CGAL::Triangulation_vertex_base_with_info_2<Info,Traits,Vb>`
-- `CGAL::Triangulation_face_base_with_info_2<Info,Traits,Fb>`
-- `CGAL::Triangulation_hierarchy_vertex_base_2<Vb>`
-
-- `CGAL::Triangulation_cw_ccw_2`
+- `CGAL::DDT::Tile<TriangulationTraits>`
+- `CGAL::DDT::Distributed_Delaunay_triangulation<TileContainer>`
 */
 

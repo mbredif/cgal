@@ -26,6 +26,8 @@
 namespace CGAL {
 namespace DDT {
 
+/// \ingroup PkgDDTRef
+/// \cgalModels Scheduler
 template<typename T>
 struct tbb_scheduler
 {

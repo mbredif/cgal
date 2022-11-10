@@ -9,9 +9,6 @@ The concept `TileContainer` describes the requirements for a container of tiles
 
 */
 
-namespace CGAL {
-namespace DDT {
-
 class TileContainer {
 public:
 
@@ -23,6 +20,3 @@ public:
 
 
 }; /* end TileContainer */
-
-}
-}

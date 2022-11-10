@@ -6,12 +6,7 @@
 The concept `PointIdRange` describes the requirements for the
 ...
 
-\cgalHasModel `CGAL::DDT::DDT`
-
 */
-
-namespace CGAL {
-namespace DDT {
 
 class PointIdRange {
 public:
@@ -41,6 +36,3 @@ public:
 
 
 }; /* end TileContainer */
-
-}
-}

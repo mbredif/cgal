@@ -12,9 +12,6 @@ The concept `Partitioner` describes the requirements for the
 
 */
 
-namespace CGAL {
-namespace DDT {
-
 class Partitioner {
 public:
 
@@ -47,6 +44,3 @@ inline Id operator()(const Point& p) const;
 
 
 }; /* end Partitioner */
-
-}
-}

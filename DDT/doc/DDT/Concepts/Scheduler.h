@@ -13,9 +13,6 @@ The concept `Scheduler` describes the requirements for the
 
 */
 
-namespace CGAL {
-namespace DDT {
-
 class Scheduler {
 public:
 
@@ -114,6 +111,3 @@ public:
 
 
 }; /* end Scheduler */
-
-}
-}

@@ -17,6 +17,8 @@
 namespace CGAL {
 namespace DDT {
 
+/// \ingroup PkgDDTRef
+/// \cgalModels Partitioner
 template<typename Traits>
 class grid_partitioner
 {

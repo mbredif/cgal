@@ -18,12 +18,9 @@
 
 namespace CGAL {
 
-/*!
-\ingroup PkgDDTClasses
-\tparam TileContainer is a container that abstracts the storage of the triangulation tiles.
-The Distributed_Delaunay_triangulation class wraps a TileContainer to expose a triangulation interface.
-*/
-
+/// \ingroup PkgDDTClasses
+/// \tparam TileContainer is a container that abstracts the storage of the triangulation tiles.
+/// The Distributed_Delaunay_triangulation class wraps a TileContainer to expose a triangulation interface.
 template<typename TileContainer>
 class Distributed_Delaunay_triangulation
 {
