@@ -19,6 +19,13 @@ template <class Tile>
 struct File_serializer
 {
   File_serializer(const std::string& prefix) : m_prefix(prefix) {}
+#ifdef CGAL_DEBUG_DDT
+  ~File_serializer()
+  {
+    std::cout << "nb_loads " << nb_loads << "\n";
+    std::cout << "nb_save " << nb_save << "\n";
+  }
+#endif
 
   bool has_tile(typename Tile::Id id) const
   {
@@ -29,6 +36,9 @@ struct File_serializer
 
   Tile load(typename Tile::Id id) const
   {
+#ifdef CGAL_DEBUG_DDT
+    ++nb_loads;
+#endif
     const std::string fname = filename(id);
     std::ifstream in(fname, std::ios::in | std::ios::binary);
     Tile tile(id);
@@ -37,6 +47,9 @@ struct File_serializer
   }
 
   bool save(const Tile& tile) const {
+#ifdef CGAL_DEBUG_DDT
+    ++nb_save;
+#endif
     const std::string fname = filename(tile.id());
     std::ofstream out(fname, std::ios::out | std::ios::binary);
     out << std::setprecision(17) << tile.triangulation();
@@ -50,6 +63,10 @@ private:
   }
 
   std::string m_prefix;
+#ifdef CGAL_DEBUG_DDT
+  mutable int nb_loads = 0;
+  mutable int nb_save = 0;
+#endif
 };
 
 

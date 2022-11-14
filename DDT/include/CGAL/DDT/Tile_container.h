@@ -156,7 +156,10 @@ public:
 
     void init(Id id)
     {
-        tiles.emplace(id, id);
+        if (serializer.has_tile(id))
+          load(id);
+        else
+          tiles.emplace(id, id);
     }
 
     /// @todo attention à la perennité des handles (tile is possibly unloaded), ou alors lock ou shared pointer.

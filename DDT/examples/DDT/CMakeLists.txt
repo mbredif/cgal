@@ -13,7 +13,9 @@ if(NOT TARGET Boost::filesystem)
 endif()
 
 create_single_source_cgal_program( "ddt_mt_2.cpp" )
+create_single_source_cgal_program( "ddt_out_of_core_2.cpp" )
 target_link_libraries(ddt_mt_2  PRIVATE Boost::filesystem Boost::program_options)
+target_link_libraries(ddt_out_of_core_2  PRIVATE Boost::filesystem Boost::program_options)
 
 option (USE_TBB "Use TBB " ON)
 if (USE_TBB)
