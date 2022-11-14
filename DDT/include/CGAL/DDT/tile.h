@@ -450,31 +450,6 @@ public:
             }
         }
     }
-/*
-    void get_neighbors_pid(std::map<Id, std::vector<Point_id>> & outbox)
-    {
-
-        for(auto cit = cells_begin(); cit != cells_end(); ++cit)
-        {
-            for(int i=0; i<=D; ++i)
-            {
-                Vertex_const_handle v = vertex(cit, i);
-                if(vertex_is_infinite(v)) break;
-                Id idv = id(v);
-                if(idv != id())
-                    for(int j=0; j<=D; ++j)
-                    {
-                        Vertex_const_handle w = vertex(cit, j);
-                        if(vertex_is_infinite(w) || id(w) != idv)
-                        {
-                            outbox[idv].push_back(std::make_tuple(w->point(),id(w),id()));
-                        }
-                    }
-            }
-        }
-
-    }
-*/
 
     template <class Points>
     int insert(const /*std::vector<Point_id>*/ Points & received, bool do_simplify = true)
@@ -485,7 +460,7 @@ public:
         for(auto& v : received)
         {
             Id vid = std::get<1>(v);
-            points.emplace_back(std::get<0>(v),vid); // source is unused here
+            points.emplace_back(std::get<0>(v),vid);
             bbox_[vid] += std::get<0>(v);
         }
         insert(points.begin(), points.end());

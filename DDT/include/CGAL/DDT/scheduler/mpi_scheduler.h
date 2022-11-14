@@ -115,7 +115,7 @@ struct mpi_scheduler
 
     bool send_vertex(const Tile& tile, Vertex_const_handle v, Id target)
     {
-        if (tile.vertex_is_infinite(v)) return false;
+        assert(!tile.vertex_is_infinite(v));
         Id source = tile.id();
         Id vid = tile.id(v);
         if(target==vid || target == source || !sent_[target].insert(v).second)
