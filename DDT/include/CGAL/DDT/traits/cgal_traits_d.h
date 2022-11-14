@@ -13,8 +13,8 @@
 #define CGAL_DDT_CGAL_TRAITS_D_H
 
 
-#include <CGAL/DDT/data.h>
-#include <CGAL/DDT/bbox.h>
+#include <CGAL/DDT/Data.h>
+#include <CGAL/DDT/Bbox.h>
 #include <CGAL/DDT/iterator/Facet_const_iterator_d.h>
 
 #include <CGAL/Epick_d.h>

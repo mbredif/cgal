@@ -12,7 +12,7 @@
 #ifndef CGAL_DDT_TILE_CONTAINER_H
 #define CGAL_DDT_TILE_CONTAINER_H
 
-#include <CGAL/DDT/tile.h>
+#include <CGAL/DDT/Tile.h>
 #include <map>
 
 namespace CGAL {
@@ -89,7 +89,7 @@ private:
 
 /// \ingroup PkgDDTClasses
 template<typename _Traits, typename Serializer, typename _Tile = CGAL::DDT::Tile<_Traits>>
-class tile_container
+class Tile_container
 {
 public:
     typedef _Traits                                  Traits;
@@ -124,7 +124,7 @@ public:
         return D;
     }
 
-    tile_container(Serializer& serializer) :
+    Tile_container(Serializer& serializer) :
         tiles(),
         serializer(serializer),
         number_of_finite_vertices_(0),

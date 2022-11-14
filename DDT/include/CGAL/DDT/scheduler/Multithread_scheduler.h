@@ -9,19 +9,14 @@
 //
 // Author(s)     : Mathieu Brédif and Laurent Caraffa
 
-#ifndef CGAL_DDT_SCHEDULER_TBB_SCHEDULER_H
-#define CGAL_DDT_SCHEDULER_TBB_SCHEDULER_H
-
-#ifndef CGAL_LINKED_WITH_TBB
-#error TBB not properly setup with CGAL
-#endif
+#ifndef CGAL_DDT_SCHEDULER_MULTITHREAD_SCHEDULER_H
+#define CGAL_DDT_SCHEDULER_MULTITHREAD_SCHEDULER_H
 
 #include <map>
 #include <set>
 #include <vector>
-#include <tbb/concurrent_vector.h>
-#include <tbb/parallel_reduce.h>
-#include <tbb/task_arena.h>
+#include <chrono>
+#include <CGAL/DDT/scheduler/multithread_scheduler/thread_pool.h>
 
 namespace CGAL {
 namespace DDT {
@@ -29,7 +24,7 @@ namespace DDT {
 /// \ingroup PkgDDTSchedulerClasses
 /// \cgalModels Scheduler
 template<typename T>
-struct tbb_scheduler
+struct Multithread_scheduler
 {
     typedef T Tile;
     typedef typename Tile::Vertex_const_handle_and_id Vertex_const_handle_and_id;
@@ -37,14 +32,25 @@ struct tbb_scheduler
     typedef typename Tile::Point_id Point_id;
     typedef typename Tile::Point Point;
     typedef typename Tile::Id Id;
-    typedef tbb::concurrent_vector<Point_id> Point_id_container;
+    typedef std::vector<Point_id> Point_id_container;
 
-    tbb_scheduler()
-    {}
-
+    /// constructor
+    Multithread_scheduler(int n_threads = 0) : pool(n_threads), timeout_(1)
+    {
+        pool.init();
+    }
+    template<class Duration>
+    Multithread_scheduler(int n_threads, Duration timeout) : pool(n_threads), timeout_(timeout)
+    {
+        pool.init();
+    }
     inline int number_of_threads() const
     {
-        return tbb::this_task_arena::max_concurrency();
+        return pool.number_of_threads();
+    }
+    ~Multithread_scheduler()
+    {
+        pool.shutdown();
     }
 
     inline void receive(Id id, Point_id_container& received) { inbox[id].swap(received); }
@@ -72,8 +78,7 @@ struct tbb_scheduler
         int count = 0;
         for(auto& vi : vertices)
             count += send_vertex(tile, vi.first, vi.second, outbox);
-        for(auto& o : outbox)
-            inbox[o.first].grow_by(o.second.begin(), o.second.end());
+        for(auto& o : outbox) inbox[o.first].append(o.second);
         return count;
     }
 
@@ -86,8 +91,7 @@ struct tbb_scheduler
         for(Vertex_const_handle v : vertices)
             for(Id_iterator target = begin; target != end; ++target)
                 count += send_vertex(tile, v, *target, outbox);
-        for(auto& o : outbox)
-            inbox[o.first].grow_by(o.second.begin(), o.second.end());
+        for(auto& o : outbox) inbox[o.first].append(o.second);
         return count;
     }
 
@@ -98,19 +102,12 @@ struct tbb_scheduler
         for(Id_iterator it = begin; it != end; ++it)
             sent_.emplace(*it, std::map<Id, std::set<Vertex_const_handle>>{});
 
-        std::vector<Id> ids(begin, end);
-        int count = tbb::parallel_reduce(
-              tbb::blocked_range<int>(0,ids.size()),
-              0,
-              [&](tbb::blocked_range<int> r, double running_total)
-              {
-                  int c = 0;
-                  for (int i=r.begin(); i<r.end(); ++i)
-                  {
-                      c+=func(*(tc.get_tile(ids[i])));
-                  }
-                  return c;
-              }, std::plus<int>() );
+        std::vector<std::future<int>> futures;
+        for(Id_iterator it = begin; it != end; ++it)
+            futures.push_back(pool.submit(func, std::ref(*(tc.get_tile(*it)))));
+
+        int count = 0;
+        for(auto& f: futures) count += f.get();
         return count;
     }
 
@@ -131,40 +128,41 @@ struct tbb_scheduler
     template<typename TileContainer>
     int for_each_rec(TileContainer& tc, const std::function<int(Tile&)>& func)
     {
-
-        int count = 0, c = 0;
-        do{
-          std::vector<Id> ids;
-          for(auto it : inbox) {
-              if (!it.second.empty()) {
-                  Id id = it.first;
-                  ids.push_back(id);
-                  if(!tc.is_loaded(id)) tc.init(id); /// @todo : load !
-              }
-          }
-          c = tbb::parallel_reduce(
-          tbb::blocked_range<int>(0,ids.size()),
-          0,
-          [&](tbb::blocked_range<int> r, double running_total)
-          {
-              int c = 0;
-              for (int i=r.begin(); i<r.end(); ++i)
-              {
-                  c+=func(*(tc.get_tile(ids[i])));
-              }
-              return c;
-          }, std::plus<int>() );
-          count += c;
-        } while (c!=0);
+        int count = 0;
+        std::map<Id, std::future<int>> futures;
+        do {
+            auto fit = futures.begin();
+            while(fit!=futures.end())
+            {
+                if (fit->second.wait_for(timeout_) != std::future_status::ready) {
+                    ++fit;
+                } else {
+                    count += fit->second.get();
+                    futures.erase(fit++);
+                }
+            }
+            ;
+            for(const auto& it : inbox)
+            {
+                Id id = it.first;
+                if (!it.second.empty() && futures.count(id) == 0)
+                {
+                    if(!tc.is_loaded(id)) tc.init(id); /// @todo : load !
+                    futures[id] = pool.submit(func, std::ref(*(tc.get_tile(id))));
+                }
+            }
+        } while (!futures.empty());
         return count;
     }
 
 private:
-    std::map<Id, Point_id_container> inbox;
+    std::map<Id, safe<std::vector<Point_id>>> inbox;
     std::map<Id, std::map<Id, std::set<Vertex_const_handle>>> sent_; // no race condition, as the first Id is the source tile id
+    thread_pool pool;
+    std::chrono::milliseconds timeout_;
 };
 
 }
 }
 
-#endif // CGAL_DDT_SCHEDULER_TBB_SCHEDULER_H
+#endif // CGAL_DDT_SCHEDULER_MULTITHREAD_SCHEDULER_H

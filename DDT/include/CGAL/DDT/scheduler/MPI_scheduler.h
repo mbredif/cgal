@@ -68,7 +68,7 @@ template<typename T> char * load_point(char * buf, T& t) {
 /// \ingroup PkgDDTSchedulerClasses
 /// \cgalModels Scheduler
 template<typename T>
-struct mpi_scheduler
+struct MPI_scheduler
 {
     typedef T Tile;
     typedef typename Tile::Vertex_const_handle_and_id Vertex_const_handle_and_id;
@@ -78,7 +78,7 @@ struct mpi_scheduler
     typedef typename Tile::Id Id;
     typedef std::vector<Point_id> Point_id_container;
 
-    mpi_scheduler() {
+    MPI_scheduler() {
         // Initialize the MPI environment
         MPI_Init(NULL, NULL);
 
@@ -96,7 +96,7 @@ struct mpi_scheduler
         printf("Processor %s [ %d / %d ]\n", processor_name, world_rank, world_size);
     }
 
-    ~mpi_scheduler() {
+    ~MPI_scheduler() {
         // Finalize the MPI environment.
         MPI_Finalize();
     }

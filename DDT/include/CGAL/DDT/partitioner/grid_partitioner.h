@@ -12,7 +12,7 @@
 #ifndef CGAL_DDT_PARITIONER_GRID_PARTITIONER_H
 #define CGAL_DDT_PARITIONER_GRID_PARTITIONER_H
 
-#include <CGAL/DDT/bbox.h>
+#include <CGAL/DDT/Bbox.h>
 
 namespace CGAL {
 namespace DDT {

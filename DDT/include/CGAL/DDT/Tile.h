@@ -12,7 +12,7 @@
 #ifndef CGAL_DDT_TILE_H
 #define CGAL_DDT_TILE_H
 
-#include <CGAL/DDT/bbox.h>
+#include <CGAL/DDT/Bbox.h>
 
 #include <vector>
 #include <set>

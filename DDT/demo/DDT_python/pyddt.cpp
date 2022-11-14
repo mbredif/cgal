@@ -1,4 +1,4 @@
-#include <CGAL/DDT/tile.h>
+#include <CGAL/DDT/Tile.h>
 #include <CGAL/DDT/IO/read.h>
 #include <CGAL/DDT/IO/write.h>
 
@@ -161,8 +161,8 @@ public:
     py_cell_iterator py_cells_end()   const { return py_cell_iterator(cells_end  (), *this); }
 };
 
-#include <CGAL/DDT/scheduler/multithread_scheduler.h>
-typedef CGAL::DDT::multithread_scheduler<py_tile> Scheduler;
+#include <CGAL/DDT/scheduler/Multithread_scheduler.h>
+typedef CGAL::DDT::Multithread_scheduler<py_tile> Scheduler;
 
 #include <CGAL/DDT.h>
 class py_DDT : public CGAL::DDT::DDT<Traits, Scheduler, py_tile>

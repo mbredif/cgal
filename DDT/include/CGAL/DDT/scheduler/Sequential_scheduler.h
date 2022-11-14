@@ -21,7 +21,7 @@ namespace DDT {
 /// \ingroup PkgDDTSchedulerClasses
 /// \cgalModels Scheduler
 template<typename T>
-struct sequential_scheduler
+struct Sequential_scheduler
 {
     typedef T Tile;
     typedef typename Tile::Vertex_const_handle_and_id Vertex_const_handle_and_id;
@@ -32,7 +32,7 @@ struct sequential_scheduler
     typedef std::vector<Point_id> Point_id_container;
 
     /// constructor
-    sequential_scheduler() {}
+    Sequential_scheduler() {}
     inline int number_of_threads() const
     {
         return 1;

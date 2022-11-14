@@ -16,22 +16,22 @@ typedef Traits::Random_points_in_box Random_points;
 
 #include <CGAL/DDT/partitioner/grid_partitioner.h>
 #define DDT_USE_THREADS 1
-#include <CGAL/DDT/tile_container.h>
+#include <CGAL/DDT/Tile_container.h>
 typedef CGAL::DDT::Tile<Traits> Tile;
 
-//#include <CGAL/DDT/scheduler/sequential_scheduler.h>
-//typedef CGAL::DDT::sequential_scheduler<Tile> Scheduler;
-//#include <CGAL/DDT/scheduler/multithread_scheduler.h>
-//typedef CGAL::DDT::multithread_scheduler<Tile> Scheduler;
-#include <CGAL/DDT/scheduler/tbb_scheduler.h>
-typedef CGAL::DDT::tbb_scheduler<Tile> Scheduler;
-//#include <CGAL/DDT/scheduler/mpi_scheduler.h>
-//typedef CGAL::DDT::mpi_scheduler<Tile> Scheduler;
+//#include <CGAL/DDT/scheduler/Sequential_scheduler.h>
+//typedef CGAL::DDT::Sequential_scheduler<Tile> Scheduler;
+//#include <CGAL/DDT/scheduler/Multithread_scheduler.h>
+//typedef CGAL::DDT::Multithread_scheduler<Tile> Scheduler;
+#include <CGAL/DDT/scheduler/TBB_scheduler.h>
+typedef CGAL::DDT::TBB_scheduler<Tile> Scheduler;
+//#include <CGAL/DDT/scheduler/MPI_scheduler.h>
+//typedef CGAL::DDT::MPI_scheduler<Tile> Scheduler;
 
 #include <CGAL/DDT/serializer/file_serializer.h>
 typedef CGAL::DDT::File_Serializer<Id,Tile> Serializer;
 
-typedef CGAL::DDT::tile_container<Traits, Serializer> TileContainer;
+typedef CGAL::DDT::Tile_container<Traits, Serializer> TileContainer;
 #include <CGAL/Distributed_Delaunay_triangulation.h>
 typedef CGAL::Distributed_Delaunay_triangulation<TileContainer> Distributed_Delaunay_triangulation;
 #include <CGAL/DDT/IO/write_ply.h>

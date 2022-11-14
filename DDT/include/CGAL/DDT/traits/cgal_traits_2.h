@@ -17,8 +17,8 @@
 // #include <CGAL/Triangulation_vertex_base_with_info_2.h>
 #include <CGAL/point_generators_2.h>
 
-#include <CGAL/DDT/data.h>
-#include <CGAL/DDT/bbox.h>
+#include <CGAL/DDT/Data.h>
+#include <CGAL/DDT/Bbox.h>
 #include <CGAL/DDT/iterator/Facet_const_iterator_2.h>
 #include <CGAL/DDT/traits/ddt_vertex_base_with_info_2.h>
 

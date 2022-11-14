@@ -6,10 +6,10 @@
 The concept `Scheduler` describes the requirements for the
 ...
 
-\cgalHasModel `CGAL::DDT::sequential_scheduler`
-\cgalHasModel `CGAL::DDT::multithread_scheduler`
-\cgalHasModel `CGAL::DDT::tbb_scheduler`
-\cgalHasModel `CGAL::DDT::mpi_scheduler` (wip)
+\cgalHasModel `CGAL::DDT::Sequential_scheduler`
+\cgalHasModel `CGAL::DDT::Multithread_scheduler`
+\cgalHasModel `CGAL::DDT::TBB_scheduler`
+\cgalHasModel `CGAL::DDT::MPI_scheduler` (wip)
 
 */
 
