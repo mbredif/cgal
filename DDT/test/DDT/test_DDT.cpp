@@ -59,7 +59,7 @@ int main(int, char **)
     TileContainer tiles(serializer);
     Scheduler scheduler;
     CGAL::DDT::insert(tiles, scheduler, points.begin(), points.size(), partitioner);
-    CGAL::Distributed_Delaunay_triangulation tri(tiles);
+    Distributed_Delaunay_triangulation tri(tiles);
     assert(tri.is_valid());
 
     for(auto vertex = tri.vertices_begin(); vertex != tri.vertices_end(); ++vertex)

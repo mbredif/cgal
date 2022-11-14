@@ -71,7 +71,7 @@ int test_traits(const std::string& testname, int ND, int NP, bool do_test_io = t
     TileContainer tiles1(serializer);
     Scheduler scheduler;
     CGAL::DDT::insert(tiles1, scheduler, points, NP, partitioner);
-    CGAL::Distributed_Delaunay_triangulation tri1(tiles1);
+    Distributed_Delaunay_triangulation tri1(tiles1);
     if(!tri1.is_valid())
     {
         std::cerr << "tri is not valid" << std::endl;
@@ -100,7 +100,7 @@ int test_traits(const std::string& testname, int ND, int NP, bool do_test_io = t
         CGAL::DDT::write_cgal(tiles1, testname + "/cgal");
 
         TileContainer tiles2(serializer);
-        CGAL::Distributed_Delaunay_triangulation tri2(tiles2);
+        Distributed_Delaunay_triangulation tri2(tiles2);
         std::cout << "read..." << std::endl;
         CGAL::DDT::read_cgal(tiles2, testname + "/cgal");
         std::cout << "write again..." << std::endl;
