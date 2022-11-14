@@ -22,29 +22,23 @@ namespace CGAL {
 namespace DDT {
 
 template<typename TileContainer, typename Scheduler>
-size_t local_insert_received(TileContainer& tc, Scheduler& sch) {
-    typedef typename TileContainer::Tile Tile;
-    typedef typename Scheduler::Point_id_container Point_id_container;
-    return sch.for_each(tc, [&sch](Tile& tile)
-    {
-        Point_id_container received;
-        sch.receive(tile.id(), received);
-        return int(tile.insert(received));
-    });
-}
-
-template<typename TileContainer, typename Scheduler>
-size_t send_all_bbox_points(TileContainer& tc, Scheduler& sch)       {
+size_t insert_and_send_all_bbox_points(TileContainer& tc, Scheduler& sch)       {
     typedef typename TileContainer::Tile Tile;
     typedef typename TileContainer::Tile_id_const_iterator Tile_id_const_iterator;
     typedef typename Tile::Vertex_const_handle Vertex_const_handle;
+    typedef typename Scheduler::Point_id_container Point_id_container;
     Tile_id_const_iterator begin = tc.tile_ids_begin();
     Tile_id_const_iterator end = tc.tile_ids_end();
-    return sch.for_each(tc, begin, end, [&sch, begin, end](Tile& tile)
+    return sch.for_each(tc, [&sch, begin, end](Tile& tile)
     {
+        Point_id_container received;
+        sch.receive(tile.id(), received);
+        int count = tile.insert(received);
+        if(count == 0) return 0;
         std::vector<Vertex_const_handle> vertices;
         tile.get_bbox_points(vertices);
-        return sch.send_all(tile, vertices, begin, end);
+        sch.send_all(tile, vertices, begin, end);
+        return count;
     });
 }
 
@@ -58,9 +52,9 @@ size_t splay_stars(TileContainer& tc, Scheduler& sch)       {
         Point_id_container received;
         sch.receive(tile.id(), received);
         if(!tile.insert(received)) return 0;
-        std::vector<Vertex_const_handle_and_id> outgoing;
-        tile.get_finite_neighbors(outgoing);
-        return sch.send_one(tile, outgoing);
+        std::vector<Vertex_const_handle_and_id> vertices;
+        tile.get_finite_neighbors(vertices);
+        return sch.send_one(tile, vertices);
     });
 }
 
@@ -70,8 +64,7 @@ size_t splay_stars(TileContainer& tc, Scheduler& sch)       {
 /// @returns the vertex const iterator to the inserted point, or the already existing point if if it was already present
 template<typename TileContainer, typename Scheduler>
 size_t insert_received(TileContainer& tc, Scheduler& sch){
-    size_t insertions = local_insert_received(tc, sch);
-    send_all_bbox_points(tc, sch);
+    size_t insertions = insert_and_send_all_bbox_points(tc, sch);
     splay_stars(tc, sch);
     tc.finalize();
     return insertions;
@@ -85,6 +78,7 @@ size_t insert_received(TileContainer& tc, Scheduler& sch){
 template<typename TileContainer, typename Scheduler, typename Point, typename Id>
 typename TileContainer::Vertex_const_iterator insert(TileContainer& tc, Scheduler& sch, const Point& point, Id id){
     sch.send(point, id, id);
+    tc.init(id);
     return insert_received(tc, sch);
 }
 
@@ -94,8 +88,11 @@ typename TileContainer::Vertex_const_iterator insert(TileContainer& tc, Schedule
 /// @returns the number of newly inserted vertices
 template<typename TileContainer, typename Scheduler, typename PointIdRange>
 size_t insert(TileContainer& tc, Scheduler& sch, const PointIdRange& range) {
-    for (auto point_id : range)
-        sch.send(point_id.first, point_id.second, point_id.second);
+    for (auto point_id : range) {
+        auto id = point_id.second;
+        sch.send(point_id.first, id, id);
+        tc.init(id);
+    }
     return insert_received(tc, sch);
 }
 
@@ -109,6 +106,7 @@ size_t insert(TileContainer& tc, Scheduler& sch, PointRange points, Partitioner&
     {
         auto id = part(p);
         sch.send(p, id, id);
+        tc.init(id);
     }
     return insert_received(tc, sch);
 }
@@ -128,6 +126,7 @@ size_t insert(TileContainer& tc, Scheduler& sch, Iterator it, int count, Partiti
         auto p(*it);
         auto id = part(p);
         sch.send(p, id, id);
+        tc.init(id);
     }
     return insert_received(tc, sch);
 #endif
