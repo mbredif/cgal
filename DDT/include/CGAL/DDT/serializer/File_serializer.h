@@ -15,33 +15,43 @@
 namespace CGAL {
 namespace DDT {
 
-template<typename Id, typename Tile>
-class File_serializer
+template <class Tile>
+struct File_serializer
 {
-public:
-    File_serializer(const std::map<Id, std::string>& files) : files(files) {}
-    File_serializer() : files() {}
+  File_serializer(const std::string& prefix) : m_prefix(prefix) {}
 
-    void add(Id id, const std::string& filename) {
-        files[id] = filename;
-    }
+  bool has_tile(typename Tile::Id id) const
+  {
+    const std::string fname = filename(id);
+    std::ifstream in(fname, std::ios::in | std::ios::binary);
+    return in.is_open();
+  }
 
-    Tile load(Id id) const {
-        const std::string filename = files.at(id);
-        Tile tile(id);
-        /// @todo return tile loaded from 'filename'
-        return tile;
-    }
+  Tile load(typename Tile::Id id) const
+  {
+    const std::string fname = filename(id);
+    std::ifstream in(fname, std::ios::in | std::ios::binary);
+    Tile tile(id);
+    in >> tile.triangulation();
+    return tile;
+  }
 
-    bool save(const Tile& tile) const {
-        const std::string filename = files.at(tile.id());
-        /// @todo save tile in 'filename'
-      return false;
-    }
+  bool save(const Tile& tile) const {
+    const std::string fname = filename(tile.id());
+    std::ofstream out(fname, std::ios::out | std::ios::binary);
+    out << std::setprecision(17) << tile.triangulation();
+    return true;
+  }
 
 private:
-    std::map<Id,std::string> files;
+  std::string filename(typename Tile::Id i) const
+  {
+    return m_prefix+std::to_string(i);
+  }
+
+  std::string m_prefix;
 };
+
 
 }
 }
