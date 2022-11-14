@@ -209,8 +209,8 @@ struct mpi_scheduler
         std::vector<Point_id>& box = inbox[id];
         for(int i = 0; i< count; ++i) {
             Point_id p;
-            bytes = load_point(bytes, std::get<0>(p));
-            bytes = load_value_4(bytes, std::get<1>(p)); // Id point id
+            bytes = load_point(bytes, p.first);
+            bytes = load_value_4(bytes, p.second); // Id point id
             box.push_back(p);
         }
         // std::cout << processor_name << "[" << world_rank << "] " << count  << " points recieved by " << int(id) << std::endl;
@@ -223,8 +223,8 @@ struct mpi_scheduler
         bytes = save_value_4(bytes, id);
         bytes = save_value_4(bytes, count);
         for(auto p : msg) {
-            bytes = save_point(bytes, std::get<0>(p));
-            bytes = save_value_4(bytes, std::get<1>(p)); // Id point id
+            bytes = save_point(bytes, p.first);
+            bytes = save_value_4(bytes, p.second); // Id point id
         }
         //std::cout << processor_name << "[" << world_rank << "] " << count  << " points sent to " << int(id) << std::endl;
         return bytes;

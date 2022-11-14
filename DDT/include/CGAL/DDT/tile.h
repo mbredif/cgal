@@ -39,14 +39,14 @@ public:
     typedef typename Traits::Vertex_iterator         Vertex_iterator;
     typedef typename Traits::Vertex_const_handle     Vertex_const_handle;
     typedef typename Traits::Vertex_const_iterator   Vertex_const_iterator;
-    typedef std::pair<Vertex_const_handle,Id>        Vertex_const_handle_and_id;
-    typedef std::tuple<Point,Id>                     Point_id;
     typedef typename Traits::Cell_handle             Cell_handle;
     typedef typename Traits::Cell_const_handle       Cell_const_handle;
     typedef typename Traits::Cell_const_iterator     Cell_const_iterator;
     typedef typename Traits::Facet_const_iterator    Facet_const_iterator;
     typedef typename Traits::Facet_const_iterator    Facet_const_handle;
     typedef std::pair<Cell_const_handle,Id>          Cell_const_handle_and_id;
+    typedef std::pair<Vertex_const_handle,Id>        Vertex_const_handle_and_id;
+    typedef std::pair<Point,Id>                      Point_id;
     enum { D = Traits::D };
 
     /// constructor
@@ -451,17 +451,17 @@ public:
         }
     }
 
-    template <class Points>
-    int insert(const /*std::vector<Point_id>*/ Points & received, bool do_simplify = true)
+    template <class PointIdContainer>
+    int insert(const PointIdContainer& received, bool do_simplify = true)
     {
         if(received.empty()) return 0;
-        std::vector<std::pair<Point,Id>> points;
+        std::vector<Point_id> points;
         points.reserve(received.size());
         for(auto& v : received)
         {
-            Id vid = std::get<1>(v);
-            points.emplace_back(std::get<0>(v),vid);
-            bbox_[vid] += std::get<0>(v);
+            Id vid = v.second;
+            points.emplace_back(v.first,vid);
+            bbox_[vid] += v.first;
         }
         insert(points.begin(), points.end());
         int s = 0;
