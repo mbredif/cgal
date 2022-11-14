@@ -108,6 +108,7 @@ struct TBB_scheduler
                   for (int i=r.begin(); i<r.end(); ++i)
                   {
                       c+=func(*(tc.get_tile(ids[i])));
+                      tc.unload(ids[i]);
                   }
                   return c;
               }, std::plus<int>() );
@@ -151,6 +152,7 @@ struct TBB_scheduler
               for (int i=r.begin(); i<r.end(); ++i)
               {
                   c+=func(*(tc.get_tile(ids[i])));
+                  tc.unload(ids[i]);
               }
               return c;
           }, std::plus<int>() );

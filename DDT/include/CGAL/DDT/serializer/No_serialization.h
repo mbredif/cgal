@@ -19,7 +19,7 @@ template<typename Tile>
 struct No_serialization
 {
   Tile load(typename Tile::Id Id) const {}
-  void save(const Tile& ) const {}
+  bool save(const Tile& ) const { return false;}
 };
 
 } }  // CGAL::DDT namespace

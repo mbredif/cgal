@@ -81,7 +81,10 @@ struct Sequential_scheduler
     {
         int count = 0;
         for(Id_iterator it = begin; it != end; ++it)
+        {
             count += func(*(tc.get_tile(*it)));
+            tc.unload(*it);
+        }
         return count;
     }
 

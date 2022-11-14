@@ -104,7 +104,10 @@ struct Multithread_scheduler
 
         std::vector<std::future<int>> futures;
         for(Id_iterator it = begin; it != end; ++it)
+        {
             futures.push_back(pool.submit(func, std::ref(*(tc.get_tile(*it)))));
+            tc.unload(*it);
+        }
 
         int count = 0;
         for(auto& f: futures) count += f.get();
@@ -149,6 +152,7 @@ struct Multithread_scheduler
                 {
                     if(!tc.is_loaded(id)) tc.init(id); /// @todo : load !
                     futures[id] = pool.submit(func, std::ref(*(tc.get_tile(id))));
+                    tc.unload(id);
                 }
             }
         } while (!futures.empty());

@@ -33,9 +33,10 @@ public:
         return tile;
     }
 
-    void save(const Tile& tile) const {
+    bool save(const Tile& tile) const {
         const std::string filename = files.at(tile.id());
         /// @todo save tile in 'filename'
+      return false;
     }
 
 private:

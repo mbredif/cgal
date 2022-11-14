@@ -163,8 +163,8 @@ public:
     /// unload a tile from memory (no automatic saving)
     void unload(Id id)
     {
-        save(id);
-        tiles.erase(id);
+        if (save(id))
+          tiles.erase(id);
     }
 
     /// load the tile using the serializer, given its id.
@@ -175,9 +175,9 @@ public:
     }
 
     /// saves a tile using the serializer (no unloading)
-    void save(Id id) const
+    bool save(Id id) const
     {
-        serializer.save(tiles.at(id));
+        return serializer.save(tiles.at(id));
     }
 
     void get_adjacency_graph(std::unordered_multimap<Id,Id>& edges) const
