@@ -18,6 +18,7 @@ namespace DDT {
 template<typename Tile>
 struct No_serialization
 {
+  bool has_tile(typename Tile::Id) const { return false; }
   Tile load(typename Tile::Id Id) const {}
   bool save(const Tile& ) const { return false;}
 };
