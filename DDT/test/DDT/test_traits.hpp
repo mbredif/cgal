@@ -7,7 +7,6 @@
 #include <CGAL/DDT/IO/read.h>
 #include <CGAL/DDT/partitioner/grid_partitioner.h>
 #include <CGAL/DDT/Scheduler.h>
-#include <CGAL/DDT/serializer/file_serializer.h>
 #include <CGAL/DDT/insert.h>
 #include <CGAL/DDT/Tile_container.h>
 #include <CGAL/Distributed_Delaunay_triangulation.h>
@@ -56,8 +55,7 @@ int test_traits(const std::string& testname, int ND, int NP, bool do_test_io = t
     typedef T Traits;
     typedef CGAL::DDT::Tile<Traits> Tile;
     typedef CGAL::DDT::Scheduler<Tile> Scheduler;
-    typedef CGAL::DDT::File_serializer<Id,Tile> Serializer;
-    typedef CGAL::DDT::Tile_container<Traits, Serializer> TileContainer;
+    typedef CGAL::DDT::Tile_container<Traits> TileContainer;
     typedef CGAL::Distributed_Delaunay_triangulation<TileContainer> Distributed_Delaunay_triangulation;
     typedef CGAL::DDT::grid_partitioner<Traits> Partitioner;
     typedef typename Traits::Random_points_in_box Random_points;
@@ -67,8 +65,7 @@ int test_traits(const std::string& testname, int ND, int NP, bool do_test_io = t
     CGAL::DDT::Bbox<Traits::D, double> bbox(range);
     Random_points points(Traits::D, range);
     Partitioner partitioner(bbox, ND);
-    Serializer serializer;
-    TileContainer tiles1(serializer);
+    TileContainer tiles1;
     Scheduler scheduler;
     CGAL::DDT::insert(tiles1, scheduler, points, NP, partitioner);
     Distributed_Delaunay_triangulation tri1(tiles1);
@@ -99,7 +96,7 @@ int test_traits(const std::string& testname, int ND, int NP, bool do_test_io = t
         std::cout << "write..." << std::endl;
         CGAL::DDT::write_cgal(tiles1, testname + "/cgal");
 
-        TileContainer tiles2(serializer);
+        TileContainer tiles2;
         Distributed_Delaunay_triangulation tri2(tiles2);
         std::cout << "read..." << std::endl;
         CGAL::DDT::read_cgal(tiles2, testname + "/cgal");

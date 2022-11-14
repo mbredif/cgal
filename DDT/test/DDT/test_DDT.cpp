@@ -10,10 +10,8 @@ typedef CGAL::DDT::Cgal_traits<2,Id,Flag> Traits;
 typedef Traits::Point Point;
 
 #include <CGAL/DDT/Tile_container.h>
-#include <CGAL/DDT/serializer/file_serializer.h>
 typedef CGAL::DDT::Tile<Traits> Tile;
-typedef CGAL::DDT::File_serializer<Id,Tile> Serializer;
-typedef CGAL::DDT::Tile_container<Traits, Serializer> TileContainer;
+typedef CGAL::DDT::Tile_container<Traits> TileContainer;
 
 //#include <CGAL/DDT/scheduler/Sequential_scheduler.h>
 //typedef CGAL::DDT::Sequential_scheduler<Tile> Scheduler;
@@ -55,8 +53,7 @@ int main(int, char **)
     CGAL::DDT::Bbox<Traits::D, double> bbox(range);
 
     Partitioner partitioner(bbox, ND, ND+Traits::D);
-    Serializer serializer;
-    TileContainer tiles(serializer);
+    TileContainer tiles;
     Scheduler scheduler;
     CGAL::DDT::insert(tiles, scheduler, points.begin(), points.size(), partitioner);
     Distributed_Delaunay_triangulation tri(tiles);

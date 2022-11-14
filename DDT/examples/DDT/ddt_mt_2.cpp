@@ -28,10 +28,7 @@ typedef CGAL::DDT::TBB_scheduler<Tile> Scheduler;
 //#include <CGAL/DDT/scheduler/MPI_scheduler.h>
 //typedef CGAL::DDT::MPI_scheduler<Tile> Scheduler;
 
-#include <CGAL/DDT/serializer/file_serializer.h>
-typedef CGAL::DDT::File_serializer<Id,Tile> Serializer;
-
-typedef CGAL::DDT::Tile_container<Traits, Serializer> TileContainer;
+typedef CGAL::DDT::Tile_container<Traits> TileContainer;
 #include <CGAL/Distributed_Delaunay_triangulation.h>
 typedef CGAL::Distributed_Delaunay_triangulation<TileContainer> Distributed_Delaunay_triangulation;
 #include <CGAL/DDT/IO/write_ply.h>
@@ -92,10 +89,7 @@ int main(int argc, char **argv)
     CGAL::DDT::Bbox<D, double> bbox(range);
     CGAL::DDT::grid_partitioner<Traits> partitioner(bbox, NT.begin(), NT.end());
 
-    Serializer serializer;
-    serializer.add(0, "0.txt");
-    serializer.add(1, "1.txt");
-    TileContainer tiles(serializer);
+    TileContainer tiles;
     Scheduler scheduler;
 
     std::cout << "- Loglevel : " << loglevel << std::endl;

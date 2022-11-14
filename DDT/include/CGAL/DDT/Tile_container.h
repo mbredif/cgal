@@ -13,6 +13,7 @@
 #define CGAL_DDT_TILE_CONTAINER_H
 
 #include <CGAL/DDT/Tile.h>
+#include <CGAL/DDT/serializer/No_serialization.h>
 #include <map>
 
 namespace CGAL {
@@ -88,7 +89,7 @@ private:
 };
 
 /// \ingroup PkgDDTClasses
-template<typename _Traits, typename Serializer, typename _Tile = CGAL::DDT::Tile<_Traits>>
+template<typename _Traits, typename _Tile = CGAL::DDT::Tile<_Traits>, typename Serializer = No_serialization<_Tile> >
 class Tile_container
 {
 public:
@@ -124,7 +125,7 @@ public:
         return D;
     }
 
-    Tile_container(Serializer& serializer) :
+    Tile_container(const Serializer& serializer = Serializer()) :
         tiles(),
         serializer(serializer),
         number_of_finite_vertices_(0),
@@ -258,7 +259,7 @@ public:
 
 private:
     Container tiles; /// loaded tiles
-    Serializer& serializer;
+    Serializer serializer;
 
     size_t number_of_finite_vertices_;
     size_t number_of_finite_facets_;
