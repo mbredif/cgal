@@ -56,7 +56,7 @@ int test_traits(const std::string& testname, int ND, int NP, bool do_test_io = t
     typedef T Traits;
     typedef CGAL::DDT::Tile<Traits> Tile;
     typedef CGAL::DDT::Scheduler<Tile> Scheduler;
-    typedef CGAL::DDT::File_Serializer<Id,Tile> Serializer;
+    typedef CGAL::DDT::File_serializer<Id,Tile> Serializer;
     typedef CGAL::DDT::Tile_container<Traits, Serializer> TileContainer;
     typedef CGAL::Distributed_Delaunay_triangulation<TileContainer> Distributed_Delaunay_triangulation;
     typedef CGAL::DDT::grid_partitioner<Traits> Partitioner;

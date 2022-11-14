@@ -29,7 +29,7 @@ typedef CGAL::DDT::TBB_scheduler<Tile> Scheduler;
 //typedef CGAL::DDT::MPI_scheduler<Tile> Scheduler;
 
 #include <CGAL/DDT/serializer/file_serializer.h>
-typedef CGAL::DDT::File_Serializer<Id,Tile> Serializer;
+typedef CGAL::DDT::File_serializer<Id,Tile> Serializer;
 
 typedef CGAL::DDT::Tile_container<Traits, Serializer> TileContainer;
 #include <CGAL/Distributed_Delaunay_triangulation.h>

@@ -12,7 +12,7 @@ typedef Traits::Point Point;
 #include <CGAL/DDT/Tile_container.h>
 #include <CGAL/DDT/serializer/file_serializer.h>
 typedef CGAL::DDT::Tile<Traits> Tile;
-typedef CGAL::DDT::File_Serializer<Id,Tile> Serializer;
+typedef CGAL::DDT::File_serializer<Id,Tile> Serializer;
 typedef CGAL::DDT::Tile_container<Traits, Serializer> TileContainer;
 
 //#include <CGAL/DDT/scheduler/Sequential_scheduler.h>

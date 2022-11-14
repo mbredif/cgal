@@ -16,11 +16,11 @@ namespace CGAL {
 namespace DDT {
 
 template<typename Id, typename Tile>
-class File_Serializer
+class File_serializer
 {
 public:
-    File_Serializer(const std::map<Id, std::string>& files) : files(files) {}
-    File_Serializer() : files() {}
+    File_serializer(const std::map<Id, std::string>& files) : files(files) {}
+    File_serializer() : files() {}
 
     void add(Id id, const std::string& filename) {
         files[id] = filename;
