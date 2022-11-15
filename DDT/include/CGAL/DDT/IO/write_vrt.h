@@ -227,6 +227,18 @@ void write_csv_cell(const Tile& tile, std::ostream& csv, bool main_only=false)
 
 
 
+template<typename Tile>
+void write_tile_vrt_verts(const Tile& tile, const std::string& vrt_name, bool main_only=false)
+{
+    boost::filesystem::path path(vrt_name);
+
+    std::ofstream csv;
+    write_vrt_header_vert(csv, vrt_name);
+    // add_qgis_style(vrt_name,std::string("tri1.qml"));
+    write_csv_vert(tile, csv, main_only);
+}
+
+
 
 template<typename Tile>
 void write_tile_vrt_cells(const Tile& tile, const std::string& vrt_name, bool main_only=false)

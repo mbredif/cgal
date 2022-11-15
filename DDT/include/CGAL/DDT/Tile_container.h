@@ -110,13 +110,12 @@ public:
     typedef typename Traits::Facet_const_handle      Tile_facet_const_handle;
     typedef typename Traits::Facet_const_iterator    Tile_facet_const_iterator;
 
-    typedef std::map<Id, Tile>                                              Container;
+    typedef std::map<Id, Tile>                                         Container;
     typedef Mapped_const_iterator<typename Container::const_iterator>  Tile_const_iterator ;
     typedef Mapped_iterator<typename Container::iterator>              Tile_iterator ;
-    typedef Key_const_iterator<typename Container::const_iterator>     Tile_id_const_iterator ;
 
-    // typedef std::set<Id> Tile_id_set;
-    // typedef typename Tile_id_set::const_iterator Tile_id_set_const_iterator;
+    typedef std::set<Id> Tile_id_set;
+    typedef typename Tile_id_set::const_iterator Tile_id_const_iterator;
 
     enum { D = Traits::D };
 
@@ -138,8 +137,8 @@ public:
 
     inline size_t number_of_tiles   () const { return tiles.size();   }
 
-    Tile_id_const_iterator tile_ids_begin() const { return tiles.begin(); }
-    Tile_id_const_iterator tile_ids_end  () const { return tiles.end  (); }
+    Tile_id_const_iterator tile_ids_begin() const { return ids.begin(); }
+    Tile_id_const_iterator tile_ids_end  () const { return ids.end  (); }
 
 
     bool empty() const { return tiles.empty(); }
@@ -156,6 +155,7 @@ public:
 
     void init(Id id)
     {
+        ids.insert(id);
         if (serializer.has_tile(id))
           load(id);
         else
@@ -262,6 +262,7 @@ public:
 
 private:
     Container tiles; /// loaded tiles
+    Tile_id_set ids;
     Serializer serializer;
 
     size_t number_of_finite_vertices_;

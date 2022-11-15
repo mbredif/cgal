@@ -1,16 +1,18 @@
 #define CGAL_DEBUG_DDT
 
 #include <CGAL/DDT/traits/cgal_traits_2.h>
+//#include <CGAL/DDT/partitioner/random_partitioner.h>
 #include <CGAL/DDT/partitioner/grid_partitioner.h>
 #include <CGAL/DDT/Tile_container.h>
 #include <CGAL/DDT/scheduler/Sequential_scheduler.h>
 #include <CGAL/DDT/serializer/File_serializer.h>
 #include <CGAL/Distributed_Delaunay_triangulation.h>
 #include <CGAL/DDT/insert.h>
+#include <CGAL/DDT/IO/write_vrt.h>
 
 #include <boost/program_options.hpp>
 
-typedef unsigned char Id;
+typedef int Id; /// @todo : serialization error occurs when Id is unsigned char
 typedef unsigned char Flag;
 
 typedef CGAL::DDT::Cgal_traits_2<Id,Flag> Traits;
@@ -30,7 +32,7 @@ int main(int argc, char **argv)
 
   int NP;
   std::vector<int> NT;
-  std::string out_prefix;
+  std::string out_prefix, out_vrt;
   double range;
 
   po::options_description desc("Allowed options");
@@ -41,6 +43,7 @@ int main(int argc, char **argv)
   ("tiles,t", po::value<std::vector<int>>(&NT), "number of tiles")
   ("range,r", po::value<double>(&range)->default_value(1), "range")
   ("output_prefix,o", po::value<std::string>(&out_prefix)->default_value("tile_"), "prefix for tile serialization")
+  ("output_vrt,v", po::value<std::string>(&out_vrt)->default_value("out"), "prefix for vrt output")
   ;
 
   po::variables_map vm;
@@ -70,6 +73,7 @@ int main(int argc, char **argv)
   }
   CGAL::DDT::Bbox<2, double> bbox(range);
   CGAL::DDT::grid_partitioner<Traits> partitioner(bbox, NT.begin(), NT.end());
+//  CGAL::DDT::random_partitioner<Traits> partitioner(0, NT[0]-1);
 
   Serializer serializer(out_prefix);
   TileContainer tiles(serializer);
@@ -79,15 +83,25 @@ int main(int argc, char **argv)
   std::cout << "- Points         : " << NP << std::endl;
   std::cout << "- Output prefix  : " << out_prefix <<  std::endl;
   std::cout << "- Tiles          : " << partitioner.size() << " ( ";
-  std::copy(partitioner.begin(), partitioner.end(), std::ostream_iterator<int>(std::cout, " "));
+  std::copy(NT.begin(), NT.end(), std::ostream_iterator<int>(std::cout, " "));
   std::cout << ")" << std::endl;
 
   Random_points points(D, range);
-  CGAL::DDT::insert(tiles, scheduler, points, NP, partitioner);
+  size_t n = CGAL::DDT::insert(tiles, scheduler, points, NP, partitioner);
+  std::cout << n << " points inserted" << std::endl;
+
+  Distributed_Delaunay_triangulation tri(tiles);
+  if ( vm.count("output_vrt")  )
+  {
+      scheduler.for_all(tiles, [&out_vrt](Tile& tile) {
+          CGAL::DDT::write_tile_vrt_cells(tile, out_vrt+"/tile_cell_" + std::to_string(tile.id()) + ".vrt");
+          CGAL::DDT::write_tile_vrt_verts(tile, out_vrt+"/tile_vert_" + std::to_string(tile.id()) + ".vrt");
+          return 1;
+      });
+  }
 
   if ( vm.count("check")  )
   {
-    Distributed_Delaunay_triangulation tri(tiles);
     std::cout << "Validity     \t" << (tri.is_valid() ? "OK" : "ERROR!") << std::endl;
   }
   return 0;

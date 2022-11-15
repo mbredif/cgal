@@ -46,6 +46,8 @@ public:
         return distribution(generator);
     }
 
+    int size() const { return distribution.b() - distribution.a(); }
+
 private:
     std::uniform_int_distribution<Id> distribution;
     Generator generator;

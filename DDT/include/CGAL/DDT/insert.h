@@ -21,41 +21,39 @@
 namespace CGAL {
 namespace DDT {
 
-template<typename TileContainer, typename Scheduler>
-size_t insert_and_send_all_bbox_points(TileContainer& tc, Scheduler& sch)       {
-    typedef typename TileContainer::Tile Tile;
-    typedef typename TileContainer::Tile_id_const_iterator Tile_id_const_iterator;
-    typedef typename Tile::Vertex_const_handle Vertex_const_handle;
+template<typename Tile, typename Scheduler>
+size_t splay_tile(Tile& tile, Scheduler& sch)
+{
     typedef typename Scheduler::Point_id_container Point_id_container;
-    Tile_id_const_iterator begin = tc.tile_ids_begin();
-    Tile_id_const_iterator end = tc.tile_ids_end();
-    return sch.for_each(tc, [&sch, begin, end](Tile& tile)
+    typedef typename Tile::Vertex_const_handle_and_id Vertex_const_handle_and_id;
+    Point_id_container received;
+    sch.receive(tile.id(), received);
+    if(!tile.insert(received)) return 0;
+    std::vector<Vertex_const_handle_and_id> vertices;
+    tile.get_finite_neighbors(vertices);
+    return sch.send_one(tile, vertices);
+}
+
+template<typename TileContainer, typename Scheduler>
+size_t insert_and_send_all_bbox_points(TileContainer& tc, Scheduler& sch)
+{
+    typedef typename TileContainer::Tile Tile;
+    typedef typename Tile::Vertex_const_handle Vertex_const_handle;
+    return sch.for_each(tc, [&sch](Tile& tile)
     {
-        Point_id_container received;
-        sch.receive(tile.id(), received);
-        int count = tile.insert(received);
-        if(count == 0) return 0;
-        std::vector<Vertex_const_handle> vertices;
-        tile.get_bbox_points(vertices);
-        sch.send_all(tile, vertices, begin, end);
+        size_t count = splay_tile(tile, sch);
+        std::vector<Vertex_const_handle> bbox;
+        tile.get_bbox_points(bbox);
+        sch.send_all(tile, bbox);
         return count;
     });
 }
 
 template<typename TileContainer, typename Scheduler>
-size_t splay_stars(TileContainer& tc, Scheduler& sch)       {
+size_t splay_stars(TileContainer& tc, Scheduler& sch)
+{
     typedef typename TileContainer::Tile Tile;
-    typedef typename Scheduler::Point_id_container Point_id_container;
-    typedef typename Tile::Vertex_const_handle_and_id Vertex_const_handle_and_id;
-    return sch.for_each_rec(tc, [&sch](Tile& tile)
-    {
-        Point_id_container received;
-        sch.receive(tile.id(), received);
-        if(!tile.insert(received)) return 0;
-        std::vector<Vertex_const_handle_and_id> vertices;
-        tile.get_finite_neighbors(vertices);
-        return sch.send_one(tile, vertices);
-    });
+    return sch.for_each_rec(tc, [&sch](Tile& tile) { return splay_tile(tile, sch); });
 }
 
 /// \ingroup PkgDDTInsert
@@ -64,10 +62,11 @@ size_t splay_stars(TileContainer& tc, Scheduler& sch)       {
 /// @returns the vertex const iterator to the inserted point, or the already existing point if if it was already present
 template<typename TileContainer, typename Scheduler>
 size_t insert_received(TileContainer& tc, Scheduler& sch){
-    size_t insertions = insert_and_send_all_bbox_points(tc, sch);
+    size_t n = tc.number_of_finite_vertices();
+    insert_and_send_all_bbox_points(tc, sch);
     splay_stars(tc, sch);
-    tc.finalize();
-    return insertions;
+    tc.finalize(); /// @todo : return 0 for unloaded tiles
+    return tc.number_of_finite_vertices() - n;
 }
 
 
