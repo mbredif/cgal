@@ -53,14 +53,18 @@ struct Sequential_scheduler
     }
 #endif
 
-    inline void receive(Id id, Point_id_container& received) {
+    inline void receive(Id id, Point_id_container& received)
+    {
         inbox[id].swap(received);
         allbox_sent.emplace(id, 0);
+        size_t size0 = received.size();
+        // allbox.copy_after(received, allbox_sent[id]);
+        received.insert(received.end(), allbox.begin() + allbox_sent[id], allbox.end());
+        size_t size1 = received.size();
+        allbox_sent[id] += size1 - size0;
 #ifdef CGAL_DEBUG_DDT
         std::cout << int(id) << " : " << received.size() << " + " << (allbox.size()-allbox_sent[id]) << std::endl;
 #endif
-        received.insert(received.end(), allbox.begin() + allbox_sent[id], allbox.end());
-        allbox_sent[id] = allbox.size();
     }
 
     void send(const Point& p, Id id, Id target)
@@ -68,11 +72,11 @@ struct Sequential_scheduler
         inbox[target].emplace_back(p,id);
     }
 
-    int send_one(const Tile& tile, const std::vector<Vertex_const_handle_and_id>& outbox)
+    int send_one(const Tile& tile, const std::vector<Vertex_const_handle_and_id>& vertices)
     {
         Id source = tile.id();
         int count = 0;
-        for(auto& vi : outbox)
+        for(auto& vi : vertices)
         {
             Vertex_const_handle v = vi.first;
             Id target = vi.second;
@@ -88,11 +92,11 @@ struct Sequential_scheduler
         return count;
     }
 
-    int send_all(const Tile& tile, const std::vector<Vertex_const_handle>& outbox)
+    int send_all(const Tile& tile, const std::vector<Vertex_const_handle>& vertices)
     {
-        for(Vertex_const_handle v : outbox)
+        for(Vertex_const_handle v : vertices)
             allbox.emplace_back(tile.point(v),tile.id(v));
-        return outbox.size();
+        return vertices.size();
     }
 
     template<typename TileContainer, typename Id_iterator>
@@ -118,9 +122,9 @@ struct Sequential_scheduler
     int for_each(TileContainer& tc, const std::function<int(Tile&)>& func)
     {
         std::set<Id> ids;
-
+        size_t n = allbox.size();
         for(auto& it : allbox_sent)
-            if (it.second != allbox.size())
+            if (it.second != n)
                 ids.insert(it.first);
 
         for(auto& it : inbox)
@@ -150,6 +154,7 @@ private:
     std::map<Id, size_t> allbox_sent;
     std::map<Id, std::vector<Point_id>> inbox;
     std::map<Id, std::set<Point_id>> sent_;
+
 #ifdef CGAL_DEBUG_DDT
     int n_rec;
 #endif

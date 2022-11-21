@@ -79,6 +79,12 @@ public:
         std::unique_lock<std::mutex> lock(m_mutex);
         m_container.insert(m_container.end(), container.begin(), container.end());
     }
+
+    void copy_after( Container& container, size_type count) const
+    {
+        std::unique_lock<std::mutex> lock(m_mutex);
+        container.insert(container.end(), m_container.begin()+count, m_container.end());
+    }
 };
 
 }
