@@ -124,17 +124,19 @@ public:
         return D;
     }
 
-    Tile_container(const Serializer& serializer = Serializer()) :
+    Tile_container(size_t max_number_of_tiles = -1, const Serializer& serializer = Serializer()) :
         tiles(),
         serializer(serializer),
         number_of_finite_vertices_(0),
         number_of_finite_facets_  (0),
         number_of_finite_cells_   (0),
         number_of_facets_  (0),
-        number_of_cells_   (0)
+        number_of_cells_   (0),
+        max_number_of_tiles(max_number_of_tiles)
     {
     }
 
+    inline size_t maximum_number_of_tiles() const { return max_number_of_tiles;   }
     inline size_t number_of_tiles   () const { return tiles.size();   }
 
     Tile_id_const_iterator tile_ids_begin() const { return ids.begin(); }
@@ -146,11 +148,11 @@ public:
     Tile_const_iterator cend    () const { return tiles.end   (); }
     Tile_const_iterator begin  () const { return tiles.begin (); }
     Tile_const_iterator end    () const { return tiles.end   (); }
-    Tile_const_iterator get_tile(Id id) const { return tiles.find(id); }
+    Tile_const_iterator find(Id id) const { return tiles.find(id); }
 
     Tile_iterator begin  () { return tiles.begin (); }
     Tile_iterator end    () { return tiles.end   (); }
-    Tile_iterator get_tile(Id id) { return tiles.find(id); }
+    Tile_iterator find(Id id) { return tiles.find(id); }
     bool is_loaded(Id id) const { return tiles.find(id) != tiles.end(); }
 
     void init(Id id)
@@ -166,12 +168,11 @@ public:
     }
 
     /// load the tile using the serializer, given its id.
-    void load(Id id)
+    std::pair<Tile_iterator, bool> load(Id id)
     {
         if (serializer.has_tile(id))
-          tiles.emplace(id, std::move(serializer.load(id)));
-        else
-          tiles.emplace(id, id);
+          return tiles.emplace(id, std::move(serializer.load(id)));
+        return tiles.emplace(id, id);
     }
 
     /// saves a tile using the serializer (no unloading)
@@ -267,6 +268,7 @@ private:
     size_t number_of_finite_cells_;
     size_t number_of_facets_;
     size_t number_of_cells_;
+    size_t max_number_of_tiles;
 };
 
 }

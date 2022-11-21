@@ -107,7 +107,7 @@ struct TBB_scheduler
                   int c = 0;
                   for (int i=r.begin(); i<r.end(); ++i)
                   {
-                      c+=func(*(tc.get_tile(ids[i])));
+                      c+=func(*(tc.find(ids[i])));
                       tc.unload(ids[i]);
                   }
                   return c;
@@ -151,7 +151,7 @@ struct TBB_scheduler
               int c = 0;
               for (int i=r.begin(); i<r.end(); ++i)
               {
-                  c+=func(*(tc.get_tile(ids[i])));
+                  c+=func(*(tc.find(ids[i])));
                   tc.unload(ids[i]);
               }
               return c;

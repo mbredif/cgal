@@ -78,8 +78,8 @@ int main(int argc, char **argv)
 //  CGAL::DDT::random_partitioner<Traits> partitioner(0, NT[0]-1);
 
   Serializer serializer(ser_prefix);
-  TileContainer tiles(serializer);
-  Scheduler scheduler(max_number_of_tiles);
+  TileContainer tiles(max_number_of_tiles, serializer);
+  Scheduler scheduler;
 
   std::cout << "- Range          : " << range << std::endl;
   std::cout << "- Points         : " << NP << std::endl;

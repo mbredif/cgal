@@ -57,7 +57,7 @@ int read_cgal_tile(Tile& tile, const std::string& dirname)
 
     if (!ifile_tri.is_open())
     {
-        std::cerr << "stream not open" << std::endl;
+        std::cerr << "stream not opened : " << filename << std::endl;
         return 1;
     }
 
@@ -87,7 +87,7 @@ int read_cgal(TileContainer& tc, const std::string& dirname)
     {
         Id tid = std::stoi(its.first);
         tc.init(tid);
-        auto tile  = tc.get_tile(tid);
+        auto tile = tc.load(tid).first;
         read_cgal_tile(*tile,dirname);
     }
     tc.finalize();

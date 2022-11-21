@@ -97,9 +97,9 @@ int main(int argc, char **argv)
     CGAL::DDT::grid_partitioner<Traits> partitioner(bbox, NT.begin(), NT.end());
 
     Serializer serializer(ser_prefix);
-    TileContainer tiles(serializer);
-    //TileContainer tiles;
-    Scheduler scheduler(max_number_of_tiles);
+    TileContainer tiles(max_number_of_tiles, serializer);
+    //TileContainer tiles(max_number_of_tiles);
+    Scheduler scheduler;
 
     std::cout << "- Loglevel : " << loglevel << std::endl;
     std::cout << "- Range    : " << range << std::endl;

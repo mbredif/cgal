@@ -33,8 +33,6 @@ struct Sequential_scheduler
 
     /// constructor
 
-    Sequential_scheduler(size_t max_number_of_tiles = 1) : max_number_of_tiles(max_number_of_tiles) {}
-
     inline int number_of_threads() const
     {
         return 1;
@@ -100,8 +98,9 @@ struct Sequential_scheduler
         int count = 0;
         for(Id_iterator it = begin; it != end; ++it)
         {
-            if(!tc.is_loaded(*it)) {
-                while(tc.number_of_tiles() >= max_number_of_tiles) {
+            typename TileContainer::Tile_iterator tile = tc.find(*it);
+            if(tile == tc.end()) {
+                while(tc.number_of_tiles() >= tc.maximum_number_of_tiles()) {
                     auto it = tc.begin();
                     Id id0 = it->id();
                     size_t count0 = inbox[id0].size();
@@ -123,9 +122,9 @@ struct Sequential_scheduler
 #ifdef CGAL_DEBUG_DDT
                 std::cout << "load " << int(*it) << " ( " << inbox[*it].size() << " inbox points)" << std::endl;
 #endif
-                tc.load(*it);
+                tile = tc.load(*it).first;
             }
-            count += func(*(tc.get_tile(*it)));
+            count += func(*tile);
         }
         return count;
     }
@@ -169,7 +168,6 @@ private:
     std::map<Id, size_t> allbox_sent;
     std::map<Id, std::vector<Point_id>> inbox;
     std::map<Id, std::set<Point_id>> sent_;
-    size_t max_number_of_tiles;
 };
 
 }

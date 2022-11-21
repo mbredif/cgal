@@ -47,7 +47,7 @@ bool is_euler_valid(T & tri)
 }
 
 template <typename T>
-int test_traits(const std::string& testname, int ND, int NP, bool do_test_io = true)
+int test_traits(const std::string& testname, int ND, int NP, int NT = -1, bool do_test_io = true)
 {
     std::cout << "Test " << testname << std::endl;
     int result = 0;
@@ -65,7 +65,7 @@ int test_traits(const std::string& testname, int ND, int NP, bool do_test_io = t
     CGAL::DDT::Bbox<Traits::D, double> bbox(range);
     Random_points points(Traits::D, range);
     Partitioner partitioner(bbox, ND);
-    TileContainer tiles1;
+    TileContainer tiles1(NT);
     Scheduler scheduler;
     CGAL::DDT::insert(tiles1, scheduler, points, NP, partitioner);
     Distributed_Delaunay_triangulation tri1(tiles1);
@@ -101,7 +101,7 @@ int test_traits(const std::string& testname, int ND, int NP, bool do_test_io = t
         std::cout << "read..." << std::endl;
         CGAL::DDT::read_cgal(tiles2, testname + "/cgal");
         std::cout << "write again..." << std::endl;
-        CGAL::DDT::write_cgal(tiles1, testname + "/cgal2");
+        CGAL::DDT::write_cgal(tiles2, testname + "/cgal2");
 
         result += dump_2d_vrt(tri2, tiles2, testname + "/tri2");
         if (Traits::D == 2)

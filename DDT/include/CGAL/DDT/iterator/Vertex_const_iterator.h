@@ -70,7 +70,7 @@ public:
             {
                 if (++tile_ != end_) {
                     //if(!ddt_.is_loaded(*id_)) ddt_.load(*id_);
-                    //tile_ = ((const DDT&)(ddt_)).get_tile(*id_); /// @todo constness
+                    //tile_ = ((const DDT&)(ddt_)).find(*id_); /// @todo constness
                     vertex_ = tile_->vertices_begin();
                 }
             }

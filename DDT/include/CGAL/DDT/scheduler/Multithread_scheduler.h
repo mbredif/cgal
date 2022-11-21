@@ -35,12 +35,12 @@ struct Multithread_scheduler
     typedef std::vector<Point_id> Point_id_container;
 
     /// constructor
-    Multithread_scheduler(int max_number_of_tiles, int n_threads = 0) : max_number_of_tiles(max_number_of_tiles), pool(n_threads), timeout_(1)
+    Multithread_scheduler(int n_threads = 0) : pool(n_threads), timeout_(1)
     {
         pool.init();
     }
     template<class Duration>
-    Multithread_scheduler(int max_number_of_tiles, int n_threads, Duration timeout) : max_number_of_tiles(max_number_of_tiles), pool(n_threads), timeout_(timeout)
+    Multithread_scheduler(int n_threads, Duration timeout) : pool(n_threads), timeout_(timeout)
     {
         pool.init();
     }
@@ -108,14 +108,15 @@ struct Multithread_scheduler
     {
         std::function<int(Id)> func2 = [this, &tc, &func](Id id)
         {
+            typename TileContainer::Tile_iterator tile;
             {
                 std::unique_lock<std::mutex> lock(tc_mutex);
-                tc.load(id);
+                tile = tc.load(id).first;
             }
-            int count = func(*(tc.get_tile(id)));
+            int count = func(*tile);
             {
                 std::unique_lock<std::mutex> lock(tc_mutex);
-                if(tc.number_of_tiles() >= max_number_of_tiles) {
+                if(tc.number_of_tiles() >= tc.maximum_number_of_tiles()) {
                     if(!tc.save(id)) assert(false);
                     tc.unload(id);
                 }
@@ -168,14 +169,15 @@ struct Multithread_scheduler
         int count = 0;
         std::function<int(Id)> func2 = [this, &tc, &func](Id id)
         {
+            typename TileContainer::Tile_iterator tile;
             {
                 std::unique_lock<std::mutex> lock(tc_mutex);
-                tc.load(id);
+                tile = tc.load(id).first;
             }
-            int count = func(*(tc.get_tile(id)));
+            int count = func(*tile);
             {
                 std::unique_lock<std::mutex> lock(tc_mutex);
-                if(tc.number_of_tiles() >= max_number_of_tiles) {
+                if(tc.number_of_tiles() >= tc.maximum_number_of_tiles()) {
                     if(!tc.save(id)) assert(false);
                     tc.unload(id);
                 }
@@ -186,7 +188,7 @@ struct Multithread_scheduler
             {
                 std::unique_lock<std::mutex> lock(tc_mutex);
                 if(!tc.is_loaded(id)) {
-                    while(tc.number_of_tiles() >= max_number_of_tiles) {
+                    while(tc.number_of_tiles() >= tc.maximum_number_of_tiles()) {
                         auto it = tc.begin();
                         Id id0 = it->id();
                         if (futures.count(id0) == 0) continue; // race condition issues ?
@@ -206,7 +208,7 @@ struct Multithread_scheduler
                     tc.load(id);
                 }
             }
-            return func(*(tc.get_tile(id)));
+            return func(*(tc.find(id)));
 */
         };
 
@@ -244,7 +246,7 @@ private:
     std::map<Id, size_t> allbox_sent;
     std::map<Id, safe<Point_id_container>> inbox;
     std::map<Id, std::map<Id, std::set<Point_id>>> sent_; // no race condition, as the first Id is the source tile id
-    size_t max_number_of_tiles;
+
     thread_pool pool;
     std::chrono::milliseconds timeout_;
 

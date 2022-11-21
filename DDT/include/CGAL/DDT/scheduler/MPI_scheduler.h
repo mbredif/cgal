@@ -162,7 +162,7 @@ struct MPI_scheduler
         if (sync) send_all_to_all();
         int count = 0;
         for(Id_iterator it = begin; it != end; ++it)
-            count += func(*(tc.get_tile(*it)));
+            count += func(*(tc.find(*it)));
         return count;
     }
 
@@ -192,7 +192,7 @@ struct MPI_scheduler
                 for(const auto& it : inbox) {
                     Id id = it.first;
                     if (!it.second.empty() && rank(id) == world_rank)
-                        c += func(*(tc.get_tile(id)));
+                        c += func(*(tc.find(id)));
                 }
                 count += c;
             } while (c != 0);

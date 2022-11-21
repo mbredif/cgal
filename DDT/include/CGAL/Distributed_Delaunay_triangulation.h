@@ -143,7 +143,7 @@ public:
                 if(tile->vertex_is_infinite(v)) continue;
                 Id tid = tile->id(v);
                 if(tid == tile->id()) continue;
-                auto t = tiles.get_tile(tid);
+                auto t = tiles.find(tid);
                 if(t->relocate_vertex(*tile, v) == t->vertices_end())
                 {
                     assert(! "relocate_vertex failed" );
@@ -167,7 +167,7 @@ public:
                 }
                 for(auto tid : tids)
                 {
-                    auto t = tiles.get_tile(tid);
+                    auto t = tiles.find(tid);
                     if(t->relocate_facet(*tile, f) == t->facets_end())
                     {
                       assert(! "relocate_facet failed" );
@@ -191,7 +191,7 @@ public:
                 }
                 for(auto tid : tids)
                 {
-                    auto t = tiles.get_tile(tid);
+                    auto t = tiles.find(tid);
                     if(t->relocate_cell(*tile, c) == t->cells_end())
                     {
                       assert(! "relocate_facet failed" );
@@ -256,7 +256,7 @@ public:
 
         // if (!is_loaded(id) ) load(id);
         Tile_container const& t = tiles; // why do we need this in a const function ?
-        Tile_const_iterator tile = t.get_tile(id);
+        Tile_const_iterator tile = t.find(id);
         Tile_vertex_const_iterator vertex = tile->relocate_vertex(*(v.tile()), v.vertex());
         if (vertex==tile->vertices_end()) return vertices_end();
         return Vertex_const_iterator(tile, tiles.cend(), vertex);
@@ -269,7 +269,7 @@ public:
         if (id == tile_id(f)) return f; // f is already in tile id
 
         Tile_container const& t = tiles; // why do we need this in a const function ?
-        Tile_const_iterator tile = t.get_tile(id);
+        Tile_const_iterator tile = t.find(id);
         Tile_facet_const_iterator facet = tile->relocate_facet(*(f.tile()), f.facet());
         if (facet==tile->facets_end()) return facets_end();
         return Facet_const_iterator(tile, tiles.cend(), facet);
@@ -282,7 +282,7 @@ public:
         if (id == tile_id(c)) return c; // c is already in tile id
 
         Tile_container const& t = tiles; // why do we need this in a const function ?
-        Tile_const_iterator tile = t.get_tile(id);
+        Tile_const_iterator tile = t.find(id);
         Tile_cell_const_iterator cell = tile->relocate_cell(*(c.tile()), c.cell());
         if (cell==tile->cells_end()) return cells_end();
         return Cell_const_iterator(tile, tiles.cend(), cell);
