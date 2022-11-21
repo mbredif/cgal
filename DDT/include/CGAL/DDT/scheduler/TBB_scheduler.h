@@ -47,48 +47,51 @@ struct TBB_scheduler
         return tbb::this_task_arena::max_concurrency();
     }
 
-    inline void receive(Id id, Point_id_container& received) { inbox[id].swap(received); }
+    inline void receive(Id id, Point_id_container& received)
+    {
+        inbox[id].swap(received);
+        allbox_sent.emplace(id, 0);
+        size_t size0 = received.size();
+        received.grow_by(allbox.begin()+allbox_sent[id], allbox.end());
+        size_t size1 = received.size();
+        allbox_sent[id] += size1 - size0;
+    }
 
     void send(const Point& p, Id id, Id target)
     {
         inbox[target].emplace_back(p,id);
     }
 
-    bool send_vertex(const Tile& tile, Vertex_const_handle v, Id target, std::map<Id, std::vector<Point_id>>& outbox)
-    {
-        assert(!tile.vertex_is_infinite(v));
-        Id source = tile.id();
-        Id vid = tile.id(v);
-        if(target==vid || target == source || !sent_[source][target].insert(v).second)
-            return false;
-        outbox[target].emplace_back(tile.point(v), vid);
-        return true;
-    }
-
     int send_one(const Tile& tile, std::vector<Vertex_const_handle_and_id>& vertices)
     {
-        std::map<Id, std::vector<Point_id>> outbox;
+        std::map<Id, std::vector<Point_id>> points;
         Id source = tile.id();
         int count = 0;
         for(auto& vi : vertices)
-            count += send_vertex(tile, vi.first, vi.second, outbox);
-        for(auto& o : outbox)
-            inbox[o.first].grow_by(o.second.begin(), o.second.end());
+        {
+            Vertex_const_handle v = vi.first;
+            Id target = vi.second;
+            Id vid = tile.id(v);
+            if(target == source || target == vid) continue;
+            const Point& p = tile.point(v);
+            if(sent_[source][target].insert(std::make_pair(p,vid)).second)
+            {
+                ++count;
+                points[target].emplace_back(p, vid);
+            }
+        }
+        for(auto& p : points)
+            inbox[p.first].grow_by(p.second.begin(), p.second.end());
         return count;
     }
 
-    template<typename Id_iterator>
-    int send_all(const Tile& tile, std::vector<Vertex_const_handle>& vertices, Id_iterator begin, Id_iterator end)
+    int send_all(const Tile& tile, std::vector<Vertex_const_handle>& vertices)
     {
-        std::map<Id, std::vector<Point_id>> outbox;
-        Id source = tile.id();
-        int count = 0;
+        Point_id_container points;
         for(Vertex_const_handle v : vertices)
-            for(Id_iterator target = begin; target != end; ++target)
-                count += send_vertex(tile, v, *target, outbox);
-        for(auto& o : outbox)
-            inbox[o.first].grow_by(o.second.begin(), o.second.end());
-        return count;
+            points.emplace_back(tile.point(v),tile.id(v));
+        allbox.grow_by(points.begin(), points.end());
+        return points.size();
     }
 
     template<typename TileContainer, typename Id_iterator>
@@ -96,74 +99,69 @@ struct TBB_scheduler
     {
         // ensure sent_ has all the id inserted to prevent race conditions
         for(Id_iterator it = begin; it != end; ++it)
-            sent_.emplace(*it, std::map<Id, std::set<Vertex_const_handle>>{});
+        {
+            sent_.emplace(*it, std::map<Id, std::set<Point_id>>{});
+            allbox_sent.emplace(*it, 0);
+            tc.load(*it);
+        }
 
         std::vector<Id> ids(begin, end);
         int count = tbb::parallel_reduce(
               tbb::blocked_range<int>(0,ids.size()),
-              0,
-              [&](tbb::blocked_range<int> r, double running_total)
-              {
-                  int c = 0;
-                  for (int i=r.begin(); i<r.end(); ++i)
-                  {
-                      c+=func(*(tc.find(ids[i])));
-                      tc.unload(ids[i]);
-                  }
-                  return c;
-              }, std::plus<int>() );
+              0, [&](tbb::blocked_range<int> r, double running_total)
+        {
+            int c = 0;
+            for (int i=r.begin(); i<r.end(); ++i)
+            {
+                Id id = ids[i];
+                typename TileContainer::Tile_iterator tile = tc.find(id);
+                // typename TileContainer::Tile_iterator tile = tc.load(id).first;
+                c+=func(*tile);
+                // tc.unload(id);
+            }
+            return c;
+        }, std::plus<int>() );
         return count;
+    }
+
+    template<typename TileContainer>
+    int for_all(TileContainer& tc, const std::function<int(Tile&)>& func)
+    {
+        return for_each(tc, tc.tile_ids_begin(), tc.tile_ids_end(), func);
     }
 
     template<typename TileContainer>
     int for_each(TileContainer& tc, const std::function<int(Tile&)>& func)
     {
-        std::vector<Id> ids;
-        for(auto& it : inbox) {
-            if (it.second.empty()) continue;
-            Id id = it.first;
-            ids.push_back(id);
-            if(!tc.is_loaded(id)) tc.init(id); /// @todo : load !
-        }
+        std::set<Id> ids;
+        size_t n = allbox.size();
+        for(auto& it : allbox_sent)
+            if (it.second != n)
+                ids.insert(it.first);
+
+        for(auto& it : inbox)
+            if (!it.second.empty())
+                ids.insert(it.first);
+
         return for_each(tc, ids.begin(), ids.end(), func);
     }
 
-    // no barrier between each epoch, busy tiles are skipped
     template<typename TileContainer>
     int for_each_rec(TileContainer& tc, const std::function<int(Tile&)>& func)
     {
-
         int count = 0, c = 0;
         do{
-          std::vector<Id> ids;
-          for(auto it : inbox) {
-              if (!it.second.empty()) {
-                  Id id = it.first;
-                  ids.push_back(id);
-                  if(!tc.is_loaded(id)) tc.init(id); /// @todo : load !
-              }
-          }
-          c = tbb::parallel_reduce(
-          tbb::blocked_range<int>(0,ids.size()),
-          0,
-          [&](tbb::blocked_range<int> r, double running_total)
-          {
-              int c = 0;
-              for (int i=r.begin(); i<r.end(); ++i)
-              {
-                  c+=func(*(tc.find(ids[i])));
-                  tc.unload(ids[i]);
-              }
-              return c;
-          }, std::plus<int>() );
+          c = for_each(tc, func);
           count += c;
         } while (c!=0);
         return count;
     }
 
 private:
+    Point_id_container allbox;
+    std::map<Id, size_t> allbox_sent;
     std::map<Id, Point_id_container> inbox;
-    std::map<Id, std::map<Id, std::set<Vertex_const_handle>>> sent_; // no race condition, as the first Id is the source tile id
+    std::map<Id, std::map<Id, std::set<Point_id>>> sent_; // no race condition, as the first Id is the source tile id
 };
 
 }
