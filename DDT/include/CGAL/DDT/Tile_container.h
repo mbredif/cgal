@@ -156,25 +156,22 @@ public:
     void init(Id id)
     {
         ids.insert(id);
-        if (serializer.has_tile(id))
-          load(id);
-        else
-          tiles.emplace(id, id);
     }
 
     /// @todo attention à la perennité des handles (tile is possibly unloaded), ou alors lock ou shared pointer.
     /// unload a tile from memory (no automatic saving)
     void unload(Id id)
     {
-        if (save(id))
-          tiles.erase(id);
+        tiles.erase(id);
     }
 
     /// load the tile using the serializer, given its id.
     void load(Id id)
     {
-        /// @todo unload tiles if needed
-        tiles.emplace(id, std::move(serializer.load(id)));
+        if (serializer.has_tile(id))
+          tiles.emplace(id, std::move(serializer.load(id)));
+        else
+          tiles.emplace(id, id);
     }
 
     /// saves a tile using the serializer (no unloading)

@@ -33,11 +33,7 @@ struct Sequential_scheduler
 
     /// constructor
 
-#ifdef CGAL_DEBUG_DDT
-    Sequential_scheduler() : n_rec(0) {}
-#else
-    Sequential_scheduler() {}
-#endif
+    Sequential_scheduler(size_t max_number_of_tiles = 1) : max_number_of_tiles(max_number_of_tiles) {}
 
     inline int number_of_threads() const
     {
@@ -49,7 +45,6 @@ struct Sequential_scheduler
         std::cout << "broadcast : " << allbox.size() << " points" << std::endl;
         for(auto& s : sent_)
             std::cout << "sent [" << int(s.first) << "] : " << s.second.size() << " points" << std::endl;
-        std::cout << "recursions : " << n_rec << std::endl;
     }
 #endif
 
@@ -63,7 +58,7 @@ struct Sequential_scheduler
         size_t size1 = received.size();
         allbox_sent[id] += size1 - size0;
 #ifdef CGAL_DEBUG_DDT
-        std::cout << int(id) << " : " << received.size() << " + " << (allbox.size()-allbox_sent[id]) << std::endl;
+        std::cout << int(id) << " : " << size1 << " + " << (size1-size0) << std::endl;
 #endif
     }
 
@@ -105,9 +100,32 @@ struct Sequential_scheduler
         int count = 0;
         for(Id_iterator it = begin; it != end; ++it)
         {
-            if(!tc.is_loaded(*it)) tc.init(*it);
+            if(!tc.is_loaded(*it)) {
+                while(tc.number_of_tiles() >= max_number_of_tiles) {
+                    auto it = tc.begin();
+                    Id id0 = it->id();
+                    size_t count0 = inbox[id0].size();
+                    for(++it; it != tc.end() && count0; ++it)
+                    {
+                        Id id = it->id();
+                        size_t count = inbox[id].size();
+                        if(count0 > count) {
+                            count0 = count;
+                            id0 = id;
+                        }
+                    }
+#ifdef CGAL_DEBUG_DDT
+                    std::cout << "unload " << int(id0) << " ( " << inbox[id0].size() << " inbox points)" << std::endl;
+#endif
+                    if(!tc.save(id0)) assert(false);
+                    tc.unload(id0);
+                }
+#ifdef CGAL_DEBUG_DDT
+                std::cout << "load " << int(*it) << " ( " << inbox[*it].size() << " inbox points)" << std::endl;
+#endif
+                tc.load(*it);
+            }
             count += func(*(tc.get_tile(*it)));
-            tc.unload(*it);
         }
         return count;
     }
@@ -140,9 +158,6 @@ struct Sequential_scheduler
     {
         int count = 0, c;
         do {
-#ifdef CGAL_DEBUG_DDT
-            ++n_rec;
-#endif
             c = for_each(tc, func);
             count += c;
         } while (c != 0);
@@ -154,10 +169,7 @@ private:
     std::map<Id, size_t> allbox_sent;
     std::map<Id, std::vector<Point_id>> inbox;
     std::map<Id, std::set<Point_id>> sent_;
-
-#ifdef CGAL_DEBUG_DDT
-    int n_rec;
-#endif
+    size_t max_number_of_tiles;
 };
 
 }

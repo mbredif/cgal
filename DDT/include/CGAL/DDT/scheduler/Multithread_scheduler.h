@@ -35,12 +35,12 @@ struct Multithread_scheduler
     typedef std::vector<Point_id> Point_id_container;
 
     /// constructor
-    Multithread_scheduler(int n_threads = 0) : pool(n_threads), timeout_(1)
+    Multithread_scheduler(int max_number_of_tiles, int n_threads = 0) : max_number_of_tiles(max_number_of_tiles), pool(n_threads), timeout_(1)
     {
         pool.init();
     }
     template<class Duration>
-    Multithread_scheduler(int n_threads, Duration timeout) : pool(n_threads), timeout_(timeout)
+    Multithread_scheduler(int max_number_of_tiles, int n_threads, Duration timeout) : max_number_of_tiles(max_number_of_tiles), pool(n_threads), timeout_(timeout)
     {
         pool.init();
     }
@@ -106,15 +106,19 @@ struct Multithread_scheduler
     template<typename TileContainer, typename Id_iterator>
     int for_each(TileContainer& tc, Id_iterator begin, Id_iterator end, const std::function<int(Tile&)>& func)
     {
-        std::function<int(Id)> func2 = [this, &tc, &func](Id id) {
+        std::function<int(Id)> func2 = [this, &tc, &func](Id id)
+        {
             {
                 std::unique_lock<std::mutex> lock(tc_mutex);
-                if(!tc.is_loaded(id)) tc.init(id);
+                tc.load(id);
             }
             int count = func(*(tc.get_tile(id)));
             {
                 std::unique_lock<std::mutex> lock(tc_mutex);
-                tc.unload(id);
+                if(tc.number_of_tiles() >= max_number_of_tiles) {
+                    if(!tc.save(id)) assert(false);
+                    tc.unload(id);
+                }
             }
             return count;
         };
@@ -162,18 +166,50 @@ struct Multithread_scheduler
     int for_each_rec(TileContainer& tc, const std::function<int(Tile&)>& func)
     {
         int count = 0;
-        std::function<int(Id)> func2 = [this, &tc, &func](Id id) {
+        std::function<int(Id)> func2 = [this, &tc, &func](Id id)
+        {
             {
                 std::unique_lock<std::mutex> lock(tc_mutex);
-                if(!tc.is_loaded(id)) tc.init(id);
+                tc.load(id);
             }
             int count = func(*(tc.get_tile(id)));
             {
                 std::unique_lock<std::mutex> lock(tc_mutex);
-                tc.unload(id);
+                if(tc.number_of_tiles() >= max_number_of_tiles) {
+                    if(!tc.save(id)) assert(false);
+                    tc.unload(id);
+                }
             }
             return count;
+/*
+            // instead of unloading the just-processed excess tile, unload a tile that is not being processed with minimal incoming points ?
+            {
+                std::unique_lock<std::mutex> lock(tc_mutex);
+                if(!tc.is_loaded(id)) {
+                    while(tc.number_of_tiles() >= max_number_of_tiles) {
+                        auto it = tc.begin();
+                        Id id0 = it->id();
+                        if (futures.count(id0) == 0) continue; // race condition issues ?
+                        size_t count0 = inbox[id0].size();
+                        for(++it; it != tc.end() && count0; ++it)
+                        {
+                            Id id1 = it->id();
+                            size_t count1 = inbox[id1].size();
+                            if(count0 > count1) {
+                                count0 = count1;
+                                id0 = id1;
+                            }
+                        }
+                        if(!tc.save(id0)) assert(false);
+                        tc.unload(id0);
+                    }
+                    tc.load(id);
+                }
+            }
+            return func(*(tc.get_tile(id)));
+*/
         };
+
         std::map<Id, std::future<int>> futures;
         do {
             auto fit = futures.begin();
@@ -208,7 +244,7 @@ private:
     std::map<Id, size_t> allbox_sent;
     std::map<Id, safe<Point_id_container>> inbox;
     std::map<Id, std::map<Id, std::set<Point_id>>> sent_; // no race condition, as the first Id is the source tile id
-
+    size_t max_number_of_tiles;
     thread_pool pool;
     std::chrono::milliseconds timeout_;
 

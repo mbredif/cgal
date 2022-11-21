@@ -1,4 +1,6 @@
-typedef unsigned char Id;
+#define CGAL_DEBUG_DDT
+
+typedef int  Id;
 typedef unsigned char Flag;
 
 #include <CGAL/DDT/traits/cgal_traits_2.h>
@@ -21,14 +23,17 @@ typedef CGAL::DDT::Tile<Traits> Tile;
 
 //#include <CGAL/DDT/scheduler/Sequential_scheduler.h>
 //typedef CGAL::DDT::Sequential_scheduler<Tile> Scheduler;
-//#include <CGAL/DDT/scheduler/Multithread_scheduler.h>
-//typedef CGAL::DDT::Multithread_scheduler<Tile> Scheduler;
-#include <CGAL/DDT/scheduler/TBB_scheduler.h>
-typedef CGAL::DDT::TBB_scheduler<Tile> Scheduler;
+#include <CGAL/DDT/scheduler/Multithread_scheduler.h>
+typedef CGAL::DDT::Multithread_scheduler<Tile> Scheduler;
+//#include <CGAL/DDT/scheduler/TBB_scheduler.h>
+//typedef CGAL::DDT::TBB_scheduler<Tile> Scheduler;
 //#include <CGAL/DDT/scheduler/MPI_scheduler.h>
 //typedef CGAL::DDT::MPI_scheduler<Tile> Scheduler;
 
-typedef CGAL::DDT::Tile_container<Traits> TileContainer;
+#include <CGAL/DDT/serializer/File_serializer.h>
+typedef CGAL::DDT::File_serializer<Tile> Serializer;
+typedef CGAL::DDT::Tile_container<Traits, Tile, Serializer> TileContainer;
+//typedef CGAL::DDT::Tile_container<Traits> TileContainer;
 #include <CGAL/Distributed_Delaunay_triangulation.h>
 typedef CGAL::Distributed_Delaunay_triangulation<TileContainer> Distributed_Delaunay_triangulation;
 #include <CGAL/DDT/IO/write_ply.h>
@@ -44,9 +49,9 @@ int main(int argc, char **argv)
 {
     enum { D = Traits::D };
 
-    int NP, loglevel;
+    int NP, loglevel, max_number_of_tiles;
     std::vector<int> NT;
-    std::string out;
+    std::string out, ser_prefix;
     double range;
 
     po::options_description desc("Allowed options");
@@ -58,7 +63,9 @@ int main(int argc, char **argv)
     //("threads,j", po::value<int>(&threads)->default_value(0), "number of threads (0=all)")
     ("tiles,t", po::value<std::vector<int>>(&NT), "number of tiles")
     ("range,r", po::value<double>(&range)->default_value(1), "range")
+    ("serialize,s", po::value<std::string>(&ser_prefix)->default_value("tile_"), "prefix for tile serialization")
     ("out,o", po::value<std::string>(&out), "output directory")
+    ("memory,m", po::value<int>(&max_number_of_tiles)->default_value(1), "max number of tiles in memory")
     ;
 
     po::variables_map vm;
@@ -89,8 +96,10 @@ int main(int argc, char **argv)
     CGAL::DDT::Bbox<D, double> bbox(range);
     CGAL::DDT::grid_partitioner<Traits> partitioner(bbox, NT.begin(), NT.end());
 
-    TileContainer tiles;
-    Scheduler scheduler;
+    Serializer serializer(ser_prefix);
+    TileContainer tiles(serializer);
+    //TileContainer tiles;
+    Scheduler scheduler(max_number_of_tiles);
 
     std::cout << "- Loglevel : " << loglevel << std::endl;
     std::cout << "- Range    : " << range << std::endl;
