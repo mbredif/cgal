@@ -159,14 +159,12 @@ Communication is implemented by a shared inbox of points, with tile ids : tile i
 
 \section Section_DDT_algo Algorithm description
 
-The main steps of the algorithms are the following. First points are partitionned into tiles. Then a Delaunay triangulation per tile is created.
-For each tile, the extreme points along each axis (2 points per axis) are extracted. Those points are send to all the tiles.
-Then starts a while loop that will end when no new point is added to any tile.
-The while loop is initialiazed with the axis extreme points that are received by each tile. For each tile, the Delaunay triangulation is
-updated by inserting the received points (resulting vertices keep the originating tile associated). Then for each new vertex `vn` (that is
-always from another tile), we consider all adjacent vertices. If the vertex `va` if from the current tile, it is sent to the tile of `vn`. If the
-vertex `va` if from another tile, the vertex `va` is sent to the tile of `vn` and `vn` is sent to the tile of `va`. Also, any vertex from another tile incident
-to no vertex of the current tile will be removed. Following the proof of \cgalCite{bredif2020provably}, this converges.
+The main steps of the algorithm are the following. First points are partitioned into tiles. Then a Delaunay triangulation is created independently in each tile. Beyond its point embedding, each vertex of these triangulations keep track of its original tile using a tile identifier. At first, all vertices are local (they originate from the same tile), but the computation of the overall triangulation requires merging these local triangulation and creating mixed cells between vertices of different tiles. In the end, tile triangulations will also contain vertices from other tiles (denoted as foreign vertices) if they are adjacent to the local vertices in the overall triangulation of all points. Furthermore, mixed cells (containing both local and foreign vertices) will be replicated in the tile triangulation of each of its incident vertices.
+
+The merge of the tile triangulation begins by extracting, for each tile, the extreme points along each axis (2 points per axis) and by sending these points to all the tiles.
+Then starts a while loop that will continue until all sent points have been processed by the receiving tiles.
+The while loop is initialized with the sending of the axis-extreme points, and further processing of received points may send new points. For each tile, the Delaunay triangulation is updated by inserting the received points. Then, to decide which points to send, for each newly inserted foreign vertex `vn`, we consider each of its adjacent vertices `va`. If the vertex `va` if from the current tile, its point is sent to the tile of `vn`. If the
+vertex `va` is also foreign (from another tile), both points are sent : the point of `va` is sent to the tile of `vn` and the point of `vn` is sent to the tile of `va`. To prevent oversending points, points are sent only if they are newly adjacent to a tile. Also, any vertex from another tile incident to no vertex of the current tile will be removed, in order to simplify the tile triangulation. Following the proof of \cgalCite{bredif2020provably}, based on \cgalCite{shewchuk2005star}, this converges.
 
 
 
