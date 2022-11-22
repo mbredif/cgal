@@ -157,6 +157,19 @@ Communication is implemented by a shared inbox of points, with tile ids : tile i
 	https://optimad.github.io/bitpit/.
 - Schedulers could be extended to support streaming by loading and unloading tiles as needed.
 
+\section Section_DDT_algo Algorithm description
+
+The main steps of the algorithms are the following. First points are partitionned into tiles. Then a Delaunay triangulation per tile is created.
+For each tile, the extreme points along each axis (2 points per axis) are extracted. Those points are send to all the tiles.
+Then starts a while loop that will end when no new point is added to any tile.
+The while loop is initialiazed with the axis extreme points that are received by each tile. For each tile, the Delaunay triangulation is
+updated by inserting the received points (resulting vertices keep the originating tile associated). Then for each new vertex `vn` (that is
+always from another tile), we consider all adjacent vertices. If the vertex `va` if from the current tile, it is sent to the tile of `vn`. If the
+vertex `va` if from another tile, the vertex `va` is sent to the tile of `vn` and `vn` is sent to the tile of `va`. Also, any vertex from another tile incident
+to no vertex of the current tile will be removed. Following the proof of \cgalCite{bredif2020provably}, this converges.
+
+
+
 \section Section_DDT_History Design and Implementation History
 
 The code of this package is based on a version of the code developed in the LASTIG laboratory (Univ. Gustave Eiffel, IGN ENSG) by Mathieu Brédif and Laurent Caraffa.
