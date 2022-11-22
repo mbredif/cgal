@@ -145,14 +145,41 @@ struct Cgal_traits_2
         return dt.clear();
     }
 
-    template<class It> inline void insert(Delaunay_triangulation& dt, It begin, It end) const
+    void spatial_sort(const Delaunay_triangulation& dt, std::vector<std::size_t>& indices, const std::vector<Point>& points) const
     {
-        dt.insert(begin, end);
+        using Geom_traits = K;
+        typedef typename Pointer_property_map<Point>::const_type Pmap;
+        typedef Spatial_sort_traits_adapter_2<Geom_traits,Pmap> Search_traits;
+
+        CGAL::spatial_sort(indices.begin(), indices.end(),
+                     Search_traits(make_property_map(points), dt.geom_traits()));
     }
 
-    template<class It> inline void remove(Delaunay_triangulation& dt, It begin, It end) const
+    inline void adjacent_vertices(Delaunay_triangulation& dt, std::vector<Vertex_handle>& adj, Vertex_handle v) const
     {
-        for(It it=begin; it!=end; ++it) dt.remove(*it);
+        typename TDS::Vertex_circulator c = dt.incident_vertices(v), done = c;
+        if ( ! c.is_empty()) {
+          do {
+            adj.push_back(c);
+          } while (++c != done);
+        }
+    }
+
+    inline Vertex_handle insert(Delaunay_triangulation& dt, const Point& p, Id id, Vertex_handle hint = Vertex_handle()) const
+    {
+       Vertex_handle v = dt.insert(p, hint == Vertex_handle() ? Cell_handle() : hint->face());
+       v->info() = id;
+       return v;
+    }
+
+    inline Vertex_handle insert(Delaunay_triangulation& dt, const Point& p, Vertex_handle v = Vertex_handle()) const
+    {
+       return dt.insert(p, v->face());
+    }
+
+    inline void remove(Delaunay_triangulation& dt, Vertex_handle v) const
+    {
+        dt.remove(v);
     }
 
     inline Point circumcenter(const Delaunay_triangulation& dt, Cell_const_handle c) const
