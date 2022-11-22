@@ -143,7 +143,12 @@ struct Multithread_scheduler
     template<typename TileContainer>
     int for_all(TileContainer& tc, const std::function<int(Tile&)>& func)
     {
-        return for_each(tc, tc.tile_ids_begin(), tc.tile_ids_end(), func);
+        std::vector<Id> ids;
+        {
+            std::unique_lock<std::mutex> lock(tc_mutex);
+            ids.insert(tc.tile_ids_begin(), tc.tile_ids_end());
+        }
+        return for_each(tc, ids.begin(), ids.end(), func);
     }
 
     template<typename TileContainer>

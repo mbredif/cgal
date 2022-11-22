@@ -19,6 +19,7 @@
 #include <map>
 #include <set>
 #include <vector>
+#include <mutex>
 #include <tbb/concurrent_vector.h>
 #include <tbb/parallel_reduce.h>
 #include <tbb/task_arena.h>
@@ -102,7 +103,6 @@ struct TBB_scheduler
         {
             sent_.emplace(*it, std::map<Id, std::set<Point_id>>{});
             allbox_sent.emplace(*it, 0);
-            tc.load(*it);
         }
 
         std::vector<Id> ids(begin, end);
@@ -114,10 +114,19 @@ struct TBB_scheduler
             for (int i=r.begin(); i<r.end(); ++i)
             {
                 Id id = ids[i];
-                typename TileContainer::Tile_iterator tile = tc.find(id);
-                // typename TileContainer::Tile_iterator tile = tc.load(id).first;
+                typename TileContainer::Tile_iterator tile;
+                {
+                    std::unique_lock<std::mutex> lock(tc_mutex);
+                    tile = tc.load(id).first;
+                }
                 c+=func(*tile);
-                // tc.unload(id);
+                {
+                    std::unique_lock<std::mutex> lock(tc_mutex);
+                    if(tc.number_of_tiles() >= tc.maximum_number_of_tiles()) {
+                        if(!tc.save(id)) assert(false);
+                        tc.unload(id);
+                    }
+                }
             }
             return c;
         }, std::plus<int>() );
@@ -127,7 +136,12 @@ struct TBB_scheduler
     template<typename TileContainer>
     int for_all(TileContainer& tc, const std::function<int(Tile&)>& func)
     {
-        return for_each(tc, tc.tile_ids_begin(), tc.tile_ids_end(), func);
+        std::vector<Id> ids;
+        {
+            std::unique_lock<std::mutex> lock(tc_mutex);
+            ids.insert(tc.tile_ids_begin(), tc.tile_ids_end());
+        }
+        return for_each(tc, ids.begin(), ids.end(), func);
     }
 
     template<typename TileContainer>
@@ -162,6 +176,7 @@ private:
     std::map<Id, size_t> allbox_sent;
     std::map<Id, Point_id_container> inbox;
     std::map<Id, std::map<Id, std::set<Point_id>>> sent_; // no race condition, as the first Id is the source tile id
+    std::mutex tc_mutex;
 };
 
 }
