@@ -304,7 +304,7 @@ void write_csv_bbox_vert(const Tile& tile, std::ostream& csv)
 {
     int D = tile.maximal_dimension();
     std::vector<typename Tile::Vertex_const_handle> points;
-    tile.get_bbox_points(points);
+    tile.get_axis_extreme_points(points);
     for(auto it : points)
     {
         csv << "POINT( ";

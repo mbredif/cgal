@@ -140,7 +140,7 @@ int test_traits(const std::string& testname, int ND, int NP, int NT = -1, bool d
         Tile t(0);
         std::vector<typename Tile::Vertex_const_handle> points;
         std::vector<typename Tile::Vertex_const_handle_and_id> points_and_ids;
-        t.get_bbox_points(points);
+        t.get_axis_extreme_points(points);
         t.get_local_neighbors(points_and_ids);
     }
     return result;

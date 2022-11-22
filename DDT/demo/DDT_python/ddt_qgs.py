@@ -43,7 +43,7 @@ if insert_input_points and input_points:
 
 print("Triangulating %d points" % npoints)
 print(tri.insert_received_points())
-print(tri.send_all_bbox_points())
+print(tri.send_all_axis_extreme_points())
 print(tri.splay_stars())
 
 

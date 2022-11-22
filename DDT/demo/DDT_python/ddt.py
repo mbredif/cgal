@@ -38,7 +38,7 @@ def dump_vrt(output_path_vrt,tt) :
 # Insertion
 tri1.send_points(rand_points, number_of_vertex, Grid_partitioner(bbox,nb_tile_side))
 print(tri1.insert_received_points(True))
-print(tri1.send_all_bbox_points())
+print(tri1.send_all_axis_extreme_points())
 print(tri1.splay_stars())
 tri1.finalize()
 

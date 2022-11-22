@@ -367,7 +367,7 @@ public:
         return todo.size();
     }
 
-    void get_bbox_points(std::vector<Vertex_const_handle>& out) const
+    void get_axis_extreme_points(std::vector<Vertex_const_handle>& out) const
     {
         Vertex_const_handle v[2*D];
         auto vit = vertices_begin();
@@ -424,6 +424,7 @@ public:
 
     void get_finite_neighbors(std::vector<Vertex_const_handle_and_id>& out) const
     {
+        /// @todo: change api to consider only newly inserted vertices in splay_star (convert )
         std::map<Id, std::set<Vertex_const_handle>> outbox;
         for(auto cit = cells_begin(); cit != cells_end(); ++cit)
             for(int i=0; i<=current_dimension(); ++i)
@@ -451,17 +452,22 @@ public:
         }
     }
 
+    /// @todo : expose spatial_sort in traits
+    /// @todo : expose insert(point)->vertex in traits
+    /// @todo : return container of new foreign vertices
     template <class PointIdContainer>
     int insert(const PointIdContainer& received, bool do_simplify = true)
     {
         if(received.empty()) return 0;
         std::vector<Point_id> points;
         points.reserve(received.size());
+        // spatial_sort
         for(auto& v : received)
         {
             Id vid = v.second;
             points.emplace_back(v.first,vid);
             bbox_[vid] += v.first;
+            // insert point
         }
         insert(points.begin(), points.end());
         int s = 0;
