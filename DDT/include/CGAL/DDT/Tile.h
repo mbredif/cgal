@@ -342,21 +342,14 @@ public:
     bool simplify(Vertex_handle v)
     {
         assert(!vertex_is_infinite(v));
-        bool foreign = vertex_is_foreign(v);
-        if(foreign)
-        {
-            std::vector<Vertex_handle> adj;
-            adjacent_vertices(adj, v);
-            for (auto a : adj)
-                if(!vertex_is_infinite(a) && vertex_is_local(a)) {
-                    foreign = false;
-                    break;
-                }
-
-            if(foreign)
-                remove(v);
-        }
-        return foreign;
+        if (!vertex_is_foreign(v)) return false;
+        std::vector<Vertex_handle> adj;
+        adjacent_vertices(adj, v);
+        for (auto a : adj)
+            if(!vertex_is_infinite(a) && vertex_is_local(a))
+                return false;
+        remove(v);
+        return true;
     }
 
     void get_axis_extreme_points(std::vector<Vertex_const_handle>& out) const
@@ -444,9 +437,9 @@ public:
         }
     }
 
-    /// @todo : expose spatial_sort in traits
-    /// @todo : expose insert(point)->vertex in traits
-    /// @todo : return container of new foreign vertices
+    /// @todo : expose spatial_sort in traits 3,d
+    /// @todo : expose insert(point)->vertex in traits 3,d
+    /// @todo : return container or output iterator of new (foreign?) vertices
     template <class PointIdContainer>
     int insert(const PointIdContainer& received)
     {
@@ -471,23 +464,15 @@ public:
         spatial_sort(indices, points);
 
         // insert the point with infos in the sorted order
-        std::vector<Vertex_handle> vertices;
+        std::set<Vertex_handle> vertices;
         Vertex_handle v;
         for (size_t index : indices) {
           v = insert(points[index], ids[index], v);
-          vertices.push_back(v);
+          vertices.insert(v);
         }
 
         // simplify : remove foreign points with foreign adjacent points only
-        for (Vertex_handle v : vertices)
-        {
-            assert(!vertex_is_infinite(v));
-            if (simplify(v))
-            {
-                std::cout << "simplification" << std::endl;
-                break;
-            }
-        }
+        for (Vertex_handle v : vertices) simplify(v);
 
         return number_of_vertices() - n;
     }
@@ -512,34 +497,6 @@ public:
                         out_edges.insert(id(v));
                 }
     }
-/*
-    void get_merge_graph_edges(std::set<Id>& out_edges, std::vector<Cell_const_handle>& finalized) const
-    {
-        for(auto cit = cells_begin(); cit != cells_end(); ++cit)
-        {
-            if(cell_is_foreign(cit)) continue;
-            bool active = false;
-            for(auto pair : bbox_)
-                if((active || out_edges.find(pair.first)==out_edges.end()) && cell_is_active(pair.second, cit) )
-                {
-                    active = true;
-                    out_edges.insert(pair.first);
-                }
-            if(!active)
-                finalized.push_back(cit);
-        }
-    }
-
-
-    bool cell_is_finalized(Cell_const_handle c) const
-    {
-        if(cell_is_foreign(c)) return false;
-        /// @todo acceleration data structure !!!
-        for(auto pair : bbox_)
-            if(pair.first != id() && cell_is_active(pair.second, c)) return false;
-        return true;
-    }
-*/
 
     const std::map<Id, Bbox<D,double>>& bbox() const
     {
