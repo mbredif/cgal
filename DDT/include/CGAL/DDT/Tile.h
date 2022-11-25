@@ -32,7 +32,7 @@ class Tile
 public:
     typedef T                                        Traits;
     typedef typename Traits::Id                      Id;
-    typedef typename Traits::Flag                    Flag;
+    typedef typename Traits::Info                    Info;
     typedef typename Traits::Point                   Point;
     typedef typename Traits::Delaunay_triangulation  DT;
     typedef typename Traits::Vertex_handle           Vertex_handle;
@@ -91,7 +91,7 @@ public:
     inline size_t number_of_main_finite_cells   () const { return number_of_main_finite_cells_;    }
 
     inline Id    id  (Vertex_const_handle v) const { assert(!vertex_is_infinite(v)); return traits.id  (v); }
-    inline Flag& flag(Vertex_const_handle v) const { assert(!vertex_is_infinite(v)); return traits.flag(v); }
+    inline Info& info(Vertex_const_handle v) const { assert(!vertex_is_infinite(v)); return traits.info(v); }
 
     Id minimum_id(Cell_const_handle c) const
     {
@@ -413,14 +413,17 @@ public:
         for(auto v : vertices) {
             if(vertex_is_infinite(v)) continue;
             Id idv = id(v);
-            std::vector<Vertex_handle> adj;
-            adjacent_vertices(adj, v);
-            for (auto w : adj) {
+            std::vector<Vertex_handle> vadj;
+            adjacent_vertices(vadj, v);
+            for (auto w : vadj) {
                 if(vertex_is_infinite(w)) continue;
                 Id idw = id(w);
                 if(idw != idv)
                 {
+                    // w is not new in the dt, insert it only if it is foreign and
+                    /// @todo if it was not already adjacent to a vertex in tile idv
                     if (idv!=id()) outbox[idv].insert(w);
+                    // v is new so it has no previous neighbors in the dt
                     if (idw!=id()) outbox[idw].insert(v);
                 }
             }

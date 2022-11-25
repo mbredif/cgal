@@ -1,18 +1,18 @@
 #define CGAL_DEBUG_DDT
 
 typedef int  Id;
-typedef unsigned char Flag;
+typedef unsigned char Info;
 
 #include <CGAL/DDT/traits/cgal_traits_2.h>
 //#include <CGAL/DDT/traits/cgal_traits_3.h>
 //#include <CGAL/DDT/traits/cgal_traits_d.h>
 
-typedef CGAL::DDT::Cgal_traits_2<Id,Flag> Traits;
-//typedef CGAL::DDT::Cgal_traits_3<Id,Flag> Traits;
-//typedef CGAL::DDT::Cgal_traits_d<Id,Flag> Traits; // dynamic
-//typedef CGAL::DDT::Cgal_traits<2,Id,Flag> Traits;
-//typedef CGAL::DDT::Cgal_traits<3,Id,Flag> Traits;
-//typedef CGAL::DDT::Cgal_traits<4,Id,Flag> Traits;
+typedef CGAL::DDT::Cgal_traits_2<Id, Info> Traits;
+//typedef CGAL::DDT::Cgal_traits_3<Id, Info> Traits;
+//typedef CGAL::DDT::Cgal_traits_d<Id, Info Traits; // dynamic
+//typedef CGAL::DDT::Cgal_traits<2,Id, Info> Traits;
+//typedef CGAL::DDT::Cgal_traits<3,Id, Info> Traits;
+//typedef CGAL::DDT::Cgal_traits<4,Id, Info> Traits;
 
 typedef Traits::Random_points_in_box Random_points;
 

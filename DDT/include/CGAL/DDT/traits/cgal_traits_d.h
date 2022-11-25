@@ -13,9 +13,9 @@
 #define CGAL_DDT_CGAL_TRAITS_D_H
 
 
-#include <CGAL/DDT/Data.h>
 #include <CGAL/DDT/Bbox.h>
 #include <CGAL/DDT/iterator/Facet_const_iterator_d.h>
+#include <CGAL/DDT/traits/Data.h>
 
 #include <CGAL/Epick_d.h>
 #include <CGAL/Delaunay_triangulation.h>
@@ -39,8 +39,8 @@ struct Cgal_traits_d
 {
     typedef Dim                                                    Dim_tag;
     typedef I                                                      Id;
-    typedef F                                                      Flag;
-    typedef CGAL::DDT::Data<Id, Flag>                                    Data;
+    typedef F                                                      Info;
+    typedef CGAL::DDT::Data<Id, Info>                              Data;
     typedef CGAL::Epick_d<Dim_tag>                                 K;
     typedef CGAL::Triangulation_vertex<K,Data>                     Vb;
     typedef CGAL::Triangulation_full_cell<K>                       Cb;
@@ -75,9 +75,9 @@ struct Cgal_traits_d
     {
         return v->data().id;
     }
-    inline Flag& flag(Vertex_const_handle v) const
+    inline Info& info(Vertex_const_handle v) const
     {
-        return v->data().flag;
+        return v->data().info;
     }
     inline int current_dimension(const Delaunay_triangulation& dt) const
     {

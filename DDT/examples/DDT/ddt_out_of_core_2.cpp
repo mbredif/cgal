@@ -12,10 +12,8 @@
 
 #include <boost/program_options.hpp>
 
-typedef int Id; /// @todo : serialization error occurs when Id is unsigned char
-typedef unsigned char Flag;
-
-typedef CGAL::DDT::Cgal_traits_2<Id,Flag> Traits;
+typedef int Id;
+typedef CGAL::DDT::Cgal_traits_2<Id> Traits;
 typedef Traits::Random_points_in_box Random_points;
 
 typedef CGAL::DDT::Tile<Traits> Tile;

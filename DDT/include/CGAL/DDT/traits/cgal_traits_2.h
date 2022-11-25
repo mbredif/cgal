@@ -17,10 +17,10 @@
 // #include <CGAL/Triangulation_vertex_base_with_info_2.h>
 #include <CGAL/point_generators_2.h>
 
-#include <CGAL/DDT/Data.h>
 #include <CGAL/DDT/Bbox.h>
 #include <CGAL/DDT/iterator/Facet_const_iterator_2.h>
 #include <CGAL/DDT/traits/ddt_vertex_base_with_info_2.h>
+#include <CGAL/DDT/traits/Data.h>
 
 namespace CGAL {
 namespace DDT {
@@ -28,13 +28,13 @@ namespace DDT {
 /// \ingroup PkgDDTTraitsClasses
 /// \cgalModels TriangulationTraits
 /// @todo mettre le vertex en parametre template (dans tous les traits)
-template<typename I, typename F>
+template<typename I, typename F = No_info>
 struct Cgal_traits_2
 {
     enum { D = 2 };
     typedef I                                                      Id;
-    typedef F                                                      Flag;
-    typedef CGAL::DDT::Data<Id, Flag>                                    Data;
+    typedef F                                                      Info;
+    typedef CGAL::DDT::Data<Id, Info>                              Data;
     typedef CGAL::Exact_predicates_inexact_constructions_kernel    K;
     typedef CGAL::DDT_vertex_base_with_info_2<Data, K>   Vb;
     typedef CGAL::Triangulation_data_structure_2<Vb>               TDS;
@@ -78,9 +78,9 @@ struct Cgal_traits_2
     {
         return v->info().id;
     }
-    inline Flag& flag(Vertex_const_handle v) const
+    inline Info& info(Vertex_const_handle v) const
     {
-        return v->info().flag;
+        return v->info().info;
     }
     inline int current_dimension(const Delaunay_triangulation& dt) const
     {
@@ -168,7 +168,7 @@ struct Cgal_traits_2
     inline Vertex_handle insert(Delaunay_triangulation& dt, const Point& p, Id id, Vertex_handle hint = Vertex_handle()) const
     {
        Vertex_handle v = dt.insert(p, hint == Vertex_handle() ? Cell_handle() : hint->face());
-       v->info() = id;
+       v->info().id = id;
        return v;
     }
 

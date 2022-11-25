@@ -17,10 +17,10 @@
 // #include <CGAL/Triangulation_vertex_base_with_info_3.h>
 #include <CGAL/point_generators_3.h>
 
-#include <CGAL/DDT/Data.h>
 #include <CGAL/DDT/Bbox.h>
 #include <CGAL/DDT/iterator/Facet_const_iterator_3.h>
 #include <CGAL/DDT/traits/ddt_vertex_base_with_info_3.h>
+#include <CGAL/DDT/traits/Data.h>
 
 namespace CGAL {
 namespace DDT {
@@ -32,8 +32,8 @@ struct Cgal_traits_3
 {
     enum { D = 3 };
     typedef I                                                      Id;
-    typedef F                                                      Flag;
-    typedef CGAL::DDT::Data<Id, Flag>                                    Data;
+    typedef F                                                      Info;
+    typedef CGAL::DDT::Data<Id, Info>                              Data;
     typedef CGAL::Exact_predicates_inexact_constructions_kernel    K;
     typedef CGAL::DDT_vertex_base_with_info_3<Data, K>   Vb;
     typedef CGAL::Delaunay_triangulation_cell_base_3<K>            Cb;
@@ -78,9 +78,9 @@ struct Cgal_traits_3
     {
         return v->info().id;
     }
-    inline Flag& flag(Vertex_const_handle v) const
+    inline Info& info(Vertex_const_handle v) const
     {
-        return v->info().flag;
+        return v->info().info;
     }
     inline int current_dimension(const Delaunay_triangulation& dt) const
     {
