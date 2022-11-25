@@ -56,7 +56,7 @@ struct Sequential_scheduler
         size_t size1 = received.size();
         allbox_sent[id] += size1 - size0;
 #ifdef CGAL_DEBUG_DDT
-        std::cout << int(id) << " : " << size1 << " + " << (size1-size0) << std::endl;
+        std::cout << int(id) << " : " << size0 << " + " << (size1-size0) << std::endl;
 #endif
     }
 
