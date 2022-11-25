@@ -155,7 +155,7 @@ struct Cgal_traits_2
                      Search_traits(make_property_map(points), dt.geom_traits()));
     }
 
-    inline void adjacent_vertices(Delaunay_triangulation& dt, std::vector<Vertex_handle>& adj, Vertex_handle v) const
+    inline void adjacent_vertices(const Delaunay_triangulation& dt, std::vector<Vertex_handle>& adj, Vertex_handle v) const
     {
         typename TDS::Vertex_circulator c = dt.incident_vertices(v), done = c;
         if ( ! c.is_empty()) {

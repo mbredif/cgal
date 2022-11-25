@@ -132,8 +132,8 @@ public:
     inline Vertex_const_handle insert(const Point& p, Id id, Vertex_const_handle v = Vertex_const_handle()) { return traits.insert(dt_, p, id, v); }
     inline void remove(Vertex_const_handle v) { traits.remove(dt_, v); }
 
-    inline void spatial_sort(std::vector<std::size_t>& indices, const std::vector<Point>& points) { traits.spatial_sort(dt_, indices, points); }
-    inline void adjacent_vertices(std::vector<Vertex_handle>& adj, Vertex_const_handle v) { traits.adjacent_vertices(dt_, adj, v); }
+    inline void spatial_sort(std::vector<std::size_t>& indices, const std::vector<Point>& points) const { traits.spatial_sort(dt_, indices, points); }
+    inline void adjacent_vertices(std::vector<Vertex_handle>& adj, Vertex_const_handle v) const { traits.adjacent_vertices(dt_, adj, v); }
 
     inline Vertex_handle infinite_vertex() const { return traits.infinite_vertex(dt_); }
     inline const Point& point(Vertex_const_handle v) const { return traits.point(dt_, v); }
@@ -407,26 +407,25 @@ public:
                 out.push_back(std::make_pair(vh, pair.first));
     }
 
-    void get_finite_neighbors(std::vector<Vertex_const_handle_and_id>& out) const
+    void get_finite_neighbors(const std::vector<Vertex_const_handle>& vertices, std::vector<Vertex_const_handle_and_id>& out) const
     {
-        /// @todo: change api to consider only newly inserted vertices in splay_star (convert )
         std::map<Id, std::set<Vertex_const_handle>> outbox;
-        for(auto cit = cells_begin(); cit != cells_end(); ++cit)
-            for(int i=0; i<=current_dimension(); ++i)
-            {
-                Vertex_const_handle v = vertex(cit, i);
-                if(vertex_is_infinite(v)) break;
-                Id idv = id(v);
-                if(idv != id())
+        for(auto v : vertices) {
+            if(vertex_is_infinite(v)) continue;
+            Id idv = id(v);
+            std::vector<Vertex_handle> adj;
+            adjacent_vertices(adj, v);
+            for (auto w : adj) {
+                if(vertex_is_infinite(w)) continue;
+                Id idw = id(w);
+                if(idw != idv)
                 {
-                    for(int j=0; j<=current_dimension(); ++j)
-                    {
-                        Vertex_const_handle w = vertex(cit, j);
-                        if(!vertex_is_infinite(w) && id(w) != idv) // implies i!=j
-                            outbox[idv].insert(w);
-                    }
+                    if (idv!=id()) outbox[idv].insert(w);
+                    if (idw!=id()) outbox[idw].insert(v);
                 }
             }
+        }
+
         for(auto&& pair : outbox)
         {
             Id idv = pair.first;
@@ -441,7 +440,7 @@ public:
     /// @todo : expose insert(point)->vertex in traits 3,d
     /// @todo : return container or output iterator of new (foreign?) vertices
     template <class PointIdContainer>
-    int insert(const PointIdContainer& received)
+    int insert(const PointIdContainer& received, std::vector<Vertex_const_handle>& inserted)
     {
         size_t n = number_of_vertices();
 
@@ -472,7 +471,9 @@ public:
         }
 
         // simplify : remove foreign points with foreign adjacent points only
-        for (Vertex_handle v : vertices) simplify(v);
+        for (Vertex_handle v : vertices)
+            if (!simplify(v))
+                inserted.push_back(v);
 
         return number_of_vertices() - n;
     }
