@@ -441,9 +441,7 @@ public:
         }
     }
 
-    /// @todo : expose spatial_sort in traits 3,d
-    /// @todo : expose insert(point)->vertex in traits 3,d
-    /// @todo : return container or output iterator of new (foreign?) vertices
+    /// @todo : only report new foreign vertices ? for now it also reports local vertices, and vertices that were already inserted.
     template <class PointIdContainer>
     int insert(const PointIdContainer& received, std::vector<Vertex_handle>& inserted)
     {
@@ -541,16 +539,6 @@ public:
         if(t.vertex_is_infinite(v)) return infinite_vertex();
         return locate_vertex(t.point(v));
     }
-
-    /*
-    Vertex_const_handle relocate_vertex(const Tile& t, Vertex_const_handle tv) const
-    {
-        for(auto v = vertices_begin(); v != vertices_end(); ++v )
-            if(are_vertices_equal(v, t, tv))
-                return v;
-        return vertices_end();
-    }
-    */
 
     Facet_const_handle relocate_facet(const Tile& t, Facet_const_handle f) const
     {
