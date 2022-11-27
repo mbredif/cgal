@@ -32,15 +32,15 @@ public:
     using reference = value_type&;
 
 private:
+    const TileContainer *tiles_;
     Tile_const_iterator tile_;
-    Tile_const_iterator end_;
     Tile_cell_const_iterator cell_;
 
 public:
-    Cell_const_iterator(Tile_const_iterator tile, Tile_const_iterator end)
-        : tile_(tile), end_(end), cell_()
+    Cell_const_iterator(const TileContainer *tiles, Tile_const_iterator tile)
+        : tiles_(tiles), tile_(tile), cell_()
     {
-        if(tile_ != end_)
+        if(tile_ != tiles_->cend())
         {
             cell_ = tile_->cells_begin();
             advance_to_main();
@@ -48,15 +48,15 @@ public:
         assert(is_valid());
     }
 
-    Cell_const_iterator(Tile_const_iterator tile, Tile_const_iterator end, Tile_cell_const_iterator cell)
-        : tile_(tile), end_(end), cell_(cell)
+    Cell_const_iterator(const TileContainer *tiles, Tile_const_iterator tile, Tile_cell_const_iterator cell)
+        : tiles_(tiles), tile_(tile), cell_(cell)
     {
         // do not enforce main here !
         assert(is_valid());
     }
 
     Cell_const_iterator(const Cell_const_iterator& c)
-        : tile_(c.tile_), end_(c.end_), cell_(c.cell_)
+        : tiles_(c.tiles_), tile_(c.tile_), cell_(c.cell_)
     {
         // do not enforce main here !
         assert(is_valid());
@@ -64,11 +64,11 @@ public:
 
     Cell_const_iterator& advance_to_main()
     {
-        while(tile_ != end_)
+        while(tile_ != tiles_->cend())
         {
             if(cell_ == tile_->cells_end())
             {
-                if (++tile_ != end_) cell_ = tile_->cells_begin();
+                if (++tile_ != tiles_->cend()) cell_ = tile_->cells_begin();
             }
             else if(tile_->cell_is_main(cell_))
             {
@@ -84,14 +84,15 @@ public:
 
     bool operator<(const Cell_const_iterator& c) const
     {
-        if (c.tile_ == c.end_) return tile_ != end_;
-        if (tile_ == end_) return false;
+        assert(tiles_ == c.tiles_);
+        if (c.tile_ == tiles_->cend()) return tile_ != tiles_->cend();
+        if (tile_ == tiles_->cend()) return false;
         return  tile_->id() < c.tile_->id() || (tile_->id() == c.tile_->id() && cell_ < c.cell_);
     }
 
     Cell_const_iterator& operator++()
     {
-        assert(tile_ != end_);
+        assert(tile_ != tiles_->cend());
         ++cell_;
         return advance_to_main();
     }
@@ -105,7 +106,7 @@ public:
 
     Cell_const_iterator& operator+=(int n)
     {
-        assert(tile_ != end_);
+        assert(tile_ != tiles_->cend());
         for(auto cit = tile_->cells_begin(); cit != cell_; ++cit)
             if(tile_->cell_is_main(cit))
                 ++n;
@@ -126,8 +127,8 @@ public:
 
     bool operator==(const Cell_const_iterator& c) const
     {
-        if (end_ != c.end_) return false;
-        if (tile_ == end_ || c.tile_ == end_) return tile_ == c.tile_; // == end_ == c.end_
+        if (tiles_ != c.tiles_) return false;
+        if (tile_ == tiles_->cend() || c.tile_ == tiles_->cend()) return tile_ == c.tile_;
         if (tile_ == c.tile_) return cell_==c.cell_;
         return tile_->are_cells_equal(cell_, *(c.tile_), c.cell_);
     }
@@ -139,7 +140,7 @@ public:
 
     bool is_valid()    const
     {
-        return tile_ == end_ || cell_ != tile_->cells_end();
+        return tile_ == tiles_->cend() || cell_ != tile_->cells_end();
     }
 };
 

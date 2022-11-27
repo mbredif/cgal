@@ -67,19 +67,19 @@ public:
     /// @{
 
     /// @returns A const iterator at the start of the range of finite vertices.
-    Vertex_const_iterator vertices_begin() const { return Vertex_const_iterator(tiles.cbegin(), tiles.cend()); }
+    Vertex_const_iterator vertices_begin() const { return Vertex_const_iterator(&tiles, tiles.cbegin()); }
     /// @returns A const iterator past the end of the range of finite vertices.
-    Vertex_const_iterator vertices_end  () const { return Vertex_const_iterator(tiles.cend(), tiles.cend()); }
+    Vertex_const_iterator vertices_end  () const { return Vertex_const_iterator(&tiles, tiles.cend()); }
 
     /// @returns A const iterator at the start of the range of finite cells.
-    Cell_const_iterator cells_begin() const { return Cell_const_iterator(tiles.cbegin(), tiles.cend()); }
+    Cell_const_iterator cells_begin() const { return Cell_const_iterator(&tiles, tiles.cbegin()); }
     /// @returns A const iterator past the end of the range of finite cells.
-    Cell_const_iterator cells_end  () const { return Cell_const_iterator(tiles.cend(), tiles.cend()); }
+    Cell_const_iterator cells_end  () const { return Cell_const_iterator(&tiles, tiles.cend()); }
 
     /// @returns A const iterator at the start of the range of finite facets.
-    Facet_const_iterator facets_begin() const { return Facet_const_iterator(tiles.cbegin(), tiles.cend()); }
+    Facet_const_iterator facets_begin() const { return Facet_const_iterator(&tiles, tiles.cbegin()); }
     /// @returns A const iterator past the end of the range of finite facets.
-    Facet_const_iterator facets_end  () const { return Facet_const_iterator(tiles.cend(), tiles.cend()); }
+    Facet_const_iterator facets_end  () const { return Facet_const_iterator(&tiles, tiles.cend()); }
 
     /// @}
 
@@ -259,7 +259,7 @@ public:
         Tile_const_iterator tile = t.find(id);
         Tile_vertex_const_iterator vertex = tile->relocate_vertex(*(v.tile()), *v);
         if (vertex==tile->vertices_end()) return vertices_end();
-        return Vertex_const_iterator(tile, tiles.cend(), vertex);
+        return Vertex_const_iterator(&tiles, tile, vertex);
     }
 
     /// Get a facet iterator equivalent to f in tile id. They represent the same facet of the global triangulation.
@@ -272,7 +272,7 @@ public:
         Tile_const_iterator tile = t.find(id);
         Tile_facet_const_iterator facet = tile->relocate_facet(*(f.tile()), *f);
         if (facet==tile->facets_end()) return facets_end();
-        return Facet_const_iterator(tile, tiles.cend(), facet);
+        return Facet_const_iterator(&tiles, tile, facet);
     }
 
     /// get a cell iterator equivalent to c in tile id. They represent the same cell of the global triangulation.
@@ -285,7 +285,7 @@ public:
         Tile_const_iterator tile = t.find(id);
         Tile_cell_const_iterator cell = tile->relocate_cell(*(c.tile()), *c);
         if (cell==tile->cells_end()) return cells_end();
-        return Cell_const_iterator(tile, tiles.cend(), cell);
+        return Cell_const_iterator(&tiles, tile, cell);
     }
 
     /// get the main representative of a vertex iterator
@@ -307,7 +307,7 @@ public:
     {
         assert(!tiles.empty());
         Tile_const_iterator tile = tiles.cbegin();
-        return Vertex_const_iterator(tile, tiles.cend(), tile->infinite_vertex());
+        return Vertex_const_iterator(&tiles, tile, tile->infinite_vertex());
     }
 
     /// Access the ith vertex of cell c.
@@ -335,7 +335,7 @@ public:
         assert(is_valid(f));
         Tile_const_iterator tile = f.tile();
         assert(tile->facet_is_valid(*f));
-        return Facet_const_iterator(tile, tiles.cend(), tile->mirror_facet(*f));
+        return Facet_const_iterator(&tiles, tile, tile->mirror_facet(*f));
     }
 
     /// Access the mirror index of facet f, such that neighbor(cell(mirror_facet(f)), mirror_index)==cell(f)
@@ -355,7 +355,7 @@ public:
         Tile_const_iterator tile = f.tile();
         Tile_cell_const_iterator c = tile->cell(*f);
         if(tile->cell_is_foreign(c)) return local_cell(main(f)); // any non foreign representative could do
-        return Cell_const_iterator(tile, tiles.cend(), c);
+        return Cell_const_iterator(&tiles, tile, c);
     }
 
     /// @returns one of the full cells that is incident to the input vertex v. The operation is local
@@ -365,13 +365,13 @@ public:
         Tile_vertex_const_iterator tv = *v;
         Tile_cell_const_iterator tc = tile->cell(tv);
         if(!tile->cell_is_foreign(tc))
-            return Cell_const_iterator(tile, tiles.cend(), tc);
+            return Cell_const_iterator(&tiles, tile, tc);
 
         std::vector<Tile_cell_const_iterator> cells;
         tile->incident_cells(cells, tv);
         for(Tile_cell_const_iterator c: cells)
             if(!tile->cell_is_foreign(c))
-                return Cell_const_iterator(tile, tiles.cend(), c);
+                return Cell_const_iterator(&tiles, tile, c);
         assert(false); // all incident cells are foreign, v should have been simplified !
         return cells_end();
     }
@@ -412,7 +412,7 @@ public:
         Tile_const_iterator tile = f.tile();
         Tile_cell_const_iterator c = tile->cell(*f);
         if(tile->cell_is_foreign(c)) return local_covertex(main(f)); // any non foreign representative could do
-        return Vertex_const_iterator(tile, tiles.cend(), tile->covertex(*f));
+        return Vertex_const_iterator(&tiles, tile, tile->covertex(*f));
     }
 
     /// @returns the mirror_vertex of a facet f, as the covertex of its mirror facet.
@@ -467,7 +467,7 @@ public:
     {
         assert(is_valid(c));
         Tile_const_iterator tile = c.tile();
-        return Vertex_const_iterator(tile, tiles.cend(), tile->vertex(*c, i));
+        return Vertex_const_iterator(&tiles, tile, tile->vertex(*c, i));
     }
 
     /// gets the index of the covertex of f in its local cell
@@ -490,7 +490,7 @@ public:
     {
         assert(is_valid(c));
         Tile_const_iterator tile = c.tile();
-        return Facet_const_iterator(tile, tiles.cend(), tile->facet(*c, i));
+        return Facet_const_iterator(&tiles, tile, tile->facet(*c, i));
     }
 
     /// gets the index of the mirror vertex of f locally
@@ -513,7 +513,7 @@ public:
         Tile_const_iterator tile = f.tile();
         Tile_cell_const_iterator c = tile->cell(*f);
         assert(!tile->cell_is_foreign(c));
-        return Cell_const_iterator(tile, tiles.cend(), c);
+        return Cell_const_iterator(&tiles, tile, c);
     }
 
     /// @returns the covertex of the input facet f
@@ -524,7 +524,7 @@ public:
         Tile_const_iterator tile = f.tile();
         Tile_cell_const_iterator c = tile->cell(*f);
         assert(!tile->cell_is_foreign(c));
-        return Vertex_const_iterator(tile, tiles.cend(), tile->covertex(*f));
+        return Vertex_const_iterator(&tiles, tile, tile->covertex(*f));
     }
     /// @}
 

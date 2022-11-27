@@ -32,15 +32,15 @@ public:
     using reference = value_type&;
 
 private:
+    const TileContainer *tiles_;
     Tile_const_iterator tile_;
-    Tile_const_iterator end_;
     Tile_vertex_const_iterator vertex_;
 
 public:
-    Vertex_const_iterator(Tile_const_iterator tile, Tile_const_iterator end)
-        : tile_(tile), end_(end), vertex_()
+    Vertex_const_iterator(const TileContainer *tiles, Tile_const_iterator tile)
+        : tiles_(tiles), tile_(tile), vertex_()
     {
-        if(tile_ != end_)
+        if(tile_ != tiles_->cend())
         {
             vertex_ = tile_->vertices_begin();
             advance_to_main();
@@ -48,15 +48,15 @@ public:
         assert(is_valid());
     }
 
-    Vertex_const_iterator(Tile_const_iterator tile, Tile_const_iterator end, Tile_vertex_const_iterator vertex)
-        : tile_(tile), end_(end), vertex_(vertex)
+    Vertex_const_iterator(const TileContainer *tiles, Tile_const_iterator tile, Tile_vertex_const_iterator vertex)
+        : tiles_(tiles), tile_(tile), vertex_(vertex)
     {
         // do not enforce main here !
         assert(is_valid());
     }
 
     Vertex_const_iterator(const Vertex_const_iterator& v)
-        : tile_(v.tile_), end_(v.end_), vertex_(v.vertex_)
+        : tiles_(v.tiles_), tile_(v.tile_), vertex_(v.vertex_)
     {
         // do not enforce main here !
         assert(is_valid());
@@ -64,11 +64,11 @@ public:
 
     Vertex_const_iterator& advance_to_main()
     {
-        while(tile_ != end_)
+        while(tile_ != tiles_->cend())
         {
             if(vertex_ == tile_->vertices_end())
             {
-                if (++tile_ != end_) {
+                if (++tile_ != tiles_->cend()) {
                     //if(!ddt_.is_loaded(*id_)) ddt_.load(*id_);
                     //tile_ = ((const DDT&)(ddt_)).find(*id_); /// @todo constness
                     vertex_ = tile_->vertices_begin();
@@ -120,8 +120,8 @@ public:
 
     bool operator==(const Vertex_const_iterator& v) const
     {
-        if (end_ != v.end_) return false;
-        if (tile_ == end_ || v.tile_ == end_) return tile_ == v.tile_; // == end_ == v.end_
+        if (tiles_ != v.tiles_) return false;
+        if (tile_ == tiles_->cend() || v.tile_ == tiles_->cend()) return tile_ == v.tile_;
         if (tile_ == v.tile_) return vertex_==v.vertex_;
         return tile_->are_vertices_equal(vertex_, *(v.tile_), v.vertex_);
     }
@@ -133,7 +133,7 @@ public:
 
     bool is_valid()    const
     {
-        return tile_ == end_ || vertex_ != tile_->vertices_end();
+        return tile_ == tiles_->cend() || vertex_ != tile_->vertices_end();
     }
 };
 

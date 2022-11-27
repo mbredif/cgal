@@ -32,15 +32,15 @@ public:
     using reference = value_type&;
 
 private:
+    const TileContainer *tiles_;
     Tile_const_iterator tile_;
-    Tile_const_iterator end_;
     Tile_facet_const_iterator facet_;
 
 public:
-    Facet_const_iterator(Tile_const_iterator tile, Tile_const_iterator end)
-        : tile_(tile), end_(end), facet_()
+    Facet_const_iterator(const TileContainer *tiles, Tile_const_iterator tile)
+        : tiles_(tiles), tile_(tile), facet_()
     {
-        if(tile_ != end_)
+        if(tile_ != tiles_->cend())
         {
             facet_ = tile_->facets_begin();
             advance_to_main();
@@ -48,26 +48,26 @@ public:
         assert(is_valid());
     }
 
-    Facet_const_iterator(Tile_const_iterator tile, Tile_const_iterator end, Tile_facet_const_iterator facet)
-        : tile_(tile), end_(end), facet_(facet)
+    Facet_const_iterator(const TileContainer *tiles, Tile_const_iterator tile, Tile_facet_const_iterator facet)
+        : tiles_(tiles), tile_(tile), facet_(facet)
     {
         // do not enforce main here !
         assert(is_valid());
     }
 
     Facet_const_iterator(const Facet_const_iterator& c)
-        : tile_(c.tile_), end_(c.end_), facet_(c.facet_)
+        : tiles_(c.tiles_), tile_(c.tile_), facet_(c.facet_)
     {
         // do not enforce main here !
         assert(is_valid());
     }
     Facet_const_iterator& advance_to_main()
     {
-        while(tile_ != end_)
+        while(tile_ != tiles_->cend())
         {
             if(facet_ == tile_->facets_end())
             {
-                if (++tile_ != end_) facet_ = tile_->facets_begin();
+                if (++tile_ != tiles_->cend()) facet_ = tile_->facets_begin();
             }
             else if(tile_->facet_is_main(facet_))
             {
@@ -83,7 +83,7 @@ public:
 
     Facet_const_iterator& operator++()
     {
-        assert(tile_ != end_);
+        assert(tile_ != tiles_->cend());
         ++facet_;
         return advance_to_main();
     }
@@ -97,8 +97,8 @@ public:
 
     bool operator==(const Facet_const_iterator& f) const
     {
-        if (end_ != f.end_) return false;
-        if (tile_ == end_ || f.tile_ == end_) return tile_ == f.tile_; // == end_ == f.end_
+        if (tiles_ != f.tiles_) return false;
+        if (tile_ == tiles_->cend() || f.tile_ == tiles_->cend()) return tile_ == f.tile_;
         if (tile_ == f.tile_) return facet_==f.facet_;
         return tile_->are_facets_equal(facet_, *(f.tile_), f.facet_);
     }
@@ -110,7 +110,7 @@ public:
 
     bool is_valid()    const
     {
-        return tile_ == end_ || facet_ != tile_->facets_end();
+        return tile_ == tiles_->cend() || facet_ != tile_->facets_end();
     }
 };
 
