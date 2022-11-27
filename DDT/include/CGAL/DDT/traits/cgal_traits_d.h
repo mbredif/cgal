@@ -14,7 +14,7 @@
 
 
 #include <CGAL/DDT/Bbox.h>
-#include <CGAL/DDT/iterator/Facet_const_iterator_d.h>
+#include <CGAL/DDT/traits/Facet_const_iterator_d.h>
 #include <CGAL/DDT/traits/Data.h>
 
 #include <CGAL/Epick_d.h>

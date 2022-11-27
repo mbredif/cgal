@@ -18,7 +18,7 @@
 #include <CGAL/point_generators_3.h>
 
 #include <CGAL/DDT/Bbox.h>
-#include <CGAL/DDT/iterator/Facet_const_iterator_3.h>
+#include <CGAL/DDT/traits/Facet_const_iterator_3.h>
 #include <CGAL/DDT/traits/ddt_vertex_base_with_info_3.h>
 #include <CGAL/DDT/traits/Data.h>
 
