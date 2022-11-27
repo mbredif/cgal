@@ -358,6 +358,41 @@ public:
         return Cell_const_iterator(tile, tiles.cend(), c);
     }
 
+    /// @returns one of the full cells that is incident to the input vertex v. The operation is local
+    Cell_const_iterator cell(const Vertex_const_iterator& v) const
+    {
+        Tile_const_iterator tile = v.tile();
+        Tile_vertex_const_iterator tv = v.vertex();
+        Tile_cell_const_iterator tc = tile->cell(tv);
+        if(!tile->cell_is_foreign(tc))
+            return Cell_const_iterator(tile, tiles.cend(), tc);
+
+        std::vector<Tile_cell_const_iterator> cells;
+        tile->incident_cells(cells, tv);
+        for(Tile_cell_const_iterator c: cells)
+            if(!tile->cell_is_foreign(c))
+                return Cell_const_iterator(tile, tiles.cend(), c);
+        assert(false); // all incident cells are foreign, v should have been simplified !
+        return cells_end();
+    }
+
+    /// @returns whether vertex v is incident to cell c. The operation is local in the tile of c
+    bool has_vertex(const Cell_const_iterator& c, const Vertex_const_iterator& v) const
+    {
+        Tile_const_iterator ctile = c.tile();
+        Tile_const_iterator vtile = v.tile();
+        Tile_cell_const_iterator tc = c.cell();
+        Tile_vertex_const_iterator tv = v.vertex();
+        if (ctile == vtile)
+            for(int d = 0; d <= ctile->current_dimension(); ++d)
+                if(tc->vertex(d) == tv)
+                    return true;
+        for(int d = 0; d <= ctile->current_dimension(); ++d)
+            if(ctile->are_vertices_equal(ctile->vertex(tc, d), *vtile, tv))
+                return true;
+        return false;
+    }
+
     /// @returns the index of the covertex of a facet f
     /// The operation is local iff the local cell of f is main
     inline int index_of_covertex(const Facet_const_iterator& f) const

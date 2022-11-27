@@ -134,6 +134,7 @@ public:
 
     inline void spatial_sort(std::vector<std::size_t>& indices, const std::vector<Point>& points) const { traits.spatial_sort(dt_, indices, points); }
     inline void adjacent_vertices(std::vector<Vertex_handle>& adj, Vertex_handle v) const { traits.adjacent_vertices(dt_, adj, v); }
+    inline void incident_cells(std::vector<Cell_const_handle>& cells, Vertex_const_handle v) const { traits.incident_cells(dt_, cells, v); }
 
     inline Vertex_handle infinite_vertex() const { return traits.infinite_vertex(dt_); }
     inline const Point& point(Vertex_const_handle v) const { return traits.point(dt_, v); }
@@ -152,6 +153,7 @@ public:
     inline Vertex_const_handle covertex(Facet_const_handle f) const { return traits.covertex(dt_, f); }
     inline Vertex_const_handle mirror_vertex(Facet_const_handle f) const { return traits.mirror_vertex(dt_, f); }
     inline Cell_const_handle cell(Facet_const_handle f) const { return traits.cell(dt_, f); }
+    inline Cell_const_handle cell(Vertex_const_handle v) const { return traits.cell(dt_, v); }
     inline Facet_const_handle mirror_facet(Facet_const_handle f) const { return traits.mirror_facet(dt_, f); }
     inline int mirror_index(Facet_const_handle f) const { return traits.mirror_index(dt_, f); }
 

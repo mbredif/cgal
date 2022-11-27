@@ -155,6 +155,11 @@ struct Cgal_traits_3
                      Search_traits(make_property_map(points), dt.geom_traits()));
     }
 
+    inline void incident_cells(const Delaunay_triangulation& dt, std::vector<Cell_handle>& cells, Vertex_handle v) const
+    {
+        dt.incident_cells(v, std::back_inserter(cells));
+    }
+
     inline void adjacent_vertices(const Delaunay_triangulation& dt, std::vector<Vertex_handle>& adj, Vertex_handle v) const
     {
         dt.adjacent_vertices(v, std::back_inserter(adj));
@@ -282,6 +287,11 @@ struct Cgal_traits_3
     inline Cell_const_handle cell(const Delaunay_triangulation& dt, Facet_const_handle f) const
     {
         return f->first;
+    }
+
+    inline Cell_const_handle cell(const Delaunay_triangulation& dt, Vertex_const_handle v) const
+    {
+        return v->cell();
     }
 
     Facet_const_handle mirror_facet(const Delaunay_triangulation& dt, Facet_const_handle f) const

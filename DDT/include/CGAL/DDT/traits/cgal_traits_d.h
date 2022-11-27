@@ -176,14 +176,19 @@ struct Cgal_traits_d
                      Search_traits(make_property_map(points), dt.geom_traits()));
     }
 
-    inline void adjacent_vertices(const Delaunay_triangulation& dt, std::vector<Vertex_handle>& adj, Vertex_const_handle v) const
+    inline void incident_cells(const Delaunay_triangulation& dt, std::vector<Cell_const_handle>& cells, Vertex_const_handle v) const
     {
-        std::vector<Cell_handle> cells;
         cells.reserve(64);
         dt.incident_full_cells(v, std::back_inserter(cells));
+    }
+
+    inline void adjacent_vertices(const Delaunay_triangulation& dt, std::vector<Vertex_handle>& adj, Vertex_const_handle v) const
+    {
+        std::vector<Cell_const_handle> cells;
+        incident_cells(dt, cells, v);
 
         std::set<Vertex_handle> vertices;
-        for(Cell_handle c : cells)
+        for(Cell_const_handle c : cells)
         {
             for( int i = 0; i <= dt.current_dimension(); ++i )
                 vertices.insert(c->vertex(i));
@@ -303,6 +308,11 @@ struct Cgal_traits_d
     inline Cell_const_handle cell(const Delaunay_triangulation& dt, Facet_const_handle f) const
     {
         return f->first;
+    }
+
+    inline Cell_const_handle cell(const Delaunay_triangulation& dt, Vertex_const_handle v) const
+    {
+        return v->full_cell();
     }
 
     inline Vertex_const_handle covertex(const Delaunay_triangulation& dt, Facet_const_handle f) const

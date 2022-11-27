@@ -67,6 +67,8 @@ int main(int, char **)
         assert(!tri.is_foreign(vertex));
         assert(!tri.is_infinite(vertex));
         assert(tri.is_local(vertex));
+        assert(tri.cell(vertex).is_valid());
+        assert(tri.has_vertex(tri.cell(vertex), vertex));
     }
 
     for(auto facet = tri.facets_begin(); facet != tri.facets_end(); ++facet)
@@ -96,7 +98,7 @@ int main(int, char **)
         assert(tri.is_valid(cell));
         assert(tri.is_main(cell));
         assert(!tri.is_foreign(cell));
-        for(int d = 0; d < 3; ++d)
+        for(int d = 0; d <= Traits::D; ++d)
         {
             auto vd = tri.vertex(cell, d);
             auto fd = tri.facet(cell, d);
@@ -113,6 +115,7 @@ int main(int, char **)
             assert(tri.mirror_vertex(tri.mirror_facet(fd)) == vd);
             assert(tri.covertex(tri.mirror_facet(fd)) == tri.vertex(cd, tri.mirror_index(fd)));
             assert(tri.covertex(fd) == tri.vertex(cell, tri.mirror_index(tri.mirror_facet(fd))));
+            assert(tri.has_vertex(tri.cell(vd), vd));
         }
         std::set<typename Distributed_Delaunay_triangulation::Cell_const_iterator> ring;
         tri.get_ring(cell, 1, ring);
