@@ -14,7 +14,6 @@
 
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
 #include <CGAL/Delaunay_triangulation_2.h>
-// #include <CGAL/Triangulation_vertex_base_with_info_2.h>
 #include <CGAL/point_generators_2.h>
 
 #include <CGAL/DDT/Bbox.h>
@@ -170,11 +169,6 @@ struct Cgal_traits_2
        Vertex_handle v = dt.insert(p, hint == Vertex_handle() ? Cell_handle() : hint->face());
        v->info().id = id;
        return v;
-    }
-
-    inline Vertex_handle insert(Delaunay_triangulation& dt, const Point& p, Vertex_handle v = Vertex_handle()) const
-    {
-       return dt.insert(p, v->face());
     }
 
     inline void remove(Delaunay_triangulation& dt, Vertex_handle v) const

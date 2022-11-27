@@ -102,7 +102,6 @@ int main(int, char **)
             auto fd = tri.facet(cell, d);
             auto cd = tri.neighbor(cell, d);
             assert(tri.is_infinite(vd) ? vd == tri.infinite_vertex() : vd == tri.main(vd));
-            assert(fd == tri.main(fd));
             assert(cd == tri.main(cd));
             assert(tri.cell(tri.mirror_facet(tri.mirror_facet(fd))) == cell);
             assert(cell != cd);

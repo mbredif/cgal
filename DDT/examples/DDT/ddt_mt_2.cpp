@@ -1,7 +1,7 @@
 #define CGAL_DEBUG_DDT
 
 typedef int  Id;
-typedef unsigned char Info;
+typedef unsigned char Info; // unused user data
 
 #include <CGAL/DDT/traits/cgal_traits_2.h>
 //#include <CGAL/DDT/traits/cgal_traits_3.h>

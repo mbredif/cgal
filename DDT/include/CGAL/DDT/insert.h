@@ -26,13 +26,13 @@ template<typename Tile, typename Scheduler>
 size_t splay_tile(Tile& tile, Scheduler& sch)
 {
     typedef typename Scheduler::Point_id_container Point_id_container;
-    typedef typename Tile::Vertex_const_handle Vertex_const_handle;
+    typedef typename Tile::Vertex_handle Vertex_handle;
     typedef typename Tile::Vertex_const_handle_and_id Vertex_const_handle_and_id;
     Point_id_container received;
     // receive all (local and foreign, broadcasted or one to one) the incoming points from the scheduler
     sch.receive(tile.id(), received);
     // insert them into the current tile triangulation.
-    std::vector<Vertex_const_handle> inserted;
+    std::vector<Vertex_handle> inserted;
     if(!tile.insert(received, inserted)) return 0;
     // get the relevant neighbor points
     std::vector<Vertex_const_handle_and_id> neighbors;
