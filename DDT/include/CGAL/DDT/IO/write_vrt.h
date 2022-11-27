@@ -322,7 +322,7 @@ void write_vrt_vert_range(DDT& ddt, Iterator begin, Iterator end, const std::str
     std::ofstream csv;
     write_vrt_header_vert(csv, filename);
     typedef typename Iterator::value_type Vertex_const_iterator;
-    typedef typename Vertex_const_iterator::Traits Traits;
+    typedef typename Iterator::Traits Traits;
     int D = Traits::D;
     for(auto vit = begin; vit != end; ++vit)
     {
@@ -340,7 +340,7 @@ void write_vrt_facet_range(DDT& ddt, Iterator begin, Iterator end, const std::st
     std::ofstream csv;
     write_vrt_header_facet(csv, filename);
     typedef typename Iterator::value_type Facet_const_iterator;
-    typedef typename Facet_const_iterator::Traits Traits;
+    typedef typename Iterator::Traits Traits;
     int D = Traits::D;
     for(auto fit = begin; fit != end; ++fit)
     {
@@ -369,8 +369,8 @@ void write_vrt_cell_range(DDT& ddt, Iterator begin, Iterator end, const std::str
     std::ofstream csv;
     write_vrt_header_cell(csv, filename);
     typedef typename Iterator::value_type Cell_const_iterator;
-    typedef typename Cell_const_iterator::Traits Traits;
-    std::map<Cell_const_iterator, int> cmap;
+    typedef typename Iterator::Traits Traits;
+    std::map<Iterator, int> cmap;
     int nextid = 0;
     int D = Traits::D;
     for(auto iit = begin; iit != end; ++iit)
@@ -390,9 +390,9 @@ void write_vrt_cell_range(DDT& ddt, Iterator begin, Iterator end, const std::str
             for(int d=0; d<D; ++d) csv << p[d] << " ";
         }
         csv << "))\"," << int(ddt.tile_id(iit)) << "," << int(local) << "," << int(ddt.main_id(iit));
-        auto n0 = iit;//ddt.main(ddt.neighbor(iit, 0));
-        auto n1 = iit;//ddt.main(ddt.neighbor(iit, 1));
-        auto n2 = iit;//ddt.main(ddt.neighbor(iit, 2));
+        auto n0 = ddt.main(ddt.neighbor(iit, 0));
+        auto n1 = ddt.main(ddt.neighbor(iit, 1));
+        auto n2 = ddt.main(ddt.neighbor(iit, 2));
         if(!cmap.count(iit)) cmap[iit] = nextid++;
         if(!cmap.count(n0)) cmap[n0] = nextid++;
         if(!cmap.count(n1)) cmap[n1] = nextid++;

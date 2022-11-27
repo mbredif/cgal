@@ -21,15 +21,15 @@ template<typename TileContainer>
 class Vertex_const_iterator
 {
 public:
-    using iterator_category = std::forward_iterator_tag;
-    using value_type = Vertex_const_iterator<TileContainer>; /// @todo: unused, no operator*(), do we need a cell handle?
-    using difference_type = std::ptrdiff_t;
-    using pointer = value_type*;
-    using reference = value_type&;
-
     typedef typename TileContainer::Traits                     Traits;
     typedef typename TileContainer::Tile_vertex_const_iterator Tile_vertex_const_iterator;
     typedef typename TileContainer::Tile_const_iterator        Tile_const_iterator;
+
+    using iterator_category = std::forward_iterator_tag;
+    using value_type = Tile_vertex_const_iterator;
+    using difference_type = std::ptrdiff_t;
+    using pointer = value_type*;
+    using reference = value_type&;
 
 private:
     Tile_const_iterator tile_;
@@ -129,7 +129,7 @@ public:
     bool operator!=(const Vertex_const_iterator& rhs) const { return !(*this == rhs); }
 
     const Tile_const_iterator&        tile  () const { return tile_;   }
-    const Tile_vertex_const_iterator& vertex() const { return vertex_; }
+    const value_type&  operator*() const { return vertex_; }
 
     bool is_valid()    const
     {
