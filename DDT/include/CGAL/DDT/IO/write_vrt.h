@@ -55,7 +55,7 @@ template<typename Tile>
 void write_csv_facet(const std::string& filename, const Tile& tile)
 {
     std::ofstream csv(filename+".csv");
-    csv << "geom,id" << std::endl;
+    csv << "geom,id,local" << std::endl;
     int D = tile.maximal_dimension();
     for(auto fit = tile.facets_begin(); fit != tile.facets_end(); ++fit)
     {
@@ -74,7 +74,7 @@ void write_csv_facet(const std::string& filename, const Tile& tile)
                 csv << tile.point(v)[d] << " ";
             if (++j < D) csv << ",";
         }
-        csv << ")\"," << "," << int(tile.minimum_id(fit)) << "\n";
+        csv << ")\"," << "," << int(tile.minimum_id(fit)) << "," << local << "\n";
     }
 }
 
@@ -82,7 +82,7 @@ template<typename Tile>
 void write_csv_cell(const std::string& filename, const Tile& tile)
 {
     std::ofstream csv(filename+".csv");
-    csv << "geom,id" << std::endl;
+    csv << "geom,id,local" << std::endl;
     int D = tile.maximal_dimension();
     for(auto cit = tile.cells_begin(); cit != tile.cells_end(); ++cit)
     {
@@ -99,7 +99,7 @@ void write_csv_cell(const std::string& filename, const Tile& tile)
         }
         for(int d=0; d<D; ++d) // repeat first to close the polygon
             csv << tile.point(tile.vertex(cit, 0))[d] << " ";
-        csv << "))\"," << int(tile.minimum_id(cit)) << "\n";
+        csv << "))\"," << int(tile.minimum_id(cit)) << "," << local << "\n";
     }
 }
 
@@ -166,6 +166,7 @@ void write_vrt_header(const std::string& filename, const std::string& type)
     f <<    "<GeometryType>" << type << "</GeometryType>" << std::endl;
     f <<    "<GeometryField encoding=\"WKT\" field=\"geom\"/>" << std::endl;
     f <<    "<Field name=\"id\" type=\"Integer\"/>" << std::endl;
+    f <<    "<Field name=\"local\" type=\"Integer\"/>" << std::endl;
     f <<  "</OGRVRTLayer>" << std::endl;
     f <<"</OGRVRTDataSource>" << std::endl;
 }
@@ -187,6 +188,7 @@ void write_vrt_header(const std::string& dirname, const std::string& type, const
         f <<    "<GeometryType>" << type << "</GeometryType>" << std::endl;
         f <<    "<GeometryField encoding=\"WKT\" field=\"geom\"/>" << std::endl;
         f <<    "<Field name=\"id\" type=\"Integer\"/>" << std::endl;
+        f <<    "<Field name=\"local\" type=\"Integer\"/>" << std::endl;
         f <<  "</OGRVRTLayer>" << std::endl;
     }
     f <<"</OGRVRTUnionLayer>" << std::endl;
