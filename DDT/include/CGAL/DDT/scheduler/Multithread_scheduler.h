@@ -116,10 +116,8 @@ struct Multithread_scheduler
             int count = func(*tile);
             {
                 std::unique_lock<std::mutex> lock(tc_mutex);
-                if(tc.number_of_tiles() >= tc.maximum_number_of_tiles()) {
-                    if(!tc.save(id)) assert(false);
+                if(tc.number_of_tiles() >= tc.maximum_number_of_tiles())
                     tc.unload(id);
-                }
             }
             return count;
         };
@@ -182,10 +180,8 @@ struct Multithread_scheduler
             int count = func(*tile);
             {
                 std::unique_lock<std::mutex> lock(tc_mutex);
-                if(tc.number_of_tiles() >= tc.maximum_number_of_tiles()) {
-                    if(!tc.save(id)) assert(false);
+                if(tc.number_of_tiles() >= tc.maximum_number_of_tiles())
                     tc.unload(id);
-                }
             }
             return count;
 /*
@@ -207,7 +203,6 @@ struct Multithread_scheduler
                                 id0 = id1;
                             }
                         }
-                        if(!tc.save(id0)) assert(false);
                         tc.unload(id0);
                     }
                     tc.load(id);

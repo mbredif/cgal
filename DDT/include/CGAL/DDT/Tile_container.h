@@ -124,7 +124,7 @@ public:
         return D;
     }
 
-    Tile_container(size_t max_number_of_tiles = -1, const Serializer& serializer = Serializer()) :
+    Tile_container(size_t max_number_of_tiles = 0, const Serializer& serializer = Serializer()) :
         tiles(),
         serializer(serializer),
         number_of_finite_vertices_(0),
@@ -134,6 +134,7 @@ public:
         number_of_cells_   (0),
         max_number_of_tiles(max_number_of_tiles)
     {
+        if (max_number_of_tiles == 0) this->max_number_of_tiles = std::numeric_limits<size_t>::max();
     }
 
     inline size_t maximum_number_of_tiles() const { return max_number_of_tiles;   }
@@ -161,10 +162,14 @@ public:
     }
 
     /// @todo attention à la perennité des handles (tile is possibly unloaded), ou alors lock ou shared pointer.
-    /// unload a tile from memory (no automatic saving)
-    void unload(Id id)
+    /// unload a tile from memory, automatically saving it.
+    /// returns true after the loaded tile id is successfully saved and unloaded from memory.
+    bool unload(Id id)
     {
-        tiles.erase(id);
+        Tile_iterator tile = find(id);
+        if (tile == end()) return false;
+        if (!serializer.save(*tile)) return false;
+        return tiles.erase(id);
     }
 
     /// load the tile using the serializer, given its id.
@@ -173,12 +178,6 @@ public:
         if (serializer.has_tile(id))
           return tiles.emplace(id, std::move(serializer.load(id)));
         return tiles.emplace(id, id);
-    }
-
-    /// saves a tile using the serializer (no unloading)
-    bool save(Id id) const
-    {
-        return serializer.save(tiles.at(id));
     }
 
     void get_adjacency_graph(std::unordered_multimap<Id,Id>& edges) const

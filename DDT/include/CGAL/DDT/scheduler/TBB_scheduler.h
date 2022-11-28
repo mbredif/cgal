@@ -122,10 +122,8 @@ struct TBB_scheduler
                 c+=func(*tile);
                 {
                     std::unique_lock<std::mutex> lock(tc_mutex);
-                    if(tc.number_of_tiles() >= tc.maximum_number_of_tiles()) {
-                        if(!tc.save(id)) assert(false);
+                    if(tc.number_of_tiles() >= tc.maximum_number_of_tiles())
                         tc.unload(id);
-                    }
                 }
             }
             return c;

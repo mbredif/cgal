@@ -116,7 +116,6 @@ struct Sequential_scheduler
 #ifdef CGAL_DEBUG_DDT
                     std::cout << "unload " << int(id0) << " ( " << inbox[id0].size() << " inbox points)" << std::endl;
 #endif
-                    if(!tc.save(id0)) assert(false);
                     tc.unload(id0);
                 }
 #ifdef CGAL_DEBUG_DDT
