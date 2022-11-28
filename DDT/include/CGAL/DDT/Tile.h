@@ -129,7 +129,7 @@ public:
     }
 
     inline void clear() { traits.clear(dt_); }
-    inline Vertex_handle insert(const Point& p, Id id, Vertex_handle v = Vertex_handle()) { return traits.insert(dt_, p, id, v); }
+    inline std::pair<Vertex_handle, bool> insert(const Point& p, Id id, Vertex_handle v = Vertex_handle()) { return traits.insert(dt_, p, id, v); }
     inline void remove(Vertex_handle v) { traits.remove(dt_, v); }
 
     inline void spatial_sort(std::vector<std::size_t>& indices, const std::vector<Point>& points) const { traits.spatial_sort(dt_, indices, points); }
@@ -466,11 +466,12 @@ public:
         spatial_sort(indices, points);
 
         // insert the point with infos in the sorted order
-        std::set<Vertex_handle> vertices;
+        std::vector<Vertex_handle> vertices;
         Vertex_handle v;
         for (size_t index : indices) {
-          v = insert(points[index], ids[index], v);
-          vertices.insert(v);
+          std::pair<Vertex_handle,bool> p = insert(points[index], ids[index], v);
+          v = p.first;
+          if (p.second) vertices.push_back(v);
         }
 
         // simplify : remove foreign points with foreign adjacent points only

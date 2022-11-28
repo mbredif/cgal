@@ -143,29 +143,6 @@ struct Cgal_traits_d
         return dt.clear();
     }
 
-    /*
-    template<class It> inline void insert(Delaunay_triangulation& dt, It begin, It end) const
-    {
-        Vertex_handle hint;
-        for(auto it=begin; it!=end; ++it)
-        {
-            if (hint != Vertex_handle())
-            {
-                hint = dt.insert(it->first, hint);
-            }
-            else
-            {
-                hint = dt.insert(it->first);
-            }
-            hint->data() = it->second;
-        }
-    }
-
-    template<class It> inline void remove(Delaunay_triangulation& dt, It begin, It end) const
-    {
-        dt.remove(begin, end);
-    }*/
-
     void spatial_sort(const Delaunay_triangulation& dt, std::vector<std::size_t>& indices, const std::vector<Point>& points) const
     {
         using Geom_traits = K;
@@ -198,12 +175,24 @@ struct Cgal_traits_d
                 adj.push_back(w);
     }
 
-    inline Vertex_handle insert(Delaunay_triangulation& dt, const Point& p, Id id, Vertex_handle hint = Vertex_handle()) const
+    inline std::pair<Vertex_handle, bool> insert(Delaunay_triangulation& dt, const Point& p, Id id, Vertex_handle hint = Vertex_handle()) const
     {
-       Vertex_handle v = (hint == Vertex_handle()) ? dt.insert(p) : dt.insert(p, hint);
-       v->data().id = id;
-       return v;
+        typename Delaunay_triangulation::Locate_type lt;
+        typename Delaunay_triangulation::Face f(dt.maximal_dimension());
+        typename Delaunay_triangulation::Facet ft;
+        if (hint == Vertex_handle()) hint = dt.infinite_vertex();
+        Cell_handle c = dt.locate(p, lt, f, ft, hint);
+        if(lt == Delaunay_triangulation::ON_VERTEX) {
+            Vertex_handle v = c->vertex(f.index(0));
+            v->set_point(p);
+            assert(id == v->data().id);
+            return std::make_pair(v, false);
+        }
+        Vertex_handle v = dt.insert(p, lt, f, ft, c);
+        v->data().id = id;
+        return std::make_pair(v, true);
     }
+
 
     inline void remove(Delaunay_triangulation& dt, Vertex_handle v) const
     {

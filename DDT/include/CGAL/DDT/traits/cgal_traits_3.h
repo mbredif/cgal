@@ -165,11 +165,19 @@ struct Cgal_traits_3
         dt.adjacent_vertices(v, std::back_inserter(adj));
     }
 
-    inline Vertex_handle insert(Delaunay_triangulation& dt, const Point& p, Id id, Vertex_handle hint = Vertex_handle()) const
+    std::pair<Vertex_handle, bool> insert(Delaunay_triangulation& dt, const Point& p, Id id, Vertex_handle hint = Vertex_handle()) const
     {
-       Vertex_handle v = dt.insert(p, hint);
-       v->info().id = id;
-       return v;
+        typename Delaunay_triangulation::Locate_type lt;
+        int li, lj;
+        Cell_handle c = dt.locate(p, lt, li, lj, hint);
+        if(lt == Delaunay_triangulation::VERTEX) {
+            Vertex_handle v = c->vertex(li);
+            assert(id == v->info().id);
+            return std::make_pair(v, false);
+        }
+        Vertex_handle v = dt.insert(p, lt, c, li, lj);
+        v->info().id = id;
+        return std::make_pair(v, true);
     }
 
     inline void remove(Delaunay_triangulation& dt, Vertex_handle v) const
