@@ -411,7 +411,7 @@ public:
                 out.push_back(std::make_pair(vh, pair.first));
     }
 
-    void get_finite_neighbors(const std::vector<Vertex_handle>& vertices, std::vector<Vertex_const_handle_and_id>& out) const
+    void get_finite_neighbors(const std::set<Vertex_handle>& vertices, std::vector<Vertex_const_handle_and_id>& out) const
     {
         std::map<Id, std::set<Vertex_const_handle>> outbox;
         for(auto v : vertices) {
@@ -443,9 +443,8 @@ public:
         }
     }
 
-    /// @todo : only report new foreign vertices ? for now it also reports local vertices, and vertices that were already inserted.
     template <class PointIdContainer>
-    int insert(const PointIdContainer& received, std::vector<Vertex_handle>& inserted)
+    int insert(const PointIdContainer& received, std::set<Vertex_handle>& inserted, bool foreign_only=true)
     {
         // retrieve the input points and ids in separate vectors
         // compute the axis-extreme points on the way
@@ -468,29 +467,31 @@ public:
         // insert the point with infos in the sorted order
         // check immediately for simplification
         Vertex_handle v;
-        std::set<Vertex_handle> vertices;
+        int local_inserted_size = 0;
         for (size_t index : indices) {
           std::pair<Vertex_handle,bool> p = insert(points[index], ids[index], v);
           if (!p.second) {
               v = p.first;
           } else if (!simplify(p.first)) {
               v = p.first;
-              vertices.insert(v);
+              if (!foreign_only || vertex_is_foreign(v))
+                inserted.insert(v);
+              else
+                ++local_inserted_size;
           }
         }
 
         // simplify neighbors: collect vertices adjacent to newly inserted foreign points
         std::set<Vertex_handle> adj;
-        for (Vertex_handle v : vertices)
-            if(vertex_is_foreign(v))
+        for (Vertex_handle v : inserted)
+            if(foreign_only || vertex_is_foreign(v))
                 adjacent_vertices(v, std::inserter(adj, adj.begin()));
 
         for (Vertex_handle v : adj)
             if(!vertex_is_infinite(v) && simplify(v))
-                vertices.erase(v);
+                inserted.erase(v);
 
-        inserted.insert(inserted.end(), vertices.begin(), vertices.end());
-        return inserted.size();
+        return local_inserted_size + inserted.size();
     }
 
     void get_mixed_cells(std::vector<Cell_const_handle_and_id>& out) const
