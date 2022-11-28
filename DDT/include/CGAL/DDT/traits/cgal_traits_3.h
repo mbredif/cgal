@@ -155,14 +155,16 @@ struct Cgal_traits_3
                      Search_traits(make_property_map(points), dt.geom_traits()));
     }
 
-    inline void incident_cells(const Delaunay_triangulation& dt, std::vector<Cell_handle>& cells, Vertex_handle v) const
+    template<typename OutputIterator>
+    inline OutputIterator incident_cells(const Delaunay_triangulation& dt, Vertex_handle v, OutputIterator out) const
     {
-        dt.incident_cells(v, std::back_inserter(cells));
+        return dt.incident_cells(v, out);
     }
 
-    inline void adjacent_vertices(const Delaunay_triangulation& dt, std::vector<Vertex_handle>& adj, Vertex_handle v) const
+    template<typename OutputIterator>
+    inline OutputIterator adjacent_vertices(const Delaunay_triangulation& dt, Vertex_handle v, OutputIterator out) const
     {
-        dt.adjacent_vertices(v, std::back_inserter(adj));
+        return dt.adjacent_vertices(v, out);
     }
 
     std::pair<Vertex_handle, bool> insert(Delaunay_triangulation& dt, const Point& p, Id id, Vertex_handle hint = Vertex_handle()) const

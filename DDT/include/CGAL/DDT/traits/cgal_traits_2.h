@@ -154,24 +154,28 @@ struct Cgal_traits_2
                      Search_traits(make_property_map(points), dt.geom_traits()));
     }
 
-    inline void incident_cells(const Delaunay_triangulation& dt, std::vector<Cell_handle>& cells, Vertex_handle v) const
+    template<typename OutputIterator>
+    OutputIterator incident_cells(const Delaunay_triangulation& dt, Vertex_handle v, OutputIterator out) const
     {
         typename TDS::Face_circulator c = dt.incident_faces(v), done = c;
         if ( ! c.is_empty()) {
           do {
-            cells.push_back(c);
+              *out++ = c;
           } while (++c != done);
         }
+        return out;
     }
 
-    inline void adjacent_vertices(const Delaunay_triangulation& dt, std::vector<Vertex_handle>& adj, Vertex_handle v) const
+    template<typename OutputIterator>
+    OutputIterator adjacent_vertices(const Delaunay_triangulation& dt, Vertex_handle v, OutputIterator out) const
     {
         typename TDS::Vertex_circulator c = dt.incident_vertices(v), done = c;
         if ( ! c.is_empty()) {
           do {
-            adj.push_back(c);
+            *out++ = c;
           } while (++c != done);
         }
+        return out;
     }
 
     std::pair<Vertex_handle, bool> insert(Delaunay_triangulation& dt, const Point& p, Id id, Vertex_handle hint = Vertex_handle()) const

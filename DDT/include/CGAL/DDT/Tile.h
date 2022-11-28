@@ -133,8 +133,10 @@ public:
     inline void remove(Vertex_handle v) { traits.remove(dt_, v); }
 
     inline void spatial_sort(std::vector<std::size_t>& indices, const std::vector<Point>& points) const { traits.spatial_sort(dt_, indices, points); }
-    inline void adjacent_vertices(std::vector<Vertex_handle>& adj, Vertex_handle v) const { traits.adjacent_vertices(dt_, adj, v); }
-    inline void incident_cells(std::vector<Cell_const_handle>& cells, Vertex_const_handle v) const { traits.incident_cells(dt_, cells, v); }
+    template<typename OutputIterator>
+    inline OutputIterator adjacent_vertices(Vertex_const_handle v, OutputIterator out) const { return traits.adjacent_vertices(dt_, v, out); }
+    template<typename OutputIterator>
+    inline OutputIterator incident_cells(Vertex_const_handle v, OutputIterator out) const { return traits.incident_cells(dt_, v, out); }
 
     inline Vertex_handle infinite_vertex() const { return traits.infinite_vertex(dt_); }
     inline const Point& point(Vertex_const_handle v) const { return traits.point(dt_, v); }
@@ -346,7 +348,7 @@ public:
         assert(!vertex_is_infinite(v));
         if (!vertex_is_foreign(v)) return false;
         std::vector<Vertex_handle> adj;
-        adjacent_vertices(adj, v);
+        adjacent_vertices(v, std::back_inserter(adj));
         for (auto a : adj)
             if(!vertex_is_infinite(a) && vertex_is_local(a))
                 return false;
@@ -416,7 +418,7 @@ public:
             if(vertex_is_infinite(v)) continue;
             Id idv = id(v);
             std::vector<Vertex_handle> vadj;
-            adjacent_vertices(vadj, v);
+            adjacent_vertices(v, std::back_inserter(vadj));
             for (auto w : vadj) {
                 if(vertex_is_infinite(w)) continue;
                 Id idw = id(w);
@@ -445,8 +447,6 @@ public:
     template <class PointIdContainer>
     int insert(const PointIdContainer& received, std::vector<Vertex_handle>& inserted)
     {
-        size_t n = number_of_vertices();
-
         // retrieve the input points and ids in separate vectors
         // compute the axis-extreme points on the way
         std::vector<Point> points;
@@ -466,20 +466,31 @@ public:
         spatial_sort(indices, points);
 
         // insert the point with infos in the sorted order
-        std::vector<Vertex_handle> vertices;
+        // check immediately for simplification
         Vertex_handle v;
+        std::set<Vertex_handle> vertices;
         for (size_t index : indices) {
           std::pair<Vertex_handle,bool> p = insert(points[index], ids[index], v);
-          v = p.first;
-          if (p.second) vertices.push_back(v);
+          if (!p.second) {
+              v = p.first;
+          } else if (!simplify(p.first)) {
+              v = p.first;
+              vertices.insert(v);
+          }
         }
 
-        // simplify : remove foreign points with foreign adjacent points only
+        // simplify neighbors: collect vertices adjacent to newly inserted foreign points
+        std::set<Vertex_handle> adj;
         for (Vertex_handle v : vertices)
-            if (!simplify(v))
-                inserted.push_back(v);
+            if(vertex_is_foreign(v))
+                adjacent_vertices(v, std::inserter(adj, adj.begin()));
 
-        return number_of_vertices() - n;
+        for (Vertex_handle v : adj)
+            if(!vertex_is_infinite(v) && simplify(v))
+                vertices.erase(v);
+
+        inserted.insert(inserted.end(), vertices.begin(), vertices.end());
+        return inserted.size();
     }
 
     void get_mixed_cells(std::vector<Cell_const_handle_and_id>& out) const

@@ -153,26 +153,27 @@ struct Cgal_traits_d
                      Search_traits(make_property_map(points), dt.geom_traits()));
     }
 
-    inline void incident_cells(const Delaunay_triangulation& dt, std::vector<Cell_const_handle>& cells, Vertex_const_handle v) const
+    template<typename OutputIterator>
+    OutputIterator incident_cells(const Delaunay_triangulation& dt, Vertex_const_handle v, OutputIterator out) const
     {
-        cells.reserve(64);
-        dt.incident_full_cells(v, std::back_inserter(cells));
+        return dt.incident_full_cells(v, out);
     }
 
-    inline void adjacent_vertices(const Delaunay_triangulation& dt, std::vector<Vertex_handle>& adj, Vertex_const_handle v) const
+    template<typename OutputIterator>
+    OutputIterator adjacent_vertices(const Delaunay_triangulation& dt, Vertex_const_handle v, OutputIterator out) const
     {
-        std::vector<Cell_const_handle> cells;
-        incident_cells(dt, cells, v);
+        std::vector<Cell_handle> cells;
+        incident_cells(dt, v, std::back_inserter(cells));
 
         std::set<Vertex_handle> vertices;
-        for(Cell_const_handle c : cells)
+        for(Cell_handle c : cells)
         {
-            for( int i = 0; i <= dt.current_dimension(); ++i )
-                vertices.insert(c->vertex(i));
+            for( int i = 0; i <= dt.current_dimension(); ++i ) {
+                Vertex_handle w = c->vertex(i);
+                if (w != v && vertices.insert(w).second)
+                    *out++ = w;
+            }
         }
-        for( Vertex_handle w : vertices )
-            if(w != v)
-                adj.push_back(w);
     }
 
     inline std::pair<Vertex_handle, bool> insert(Delaunay_triangulation& dt, const Point& p, Id id, Vertex_handle hint = Vertex_handle()) const

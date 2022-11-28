@@ -368,7 +368,7 @@ public:
             return Cell_const_iterator(&tiles, tile, tc);
 
         std::vector<Tile_cell_const_iterator> cells;
-        tile->incident_cells(cells, tv);
+        tile->incident_cells(tv, std::back_inserter(cells));
         for(Tile_cell_const_iterator c: cells)
             if(!tile->cell_is_foreign(c))
                 return Cell_const_iterator(&tiles, tile, c);
