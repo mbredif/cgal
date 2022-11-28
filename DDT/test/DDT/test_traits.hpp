@@ -11,17 +11,15 @@
 #include <CGAL/DDT/Tile_container.h>
 #include <CGAL/Distributed_Delaunay_triangulation.h>
 
-template <typename T, typename TC>
-int dump_2d_vrt(T & tri, TC& tiles, const std::string& testname)
+template <typename TileContainer, typename Scheduler>
+int dump_2d_vrt(TileContainer& tiles, Scheduler& scheduler, const std::string& vrt)
 {
-    boost::filesystem::create_directories(testname);
-    std::cout << "== write_vrt ==" << std::endl;
-    CGAL::DDT::write_vrt_vert(tri, testname+"_vert.vrt");
-    CGAL::DDT::write_vrt_facet(tri, testname+"_facet.vrt");
-    CGAL::DDT::write_vrt_cell(tri, testname+"_cell.vrt");
-    CGAL::DDT::write_vrt_cells(tiles, testname);
-    CGAL::DDT::write_vrt_verts(tiles, testname);
-    CGAL::DDT::write_vrt_facets(tiles, testname);
+    std::cout << "== write_vrt == " << vrt << "_*.vrt" << std::endl;
+    CGAL::DDT::write_vrt_verts(tiles, scheduler, vrt+"_v");
+    CGAL::DDT::write_vrt_facets(tiles, scheduler, vrt+"_f");
+    CGAL::DDT::write_vrt_cells(tiles, scheduler, vrt+"_c");
+    CGAL::DDT::write_vrt_bboxes(tiles, scheduler, vrt+"_b");
+    CGAL::DDT::write_vrt_tins(tiles, scheduler, vrt+"_t");
     return 0;
 
 }
@@ -83,7 +81,7 @@ int test_traits(const std::string& testname, int ND, int NP, int NT = -1, bool d
     }
     else if (Traits::D == 2)
     {
-        result += dump_2d_vrt(tri1, tiles1, testname + "/tri1");
+        result += dump_2d_vrt(tiles1, scheduler, testname + "/tri1");
         if(!is_euler_valid(tri1))
             return 1;
     }
@@ -103,10 +101,10 @@ int test_traits(const std::string& testname, int ND, int NP, int NT = -1, bool d
         std::cout << "write again..." << std::endl;
         CGAL::DDT::write_cgal(tiles2, testname + "/cgal2");
 
-        result += dump_2d_vrt(tri2, tiles2, testname + "/tri2");
+        result += dump_2d_vrt(tiles2, scheduler, testname + "/tri2");
         if (Traits::D == 2)
         {
-            result += dump_2d_vrt(tri1, tiles1, testname + "/tri1");
+            result += dump_2d_vrt(tiles1, scheduler, testname + "/tri1");
             if(!is_euler_valid(tri2))
                 result += 1;
         }

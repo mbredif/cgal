@@ -30,7 +30,7 @@ int main(int argc, char **argv)
 
   int NP;
   std::vector<int> NT;
-  std::string ser_prefix, out_vrt;
+  std::string ser, vrt;
   double range;
   int max_number_of_tiles;
 
@@ -41,8 +41,8 @@ int main(int argc, char **argv)
   ("points,p", po::value<int>(&NP)->default_value(10000), "number of points")
   ("tiles,t", po::value<std::vector<int>>(&NT), "number of tiles")
   ("range,r", po::value<double>(&range)->default_value(1), "range")
-  ("serialize_prefix,s", po::value<std::string>(&ser_prefix)->default_value("tile_"), "prefix for tile serialization")
-  ("output_vrt,v", po::value<std::string>(&out_vrt)->default_value("out"), "prefix for vrt output")
+  ("serialize_prefix,s", po::value<std::string>(&ser)->default_value("tile_"), "prefix for tile serialization")
+  ("vrt", po::value<std::string>(&vrt)->default_value("out"), "prefix for vrt output")
   ("memory,m", po::value<int>(&max_number_of_tiles)->default_value(1), "max number of tiles in memory")
   ;
 
@@ -75,13 +75,14 @@ int main(int argc, char **argv)
   CGAL::DDT::grid_partitioner<Traits> partitioner(bbox, NT.begin(), NT.end());
 //  CGAL::DDT::random_partitioner<Traits> partitioner(0, NT[0]-1);
 
-  Serializer serializer(ser_prefix);
+  Serializer serializer(ser);
   TileContainer tiles(max_number_of_tiles, serializer);
   Scheduler scheduler;
 
   std::cout << "- Range          : " << range << std::endl;
   std::cout << "- Points         : " << NP << std::endl;
-  std::cout << "- Output prefix  : " << ser_prefix <<  std::endl;
+  std::cout << "- Output prefix  : " << ser <<  std::endl;
+  std::cout << "- VRT Out  : " << (vrt.empty() ? "[no output]" : vrt) << std::endl;
   std::cout << "- Tiles          : " << partitioner.size() << " ( ";
   std::copy(NT.begin(), NT.end(), std::ostream_iterator<int>(std::cout, " "));
   std::cout << ")" << std::endl;
@@ -91,16 +92,11 @@ int main(int argc, char **argv)
   std::cout << n << " points inserted" << std::endl;
 
   Distributed_Delaunay_triangulation tri(tiles);
-  if ( vm.count("output_vrt")  )
+  if ( vm.count("vrt")  )
   {
-      scheduler.for_all(tiles, [&out_vrt](Tile& tile) {
-          CGAL::DDT::write_tile_vrt_cells(tile, out_vrt+"/tile_cell_" + std::to_string(tile.id()) + ".vrt");
-          CGAL::DDT::write_tile_vrt_verts(tile, out_vrt+"/tile_vert_" + std::to_string(tile.id()) + ".vrt");
-          return 1;
-      });
-
-      CGAL::DDT::write_vrt_cell(tri, out_vrt+"_c.vrt");
-      CGAL::DDT::write_vrt_vert(tri, out_vrt+"_v.vrt");
+      CGAL::DDT::write_vrt_verts(tiles, scheduler, vrt+"_v");
+      CGAL::DDT::write_vrt_facets(tiles, scheduler, vrt+"_f");
+      CGAL::DDT::write_vrt_cells(tiles, scheduler, vrt+"_c");
   }
 
   if ( vm.count("check")  )

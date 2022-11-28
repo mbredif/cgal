@@ -33,155 +33,33 @@
 namespace CGAL {
 namespace DDT {
 
-// VRT header writers
-
-inline void add_qgis_style(const std::string& filename,const std::string& stylename)
-{
-    boost::filesystem::path path(filename);
-    boost::filesystem::path path_style_target = path.replace_extension(".qml");
-    boost::filesystem::path path_style_source(std::string(STYLE_SOURCE_DIR) + stylename);
-    boost::filesystem::copy_file(path_style_source, path_style_target, boost::filesystem::copy_option::overwrite_if_exists);
-}
-
-inline void write_vrt_header_vert(std::ofstream& csv, const std::string& filename)
-{
-    boost::filesystem::path path(filename);
-    std::string stem = path.stem().string();
-    std::ofstream f(filename);
-    f <<"<OGRVRTDataSource>" << std::endl;
-    f <<  "<OGRVRTLayer name=\"" << stem <<  "\">" << std::endl;
-    f <<    "<SrcDataSource relativeToVRT=\"1\">" << stem << ".csv</SrcDataSource>" << std::endl;
-    f <<    "<SrcLayer>" << stem <<  "</SrcLayer>" << std::endl;
-    f <<    "<LayerSRS>IGNF:LAMB93</LayerSRS> " << std::endl;
-    f <<    "<GeometryType>wkbPoint</GeometryType> " << std::endl;
-    f <<    "<GeometryField encoding=\"WKT\" field=\"geom\"/> " << std::endl;
-    f <<    "<Field name=\"tid\" type=\"Integer\"/>" << std::endl;
-    f <<    "<Field name=\"id\" type=\"Integer\"/>" << std::endl;
-    f <<  "</OGRVRTLayer>" << std::endl;
-    f <<"</OGRVRTDataSource>" << std::endl;
-
-    //    add_qgis_style(filename, std::string("vert1.qml"));
-    csv.open(path.replace_extension("csv").string());
-    csv << "geom,tid,id" << std::endl;
-}
-
-inline void write_vrt_header_facet(std::ofstream& csv, const std::string& filename)
-{
-    boost::filesystem::path path(filename);
-    std::string stem = path.stem().string();
-    std::ofstream f(filename);
-    f <<"<OGRVRTDataSource>" << std::endl;
-    f <<  "<OGRVRTLayer name=\"" << stem <<  "\">" << std::endl;
-    f <<    "<SrcDataSource relativeToVRT=\"1\">" << stem << ".csv</SrcDataSource>" << std::endl;
-    f <<    "<SrcLayer>" << stem <<  "</SrcLayer>" << std::endl;
-    f <<    "<LayerSRS>IGNF:LAMB93</LayerSRS> " << std::endl;
-    f <<    "<GeometryType>wkbLineString</GeometryType> " << std::endl;
-    f <<    "<GeometryField encoding=\"WKT\" field=\"geom\"/> " << std::endl;
-    f <<    "<Field name=\"tid\" type=\"Integer\"/>" << std::endl;
-    f <<    "<Field name=\"local\" type=\"Integer\"/>" << std::endl;
-    f <<  "</OGRVRTLayer>" << std::endl;
-    f <<"</OGRVRTDataSource>" << std::endl;
-
-    // add_qgis_style(filename,std::string("tri1.qml"));
-    csv.open(path.replace_extension("csv").string());
-    csv << "geom,tid,local" << std::endl;
-}
-
-inline void write_vrt_header_cell(std::ofstream& csv, const std::string& filename)
-{
-    boost::filesystem::path path(filename);
-    std::string stem = path.stem().string();
-    std::ofstream f(filename);
-    f <<"<OGRVRTDataSource>" << std::endl;
-    f <<  "<OGRVRTLayer name=\"" << stem <<  "\">" << std::endl;
-    f <<    "<SrcDataSource relativeToVRT=\"1\">" << stem << ".csv</SrcDataSource>" << std::endl;
-    f <<    "<SrcLayer>" << stem <<  "</SrcLayer>" << std::endl;
-    f <<    "<LayerSRS>IGNF:LAMB93</LayerSRS> " << std::endl;
-    f <<    "<GeometryType>wkbPolygon</GeometryType> " << std::endl;
-    f <<    "<GeometryField encoding=\"WKT\" field=\"geom\"/> " << std::endl;
-    f <<    "<Field name=\"tid\" type=\"Integer\"/>" << std::endl;
-    f <<    "<Field name=\"local\" type=\"Integer\"/>" << std::endl;
-    f <<    "<Field name=\"main\" type=\"Integer\"/>" << std::endl;
-    f <<    "<Field name=\"cid\" type=\"Integer\"/>" << std::endl;
-    f <<    "<Field name=\"cid0\" type=\"Integer\"/>" << std::endl;
-    f <<    "<Field name=\"cid1\" type=\"Integer\"/>" << std::endl;
-    f <<    "<Field name=\"cid2\" type=\"Integer\"/>" << std::endl;
-    f <<  "</OGRVRTLayer>" << std::endl;
-    f <<"</OGRVRTDataSource>" << std::endl;
-
-    //    add_qgis_style(filename,std::string("tri1.qml"));
-    csv.open(path.replace_extension("csv").string());
-    csv << "geom,tid,local,main,cid,cid0,cid1,cid2" << std::endl;
-}
-
-inline void write_vrt_header_tin(std::ofstream& csv, const std::string& filename)
-{
-    boost::filesystem::path path(filename);
-    std::string stem = path.stem().string();
-    std::ofstream f(filename);
-    f <<"<OGRVRTDataSource>" << std::endl;
-    f <<  "<OGRVRTLayer name=\"" << stem <<  "\">" << std::endl;
-    f <<    "<SrcDataSource relativeToVRT=\"1\">" << stem << ".csv</SrcDataSource>" << std::endl;
-    f <<    "<SrcLayer>" << stem <<  "</SrcLayer>" << std::endl;
-    f <<    "<LayerSRS>IGNF:LAMB93</LayerSRS> " << std::endl;
-    f <<    "<GeometryType>wkbTIN</GeometryType> " << std::endl;
-    f <<    "<GeometryField encoding=\"WKT\" field=\"geom\"/> " << std::endl;
-    f <<    "<Field name=\"tid\" type=\"Integer\"/>" << std::endl;
-    f <<    "<Field name=\"id\" type=\"Integer\"/>" << std::endl;
-    f <<  "</OGRVRTLayer>" << std::endl;
-    f <<"</OGRVRTDataSource>" << std::endl;
-
-    // add_qgis_style(filename, std::string("tin1.qml"));
-    csv.open(path.replace_extension("csv").string());
-    csv << "geom,tid,id" << std::endl;
-}
-
-inline void write_vrt_header_bbox(std::ofstream& csv, const std::string& filename)
-{
-    boost::filesystem::path path(filename);
-    std::string stem = path.stem().string();
-    std::ofstream f(filename);
-    f <<"<OGRVRTDataSource>" << std::endl;
-    f <<  "<OGRVRTLayer name=\"" << stem <<  "\">" << std::endl;
-    f <<    "<SrcDataSource relativeToVRT=\"1\">" << stem << ".csv</SrcDataSource>" << std::endl;
-    f <<    "<SrcLayer>" << stem <<  "</SrcLayer>" << std::endl;
-    f <<    "<LayerSRS>IGNF:LAMB93</LayerSRS> " << std::endl;
-    f <<    "<GeometryType>wkbPolygon</GeometryType> " << std::endl;
-    f <<    "<GeometryField encoding=\"WKT\" field=\"geom\"/> " << std::endl;
-    f <<    "<Field name=\"tid\" type=\"Integer\"/>" << std::endl;
-    f <<    "<Field name=\"bboxid\" type=\"Integer\"/>" << std::endl;
-    f <<  "</OGRVRTLayer>" << std::endl;
-    f <<"</OGRVRTDataSource>" << std::endl;
-
-    //    add_qgis_style(filename, std::string("bbox1.qml"));
-    csv.open(path.replace_extension("csv").string());
-    csv << "geom,tid,bboxid" << std::endl;
-}
-// CSV tile writers (Tile)
+// CSV tile writers
 
 template<typename Tile>
-void write_csv_vert(const Tile& tile, std::ostream& csv, bool main_only=false)
+void write_csv_vert(const std::string& filename, const Tile& tile)
 {
+    std::ofstream csv(filename+".csv");
+    csv << "geom,id" << std::endl;
     int D = tile.maximal_dimension();
     for(auto vit = tile.vertices_begin(); vit != tile.vertices_end(); ++vit)
     {
         if(tile.vertex_is_infinite(vit)) continue;
-        if(main_only && !tile.vertex_is_main(vit)) continue;
         csv << "POINT( ";
         for(int d=0; d<D; ++d)
             csv << tile.point(vit)[d] << " ";
-        csv << ")," << int(tile.id()) << "," << int(tile.id(vit)) << "\n";
+        csv << ")," << int(tile.id(vit)) << "\n";
     }
 }
 
 template<typename Tile>
-void write_csv_facet(const Tile& tile, std::ostream& csv, bool main_only=false)
+void write_csv_facet(const std::string& filename, const Tile& tile)
 {
+    std::ofstream csv(filename+".csv");
+    csv << "geom,id" << std::endl;
     int D = tile.maximal_dimension();
     for(auto fit = tile.facets_begin(); fit != tile.facets_end(); ++fit)
     {
         if(tile.facet_is_infinite(fit)) continue;
-        if(main_only && !tile.facet_is_main(fit)) continue;
         auto cit = tile.cell(fit);
         int idx = tile.index_of_covertex(fit);
         csv << "\"LINESTRING(";
@@ -196,18 +74,19 @@ void write_csv_facet(const Tile& tile, std::ostream& csv, bool main_only=false)
                 csv << tile.point(v)[d] << " ";
             if (++j < D) csv << ",";
         }
-        csv << ")\"," << int(tile.id()) << "," << local << "\n";
+        csv << ")\"," << "," << int(tile.minimum_id(fit)) << "\n";
     }
 }
 
 template<typename Tile>
-void write_csv_cell(const Tile& tile, std::ostream& csv, bool main_only=false)
+void write_csv_cell(const std::string& filename, const Tile& tile)
 {
+    std::ofstream csv(filename+".csv");
+    csv << "geom,id" << std::endl;
     int D = tile.maximal_dimension();
     for(auto cit = tile.cells_begin(); cit != tile.cells_end(); ++cit)
     {
         if(tile.cell_is_infinite(cit)) continue;
-        if(main_only && !tile.cell_is_main(cit))continue;
         csv << "\"POLYGON((";
         int local = 0;
         for(int i=0; i<=D; ++i)
@@ -220,71 +99,15 @@ void write_csv_cell(const Tile& tile, std::ostream& csv, bool main_only=false)
         }
         for(int d=0; d<D; ++d) // repeat first to close the polygon
             csv << tile.point(tile.vertex(cit, 0))[d] << " ";
-        csv << "))\"," << int(tile.id()) << "," << int(local) << "," << int(tile.cell_is_main(cit)) << "\n";
+        csv << "))\"," << int(tile.minimum_id(cit)) << "\n";
     }
 }
 
-
-
-
 template<typename Tile>
-void write_tile_vrt_verts(const Tile& tile, const std::string& vrt_name, bool main_only=false)
+void write_csv_bbox(const std::string& filename, const Tile& tile)
 {
-    boost::filesystem::path path(vrt_name);
-
-    std::ofstream csv;
-    write_vrt_header_vert(csv, vrt_name);
-    // add_qgis_style(vrt_name,std::string("tri1.qml"));
-    write_csv_vert(tile, csv, main_only);
-}
-
-
-
-template<typename Tile>
-void write_tile_vrt_cells(const Tile& tile, const std::string& vrt_name, bool main_only=false)
-{
-    boost::filesystem::path path(vrt_name);
-
-    std::ofstream csv;
-    write_vrt_header_cell(csv,vrt_name);
-    // add_qgis_style(vrt_name,std::string("tri1.qml"));
-    write_csv_cell(tile, csv,main_only);
-}
-
-
-
-template<typename Tile>
-void write_csv_tin(const Tile& tile, std::ostream& csv, bool main_only=false)
-{
-    int D = tile.maximal_dimension();
-    csv << "\"TIN (";
-    bool first = true;
-    for(auto cit = tile.cells_begin(); cit != tile.cells_end(); ++cit)
-    {
-        if(tile.cell_is_infinite(cit)) continue;
-        if(main_only && !tile.cell_is_main(cit))continue;
-        if(!first) csv << ", ";
-        first = false;
-        csv << "((";
-        typename Tile::Vertex_const_handle v;
-        for(int i=0; i<=D; ++i)
-        {
-            v = tile.vertex(cit,i);
-            for(int d=0; d<D; ++d)
-                csv << tile.point(v)[d] << " ";
-            csv /*<< int(tile.id(v))*/ << ",";
-        }
-        v = tile.vertex(cit,0);
-        for(int d=0; d<D; ++d) // repeat first to close the polygon
-            csv << tile.point(v)[d] << " ";
-        csv /*<< int(tile.id(v))*/ << "))";
-    }
-    csv << ")\"," << int(tile.id()) << "\n";
-}
-
-template<typename Tile>
-void write_csv_bbox(const Tile& tile, std::ostream& csv)
-{
+    std::ofstream csv(filename+".csv");
+    csv << "geom,id" << std::endl;
     for(auto& pair : tile.bbox())
     {
         auto bboxid = pair.first;
@@ -295,221 +118,184 @@ void write_csv_bbox(const Tile& tile, std::ostream& csv)
         csv << bbox.max(0) << " "<< bbox.max(1) << ", ";
         csv << bbox.min(0) << " "<< bbox.max(1) << ", ";
         csv << bbox.min(0) << " "<< bbox.min(1);
-        csv << "))\"," << int(tile.id()) << "," << int(bboxid) << "\n";
+        csv << "))\"," << int(bboxid) << "\n";
     }
+}
+
+
+template<typename Tile>
+void write_csv_tin(const std::string& filename, const Tile& tile)
+{
+    std::ofstream csv(filename+".csv");
+    csv << "geom,id" << std::endl;
+    int D = tile.maximal_dimension();
+    bool first = true;
+    for(auto cit = tile.cells_begin(); cit != tile.cells_end(); ++cit)
+    {
+        if(tile.cell_is_infinite(cit)|| !tile.cell_is_main(cit)) continue;
+        csv << (first ? "\"TIN (((" : ", ((");
+        first = false;
+        typename Tile::Vertex_const_handle v;
+        for(int i=0; i<=D; ++i)
+        {
+            v = tile.vertex(cit,i);
+            for(int d=0; d<D; ++d)
+                csv << tile.point(v)[d] << " ";
+            csv << ",";
+        }
+        v = tile.vertex(cit,0);
+        for(int d=0; d<D; ++d) // repeat first to close the polygon
+            csv << tile.point(v)[d] << " ";
+        csv << "))";
+    }
+    if (!first) csv << ")\"," << int(tile.id()) << "\n";
+ }
+
+// VRT header writers
+
+void write_vrt_header(const std::string& filename, const std::string& type)
+{
+    boost::filesystem::path path(filename);
+    std::string stem = path.stem().string();
+    std::ofstream f(filename+".vrt");
+    f <<"<OGRVRTDataSource>" << std::endl;
+    f <<  "<OGRVRTLayer name=\"" << stem <<  "\">" << std::endl;
+    f <<    "<SrcDataSource relativeToVRT=\"1\">" << stem << ".csv</SrcDataSource>" << std::endl;
+    f <<    "<SrcLayer>" << stem <<  "</SrcLayer>" << std::endl;
+    f <<    "<LayerSRS>IGNF:LAMB93</LayerSRS> " << std::endl;
+    f <<    "<GeometryType>" << type << "</GeometryType>" << std::endl;
+    f <<    "<GeometryField encoding=\"WKT\" field=\"geom\"/>" << std::endl;
+    f <<    "<Field name=\"id\" type=\"Integer\"/>" << std::endl;
+    f <<  "</OGRVRTLayer>" << std::endl;
+    f <<"</OGRVRTDataSource>" << std::endl;
+}
+
+
+template<typename Iterator>
+void write_vrt_header(const std::string& dirname, const std::string& type, const std::string& union_name, Iterator begin, Iterator end)
+{
+    std::ofstream f(dirname+".vrt");
+    f <<"<OGRVRTDataSource>" << std::endl;
+    f <<"<OGRVRTUnionLayer name=\""<< union_name << "\">" << std::endl;
+    f <<"<SourceLayerFieldName>tile</SourceLayerFieldName>" << std::endl;
+    for(Iterator it = begin; it != end; ++it) {
+        std::string name = std::to_string(*it);
+        f <<  "<OGRVRTLayer name=\"" << name <<  "\">" << std::endl;
+        f <<    "<SrcDataSource relativeToVRT=\"1\">" << dirname << "/" << name << ".csv</SrcDataSource>" << std::endl;
+        f <<    "<SrcLayer>" << name <<  "</SrcLayer>" << std::endl;
+        f <<    "<LayerSRS>IGNF:LAMB93</LayerSRS> " << std::endl;
+        f <<    "<GeometryType>" << type << "</GeometryType>" << std::endl;
+        f <<    "<GeometryField encoding=\"WKT\" field=\"geom\"/>" << std::endl;
+        f <<    "<Field name=\"id\" type=\"Integer\"/>" << std::endl;
+        f <<  "</OGRVRTLayer>" << std::endl;
+    }
+    f <<"</OGRVRTUnionLayer>" << std::endl;
+    f <<"</OGRVRTDataSource>" << std::endl;
+}
+
+
+// VRT+CSV tile writers
+
+template<typename Tile>
+void write_tile_vrt_verts(const std::string& filename, const Tile& tile)
+{
+    write_vrt_header(filename, "wkbPoint");
+    write_csv_vert(filename, tile);
 }
 
 template<typename Tile>
-void write_csv_bbox_vert(const Tile& tile, std::ostream& csv)
+void write_tile_vrt_facets(const std::string& filename, const Tile& tile)
 {
-    int D = tile.maximal_dimension();
-    std::vector<typename Tile::Vertex_const_handle> points;
-    tile.get_axis_extreme_points(points);
-    for(auto it : points)
-    {
-        csv << "POINT( ";
-        for(int d=0; d<D; ++d)
-            csv << tile.point(it)[d] << " ";
-        csv << ")," << int(tile.id()) << "," << int(tile.id(it)) << "\n";
-    }
+    write_vrt_header(filename, "wkbLineString");
+    write_csv_facet(filename, tile);
 }
 
-// VRT+CSV writers (iterators)
-
-template<typename DDT, typename Iterator>
-void write_vrt_vert_range(DDT& ddt, Iterator begin, Iterator end, const std::string& filename)
+template<typename Tile>
+void write_tile_vrt_cells(const std::string& filename, const Tile& tile)
 {
-    std::ofstream csv;
-    write_vrt_header_vert(csv, filename);
-    typedef typename Iterator::value_type Vertex_const_iterator;
-    typedef typename Iterator::Traits Traits;
-    int D = Traits::D;
-    for(auto vit = begin; vit != end; ++vit)
-    {
-        if(ddt.is_infinite(vit)) continue;
-        csv << "POINT( ";
-        for(int d=0; d<D; ++d)
-            csv << ddt.point(vit)[d] << " ";
-        csv << ")," << int(ddt.tile_id(vit)) << "," << int(ddt.main_id(vit)) << "\n";
-    }
+    write_vrt_header(filename, "wkbPolygon");
+    write_csv_cell(filename, tile);
 }
 
-template<typename DDT, typename Iterator>
-void write_vrt_facet_range(DDT& ddt, Iterator begin, Iterator end, const std::string& filename)
+template<typename Tile>
+void write_tile_vrt_bboxes(const std::string& filename, const Tile& tile)
 {
-    std::ofstream csv;
-    write_vrt_header_facet(csv, filename);
-    typedef typename Iterator::value_type Facet_const_iterator;
-    typedef typename Iterator::Traits Traits;
-    int D = Traits::D;
-    for(auto fit = begin; fit != end; ++fit)
-    {
-        if(ddt.is_infinite(fit)) continue;
-        auto cit = ddt.cell(fit);
-        int idx = ddt.index_of_covertex(fit);
-        csv << "\"LINESTRING(";
-        int local = 0;
-        int j = 0;
-        for(int i=0; i<=D; ++i)
-        {
-            if(i == idx) continue;
-            auto v = ddt.vertex(cit, i);
-            local += ddt.is_local(v);
-            for(int d=0; d<D; ++d)
-                csv << ddt.point(v)[d] << " ";
-            if (++j < D) csv << ",";
-        }
-        csv << ")\"," << int(fit.tile()->id()) << "," << local << "\n";
-    }
+    write_vrt_header(filename, "wkbPolygon");
+    write_csv_bbox(filename, tile);
 }
 
-template<typename DDT, typename Iterator>
-void write_vrt_cell_range(DDT& ddt, Iterator begin, Iterator end, const std::string& filename)
+template<typename Tile>
+void write_tile_vrt_tins(const std::string& filename, const Tile& tile)
 {
-    std::ofstream csv;
-    write_vrt_header_cell(csv, filename);
-    typedef typename Iterator::value_type Cell_const_iterator;
-    typedef typename Iterator::Traits Traits;
-    std::map<Iterator, int> cmap;
-    int nextid = 0;
-    int D = Traits::D;
-    for(auto iit = begin; iit != end; ++iit)
-    {
-        if(ddt.is_infinite(iit)) continue;
-        csv << "\"POLYGON((";
-        int local = 0;
-        for(int i=0; i<=D+1; ++i) // repeat first to close the polygon
-        {
-            auto v = ddt.vertex(iit, i % (D+1));
-            if(i>0)
-            {
-                csv << ",";
-                local += ddt.is_local(v);
-            }
-            auto p = ddt.point(v);
-            for(int d=0; d<D; ++d) csv << p[d] << " ";
-        }
-        csv << "))\"," << int(ddt.tile_id(iit)) << "," << int(local) << "," << int(ddt.main_id(iit));
-        auto n0 = ddt.main(ddt.neighbor(iit, 0));
-        auto n1 = ddt.main(ddt.neighbor(iit, 1));
-        auto n2 = ddt.main(ddt.neighbor(iit, 2));
-        if(!cmap.count(iit)) cmap[iit] = nextid++;
-        if(!cmap.count(n0)) cmap[n0] = nextid++;
-        if(!cmap.count(n1)) cmap[n1] = nextid++;
-        if(!cmap.count(n2)) cmap[n2] = nextid++;
-        csv << "," << cmap[iit] << "," << cmap[n0] << "," << cmap[n1] << "," << cmap[n2];
-        csv << "," << 0 << "," << 0 << "," << 0 << "," << 0;
-        csv << "\n";
-    }
+    write_vrt_header(filename, "wkbTIN");
+    write_csv_tin(filename, tile);
 }
 
-// VRT+CSV writers (DDT)
+// VRT+CSV writers
 
-template<typename DDT>
-void write_vrt_vert(DDT& ddt, const std::string& filename)
-{
-    write_vrt_vert_range(ddt, ddt.vertices_begin(), ddt.vertices_end(), filename);
-}
-
-template<typename DDT>
-void write_vrt_facet(DDT& ddt, const std::string& filename)
-{
-    write_vrt_facet_range(ddt, ddt.facets_begin(), ddt.facets_end(), filename);
-}
-
-template<typename DDT>
-void write_vrt_cell(DDT& ddt, const std::string& filename)
-{
-    write_vrt_cell_range(ddt, ddt.cells_begin(), ddt.cells_end(), filename);
-}
-
-template<typename DDT>
-void write_vrt_tin(DDT& tri, const std::string& filename)
-{
-    std::ofstream csv;
-    write_vrt_header_tin(csv, filename);
-    for(auto tile = tri.tiles_begin(); tile != tri.tiles_end(); ++tile)
-        write_csv_tin(*tile, csv);
-}
-
-template<typename DDT>
-void write_vrt_bbox(DDT& tri, const std::string& filename)
-{
-    std::ofstream csv;
-    write_vrt_header_bbox(csv, filename);
-    for(auto tile = tri.tiles_begin(); tile != tri.tiles_end(); ++tile)
-        write_csv_bbox(*tile, csv);
-}
-
-template<typename DDT>
-void write_vrt_bbox_vert(DDT& tri, const std::string& filename)
-{
-    std::ofstream csv;
-    write_vrt_header_vert(csv, filename);
-    for(auto tile = tri.tiles_begin(); tile != tri.tiles_end(); ++tile)
-        write_csv_bbox_vert(*tile, csv);
-}
-
-// VRT+CSV writers (DDT tiles)
-
-template<typename TileContainer>
-void write_vrt_verts(TileContainer& tc, const std::string& dirname)
+template<typename TileContainer, typename Scheduler>
+void write_vrt_verts(TileContainer& tc, Scheduler& sch, const std::string& dirname)
 {
     boost::filesystem::path p(dirname);
-    if(boost::filesystem::exists(p.parent_path()))
-    {
-        for(auto tile = tc.cbegin(); tile != tc.cend(); ++tile)
-        {
-            std::string filename(dirname + std::string("/tile_verts") + std::to_string(tile->id()) + ".vrt");
-            std::ofstream csv;
-            write_vrt_header_vert(csv, filename);
-            write_csv_vert(*tile, csv, true);
-        }
-    }
-    else
-    {
-        std::cerr << "[ERROR]" << dirname << " does not exist, create it before writing" << std::endl;
-    }
+    boost::filesystem::create_directories(p);
+    sch.for_all(tc, [&dirname](typename TileContainer::Tile& tile) {
+        std::string filename(dirname + "/" + std::to_string(tile.id()));
+        write_tile_vrt_verts(filename, tile);
+        return 1;
+    });
+    write_vrt_header(dirname, "wkbPoint", "vertices", tc.tile_ids_begin(), tc.tile_ids_end());
 }
 
-template<typename TileContainer>
-void write_vrt_facets(TileContainer& tc, const std::string& dirname)
+template<typename TileContainer, typename Scheduler>
+void write_vrt_facets(TileContainer& tc, Scheduler& sch, const std::string& dirname)
 {
     boost::filesystem::path p(dirname);
-    if(boost::filesystem::exists(p.parent_path()))
-    {
-        for(auto tile = tc.cbegin(); tile != tc.cend(); ++tile)
-        {
-            std::string filename(dirname  + std::string("/tile_facets_") + std::to_string(tile->id()) + ".vrt");
-            std::ofstream csv;
-            write_vrt_header_facet(csv, filename);
-            write_csv_facet(*tile, csv, true);
-        }
-    }
-    else
-    {
-        std::cerr << "[ERROR]" << dirname << " does not exist, create it before writing" << std::endl;
-    }
+    boost::filesystem::create_directories(p);
+    sch.for_all(tc, [&dirname](typename TileContainer::Tile& tile) {
+        std::string filename(dirname + "/" + std::to_string(tile.id()));
+        write_tile_vrt_facets(filename, tile);
+        return 1;
+    });
+    write_vrt_header(dirname, "wkbLineString", "facets", tc.tile_ids_begin(), tc.tile_ids_end());
 }
 
-template<typename TileContainer>
-void write_vrt_cells(TileContainer& tc, const std::string& dirname)
+template<typename TileContainer, typename Scheduler>
+void write_vrt_cells(TileContainer& tc, Scheduler& sch, const std::string& dirname)
 {
     boost::filesystem::path p(dirname);
-    if(boost::filesystem::exists(p.parent_path()))
-    {
-        for(auto tile = tc.cbegin(); tile != tc.cend(); ++tile)
-        {
-            std::string filename(dirname + std::string("/tile_cell_") +  std::to_string(tile->id()) + ".vrt");
-            std::ofstream csv;
-            write_vrt_header_cell(csv, filename);
-            write_csv_cell(*tile, csv, true);
-        }
-    }
-    else
-    {
-        std::cerr << "[ERROR]" << dirname << " does not exist, create it before writing" << std::endl;
-    }
+    boost::filesystem::create_directories(p);
+    sch.for_all(tc, [&dirname](typename TileContainer::Tile& tile) {
+        std::string filename(dirname + "/" + std::to_string(tile.id()));
+        write_tile_vrt_cells(filename, tile);
+        return 1;
+    });
+    write_vrt_header(dirname, "wkbPolygon", "cells", tc.tile_ids_begin(), tc.tile_ids_end());
+}
+
+template<typename TileContainer, typename Scheduler>
+void write_vrt_bboxes(TileContainer& tc, Scheduler& sch, const std::string& dirname)
+{
+    boost::filesystem::path p(dirname);
+    boost::filesystem::create_directories(p);
+    sch.for_all(tc, [&dirname](typename TileContainer::Tile& tile) {
+        std::string filename(dirname + "/" + std::to_string(tile.id()));
+        write_tile_vrt_bboxes(filename, tile);
+        return 1;
+    });
+    write_vrt_header(dirname, "wkbPolygon", "bboxes", tc.tile_ids_begin(), tc.tile_ids_end());
+}
+
+template<typename TileContainer, typename Scheduler>
+void write_vrt_tins(TileContainer& tc, Scheduler& sch, const std::string& dirname)
+{
+    boost::filesystem::path p(dirname);
+    boost::filesystem::create_directories(p);
+    sch.for_all(tc, [&dirname](typename TileContainer::Tile& tile) {
+        std::string filename(dirname + "/" + std::to_string(tile.id()));
+        write_tile_vrt_tins(filename, tile);
+        return 1;
+    });
+    write_vrt_header(dirname, "wkbTIN", "tins", tc.tile_ids_begin(), tc.tile_ids_end());
 }
 
 }

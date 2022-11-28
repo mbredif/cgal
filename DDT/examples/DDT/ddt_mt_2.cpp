@@ -51,7 +51,7 @@ int main(int argc, char **argv)
 
     int NP, loglevel, max_number_of_tiles;
     std::vector<int> NT;
-    std::string out, ser_prefix;
+    std::string vrt, ply, ser;
     double range;
 
     po::options_description desc("Allowed options");
@@ -63,8 +63,9 @@ int main(int argc, char **argv)
     //("threads,j", po::value<int>(&threads)->default_value(0), "number of threads (0=all)")
     ("tiles,t", po::value<std::vector<int>>(&NT), "number of tiles")
     ("range,r", po::value<double>(&range)->default_value(1), "range")
-    ("serialize,s", po::value<std::string>(&ser_prefix)->default_value("tile_"), "prefix for tile serialization")
-    ("out,o", po::value<std::string>(&out), "output directory")
+    ("serialize,s", po::value<std::string>(&ser)->default_value("tile_"), "prefix for tile serialization")
+    ("vrt", po::value<std::string>(&vrt), "VRT+CSV output basename")
+    ("ply", po::value<std::string>(&ply), "PLY output basename")
     ("memory,m", po::value<int>(&max_number_of_tiles)->default_value(1), "max number of tiles in memory")
     ;
 
@@ -96,7 +97,7 @@ int main(int argc, char **argv)
     CGAL::DDT::Bbox<D, double> bbox(range);
     CGAL::DDT::grid_partitioner<Traits> partitioner(bbox, NT.begin(), NT.end());
 
-    Serializer serializer(ser_prefix);
+    Serializer serializer(ser);
     TileContainer tiles(max_number_of_tiles, serializer);
     //TileContainer tiles(max_number_of_tiles);
     Scheduler scheduler;
@@ -105,7 +106,8 @@ int main(int argc, char **argv)
     std::cout << "- Range    : " << range << std::endl;
     std::cout << "- Points   : " << NP << std::endl;
     std::cout << "- Threads  : " << scheduler.number_of_threads() << std::endl;
-    std::cout << "- Out dir  : " << (out.empty() ? "[no output]" : out) << std::endl;
+    std::cout << "- VRT Out  : " << (vrt.empty() ? "[no output]" : vrt) << std::endl;
+    std::cout << "- PLY Out  : " << (ply.empty() ? "[no output]" : ply) << std::endl;
     std::cout << "- Tiles    : " << partitioner.size() << " ( ";
     std::copy(partitioner.begin(), partitioner.end(), std::ostream_iterator<int>(std::cout, " "));
     std::cout << ")" << std::endl;
@@ -114,13 +116,18 @@ int main(int argc, char **argv)
     CGAL::DDT::insert(tiles, scheduler, points, NP, partitioner);
     Distributed_Delaunay_triangulation tri(tiles);
 
-    if ( vm.count("out")  )
+    if ( vm.count("vrt")  )
     {
-        CGAL::DDT::logging<> log("Writing      ", loglevel);
-        CGAL::DDT::write_ply(tiles, out+".ply");
+        CGAL::DDT::write_vrt_verts(tiles, scheduler, vrt+"_v");
+        CGAL::DDT::write_vrt_facets(tiles, scheduler, vrt+"_f");
+        CGAL::DDT::write_vrt_cells(tiles, scheduler, vrt+"_c");
+        CGAL::DDT::write_vrt_bboxes(tiles, scheduler, vrt+"_b");
+        CGAL::DDT::write_vrt_tins(tiles, scheduler, vrt+"_t");
+    }
 
-        CGAL::DDT::write_vrt_cell(tri, out+"_c.vrt");
-        CGAL::DDT::write_vrt_vert(tri, out+"_v.vrt");
+    if ( vm.count("ply")  )
+    {
+        CGAL::DDT::write_ply(tiles, ply+".ply");
     }
 
     if ( vm.count("check")  )

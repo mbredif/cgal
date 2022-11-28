@@ -119,18 +119,11 @@ int main(int, char **)
         }
         std::set<typename Distributed_Delaunay_triangulation::Cell_const_iterator> ring;
         tri.get_ring(cell, 1, ring);
-        // write_vrt_cell_range(tri, ring.begin(), ring.end(), outdir.string() + std::to_string(cid) + "_ring.vrt");
     }
 
-
-    boost::filesystem::path outdir("./test_DDT_out/");
-    boost::filesystem::create_directories(outdir);
-    CGAL::DDT::write_vrt_vert(tri, outdir.string() + "DDT_vert.vrt");
-    CGAL::DDT::write_vrt_facet(tri, outdir.string() + "DDT_facet.vrt");
-    CGAL::DDT::write_vrt_cell(tri, outdir.string() + "DDT_cell.vrt");
-    CGAL::DDT::write_vrt_verts(tiles, outdir.string());
-    CGAL::DDT::write_vrt_facets(tiles, outdir.string());
-    CGAL::DDT::write_vrt_cells(tiles, outdir.string());
+    CGAL::DDT::write_vrt_verts(tiles, scheduler, "test_DDT_out_v");
+    CGAL::DDT::write_vrt_facets(tiles, scheduler, "test_DDT_out_f");
+    CGAL::DDT::write_vrt_cells(tiles, scheduler, "test_DDT_out_c");
 
 
     return 0;
