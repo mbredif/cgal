@@ -139,7 +139,7 @@ struct TBB_scheduler
         std::vector<Id> ids;
         {
             std::unique_lock<std::mutex> lock(tc_mutex);
-            ids.insert(tc.tile_ids_begin(), tc.tile_ids_end());
+            ids.insert(ids.end(), tc.tile_ids_begin(), tc.tile_ids_end());
         }
         return for_each(tc, ids.begin(), ids.end(), func);
     }
