@@ -12,8 +12,6 @@
 #ifndef CGAL_DDT_WRITE_VRT_H
 #define CGAL_DDT_WRITE_VRT_H
 
-// #include "conf_header/conf.hpp"
-
 #include <boost/filesystem.hpp>
 #undef BOOST_NO_CXX11_SCOPED_ENUMS
 
@@ -24,11 +22,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <set>
-
-/// @todo tmp to workariound conf.hpp
-#ifndef STYLE_SOURCE_DIR
-#define STYLE_SOURCE_DIR ""
-#endif
 
 namespace CGAL {
 namespace DDT {

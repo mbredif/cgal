@@ -11,6 +11,7 @@
 
 #ifndef CGAL_DDT_FILE_SERIALIZER_H
 #define CGAL_DDT_FILE_SERIALIZER_H
+#include <boost/filesystem.hpp>
 
 namespace CGAL {
 namespace DDT {
@@ -18,7 +19,12 @@ namespace DDT {
 template <class Tile>
 struct File_serializer
 {
-  File_serializer(const std::string& prefix) : m_prefix(prefix) {}
+  File_serializer(const std::string& prefix) : m_prefix(prefix) {
+      boost::filesystem::path p(prefix);
+      boost::filesystem::path q(p.parent_path());
+      if(p.has_parent_path() && !boost::filesystem::exists(q))
+          boost::filesystem::create_directories(q);
+  }
 #ifdef CGAL_DEBUG_DDT
   ~File_serializer()
   {
@@ -53,13 +59,13 @@ struct File_serializer
     const std::string fname = filename(tile.id());
     std::ofstream out(fname, std::ios::out | std::ios::binary);
     out << std::setprecision(17) << tile.triangulation();
-    return true;
+    return !out.fail();
   }
 
 private:
   std::string filename(typename Tile::Id i) const
   {
-    return m_prefix+std::to_string(i);
+    return m_prefix+std::to_string(i)+".txt";
   }
 
   std::string m_prefix;
