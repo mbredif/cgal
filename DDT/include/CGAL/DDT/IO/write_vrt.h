@@ -67,7 +67,7 @@ void write_csv_facet(const std::string& filename, const Tile& tile)
                 csv << tile.point(v)[d] << " ";
             if (++j < D) csv << ",";
         }
-        csv << ")\"," << "," << int(tile.minimum_id(fit)) << "," << local << "\n";
+        csv << ")\"," << "," << int(tile.id(fit)) << "," << local << "\n";
     }
 }
 
@@ -92,7 +92,7 @@ void write_csv_cell(const std::string& filename, const Tile& tile)
         }
         for(int d=0; d<D; ++d) // repeat first to close the polygon
             csv << tile.point(tile.vertex(cit, 0))[d] << " ";
-        csv << "))\"," << int(tile.minimum_id(cit)) << "," << local << "\n";
+        csv << "))\"," << int(tile.id(cit)) << "," << local << "\n";
     }
 }
 

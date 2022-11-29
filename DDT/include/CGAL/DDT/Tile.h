@@ -91,10 +91,10 @@ public:
     inline size_t number_of_main_finite_facets  () const { return number_of_main_finite_facets_;   }
     inline size_t number_of_main_finite_cells   () const { return number_of_main_finite_cells_;    }
 
-    inline Id    id  (Vertex_const_handle v) const { assert(!vertex_is_infinite(v)); return traits.id  (v); }
     inline Info& info(Vertex_const_handle v) const { assert(!vertex_is_infinite(v)); return traits.info(v); }
+    inline Id    id  (Vertex_const_handle v) const { assert(!vertex_is_infinite(v)); return traits.id  (v); }
 
-    Id minimum_id(Cell_const_handle c) const
+    Id id(Cell_const_handle c) const
     {
         bool valid = false;
         Id mid = 0;
@@ -110,7 +110,7 @@ public:
         return mid;
     }
 
-    Id minimum_id(const Facet_const_iterator& f) const
+    Id id(const Facet_const_iterator& f) const
     {
         int cid = index_of_covertex(f);
         Cell_const_handle c = cell(f);

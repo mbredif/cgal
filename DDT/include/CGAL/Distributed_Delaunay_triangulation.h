@@ -233,9 +233,9 @@ public:
 
     /// \name Tile identifiers from iterators
     /// @{
-    Id main_id(const Vertex_const_iterator&v) const { return v.tile()->id(*v); }
-    Id main_id(const Facet_const_iterator& f) const { return f.tile()->minimum_id(*f); }
-    Id main_id(const Cell_const_iterator&  c) const { return c.tile()->minimum_id(*c); }
+    Id id(const Vertex_const_iterator&v) const { return v.tile()->id(*v); }
+    Id id(const Facet_const_iterator& f) const { return f.tile()->id(*f); }
+    Id id(const Cell_const_iterator&  c) const { return c.tile()->id(*c); }
 
     Id tile_id(const Vertex_const_iterator& v) const { return v.tile()->id(); }
     Id tile_id(const Facet_const_iterator&  f) const { return f.tile()->id(); }
@@ -282,11 +282,11 @@ public:
     }
 
     /// get the main representative of a vertex iterator
-    inline Vertex_const_iterator main(const Vertex_const_iterator& v) const { return relocate(v, main_id(v)); }
+    inline Vertex_const_iterator main(const Vertex_const_iterator& v) const { return relocate(v, id(v)); }
     /// get the main representative of a facet iterator
-    inline Facet_const_iterator main(const Facet_const_iterator& f) const { return relocate(f, main_id(f)); }
+    inline Facet_const_iterator main(const Facet_const_iterator& f) const { return relocate(f, id(f)); }
     /// get the main representative of a cell iterator
-    inline Cell_const_iterator main(const Cell_const_iterator& c) const { return relocate(c, main_id(c)); }
+    inline Cell_const_iterator main(const Cell_const_iterator& c) const { return relocate(c, id(c)); }
 
     /// @}
 
@@ -394,7 +394,7 @@ public:
         Tile_const_iterator tile = f.tile();
         Tile_cell_const_iterator c = tile->cell(*f);
         if(tile->cell_is_main(c)) return local_index_of_covertex(f);
-        return local_index_of_covertex(relocate(f, tile->minimum_id(c)));
+        return local_index_of_covertex(relocate(f, tile->id(c)));
     }
 
     /// @returns the covertex of a facet f

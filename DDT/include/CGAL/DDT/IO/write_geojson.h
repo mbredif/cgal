@@ -53,7 +53,7 @@ void write_geojson_vert_range(const DDT& ddt, Iterator begin, Iterator end, std:
         ofs << "\"properties\": {" << std::endl;
         ofs << "\"fill\":" << (ddt.is_local(vit) ? "\"red\"" : "\"blue\"") <<  "," << std::endl;
         ofs << "\"tid\": " << int(ddt.tile_id(vit)) <<  "," << std::endl;
-        ofs << "\"id\": " <<  int(ddt.main_id(vit))  << std::endl;
+        ofs << "\"id\": " <<  int(ddt.id(vit))  << std::endl;
         ofs << "}" << std::endl;
         ofs << "}" << std::endl;
     }
