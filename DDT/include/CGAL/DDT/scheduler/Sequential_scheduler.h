@@ -98,32 +98,7 @@ struct Sequential_scheduler
         int count = 0;
         for(Id_iterator it = begin; it != end; ++it)
         {
-            typename TileContainer::Tile_iterator tile = tc.find(*it);
-            if(tile == tc.end()) {
-                while(tc.number_of_tiles() >= tc.maximum_number_of_tiles()) {
-                    auto it = tc.begin();
-                    Id id0 = it->id();
-                    size_t count0 = inbox[id0].size();
-                    for(++it; it != tc.end() && count0; ++it)
-                    {
-                        Id id = it->id();
-                        size_t count = inbox[id].size();
-                        if(count0 > count) {
-                            count0 = count;
-                            id0 = id;
-                        }
-                    }
-#ifdef CGAL_DEBUG_DDT
-                    std::cout << "unload " << int(id0) << " ( " << inbox[id0].size() << " inbox points)" << std::endl;
-#endif
-                    tc.unload(id0);
-                }
-#ifdef CGAL_DEBUG_DDT
-                std::cout << "load " << int(*it) << " ( " << inbox[*it].size() << " inbox points)" << std::endl;
-#endif
-                tile = tc.load(*it).first;
-            }
-            count += func(*tile);
+            count += func(*tc.load(*it));
         }
         return count;
     }

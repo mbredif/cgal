@@ -253,10 +253,7 @@ public:
     {
         assert(is_valid(v));
         if (id == tile_id(v)) return v; // v is already in tile id
-
-        // if (!is_loaded(id) ) load(id);
-        Tile_container const& t = tiles; // why do we need this in a const function ?
-        Tile_const_iterator tile = t.find(id);
+        Tile_const_iterator tile = tiles.load(id);
         Tile_vertex_const_iterator vertex = tile->relocate_vertex(*(v.tile()), *v);
         if (vertex==tile->vertices_end()) return vertices_end();
         return Vertex_const_iterator(&tiles, tile, vertex);
@@ -267,9 +264,7 @@ public:
     {
         assert(is_valid(f));
         if (id == tile_id(f)) return f; // f is already in tile id
-
-        Tile_container const& t = tiles; // why do we need this in a const function ?
-        Tile_const_iterator tile = t.find(id);
+        Tile_const_iterator tile = tiles.load(id);
         Tile_facet_const_iterator facet = tile->relocate_facet(*(f.tile()), *f);
         if (facet==tile->facets_end()) return facets_end();
         return Facet_const_iterator(&tiles, tile, facet);
@@ -280,9 +275,7 @@ public:
     {
         assert(is_valid(c));
         if (id == tile_id(c)) return c; // c is already in tile id
-
-        Tile_container const& t = tiles; // why do we need this in a const function ?
-        Tile_const_iterator tile = t.find(id);
+        Tile_const_iterator tile = tiles.load(id);
         Tile_cell_const_iterator cell = tile->relocate_cell(*(c.tile()), *c);
         if (cell==tile->cells_end()) return cells_end();
         return Cell_const_iterator(&tiles, tile, cell);

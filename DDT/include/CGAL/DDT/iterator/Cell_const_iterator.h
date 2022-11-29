@@ -68,7 +68,8 @@ public:
         {
             if(cell_ == tile_->cells_end())
             {
-                if (++tile_ != tiles_->cend()) cell_ = tile_->cells_begin();
+                if (++tile_ != tiles_->cend())
+                    cell_ = tile_->cells_begin();
             }
             else if(tile_->cell_is_main(cell_))
             {

@@ -37,30 +37,6 @@ public:
     bool operator==(const Key_const_iterator& rhs) const { return it == rhs.it; }
     bool operator!=(const Key_const_iterator& rhs) const { return it != rhs.it; }
     Key_const_iterator& operator++() { ++it; return *this; }
-
-private:
-    Map_const_iterator it;
-};
-
-template<typename Map_const_iterator>
-class Mapped_const_iterator
-{
-public:
-    using iterator_category = std::forward_iterator_tag;
-    using value_type = typename Map_const_iterator::value_type::second_type;
-    using difference_type = std::ptrdiff_t;
-    using pointer = const value_type*;
-    using reference = const value_type&;
-
-    Mapped_const_iterator ( ) : it ( ) { }
-    Mapped_const_iterator ( Map_const_iterator it_ ) : it ( it_ ) { }
-
-    pointer operator -> ( ) const { return &(it->second); }
-    reference operator * ( ) const { return it->second; }
-    bool operator==(const Mapped_const_iterator& rhs) const { return it == rhs.it; }
-    bool operator!=(const Mapped_const_iterator& rhs) const { return it != rhs.it; }
-    Mapped_const_iterator& operator++() { ++it; return *this; }
-
 private:
     Map_const_iterator it;
 };
@@ -77,6 +53,7 @@ public:
 
     Mapped_iterator ( ) : it ( ) { }
     Mapped_iterator ( Map_iterator it_ ) : it ( it_ ) { }
+    template<typename Map_const_iterator> friend class Mapped_const_iterator;
 
     pointer operator -> ( ) const { return &(it->second); }
     reference operator * ( ) const { return it->second; }
@@ -86,6 +63,31 @@ public:
 
 private:
     Map_iterator it;
+};
+
+template<typename Map_const_iterator>
+class Mapped_const_iterator
+{
+public:
+    using iterator_category = std::forward_iterator_tag;
+    using value_type = typename Map_const_iterator::value_type::second_type;
+    using difference_type = std::ptrdiff_t;
+    using pointer = const value_type*;
+    using reference = const value_type&;
+
+    Mapped_const_iterator ( ) : it ( ) { }
+    Mapped_const_iterator ( Map_const_iterator it_ ) : it ( it_ ) { }
+    template<typename Map_iterator>
+    Mapped_const_iterator ( Mapped_iterator<Map_iterator> it_ ) : it ( it_.it ) { }
+
+    pointer operator -> ( ) const { return &(it->second); }
+    reference operator * ( ) const { return it->second; }
+    bool operator==(const Mapped_const_iterator& rhs) const { return it == rhs.it; }
+    bool operator!=(const Mapped_const_iterator& rhs) const { return it != rhs.it; }
+    Mapped_const_iterator& operator++() { ++it; return *this; }
+
+private:
+    Map_const_iterator it;
 };
 
 /// \ingroup PkgDDTClasses
@@ -156,6 +158,26 @@ public:
     Tile_iterator find(Id id) { return tiles.find(id); }
     bool is_loaded(Id id) const { return tiles.find(id) != tiles.end(); }
 
+    /*
+     *             typename TileContainer::Tile_iterator tile = tc.find(*it);
+            if(tile == tc.end()) {
+                while(tc.number_of_tiles() >= tc.maximum_number_of_tiles()) {
+                    auto it = tc.begin();
+                    Id id0 = it->id();
+                    size_t count0 = inbox[id0].size();
+                    for(++it; it != tc.end() && count0; ++it)
+                    {
+                        Id id = it->id();
+                        size_t count = inbox[id].size();
+                        if(count0 > count) {
+                            count0 = count;
+                            id0 = id;
+                        }
+                    }
+                    tc.unload(id0);
+                }
+*/
+
     void init(Id id)
     {
         ids.insert(id);
@@ -167,17 +189,49 @@ public:
     bool unload(Id id)
     {
         Tile_iterator tile = find(id);
-        if (tile == end()) return false;
-        if (!serializer.save(*tile)) return false;
+        if (tile == end() || tile->in_use || !serializer.save(*tile)) return false;
         return tiles.erase(id);
     }
 
+
+     /*     auto it = begin();
+            Id id0 = it->id();
+            size_t count0 = inbox[id0].size();
+            for(++it; it != tc.end() && count0; ++it)
+            {
+                Id id = it->id();
+                size_t count = inbox[id].size();
+                if(count0 > count) {
+                    count0 = count;
+                    id0 = id;
+                }
+            }
+       */
     /// load the tile using the serializer, given its id.
-    std::pair<Tile_iterator, bool> load(Id id)
+    /// if necessary, tiles are automatically unloaded
+    /// @return the loaded tile
+    /// @todo implement other tile eviction strategies than the random strategy : LRU, prioritized by inbox size...
+    Tile_iterator load(Id id)
     {
+        // return it if already loaded
+        Tile_iterator tile = tiles.find(id);
+        if (tile != end()) return tile;
+
+        // make room if necessary
+        while(number_of_tiles() >= maximum_number_of_tiles()) {
+            // pick a loaded id at random and try to unload it
+            size_t n = rand() % ids.size();
+            Tile_id_const_iterator it = ids.begin();
+            std::advance(it, n);
+            if (*it!=id) unload(*it);
+        }
+
+        // deserialize it if possible
         if (serializer.has_tile(id))
-          return tiles.emplace(id, std::move(serializer.load(id)));
-        return tiles.emplace(id, id);
+          return tiles.emplace(id, std::move(serializer.load(id))).first;
+
+        // initialize an empty tile
+        return tiles.emplace(id, id).first;
     }
 
     void get_adjacency_graph(std::unordered_multimap<Id,Id>& edges) const

@@ -67,7 +67,8 @@ public:
         {
             if(facet_ == tile_->facets_end())
             {
-                if (++tile_ != tiles_->cend()) facet_ = tile_->facets_begin();
+                if (++tile_ != tiles_->cend())
+                    facet_ = tile_->facets_begin();
             }
             else if(tile_->facet_is_main(facet_))
             {

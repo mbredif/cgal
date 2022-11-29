@@ -117,13 +117,13 @@ struct TBB_scheduler
                 typename TileContainer::Tile_iterator tile;
                 {
                     std::unique_lock<std::mutex> lock(tc_mutex);
-                    tile = tc.load(id).first;
+                    tile = tc.load(id);
+                    tile->in_use = true;
                 }
                 c+=func(*tile);
                 {
                     std::unique_lock<std::mutex> lock(tc_mutex);
-                    if(tc.number_of_tiles() >= tc.maximum_number_of_tiles())
-                        tc.unload(id);
+                    tile->in_use = false;
                 }
             }
             return c;

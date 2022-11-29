@@ -111,13 +111,13 @@ struct Multithread_scheduler
             typename TileContainer::Tile_iterator tile;
             {
                 std::unique_lock<std::mutex> lock(tc_mutex);
-                tile = tc.load(id).first;
+                tile = tc.load(id);
+                tile->in_use = true;
             }
             int count = func(*tile);
             {
                 std::unique_lock<std::mutex> lock(tc_mutex);
-                if(tc.number_of_tiles() >= tc.maximum_number_of_tiles())
-                    tc.unload(id);
+                tile->in_use = false;
             }
             return count;
         };
@@ -175,41 +175,15 @@ struct Multithread_scheduler
             typename TileContainer::Tile_iterator tile;
             {
                 std::unique_lock<std::mutex> lock(tc_mutex);
-                tile = tc.load(id).first;
+                tile = tc.load(id);
+                tile->in_use = true;
             }
             int count = func(*tile);
             {
                 std::unique_lock<std::mutex> lock(tc_mutex);
-                if(tc.number_of_tiles() >= tc.maximum_number_of_tiles())
-                    tc.unload(id);
+                tile->in_use = false;
             }
             return count;
-/*
-            // instead of unloading the just-processed excess tile, unload a tile that is not being processed with minimal incoming points ?
-            {
-                std::unique_lock<std::mutex> lock(tc_mutex);
-                if(!tc.is_loaded(id)) {
-                    while(tc.number_of_tiles() >= tc.maximum_number_of_tiles()) {
-                        auto it = tc.begin();
-                        Id id0 = it->id();
-                        if (futures.count(id0) == 0) continue; // race condition issues ?
-                        size_t count0 = inbox[id0].size();
-                        for(++it; it != tc.end() && count0; ++it)
-                        {
-                            Id id1 = it->id();
-                            size_t count1 = inbox[id1].size();
-                            if(count0 > count1) {
-                                count0 = count1;
-                                id0 = id1;
-                            }
-                        }
-                        tc.unload(id0);
-                    }
-                    tc.load(id);
-                }
-            }
-            return func(*(tc.find(id)));
-*/
         };
 
         std::map<Id, std::future<int>> futures;

@@ -175,7 +175,6 @@ struct MPI_scheduler
             if (it.second.empty()) continue;
             Id id = it.first;
             ids.push_back(id);
-            if(!tc.is_loaded(id)) tc.init(id); /// @todo : load !
         }
         return for_each(tc, ids.begin(), ids.end(), func, false);
     }

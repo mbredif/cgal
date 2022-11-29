@@ -57,7 +57,8 @@ public:
           number_of_main_finite_facets_(0),
           number_of_main_finite_cells_(0),
           number_of_main_facets_(0),
-          number_of_main_cells_(0)
+          number_of_main_cells_(0),
+          in_use(false)
     {}
 
     inline DT& triangulation() { return dt_; }
@@ -620,6 +621,8 @@ public:
 
       return dt_.is_valid(true,5);
     }
+
+    bool in_use;
 
 private:
     Traits traits;

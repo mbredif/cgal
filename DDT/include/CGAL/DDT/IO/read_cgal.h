@@ -87,7 +87,7 @@ int read_cgal(TileContainer& tc, const std::string& dirname)
     {
         Id tid = std::stoi(its.first);
         tc.init(tid);
-        auto tile = tc.load(tid).first;
+        auto tile = tc.load(tid);
         read_cgal_tile(*tile,dirname);
     }
     tc.finalize();

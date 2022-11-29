@@ -68,11 +68,8 @@ public:
         {
             if(vertex_ == tile_->vertices_end())
             {
-                if (++tile_ != tiles_->cend()) {
-                    //if(!ddt_.is_loaded(*id_)) ddt_.load(*id_);
-                    //tile_ = ((const DDT&)(ddt_)).find(*id_); /// @todo constness
+                if (++tile_ != tiles_->cend())
                     vertex_ = tile_->vertices_begin();
-                }
             }
             else if(tile_->vertex_is_main(vertex_))
             {
