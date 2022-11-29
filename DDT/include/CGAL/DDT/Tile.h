@@ -134,24 +134,39 @@ public:
     inline void remove(Vertex_handle v) { traits.remove(dt_, v); }
 
     inline void spatial_sort(std::vector<std::size_t>& indices, const std::vector<Point>& points) const { traits.spatial_sort(dt_, indices, points); }
+
+    /// \name Infinity tests
+    /// @{
+    inline bool vertex_is_infinite(Vertex_const_handle v) const { return traits.vertex_is_infinite(dt_, v); }
+    inline bool facet_is_infinite (Facet_const_handle  f) const { return traits.facet_is_infinite (dt_, f); }
+    inline bool cell_is_infinite  (Cell_const_handle   c) const { return traits.cell_is_infinite  (dt_, c); }
+    /// @}
+
+    /// \name Validity tests
+    /// @{
+    /// A simplex of a tile triangulation is valid if it is a local representative of the corresponding simplex in the overall triangulation
+
+    /// A vertex is valid if it is finite
+    inline bool vertex_is_valid(Vertex_const_handle v) const { return !vertex_is_infinite(v); }
+    /// A facet is valid if at least one of the following vertices is finite and local : its covertex, its mirror vertex and its incident vertices
+    inline bool facet_is_valid(Facet_const_handle f) const { return !cell_is_foreign(cell(f)) || !vertex_is_foreign(mirror_vertex(f)); }
+    /// A cell is valid if at least one of its incident vertices are finite and local
+    inline bool cell_is_valid(Cell_const_handle c) const { return !cell_is_foreign(c); }
+    /// @}
+
+    /// \name Vertex functions
+    /// @{
     template<typename OutputIterator>
     inline OutputIterator adjacent_vertices(Vertex_const_handle v, OutputIterator out) const { return traits.adjacent_vertices(dt_, v, out); }
     template<typename OutputIterator>
     inline OutputIterator incident_cells(Vertex_const_handle v, OutputIterator out) const { return traits.incident_cells(dt_, v, out); }
-
     inline Vertex_handle infinite_vertex() const { return traits.infinite_vertex(dt_); }
     inline const Point& point(Vertex_const_handle v) const { return traits.point(dt_, v); }
     inline double coord(const Point& p, int i) const { return traits.coord(dt_, p, i); }
+    /// @}
 
-    inline bool vertex_is_infinite(Vertex_const_handle v) const { return traits.vertex_is_infinite(dt_, v); }
-    inline bool facet_is_infinite (Facet_const_handle  f) const { return traits.facet_is_infinite (dt_, f); }
-    inline bool cell_is_infinite  (Cell_const_handle   c) const { return traits.cell_is_infinite  (dt_, c); }
-
-    inline bool vertex_is_valid(Vertex_const_handle v) const { return !vertex_is_infinite(v); }
-    inline bool facet_is_valid(Facet_const_handle f) const { return !cell_is_foreign(cell(f)) || !vertex_is_foreign(mirror_vertex(f)); }
-    inline bool cell_is_valid(Cell_const_handle c) const { return !cell_is_foreign(c); }
-
-    /// Facet functions
+    /// \name Facet functions
+    /// @{
     inline int index_of_covertex(Facet_const_handle f) const { return traits.index_of_covertex(dt_, f); }
     inline Vertex_const_handle covertex(Facet_const_handle f) const { return traits.covertex(dt_, f); }
     inline Vertex_const_handle mirror_vertex(Facet_const_handle f) const { return traits.mirror_vertex(dt_, f); }
@@ -159,24 +174,38 @@ public:
     inline Cell_const_handle cell(Vertex_const_handle v) const { return traits.cell(dt_, v); }
     inline Facet_const_handle mirror_facet(Facet_const_handle f) const { return traits.mirror_facet(dt_, f); }
     inline int mirror_index(Facet_const_handle f) const { return traits.mirror_index(dt_, f); }
+    /// @}
 
-    /// Cell functions
+    /// \name Cell functions
+    /// @{
     inline Vertex_const_handle vertex(Cell_const_handle c, int i) const { return traits.vertex(dt_, c, i); }
     inline Facet_const_iterator facet(Cell_const_handle c, int i) const { return traits.facet(dt_, c, i); }
     inline int mirror_index(Cell_const_handle c, int i) const { return traits.mirror_index(dt_, c, i); }
     inline Cell_const_handle neighbor(Cell_const_handle c, int i) const { return traits.neighbor(dt_, c, i); }
+    /// @}
 
-    // read/write (TODO: move away?)
+    /// \name CGAL IO
+    /// @{
+    /// @todo : remove unused function ?
+    ///
     void write_cgal(std::ostream & ofile) const { traits.write_cgal(ofile,dt_); }
     void read_cgal(std::istream & ifile) { traits.read_cgal(ifile,dt_); }
+    /// @}
 
-    // Local => all vertex ids are equal to the tile id
-    // Mixed  => some vertex ids are equal to the tile id
-    // Foreign => no vertex ids are equal to the tile id
+    /// \name Tile locality tests
+    /// @{
+    /// A finite vertex is local if its tile id matches the id of the tile triangulation (tile.id(vertex) == tile.id()), otherwise, it is foreign
+    /// Simplices may be local, mixed or foreign if respectively all, some or none of their finite incident vertices are local.
+
+    /// checks if a finite vertex is local : tile.id(vertex) == tile.id()
+    /// precondition : the vertex is finite.
     inline bool vertex_is_local(Vertex_const_handle v) const { assert(!vertex_is_infinite(v)); return id(v) == id(); }
-    inline bool vertex_is_local_in_tile(Vertex_const_handle v, int tid) const { assert(!vertex_is_infinite(v)); return id(v) == tid; }
+
+    /// checks if a finite vertex is foreign : tile.id(vertex) != tile.id()
+    /// precondition : the vertex is finite.
     inline bool vertex_is_foreign(Vertex_const_handle v) const { return !vertex_is_local(v); }
 
+    /// checks if a facet is local : all its finite vertices are local
     template<typename F>
     bool facet_is_local(F f) const
     {
@@ -192,6 +221,7 @@ public:
         return true;
     }
 
+    /// checks if a facet is mixed : some of its finite vertices are local and some are foreign
     template<typename F>
     bool facet_is_mixed(F f) const
     {
@@ -218,6 +248,7 @@ public:
         return false;
     }
 
+    /// checks if a facet is foreign : all its finite vertices are foreign
     template<typename F>
     bool facet_is_foreign(F f) const
     {
@@ -233,6 +264,7 @@ public:
         return true;
     }
 
+    /// checks if a cell is local : all its finite vertices are local
     template<typename C>
     bool cell_is_local(C c) const
     {
@@ -245,6 +277,7 @@ public:
         return true;
     }
 
+    /// checks if a cell is mixed : some of its finite vertices are local and some are foreign
     template<typename C>
     bool cell_is_mixed(C c) const
     {
@@ -268,6 +301,7 @@ public:
         return false;
     }
 
+    /// checks if a cell is foreign : all its finite vertices are foreign
     template<typename C>
     bool cell_is_foreign(C c) const
     {
@@ -280,31 +314,20 @@ public:
 
         return true;
     }
+    /// @}
 
 
-    template<typename C>
-    bool cell_is_foreign_in_tile(C c, int tid) const
-    {
-        for(int i=0; i<=current_dimension(); ++i)
-        {
-            auto v = vertex(c,i);
-            if ( vertex_is_infinite(v) ) continue;
-            if ( vertex_is_local_in_tile(v,tid) ) return false;
-        }
+    /// \name Main tests
+    /// @{
 
-        return true;
-    }
-
-
-
-    // Main
+    /// checks if a vertex is main, which means finite and local : tile.id(vertex) == tile.id()
     template<typename V>
     bool vertex_is_main(V v) const
     {
-        /// @todo define somehow the main infinite vertex
         return !vertex_is_infinite(v) && vertex_is_local(v) ;
     }
 
+    /// checks if a facet is main : tile.id(facet) == tile.id()
     template<typename F>
     bool facet_is_main(F f) const
     {
@@ -325,6 +348,7 @@ public:
         return !foreign;
     }
 
+    /// checks if a cell is main : tile.id(cell) == tile.id()
     template<typename C>
     bool cell_is_main(C c) const
     {
@@ -341,6 +365,7 @@ public:
         }
         return !foreign;
     }
+    /// @}
 
     /// remove a finite vertex if it is foreign and if all its adjacent vertices are foreign
     /// returns whether simplification occured
@@ -357,6 +382,7 @@ public:
         return true;
     }
 
+    /// Collect at most 2*D vertices which points define the bounding box of the local tile vertices
     void get_axis_extreme_points(std::vector<Vertex_const_handle>& out) const
     {
         Vertex_const_handle v[2*D];
@@ -393,29 +419,12 @@ public:
         }
     }
 
-    void get_local_neighbors(std::vector<Vertex_const_handle_and_id>& out) const
+    /// Collect (vertex,id) pairs listing finite vertices that are possibly newly adjacent to vertices of a foreign tile (id),
+    /// after the insertion of the inserted vertices, as required by the star splaying algorithm.
+    void get_finite_neighbors(const std::set<Vertex_handle>& inserted, std::vector<Vertex_const_handle_and_id>& out) const
     {
         std::map<Id, std::set<Vertex_const_handle>> outbox;
-        for(Cell_const_iterator cit = cells_begin(); cit != cells_end(); ++cit)
-            for(int i=0; i<=current_dimension(); ++i)
-            {
-                Vertex_const_handle v = vertex(cit, i);
-                if(vertex_is_infinite(v)) break;
-                Id idv = id(v);
-                if(idv != id())
-                    for(int j=0; j<=current_dimension(); ++j)
-                        if(vertex_is_local(vertex(cit, j))) // implies i!=j
-                            outbox[idv].insert(vertex(cit, j));
-            }
-        for(auto&& pair : outbox)
-            for(auto vh : pair.second)
-                out.push_back(std::make_pair(vh, pair.first));
-    }
-
-    void get_finite_neighbors(const std::set<Vertex_handle>& vertices, std::vector<Vertex_const_handle_and_id>& out) const
-    {
-        std::map<Id, std::set<Vertex_const_handle>> outbox;
-        for(auto v : vertices) {
+        for(auto v : inserted) {
             if(vertex_is_infinite(v)) continue;
             Id idv = id(v);
             std::vector<Vertex_handle> vadj;
@@ -444,8 +453,14 @@ public:
         }
     }
 
+    /// Insert a range of received points with tile ids.
+    /// reports either the set of all inserted points by default.
+    /// If foreign_only is true, then only foreign inserted points are reported.
+    /// Foreign vertices of the tile triangulation are automatically simplified if the insertion makes it possible.
+    /// @returns the number of inserted points (disregarding the reinsertions of already inserted points
+    /// and the foreign point simplifications)
     template <class PointIdContainer>
-    int insert(const PointIdContainer& received, std::set<Vertex_handle>& inserted, bool foreign_only=true)
+    int insert(const PointIdContainer& received, std::set<Vertex_handle>& inserted, bool foreign_only=false)
     {
         // retrieve the input points and ids in separate vectors
         // compute the axis-extreme points on the way
@@ -493,15 +508,6 @@ public:
                 inserted.erase(v);
 
         return local_inserted_size + inserted.size();
-    }
-
-    void get_mixed_cells(std::vector<Cell_const_handle_and_id>& out) const
-    {
-        for(auto cit = cells_begin(); cit != cells_end(); ++cit)
-            if(cell_is_mixed(cit))
-                for(int i=0; i<=current_dimension(); ++i)
-                    if(!vertex_is_infinite(vertex(cit,i)))
-                        out.emplace_back(cit, id(vertex(cit,i)));
     }
 
     void get_adjacency_graph_edges(std::set<Id>& out_edges) const

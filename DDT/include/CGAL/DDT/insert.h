@@ -33,7 +33,7 @@ size_t splay_tile(Tile& tile, Scheduler& sch)
     sch.receive(tile.id(), received);
     // insert them into the current tile triangulation and get the new foreign points
     std::set<Vertex_handle> inserted;
-    if(!tile.insert(received, inserted)) return 0;
+    if(!tile.insert(received, inserted, true)) return 0;
     // get the relevant neighbor points
     std::vector<Vertex_const_handle_and_id> neighbors;
     tile.get_finite_neighbors(inserted, neighbors);
