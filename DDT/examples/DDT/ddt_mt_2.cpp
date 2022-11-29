@@ -49,7 +49,7 @@ int main(int argc, char **argv)
 {
     enum { D = Traits::D };
 
-    int NP, loglevel, max_number_of_tiles;
+    int NP, loglevel, threads, max_number_of_tiles;
     std::vector<int> NT;
     std::string vrt, ply, ser;
     double range;
@@ -60,7 +60,7 @@ int main(int argc, char **argv)
     ("check", "check validity")
     ("points,p", po::value<int>(&NP)->default_value(10000), "number of points")
     ("log,l", po::value<int>(&loglevel)->default_value(0), "log level")
-    //("threads,j", po::value<int>(&threads)->default_value(0), "number of threads (0=all)")
+    ("threads,j", po::value<int>(&threads)->default_value(0), "number of threads (0=all)")
     ("tiles,t", po::value<std::vector<int>>(&NT), "number of tiles")
     ("range,r", po::value<double>(&range)->default_value(1), "range")
     ("serialize,s", po::value<std::string>(&ser)->default_value("tile_"), "prefix for tile serialization")
@@ -97,15 +97,20 @@ int main(int argc, char **argv)
     CGAL::DDT::Bbox<D, double> bbox(range);
     CGAL::DDT::grid_partitioner<Traits> partitioner(bbox, NT.begin(), NT.end());
 
+    if (0 < max_number_of_tiles) {
+        if (threads == 0) threads = std::thread::hardware_concurrency();
+        if (max_number_of_tiles < threads) threads = max_number_of_tiles;
+    }
+
     Serializer serializer(ser);
     TileContainer tiles(max_number_of_tiles, serializer);
-    //TileContainer tiles(max_number_of_tiles);
-    Scheduler scheduler;
+    Scheduler scheduler(threads);
 
     std::cout << "- Loglevel : " << loglevel << std::endl;
     std::cout << "- Range    : " << range << std::endl;
     std::cout << "- Points   : " << NP << std::endl;
     std::cout << "- Threads  : " << scheduler.number_of_threads() << std::endl;
+    std::cout << "- memTiles : " << max_number_of_tiles << std::endl;
     std::cout << "- VRT Out  : " << (vrt.empty() ? "[no output]" : vrt) << std::endl;
     std::cout << "- PLY Out  : " << (ply.empty() ? "[no output]" : ply) << std::endl;
     std::cout << "- Tiles    : " << partitioner.size() << " ( ";
