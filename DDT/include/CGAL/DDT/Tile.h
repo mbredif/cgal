@@ -319,52 +319,12 @@ public:
 
     /// \name Main tests
     /// @{
-
-    /// checks if a vertex is main, which means finite and local : tile.id(vertex) == tile.id()
-    template<typename V>
-    bool vertex_is_main(V v) const
-    {
-        return !vertex_is_infinite(v) && vertex_is_local(v) ;
-    }
-
+    /// checks if a vertex is finite and local : tile.id(vertex) == tile.id()
+    template<typename V> inline bool vertex_is_main(V v) const { return !vertex_is_infinite(v) && id(v) == id(); }
     /// checks if a facet is main : tile.id(facet) == tile.id()
-    template<typename F>
-    bool facet_is_main(F f) const
-    {
-        int icv = index_of_covertex(f);
-        auto c = cell(f);
-        bool foreign = true;
-        for(int i=0; i<=current_dimension(); ++i)
-        {
-            if (i == icv) continue;
-            auto v = vertex(c,i);
-            if (vertex_is_infinite(v)) continue;
-            Id vid = id(v);
-            if ( vid < id() )
-                return false;
-            else if (vid == id())
-                foreign = false;
-        }
-        return !foreign;
-    }
-
+    template<typename F> inline bool facet_is_main(F f) const { return id(f) == id(); }
     /// checks if a cell is main : tile.id(cell) == tile.id()
-    template<typename C>
-    bool cell_is_main(C c) const
-    {
-        bool foreign = true;
-        for(int i=0; i<=current_dimension(); ++i)
-        {
-            auto v = vertex(c,i);
-            if (vertex_is_infinite(v)) continue;
-            Id vid = id(v);
-            if ( vid < id() )
-                return false;
-            else if (vid == id())
-                foreign = false;
-        }
-        return !foreign;
-    }
+    template<typename C> inline bool cell_is_main(C c) const { return id(c) == id(); }
     /// @}
 
     /// remove a finite vertex if it is foreign and if all its adjacent vertices are foreign

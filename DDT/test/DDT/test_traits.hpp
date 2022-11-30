@@ -129,7 +129,6 @@ int test_traits(const std::string& testname, int ND, int NP, int NT = -1, bool d
             std::set<typename Distributed_Delaunay_triangulation::Cell_const_iterator> ring;
             tri1.get_ring(finite_cell, deg, ring);
             boost::filesystem::create_directories(testname + "/ring/");
-            // write_vrt_cell_range(tri1, ring.begin(), ring.end(), testname + "/ring/" +std::to_string(deg)+".vrt");
         }
     }
 
@@ -139,7 +138,6 @@ int test_traits(const std::string& testname, int ND, int NP, int NT = -1, bool d
         std::vector<typename Tile::Vertex_const_handle> points;
         std::vector<typename Tile::Vertex_const_handle_and_id> points_and_ids;
         t.get_axis_extreme_points(points);
-        t.get_local_neighbors(points_and_ids);
     }
     return result;
 }
