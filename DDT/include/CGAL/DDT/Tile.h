@@ -23,45 +23,62 @@
 namespace CGAL {
 namespace DDT {
 
-
-template<typename Id>
-struct Minimum_id_selector
+/// \ingroup PkgDDTSelectorClasses
+/// \cgalModels Selector
+/// \tparam the value type
+/// Dereferences as the minimum value among the set of visited values.
+template<typename T>
+struct Minimum_selector
 {
     bool valid;
-    Id id;
-    Minimum_id_selector () : valid(false), id() {}
-    inline void insert(Id vid) { if (!valid || vid < id) { id = vid; valid = true; } }
-    inline Id operator*() const { assert(valid); return id; }
+    T value;
+    Minimum_selector() : valid(false), value() {}
+    inline clear() { valid = false; }
+    inline void insert(T v) { if (!valid || v < value) { value = v; valid = true; } }
+    inline T operator*() { assert(valid); return value; }
 };
 
-template<typename Id>
-struct Maximum_id_selector
+/// \ingroup PkgDDTSelectorClasses
+/// \cgalModels Selector
+/// \tparam the value type
+/// Dereferences as the maximum value among the set of visited values.
+template<typename T>
+struct Maximum_selector
 {
     bool valid;
-    Id id;
-    Maximum_id_selector () : valid(false), id() {}
-    inline void insert(Id vid) { if (!valid || vid > id) { id = vid; valid = true; } }
-    inline Id operator*() const { assert(valid); return id; }
+    T value;
+    Maximum_selector() : valid(false), value() {}
+    inline clear() { valid = false; }
+    inline void insert(T v) { if (!valid || v > value) { value = v; valid = true; } }
+    inline T operator*() { assert(valid); return value; }
 };
 
-template<typename Id>
-struct Median_id_selector
+/// \ingroup PkgDDTSelectorClasses
+/// \cgalModels Selector
+/// \tparam the value type
+/// Dereferences as the median value among the set of visited values (counting multiplicities).
+template<typename T>
+struct Median_selector
 {
-    std::vector<Id> ids;
-    Median_id_selector () : ids() {}
-    inline void insert(Id vid) { ids.push_back(vid); }
-    inline Id operator*() {
-        typename std::vector<Id>::iterator begin = ids.begin();
-        typename std::vector<Id>::iterator median = begin + (ids.size()/2);
-        std::nth_element(begin, median, ids.end());
+    std::vector<T> values;
+    Median_selector() : values() {}
+    inline void insert(T v) { values.push_back(v); }
+    inline clear() { values.clear(); }
+    inline T operator*() {
+        typedef typename std::vector<T>::iterator iterator;
+        iterator begin = values.begin();
+        iterator median = begin + (values.size()/2);
+        std::nth_element(begin, median, values.end());
         return *median;
     }
 };
 
 /// \ingroup PkgDDTClasses
 /// \tparam T is a model of the TriangulationTraits concept
-/// The Tile stores a local Delaunay triangulation
-template<class T, template <class> class Id_selector = Median_id_selector>
+/// \tparam Selector is a template for a model of the Selector concept (defaults to Median_selector)
+/// The Tile stores a local Delaunay triangulation.
+/// The main id of a simplex is defined by the selector
+template<class T, template <class> class Selector = Minimum_selector>
 class Tile
 {
 public:
@@ -131,7 +148,7 @@ public:
 
     Id id(Cell_const_handle c) const
     {
-        Id_selector<Id> selector;
+        selector.clear();
         int D = current_dimension();
         for(int i=0; i<=D; ++i) {
             Vertex_const_handle v = vertex(c, i);
@@ -142,7 +159,7 @@ public:
 
     Id id(const Facet_const_iterator& f) const
     {
-        Id_selector<Id> selector;
+        selector.clear();
         int cid = index_of_covertex(f);
         Cell_const_handle c = cell(f);
         int D = current_dimension();
@@ -619,6 +636,7 @@ private:
     Traits traits;
     Id id_;
     DT dt_;
+    mutable Selector<Id> selector;
 
     size_t number_of_main_finite_vertices_;
     size_t number_of_main_finite_facets_;
