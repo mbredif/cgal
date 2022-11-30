@@ -282,7 +282,7 @@ public:
     inline size_t number_of_cells   () const { return number_of_cells_;    }
 
 
-    bool is_valid() const
+    bool is_valid(bool verbose = false, int level = 0) const
     {
         size_t number_of_finite_vertices = 0;
         size_t number_of_finite_facets = 0;
@@ -291,7 +291,7 @@ public:
         size_t number_of_cells = 0;
         for(auto tile = begin(); tile != end(); ++tile)
         {
-            if(!tile->is_valid())
+            if(!tile->is_valid(verbose, level))
             {
                 std::cerr << "Tile " << int(tile->id()) << " is invalid" << std::endl;
                 //assert(! "CGAL tile not valid" );

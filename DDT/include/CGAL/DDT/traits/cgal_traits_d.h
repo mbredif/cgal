@@ -594,6 +594,10 @@ struct Cgal_traits_d
         return f.vertex(0);
     }
 
+    inline bool is_valid(const Delaunay_triangulation& dt, bool verbose = false, int level = 0) const
+    {
+        return dt.is_valid(verbose, level);
+    }
 };
 
 /// \ingroup PkgDDTTraitsClasses

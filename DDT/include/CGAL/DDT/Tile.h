@@ -575,10 +575,9 @@ public:
     }
 
 
-    bool is_valid() const
+    inline bool is_valid(bool verbose = false, int level = 0) const
     {
-
-      return dt_.is_valid(true,5);
+      return traits.is_valid(dt_, verbose, level);
     }
 
     bool in_use;

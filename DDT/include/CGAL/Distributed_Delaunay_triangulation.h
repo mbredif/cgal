@@ -132,9 +132,9 @@ public:
 
 
     /// checks the validity of the Distributed_Delaunay_triangulation
-    bool is_valid() const
+    bool is_valid(bool verbose = false, int level = 0) const
     {
-        if (!tiles.is_valid()) return false;
+        if (!tiles.is_valid(verbose, level)) return false;
         for(auto tile = tiles.begin(); tile != tiles.end(); ++tile)
         {
             for(auto v = tile->vertices_begin(); v != tile->vertices_end(); ++v)

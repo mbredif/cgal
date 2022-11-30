@@ -138,7 +138,7 @@ int main(int argc, char **argv)
     if ( vm.count("check")  )
     {
         CGAL::DDT::logging<> log("Validity     ", loglevel);
-        std::cout << "Validity     \t" << (tri.is_valid() ? "OK" : "ERROR!") << std::endl;
+        std::cout << "Validity     \t" << (tri.is_valid(true, 5) ? "OK" : "ERROR!") << std::endl;
     }
     return 0;
 }
