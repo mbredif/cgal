@@ -53,3 +53,5 @@ create_single_source_cgal_program( "test_DDT_traits_2.cpp" )
 create_single_source_cgal_program( "test_DDT_traits_3.cpp" )
 target_link_libraries(test_DDT_traits_2 PRIVATE Boost::filesystem ${DDT_LIBRARIES})
 target_link_libraries(test_DDT_traits_3 PRIVATE Boost::filesystem ${DDT_LIBRARIES})
+
+create_single_source_cgal_program( "test_selector.cpp" )

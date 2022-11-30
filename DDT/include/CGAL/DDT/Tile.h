@@ -13,6 +13,7 @@
 #define CGAL_DDT_TILE_H
 
 #include <CGAL/DDT/Bbox.h>
+#include <CGAL/DDT/selector/Median_selector.h>
 
 #include <vector>
 #include <set>
@@ -23,62 +24,12 @@
 namespace CGAL {
 namespace DDT {
 
-/// \ingroup PkgDDTSelectorClasses
-/// \cgalModels Selector
-/// \tparam the value type
-/// Dereferences as the minimum value among the set of visited values.
-template<typename T>
-struct Minimum_selector
-{
-    bool valid;
-    T value;
-    Minimum_selector() : valid(false), value() {}
-    inline clear() { valid = false; }
-    inline void insert(T v) { if (!valid || v < value) { value = v; valid = true; } }
-    inline T operator*() { assert(valid); return value; }
-};
-
-/// \ingroup PkgDDTSelectorClasses
-/// \cgalModels Selector
-/// \tparam the value type
-/// Dereferences as the maximum value among the set of visited values.
-template<typename T>
-struct Maximum_selector
-{
-    bool valid;
-    T value;
-    Maximum_selector() : valid(false), value() {}
-    inline clear() { valid = false; }
-    inline void insert(T v) { if (!valid || v > value) { value = v; valid = true; } }
-    inline T operator*() { assert(valid); return value; }
-};
-
-/// \ingroup PkgDDTSelectorClasses
-/// \cgalModels Selector
-/// \tparam the value type
-/// Dereferences as the median value among the set of visited values (counting multiplicities).
-template<typename T>
-struct Median_selector
-{
-    std::vector<T> values;
-    Median_selector() : values() {}
-    inline void insert(T v) { values.push_back(v); }
-    inline clear() { values.clear(); }
-    inline T operator*() {
-        typedef typename std::vector<T>::iterator iterator;
-        iterator begin = values.begin();
-        iterator median = begin + (values.size()/2);
-        std::nth_element(begin, median, values.end());
-        return *median;
-    }
-};
-
 /// \ingroup PkgDDTClasses
 /// \tparam T is a model of the TriangulationTraits concept
 /// \tparam Selector is a template for a model of the Selector concept (defaults to Median_selector)
 /// The Tile stores a local Delaunay triangulation.
 /// The main id of a simplex is defined by the selector
-template<class T, template <class> class Selector = Minimum_selector>
+template<class T, template <class> class Selector = Median_selector>
 class Tile
 {
 public:
