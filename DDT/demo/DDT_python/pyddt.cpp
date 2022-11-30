@@ -212,12 +212,12 @@ public:
 
 };
 
-#include <CGAL/DDT/partitioner/const_partitioner.h>
-#include <CGAL/DDT/partitioner/grid_partitioner.h>
-#include <CGAL/DDT/partitioner/random_partitioner.h>
-typedef CGAL::DDT::const_partitioner<Traits> Const_partitioner;
-typedef CGAL::DDT::grid_partitioner<Traits> Grid_partitioner;
-typedef CGAL::DDT::random_partitioner<Traits> Random_partitioner;
+#include <CGAL/DDT/partitioner/Const_partitioner.h>
+#include <CGAL/DDT/partitioner/Grid_partitioner.h>
+#include <CGAL/DDT/partitioner/Random_partitioner.h>
+typedef CGAL::DDT::Const_partitioner<Traits> Const_partitioner;
+typedef CGAL::DDT::Grid_partitioner<Traits> Grid_partitioner;
+typedef CGAL::DDT::Random_partitioner<Traits> Random_partitioner;
 
 typedef CGAL::DDT::Bbox<Traits::D, double> Bbox;
 

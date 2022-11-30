@@ -22,8 +22,8 @@ typedef CGAL::DDT::Multithread_scheduler<Tile> Scheduler;
 //#include <CGAL/DDT/scheduler/MPI_scheduler.h>
 //typedef CGAL::DDT::MPI_scheduler<Tile> Scheduler;
 
-#include <CGAL/DDT/partitioner/grid_partitioner.h>
-typedef CGAL::DDT::grid_partitioner<Traits> Partitioner;
+#include <CGAL/DDT/partitioner/Grid_partitioner.h>
+typedef CGAL::DDT::Grid_partitioner<Traits> Partitioner;
 
 
 #include <CGAL/Distributed_Delaunay_triangulation.h>

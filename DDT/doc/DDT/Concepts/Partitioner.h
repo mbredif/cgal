@@ -6,9 +6,9 @@
 The concept `Partitioner` describes the requirements for the
 ...
 
-\cgalHasModel `CGAL::DDT::const_partitioner`
-\cgalHasModel `CGAL::DDT::grid_partitioner`
-\cgalHasModel `CGAL::DDT::random_partitioner`
+\cgalHasModel `CGAL::DDT::Const_partitioner`
+\cgalHasModel `CGAL::DDT::Grid_partitioner`
+\cgalHasModel `CGAL::DDT::Random_partitioner`
 
 */
 
@@ -34,11 +34,8 @@ public:
 /// \name Access Functions
 /// @{
 
-/*!
-returns tile Id of the given point.
-*/
-
-inline Id operator()(const Point& p) const;
+/// returns tile Id of the given point.
+Id operator()(const Point& p) const;
 
 /// @}
 

@@ -1,8 +1,8 @@
 #define CGAL_DEBUG_DDT
 
 #include <CGAL/DDT/traits/cgal_traits_2.h>
-//#include <CGAL/DDT/partitioner/random_partitioner.h>
-#include <CGAL/DDT/partitioner/grid_partitioner.h>
+//#include <CGAL/DDT/partitioner/Random_partitioner.h>
+#include <CGAL/DDT/partitioner/Grid_partitioner.h>
 #include <CGAL/DDT/Tile_container.h>
 #include <CGAL/DDT/scheduler/Sequential_scheduler.h>
 #include <CGAL/DDT/serializer/File_serializer.h>
@@ -72,8 +72,8 @@ int main(int argc, char **argv)
     return -1;
   }
   CGAL::DDT::Bbox<2, double> bbox(range);
-  CGAL::DDT::grid_partitioner<Traits> partitioner(bbox, NT.begin(), NT.end());
-//  CGAL::DDT::random_partitioner<Traits> partitioner(0, NT[0]-1);
+  CGAL::DDT::Grid_partitioner<Traits> partitioner(bbox, NT.begin(), NT.end());
+//  CGAL::DDT::Random_partitioner<Traits> partitioner(0, NT[0]-1);
 
   Serializer serializer(ser);
   TileContainer tiles(max_number_of_tiles, serializer);

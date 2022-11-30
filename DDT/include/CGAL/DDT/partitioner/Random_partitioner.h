@@ -22,13 +22,13 @@ namespace DDT {
 /// \cgalModels Partitioner
 /// For testing purposes only (correct but bad performance)
 template<typename Traits, typename Generator = std::default_random_engine>
-class random_partitioner
+class Random_partitioner
 {
 public:
     typedef typename Traits::Point Point;
     typedef typename Traits::Id    Id;
 
-    random_partitioner(Id a, Id b, unsigned int seed = 0) : distribution(a,b), generator(seed)
+    Random_partitioner(Id a, Id b, unsigned int seed = 0) : distribution(a,b), generator(seed)
     {
         if(seed == 0)
         {
@@ -37,7 +37,7 @@ public:
         }
     }
 
-    random_partitioner(Id a, Id b, const Generator& g) : distribution(a,b), generator(g)
+    Random_partitioner(Id a, Id b, const Generator& g) : distribution(a,b), generator(g)
     {
     }
 

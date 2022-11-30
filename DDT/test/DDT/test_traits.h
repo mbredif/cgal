@@ -5,7 +5,7 @@
 #include <boost/filesystem.hpp>
 #include <CGAL/DDT/IO/write.h>
 #include <CGAL/DDT/IO/read.h>
-#include <CGAL/DDT/partitioner/grid_partitioner.h>
+#include <CGAL/DDT/partitioner/Grid_partitioner.h>
 #include <CGAL/DDT/Scheduler.h>
 #include <CGAL/DDT/insert.h>
 #include <CGAL/DDT/Tile_container.h>
@@ -55,7 +55,7 @@ int test_traits(const std::string& testname, int ND, int NP, int NT = -1, bool d
     typedef CGAL::DDT::Scheduler<Tile> Scheduler;
     typedef CGAL::DDT::Tile_container<Traits> TileContainer;
     typedef CGAL::Distributed_Delaunay_triangulation<TileContainer> Distributed_Delaunay_triangulation;
-    typedef CGAL::DDT::grid_partitioner<Traits> Partitioner;
+    typedef CGAL::DDT::Grid_partitioner<Traits> Partitioner;
     typedef typename Traits::Random_points_in_box Random_points;
 
     std::cout << "== Delaunay ==" << std::endl;

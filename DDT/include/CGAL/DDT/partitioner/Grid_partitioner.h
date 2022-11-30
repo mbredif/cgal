@@ -20,7 +20,7 @@ namespace DDT {
 /// \ingroup PkgDDTPartitionerClasses
 /// \cgalModels Partitioner
 template<typename Traits>
-class grid_partitioner
+class Grid_partitioner
 {
 public:
     typedef typename Traits::Point Point;
@@ -28,7 +28,7 @@ public:
     enum { D = Traits::D };
 
     template<typename Iterator>
-    grid_partitioner(const Bbox<D, double>& bbox, Iterator it, Iterator end)
+    Grid_partitioner(const Bbox<D, double>& bbox, Iterator it, Iterator end)
     {
         M = 1;
         int n = 1;
@@ -42,7 +42,7 @@ public:
         }
     }
 
-    grid_partitioner(const Bbox<D, double>& bbox, int n)
+    Grid_partitioner(const Bbox<D, double>& bbox, int n)
     {
         M = 1;
         for(int i=0; i<D; ++i)

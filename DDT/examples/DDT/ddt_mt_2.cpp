@@ -16,7 +16,7 @@ typedef CGAL::DDT::Cgal_traits_2<Id, Info> Traits;
 
 typedef Traits::Random_points_in_box Random_points;
 
-#include <CGAL/DDT/partitioner/grid_partitioner.h>
+#include <CGAL/DDT/partitioner/Grid_partitioner.h>
 #define DDT_USE_THREADS 1
 #include <CGAL/DDT/Tile_container.h>
 typedef CGAL::DDT::Tile<Traits> Tile;
@@ -95,7 +95,7 @@ int main(int argc, char **argv)
         return -1;
     }
     CGAL::DDT::Bbox<D, double> bbox(range);
-    CGAL::DDT::grid_partitioner<Traits> partitioner(bbox, NT.begin(), NT.end());
+    CGAL::DDT::Grid_partitioner<Traits> partitioner(bbox, NT.begin(), NT.end());
 
     if (0 < max_number_of_tiles) {
         if (threads == 0) threads = std::thread::hardware_concurrency();

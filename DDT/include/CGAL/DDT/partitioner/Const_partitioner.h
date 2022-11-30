@@ -18,13 +18,13 @@ namespace DDT {
 /// \ingroup PkgDDTPartitionerClasses
 /// \cgalModels Partitioner
 template<typename Traits>
-class const_partitioner
+class Const_partitioner
 {
 public:
     typedef typename Traits::Point Point;
     typedef typename Traits::Id    Id;
 
-    const_partitioner(Id id) : id_(id) {}
+    Const_partitioner(Id id) : id_(id) {}
 
     inline Id operator()(const Point& p) const
     {
