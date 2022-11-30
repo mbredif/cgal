@@ -23,10 +23,45 @@
 namespace CGAL {
 namespace DDT {
 
+
+template<typename Id>
+struct Minimum_id_selector
+{
+    bool valid;
+    Id id;
+    Minimum_id_selector () : valid(false), id() {}
+    inline void insert(Id vid) { if (!valid || vid < id) { id = vid; valid = true; } }
+    inline Id operator*() const { assert(valid); return id; }
+};
+
+template<typename Id>
+struct Maximum_id_selector
+{
+    bool valid;
+    Id id;
+    Maximum_id_selector () : valid(false), id() {}
+    inline void insert(Id vid) { if (!valid || vid > id) { id = vid; valid = true; } }
+    inline Id operator*() const { assert(valid); return id; }
+};
+
+template<typename Id>
+struct Median_id_selector
+{
+    std::vector<Id> ids;
+    Median_id_selector () : ids() {}
+    inline void insert(Id vid) { ids.push_back(vid); }
+    inline Id operator*() {
+        typename std::vector<Id>::iterator begin = ids.begin();
+        typename std::vector<Id>::iterator median = begin + (ids.size()/2);
+        std::nth_element(begin, median, ids.end());
+        return *median;
+    }
+};
+
 /// \ingroup PkgDDTClasses
 /// \tparam T is a model of the TriangulationTraits concept
 /// The Tile stores a local Delaunay triangulation
-template<class T>
+template<class T, template <class> class Id_selector = Median_id_selector>
 class Tile
 {
 public:
@@ -96,37 +131,27 @@ public:
 
     Id id(Cell_const_handle c) const
     {
-        bool valid = false;
-        Id mid = 0;
+        Id_selector<Id> selector;
         int D = current_dimension();
-        for(int i=0; i<=D; ++i)
-        {
+        for(int i=0; i<=D; ++i) {
             Vertex_const_handle v = vertex(c, i);
-            if(vertex_is_infinite(v)) continue;
-            Id vid = id(v);
-            if (!valid || vid < mid) { mid = vid; valid = true; }
+            if(!vertex_is_infinite(v)) selector.insert(id(v));
         }
-        assert(valid);
-        return mid;
+        return *selector;
     }
 
     Id id(const Facet_const_iterator& f) const
     {
+        Id_selector<Id> selector;
         int cid = index_of_covertex(f);
         Cell_const_handle c = cell(f);
-        bool valid = false;
-        Id mid = 0;
         int D = current_dimension();
-        for(int i=0; i<=D; ++i)
-        {
+        for(int i=0; i<=D; ++i) {
             if (i == cid) continue;
             Vertex_const_handle v = vertex(c, i);
-            if (vertex_is_infinite(v)) continue;
-            Id vid = id(v);
-            if (!valid || vid < mid) { mid = vid; valid = true; }
+            if (!vertex_is_infinite(v)) selector.insert(id(v));
         }
-        assert(valid);
-        return mid;
+        return *selector;
     }
 
     inline void clear() { traits.clear(dt_); }
