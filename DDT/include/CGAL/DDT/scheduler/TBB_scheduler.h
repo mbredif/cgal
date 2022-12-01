@@ -63,26 +63,29 @@ struct TBB_scheduler
         inbox[target].emplace_back(p,id);
     }
 
-    int send_one(const Tile& tile, std::vector<Vertex_const_handle_and_id>& vertices)
+    int send_one(const Tile& tile, const std::map<Id, std::set<Vertex_const_handle>>& vertices)
     {
-        std::map<Id, std::vector<Point_id>> points;
+        Point_id_container points;
         Id source = tile.id();
         int count = 0;
         for(auto& vi : vertices)
         {
-            Vertex_const_handle v = vi.first;
-            Id target = vi.second;
-            Id vid = tile.id(v);
-            if(target == source || target == vid) continue;
-            const Point& p = tile.point(v);
-            if(sent_[source][target].insert(std::make_pair(p,vid)).second)
+            points.clear();
+            Id target = vi.first;
+            assert(target != source);
+            for(Vertex_const_handle v : vi.second)
             {
-                ++count;
-                points[target].emplace_back(p, vid);
+                Id vid = tile.id(v);
+                assert(target != vid);
+                const Point& p = tile.point(v);
+                if(sent_[source][target].insert(std::make_pair(p,vid)).second)
+                {
+                    ++count;
+                    points.emplace_back(p, vid);
+                }
             }
+            inbox[target].grow_by(points.begin(), points.end());
         }
-        for(auto& p : points)
-            inbox[p.first].grow_by(p.second.begin(), p.second.end());
         return count;
     }
 

@@ -24,7 +24,6 @@ template<typename T>
 struct Sequential_scheduler
 {
     typedef T Tile;
-    typedef typename Tile::Vertex_const_handle_and_id Vertex_const_handle_and_id;
     typedef typename Tile::Vertex_const_handle Vertex_const_handle;
     typedef typename Tile::Point_id Point_id;
     typedef typename Tile::Point Point;
@@ -65,21 +64,24 @@ struct Sequential_scheduler
         inbox[target].emplace_back(p,id);
     }
 
-    int send_one(const Tile& tile, const std::vector<Vertex_const_handle_and_id>& vertices)
+    int send_one(const Tile& tile, const std::map<Id, std::set<Vertex_const_handle>>& vertices)
     {
         Id source = tile.id();
         int count = 0;
         for(auto& vi : vertices)
         {
-            Vertex_const_handle v = vi.first;
-            Id target = vi.second;
-            Id vid = tile.id(v);
-            if(target == source || target == vid) continue;
-            const Point& p = tile.point(v);
-            if(sent_[target].insert(std::make_pair(p,vid)).second)
+            Id target = vi.first;
+            assert(target != source);
+            for(Vertex_const_handle v : vi.second)
             {
-                ++count;
-                inbox[target].emplace_back(p, vid);
+                Id vid = tile.id(v);
+                assert(target != vid);
+                const Point& p = tile.point(v);
+                if(sent_[target].insert(std::make_pair(p,vid)).second)
+                {
+                    ++count;
+                    inbox[target].emplace_back(p, vid);
+                }
             }
         }
         return count;

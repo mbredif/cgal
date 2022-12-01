@@ -374,13 +374,12 @@ public:
 
     /// Collect (vertex,id) pairs listing finite vertices that are possibly newly adjacent to vertices of a foreign tile (id),
     /// after the insertion of the inserted vertices, as required by the star splaying algorithm.
-    void get_finite_neighbors(const std::set<Vertex_handle>& inserted, std::vector<Vertex_const_handle_and_id>& out) const
+    void get_finite_neighbors(const std::set<Vertex_const_handle>& inserted, std::map<Id, std::set<Vertex_const_handle>>& out) const
     {
-        std::map<Id, std::set<Vertex_const_handle>> outbox;
         for(auto v : inserted) {
             if(vertex_is_infinite(v)) continue;
             Id idv = id(v);
-            std::vector<Vertex_handle> vadj;
+            std::vector<Vertex_const_handle> vadj;
             adjacent_vertices(v, std::back_inserter(vadj));
             for (auto w : vadj) {
                 if(vertex_is_infinite(w)) continue;
@@ -389,19 +388,10 @@ public:
                 {
                     // w is not new in the dt, insert it only if it is foreign and
                     /// @todo if it was not already adjacent to a vertex in tile idv
-                    if (idv!=id()) outbox[idv].insert(w);
+                    if (idv!=id()) out[idv].insert(w);
                     // v is new so it has no previous neighbors in the dt
-                    if (idw!=id()) outbox[idw].insert(v);
+                    if (idw!=id()) out[idw].insert(v);
                 }
-            }
-        }
-
-        for(auto&& pair : outbox)
-        {
-            Id idv = pair.first;
-            for(auto w : pair.second)
-            {
-                out.push_back(std::make_pair(w, idv));
             }
         }
     }
@@ -413,7 +403,7 @@ public:
     /// @returns the number of inserted points (disregarding the reinsertions of already inserted points
     /// and the foreign point simplifications)
     template <class PointIdContainer>
-    int insert(const PointIdContainer& received, std::set<Vertex_handle>& inserted, bool foreign_only=false)
+    int insert(const PointIdContainer& received, std::set<Vertex_const_handle>& inserted, bool foreign_only=false)
     {
         // retrieve the input points and ids in separate vectors
         // compute the axis-extreme points on the way
@@ -452,7 +442,7 @@ public:
 
         // simplify neighbors: collect vertices adjacent to newly inserted foreign points
         std::set<Vertex_handle> adj;
-        for (Vertex_handle v : inserted)
+        for (Vertex_const_handle v : inserted)
             if(foreign_only || vertex_is_foreign(v))
                 adjacent_vertices(v, std::inserter(adj, adj.begin()));
 
