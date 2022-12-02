@@ -87,13 +87,10 @@ struct Multithread_scheduler
                 Id vid = tile.id(v);
                 assert(target != vid);
                 const Point& p = tile.point(v);
-                if(sent_[source][target].insert(std::make_pair(p,vid)).second)
-                {
-                    ++count;
-                    points.emplace_back(p, vid);
-                }
+                points.emplace_back(p, vid);
             }
             inbox[target].append(points);
+            count += points.size();
         }
         return count;
     }
@@ -126,10 +123,9 @@ struct Multithread_scheduler
             return count;
         };
 
-        // ensure sent_ has all the id inserted to prevent race conditions
+        // ensure allbox_sent has all the id inserted to prevent race conditions
         for(Id_iterator it = begin; it != end; ++it)
         {
-            sent_.emplace(*it, std::map<Id, std::set<Point_id>>{});
             allbox_sent.emplace(*it, 0);
         }
 
@@ -223,7 +219,6 @@ private:
     safe<Point_id_container> allbox;
     std::map<Id, size_t> allbox_sent;
     std::map<Id, safe<Point_id_container>> inbox;
-    std::map<Id, std::map<Id, std::set<Point_id>>> sent_; // no race condition, as the first Id is the source tile id
 
     thread_pool pool;
     std::chrono::milliseconds timeout_;

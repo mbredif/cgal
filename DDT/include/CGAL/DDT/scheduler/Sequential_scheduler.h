@@ -40,8 +40,6 @@ struct Sequential_scheduler
 #ifdef CGAL_DEBUG_DDT
     ~Sequential_scheduler() {
         std::cout << "broadcast : " << allbox.size() << " points" << std::endl;
-        for(auto& s : sent_)
-            std::cout << "sent [" << int(s.first) << "] : " << s.second.size() << " points" << std::endl;
     }
 #endif
 
@@ -77,12 +75,9 @@ struct Sequential_scheduler
                 Id vid = tile.id(v);
                 assert(target != vid);
                 const Point& p = tile.point(v);
-                if(sent_[target].insert(std::make_pair(p,vid)).second)
-                {
-                    ++count;
-                    inbox[target].emplace_back(p, vid);
-                }
+                inbox[target].emplace_back(p, vid);
             }
+            count += vi.second.size();
         }
         return count;
     }
@@ -141,7 +136,6 @@ private:
     Point_id_container allbox;
     std::map<Id, size_t> allbox_sent;
     std::map<Id, std::vector<Point_id>> inbox;
-    std::map<Id, std::set<Point_id>> sent_;
 };
 
 }
