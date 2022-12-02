@@ -98,8 +98,8 @@ struct TBB_scheduler
         return points.size();
     }
 
-    template<typename TileContainer, typename Id_iterator>
-    int for_each(TileContainer& tc, Id_iterator begin, Id_iterator end, const std::function<int(Tile&)>& func)
+    template<typename TileContainer, typename Id_iterator, typename UnaryOp, typename V = int, typename BinaryOp = std::plus<>>
+    T for_each(TileContainer& tc, Id_iterator begin, Id_iterator end, UnaryOp op1, BinaryOp op2 = {}, V init = {})
     {
         // ensure sent_ has all the id inserted to prevent race conditions
         for(Id_iterator it = begin; it != end; ++it)
@@ -109,11 +109,11 @@ struct TBB_scheduler
         }
 
         std::vector<Id> ids(begin, end);
-        int count = tbb::parallel_reduce(
+        return tbb::parallel_reduce(
               tbb::blocked_range<int>(0,ids.size()),
-              0, [&](tbb::blocked_range<int> r, double running_total)
+              init, [&](tbb::blocked_range<int> r, double running_total)
         {
-            int c = 0;
+            T c = init;
             for (int i=r.begin(); i<r.end(); ++i)
             {
                 Id id = ids[i];
@@ -123,30 +123,29 @@ struct TBB_scheduler
                     tile = tc.load(id);
                     tile->in_use = true;
                 }
-                c+=func(*tile);
+                c=op2(c,op1(*tile));
                 {
                     std::unique_lock<std::mutex> lock(tc_mutex);
                     tile->in_use = false;
                 }
             }
             return c;
-        }, std::plus<int>() );
-        return count;
+        }, op2 );
     }
 
-    template<typename TileContainer>
-    int for_all(TileContainer& tc, const std::function<int(Tile&)>& func)
+    template<typename TileContainer, typename UnaryOp, typename V = int, typename BinaryOp = std::plus<>>
+    T for_all(TileContainer& tc, UnaryOp op1, BinaryOp op2 = {}, V init = {})
     {
         std::vector<Id> ids;
         {
             std::unique_lock<std::mutex> lock(tc_mutex);
             ids.insert(ids.end(), tc.tile_ids_begin(), tc.tile_ids_end());
         }
-        return for_each(tc, ids.begin(), ids.end(), func);
+        return for_each(tc, ids.begin(), ids.end(), op1, op2, init);
     }
 
-    template<typename TileContainer>
-    int for_each(TileContainer& tc, const std::function<int(Tile&)>& func)
+    template<typename TileContainer, typename UnaryOp, typename V = int, typename BinaryOp = std::plus<>>
+    T for_each(TileContainer& tc, UnaryOp op1, BinaryOp op2 = {}, V init = {})
     {
         std::set<Id> ids;
         size_t n = allbox.size();
@@ -158,18 +157,18 @@ struct TBB_scheduler
             if (!it.second.empty())
                 ids.insert(it.first);
 
-        return for_each(tc, ids.begin(), ids.end(), func);
+        return for_each(tc, ids.begin(), ids.end(), op1, op2, init);
     }
 
-    template<typename TileContainer>
-    int for_each_rec(TileContainer& tc, const std::function<int(Tile&)>& func)
+    template<typename TileContainer, typename UnaryOp, typename V = int, typename BinaryOp = std::plus<>>
+    T for_each_rec(TileContainer& tc, const std::function<T(Tile&)>& func, const std::function<T(T, T)>& op)
     {
-        int count = 0, c = 0;
+        T value = init, v;
         do{
-          c = for_each(tc, func);
-          count += c;
-        } while (c!=0);
-        return count;
+          v = for_each(tc, op1, op2, init);
+          value = op(value,v);
+        } while (v!=init);
+        return value;
     }
 
 private:

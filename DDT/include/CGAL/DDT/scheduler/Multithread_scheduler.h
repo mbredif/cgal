@@ -107,10 +107,10 @@ struct Multithread_scheduler
         return points.size();
     }
 
-    template<typename TileContainer, typename Id_iterator>
-    int for_each(TileContainer& tc, Id_iterator begin, Id_iterator end, const std::function<int(Tile&)>& func)
+    template<typename TileContainer, typename Id_iterator, typename UnaryOp, typename V = int, typename BinaryOp = std::plus<>>
+    V for_each(TileContainer& tc, Id_iterator begin, Id_iterator end, UnaryOp op1, BinaryOp op2 = {}, V init = {})
     {
-        std::function<int(Id)> func2 = [this, &tc, &func](Id id)
+        std::function<V(Id)> func = [this, &tc, &op1](Id id)
         {
             typename TileContainer::Tile_iterator tile;
             {
@@ -118,7 +118,7 @@ struct Multithread_scheduler
                 tile = tc.load(id);
                 tile->in_use = true;
             }
-            int count = func(*tile);
+            V count = op1(*tile);
             {
                 std::unique_lock<std::mutex> lock(tc_mutex);
                 tile->in_use = false;
@@ -133,28 +133,28 @@ struct Multithread_scheduler
             allbox_sent.emplace(*it, 0);
         }
 
-        std::vector<std::future<int>> futures;
+        std::vector<std::future<V>> futures;
         for(Id_iterator it = begin; it != end; ++it)
-            futures.push_back(pool.submit(func2, *it));
+            futures.push_back(pool.submit(func, *it));
 
-        int count = 0;
-        for(auto& f: futures) count += f.get();
-        return count;
+        V value = init;
+        for(auto& f: futures) value = op2(value, f.get());
+        return value;
     }
 
-    template<typename TileContainer>
-    int for_all(TileContainer& tc, const std::function<int(Tile&)>& func)
+    template<typename TileContainer, typename UnaryOp, typename V = int, typename BinaryOp = std::plus<>>
+    V for_all(TileContainer& tc, UnaryOp op1, BinaryOp op2 = {}, V init = {})
     {
         std::vector<Id> ids;
         {
             std::unique_lock<std::mutex> lock(tc_mutex);
             ids.insert(ids.end(), tc.tile_ids_begin(), tc.tile_ids_end());
         }
-        return for_each(tc, ids.begin(), ids.end(), func);
+        return for_each(tc, ids.begin(), ids.end(), op1, op2, init);
     }
 
-    template<typename TileContainer>
-    int for_each(TileContainer& tc, const std::function<int(Tile&)>& func)
+    template<typename TileContainer, typename UnaryOp, typename V = int, typename BinaryOp = std::plus<>>
+    V for_each(TileContainer& tc, UnaryOp op1, BinaryOp op2 = {}, V init = {})
     {
         std::set<Id> ids;
         size_t n = allbox.size();
@@ -166,15 +166,14 @@ struct Multithread_scheduler
             if (!it.second.empty())
                 ids.insert(it.first);
 
-        return for_each(tc, ids.begin(), ids.end(), func);
+        return for_each(tc, ids.begin(), ids.end(), op1, op2, init);
     }
 
     // no barrier between each epoch, busy tiles are skipped
-    template<typename TileContainer>
-    int for_each_rec(TileContainer& tc, const std::function<int(Tile&)>& func)
+    template<typename TileContainer, typename UnaryOp, typename V = int, typename BinaryOp = std::plus<>>
+    V for_each_rec(TileContainer& tc, UnaryOp op1, BinaryOp op2 = {}, V init = {})
     {
-        int count = 0;
-        std::function<int(Id)> func2 = [this, &tc, &func](Id id)
+        std::function<V(Id)> func = [this, &tc, &op1](Id id)
         {
             typename TileContainer::Tile_iterator tile;
             {
@@ -182,7 +181,7 @@ struct Multithread_scheduler
                 tile = tc.load(id);
                 tile->in_use = true;
             }
-            int count = func(*tile);
+            V count = op1(*tile);
             {
                 std::unique_lock<std::mutex> lock(tc_mutex);
                 tile->in_use = false;
@@ -190,7 +189,8 @@ struct Multithread_scheduler
             return count;
         };
 
-        std::map<Id, std::future<int>> futures;
+        V count = init;
+        std::map<Id, std::future<V>> futures;
         do {
             auto fit = futures.begin();
             while(fit!=futures.end())
@@ -198,7 +198,7 @@ struct Multithread_scheduler
                 if (fit->second.wait_for(timeout_) != std::future_status::ready) {
                     ++fit;
                 } else {
-                    count += fit->second.get();
+                    count = op2(count, fit->second.get());
                     futures.erase(fit++);
                 }
             }
@@ -206,14 +206,14 @@ struct Multithread_scheduler
             {
                 Id id = it.first;
                 if (!it.second.empty() && futures.count(id) == 0)
-                    futures[id] = pool.submit(func2, id);
+                    futures[id] = pool.submit(func, id);
             }
             size_t n = allbox.size();
             for(const auto& it : allbox_sent)
             {
                 Id id = it.first;
                 if (it.second != n && futures.count(id) == 0)
-                    futures[id] = pool.submit(func2, id);
+                    futures[id] = pool.submit(func, id);
             }
         } while (!futures.empty());
         return count;

@@ -94,25 +94,23 @@ struct Sequential_scheduler
         return vertices.size();
     }
 
-    template<typename TileContainer, typename Id_iterator>
-    int for_each(TileContainer& tc, Id_iterator begin, Id_iterator end, const std::function<int(Tile&)>& func)
+    template<typename TileContainer, typename Id_iterator, typename UnaryOp, typename V = int, typename BinaryOp = std::plus<>>
+    V for_range(TileContainer& tc, Id_iterator begin, Id_iterator end, UnaryOp op1, BinaryOp op2 = {}, V init = {})
     {
-        int count = 0;
+        V value = init;
         for(Id_iterator it = begin; it != end; ++it)
-        {
-            count += func(*tc.load(*it));
-        }
-        return count;
+            value = op2(value, op1(*tc.load(*it)));
+        return value;
     }
 
-    template<typename TileContainer>
-    int for_all(TileContainer& tc, const std::function<int(Tile&)>& func)
+    template<typename TileContainer, typename UnaryOp, typename V = int, typename BinaryOp = std::plus<>>
+    V for_all(TileContainer& tc, UnaryOp op1, BinaryOp op2 = {}, V init = {})
     {
-        return for_each(tc, tc.tile_ids_begin(), tc.tile_ids_end(), func);
+        return for_range(tc, tc.tile_ids_begin(), tc.tile_ids_end(), op1, op2, init);
     }
 
-    template<typename TileContainer>
-    int for_each(TileContainer& tc, const std::function<int(Tile&)>& func)
+    template<typename TileContainer, typename UnaryOp, typename V = int, typename BinaryOp = std::plus<>>
+    V for_each(TileContainer& tc, UnaryOp op1, BinaryOp op2 = {}, V init = {})
     {
         std::set<Id> ids;
         size_t n = allbox.size();
@@ -124,19 +122,19 @@ struct Sequential_scheduler
             if (!it.second.empty())
                 ids.insert(it.first);
 
-        return for_each(tc, ids.begin(), ids.end(), func);
+        return for_range(tc, ids.begin(), ids.end(), op1, op2, init);
     }
 
     // cycles indefinitely, and stops when the last N tiles reported a count of 0
-    template<typename TileContainer>
-    int for_each_rec(TileContainer& tc, const std::function<int(Tile&)>& func)
+    template<typename TileContainer, typename UnaryOp, typename V = int, typename BinaryOp = std::plus<>>
+    V for_each_rec(TileContainer& tc, UnaryOp op1, BinaryOp op2 = {}, V init = {})
     {
-        int count = 0, c;
+        V value = init, v;
         do {
-            c = for_each(tc, func);
-            count += c;
-        } while (c != 0);
-        return count;
+            v = for_each(tc, op1, op2, init);
+            value = op2(value, v);
+        } while (v != init);
+        return value;
     }
 
 private:
