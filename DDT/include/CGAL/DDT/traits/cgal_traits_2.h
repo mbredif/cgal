@@ -178,6 +178,14 @@ struct Cgal_traits_2
         return out;
     }
 
+    Vertex_const_handle locate_vertex(const Delaunay_triangulation& dt, const Point& p, Vertex_handle hint = Vertex_handle()) const
+    {
+        typename Delaunay_triangulation::Locate_type  lt;
+        int li;
+        Cell_handle c = dt.locate(p, lt, li);
+        return (lt==Delaunay_triangulation::VERTEX) ? vertex(dt, c, li) : Vertex_const_handle();
+    }
+
     std::pair<Vertex_handle, bool> insert(Delaunay_triangulation& dt, const Point& p, Id id, Vertex_handle hint = Vertex_handle()) const
     {
         typename Delaunay_triangulation::Locate_type lt;
@@ -343,14 +351,6 @@ struct Cgal_traits_2
     {
         Facet f(c, i);
         return Facet_const_iterator(dt.tds(), f);
-    }
-
-    Vertex_const_handle locate_vertex(const Delaunay_triangulation& dt, const Point& p) const
-    {
-        typename Delaunay_triangulation::Locate_type  lt;
-        int li;
-        Cell_handle c = dt.locate(p, lt, li);
-        return (lt==Delaunay_triangulation::VERTEX) ? vertex(dt, c, li) : Vertex_const_handle();
     }
 
     inline bool is_valid(const Delaunay_triangulation& dt, bool verbose = false, int level = 0) const
