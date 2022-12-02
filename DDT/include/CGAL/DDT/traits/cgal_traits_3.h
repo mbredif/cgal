@@ -337,8 +337,7 @@ struct Cgal_traits_3
         typename Delaunay_triangulation::Locate_type  lt;
         int li, lj;
         Cell_handle c = dt.locate(p, lt, li, lj);
-        if(lt!=Delaunay_triangulation::VERTEX) return infinite_vertex(dt);
-        return vertex(dt, c, li);
+        return (lt==Delaunay_triangulation::VERTEX) ? vertex(dt, c, li) : Vertex_const_handle();
     }
 
     inline bool is_valid(const Delaunay_triangulation& dt, bool verbose = false, int level = 0) const

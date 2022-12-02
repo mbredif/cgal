@@ -590,8 +590,7 @@ struct Cgal_traits_d
         typename Delaunay_triangulation::Face f(dt.maximal_dimension());
         typename Delaunay_triangulation::Facet ft;
         Cell_handle c = dt.locate(p, lt, f, ft);
-        if(lt!=Delaunay_triangulation::ON_VERTEX) return infinite_vertex(dt);
-        return f.vertex(0);
+        return (lt==Delaunay_triangulation::ON_VERTEX) ? f.vertex(0); : Vertex_const_handle();
     }
 
     inline bool is_valid(const Delaunay_triangulation& dt, bool verbose = false, int level = 0) const
