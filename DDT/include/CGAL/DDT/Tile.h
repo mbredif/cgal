@@ -492,15 +492,15 @@ public:
     }
 
 
-    Vertex_const_handle locate_vertex(const Point& p) const
+    Vertex_const_handle locate_vertex(const Point& p, Vertex_handle hint = Vertex_handle()) const
     {
-        return traits.locate_vertex(dt_, p);
+        return traits.locate_vertex(dt_, p, hint);
     }
 
-    Vertex_const_handle relocate_vertex(const Tile& t, Vertex_const_handle v) const
+    Vertex_const_handle relocate_vertex(const Tile& t, Vertex_const_handle v, Vertex_handle hint = Vertex_handle()) const
     {
         if(t.vertex_is_infinite(v)) return infinite_vertex();
-        return locate_vertex(t.point(v));
+        return locate_vertex(t.point(v), hint);
     }
 
     Facet_const_handle relocate_facet(const Tile& t, Facet_const_handle f) const
@@ -519,13 +519,15 @@ public:
         return facets_end();
     }
 
-    Cell_const_handle relocate_cell(const Tile& t, Cell_const_handle tc) const
+    Cell_const_handle relocate_cell(const Tile& t, Cell_const_handle c) const
     {
-        assert(!t.cell_is_foreign(tc));
-        /// @todo locate the first vertex point of c in the other dt
-        for(auto c = cells_begin(); c != cells_end(); ++c )
-            if(are_cells_equal(c, t, tc))
-                return c;
+        Vertex_const_handle v = relocate_vertex(t, t.vertex(c, 0));
+        if (v == Vertex_const_handle()) return cells_end();
+        std::vector<Cell_const_handle> cells;
+        incident_cells(v, std::back_inserter(cells));
+        for(Cell_const_handle ic: cells)
+            if(are_cells_equal(ic, t, c))
+                return ic;
         return cells_end();
     }
 
