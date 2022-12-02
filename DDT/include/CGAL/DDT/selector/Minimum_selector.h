@@ -18,7 +18,7 @@ namespace CGAL {
 namespace DDT {
 
 /// \ingroup PkgDDTSelectorClasses
-/// Dereferences as the minimum value among the set of inserted values.
+/// Selects the minimum value among the set of inserted values.
 /// \cgalModels Selector
 template<typename T>
 class Minimum_selector
@@ -28,7 +28,7 @@ public:
     Minimum_selector() : valid(false), value() {}
     inline clear() { valid = false; }
     inline void insert(value_type v) { if (!valid || v < value) { value = v; valid = true; } }
-    inline value_type operator*() { assert(valid); return value; }
+    inline value_type select() { assert(valid); return value; }
 private:
     bool valid;
     value_type value;

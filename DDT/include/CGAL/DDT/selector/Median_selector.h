@@ -19,7 +19,7 @@ namespace CGAL {
 namespace DDT {
 
 /// \ingroup PkgDDTSelectorClasses
-/// Dereferences as the median value among the set of inserted values (counting multiplicities).
+/// Select the median value among the set of inserted values (counting multiplicities).
 /// \cgalModels Selector
 template<typename T>
 class Median_selector
@@ -29,7 +29,7 @@ public:
     Median_selector() : values() {}
     inline void insert(value_type v) { values.push_back(v); }
     inline clear() { values.clear(); }
-    inline value_type operator*() {
+    inline value_type select() {
         typedef typename std::vector<value_type>::iterator iterator;
         iterator begin = values.begin();
         iterator median = begin + (values.size()/2);

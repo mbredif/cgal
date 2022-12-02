@@ -105,7 +105,7 @@ public:
             Vertex_const_handle v = vertex(c, i);
             if(!vertex_is_infinite(v)) selector.insert(id(v));
         }
-        return *selector;
+        return selector.select();
     }
 
     Id id(const Facet_const_iterator& f) const
@@ -119,7 +119,7 @@ public:
             Vertex_const_handle v = vertex(c, i);
             if (!vertex_is_infinite(v)) selector.insert(id(v));
         }
-        return *selector;
+        return selector.select();
     }
 
     inline void clear() { traits.clear(dt_); }
