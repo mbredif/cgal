@@ -109,11 +109,11 @@ struct Multithread_scheduler
     {
         std::function<V(Id)> func = [this, &tc, &op1](Id id)
         {
-            typename TileContainer::Tile_iterator tile;
-            {
+            typename TileContainer::Tile_iterator tile = tc.end();
+            while (tile == tc.end()) {
                 std::unique_lock<std::mutex> lock(tc_mutex);
                 tile = tc.load(id);
-                tile->in_use = true;
+                if (tile != tc.end()) tile->in_use = true;
             }
             V count = op1(*tile);
             {
@@ -171,11 +171,11 @@ struct Multithread_scheduler
     {
         std::function<V(Id)> func = [this, &tc, &op1](Id id)
         {
-            typename TileContainer::Tile_iterator tile;
-            {
+            typename TileContainer::Tile_iterator tile = tc.end();
+            while (tile == tc.end()) {
                 std::unique_lock<std::mutex> lock(tc_mutex);
                 tile = tc.load(id);
-                tile->in_use = true;
+                if (tile != tc.end()) tile->in_use = true;
             }
             V count = op1(*tile);
             {

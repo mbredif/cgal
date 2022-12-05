@@ -223,7 +223,8 @@ public:
             size_t n = rand() % number_of_tiles();
             Tile_const_iterator it = begin();
             std::advance(it, n);
-            if (it->id()!=id) unload(it->id());
+            if (it->id()!=id && !unload(it->id()))
+                return end();
         }
 
         // initialize an empty tile
