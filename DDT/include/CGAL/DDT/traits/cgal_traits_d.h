@@ -167,6 +167,7 @@ struct Cgal_traits_d
                     *out++ = w;
             }
         }
+        return out;
     }
 
     Vertex_const_handle locate_vertex(const Delaunay_triangulation& dt, const Point& p, Vertex_handle hint = Vertex_handle()) const

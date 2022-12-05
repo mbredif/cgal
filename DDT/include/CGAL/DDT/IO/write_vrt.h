@@ -40,7 +40,7 @@ void write_csv_vert(const std::string& filename, const Tile& tile)
         csv << "POINT( ";
         for(int d=0; d<D; ++d)
             csv << tile.point(vit)[d] << " ";
-        csv << ")," << int(tile.id(vit)) << "\n";
+        csv << ")," << int(tile.vertex_id(vit)) << "\n";
     }
 }
 
@@ -50,7 +50,7 @@ void write_csv_facet(const std::string& filename, const Tile& tile)
     std::ofstream csv(filename+".csv");
     csv << "geom,id,local" << std::endl;
     int D = tile.maximal_dimension();
-    for(auto fit = tile.facets_begin(); fit != tile.facets_end(); ++fit)
+    for(typename Tile::Facet_const_iterator fit = tile.facets_begin(); fit != tile.facets_end(); ++fit)
     {
         if(tile.facet_is_infinite(fit)) continue;
         auto cit = tile.cell(fit);
@@ -67,7 +67,7 @@ void write_csv_facet(const std::string& filename, const Tile& tile)
                 csv << tile.point(v)[d] << " ";
             if (++j < D) csv << ",";
         }
-        csv << ")\"," << "," << int(tile.id(fit)) << "," << local << "\n";
+        csv << ")\"," << int(tile.facet_id(fit)) << "," << local << "\n";
     }
 }
 
@@ -92,7 +92,7 @@ void write_csv_cell(const std::string& filename, const Tile& tile)
         }
         for(int d=0; d<D; ++d) // repeat first to close the polygon
             csv << tile.point(tile.vertex(cit, 0))[d] << " ";
-        csv << "))\"," << int(tile.id(cit)) << "," << local << "\n";
+        csv << "))\"," << int(tile.cell_id(cit)) << "," << local << "\n";
     }
 }
 

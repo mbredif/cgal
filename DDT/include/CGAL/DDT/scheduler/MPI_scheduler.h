@@ -117,7 +117,7 @@ struct MPI_scheduler
     {
         assert(!tile.vertex_is_infinite(v));
         Id source = tile.id();
-        Id vid = tile.id(v);
+        Id vid = tile.vertex_id(v);
         if(target==vid || target == source || !sent_[target].insert(v).second)
             return false;
         send(tile.point(v), vid, target);

@@ -94,20 +94,20 @@ public:
     inline size_t number_of_main_finite_cells   () const { return number_of_main_finite_cells_;    }
 
     inline Info& info(Vertex_const_handle v) const { assert(!vertex_is_infinite(v)); return traits.info(v); }
-    inline Id    id  (Vertex_const_handle v) const { assert(!vertex_is_infinite(v)); return traits.id  (v); }
+    inline Id vertex_id(Vertex_const_handle v) const { assert(!vertex_is_infinite(v)); return traits.id(v); }
 
-    Id id(Cell_const_handle c) const
+    Id cell_id(Cell_const_handle c) const
     {
         selector.clear();
         int D = current_dimension();
         for(int i=0; i<=D; ++i) {
             Vertex_const_handle v = vertex(c, i);
-            if(!vertex_is_infinite(v)) selector.insert(id(v));
+            if(!vertex_is_infinite(v)) selector.insert(vertex_id(v));
         }
         return selector.select();
     }
 
-    Id id(const Facet_const_iterator& f) const
+    Id facet_id(const Facet_const_iterator& f) const
     {
         selector.clear();
         int cid = index_of_covertex(f);
@@ -116,7 +116,7 @@ public:
         for(int i=0; i<=D; ++i) {
             if (i == cid) continue;
             Vertex_const_handle v = vertex(c, i);
-            if (!vertex_is_infinite(v)) selector.insert(id(v));
+            if (!vertex_is_infinite(v)) selector.insert(vertex_id(v));
         }
         return selector.select();
     }
@@ -186,14 +186,14 @@ public:
 
     /// \name Tile locality tests
     /// @{
-    /// A finite vertex is local if its tile id matches the id of the tile triangulation (tile.id(vertex) == tile.id()), otherwise, it is foreign
+    /// A finite vertex is local if its tile id matches the id of the tile triangulation (tile.vertex_id(vertex) == tile.id()), otherwise, it is foreign
     /// Simplices may be local, mixed or foreign if respectively all, some or none of their finite incident vertices are local.
 
-    /// checks if a finite vertex is local : tile.id(vertex) == tile.id()
+    /// checks if a finite vertex is local : tile.vertex_id(vertex) == tile.id()
     /// precondition : the vertex is finite.
-    inline bool vertex_is_local(Vertex_const_handle v) const { assert(!vertex_is_infinite(v)); return id(v) == id(); }
+    inline bool vertex_is_local(Vertex_const_handle v) const { assert(!vertex_is_infinite(v)); return vertex_id(v) == id(); }
 
-    /// checks if a finite vertex is foreign : tile.id(vertex) != tile.id()
+    /// checks if a finite vertex is foreign : tile.vertex_id(vertex) != tile.id()
     /// precondition : the vertex is finite.
     inline bool vertex_is_foreign(Vertex_const_handle v) const { return !vertex_is_local(v); }
 
@@ -311,12 +311,12 @@ public:
 
     /// \name Main tests
     /// @{
-    /// checks if a vertex is finite and local : tile.id(vertex) == tile.id()
-    template<typename V> inline bool vertex_is_main(V v) const { return !vertex_is_infinite(v) && id(v) == id(); }
-    /// checks if a facet is main : tile.id(facet) == tile.id()
-    template<typename F> inline bool facet_is_main(F f) const { return id(f) == id(); }
-    /// checks if a cell is main : tile.id(cell) == tile.id()
-    template<typename C> inline bool cell_is_main(C c) const { return id(c) == id(); }
+    /// checks if a vertex is finite and local : tile.vertex_id(vertex) == tile.id()
+    template<typename V> inline bool vertex_is_main(V v) const { return !vertex_is_infinite(v) && vertex_id(v) == id(); }
+    /// checks if a facet is main : tile.facet_id(facet) == tile.id()
+    template<typename F> inline bool facet_is_main(F f) const { return facet_id(f) == id(); }
+    /// checks if a cell is main : tile.cell_id(cell) == tile.id()
+    template<typename C> inline bool cell_is_main(C c) const { return cell_id(c) == id(); }
     /// @}
 
     /// remove a finite vertex if it is foreign and if all its adjacent vertices are foreign
@@ -325,9 +325,9 @@ public:
     {
         assert(!vertex_is_infinite(v));
         if (!vertex_is_foreign(v)) return false;
-        std::vector<Vertex_handle> adj;
+        std::vector<Vertex_const_handle> adj;
         adjacent_vertices(v, std::back_inserter(adj));
-        for (auto a : adj)
+        for (Vertex_const_handle a : adj)
             if(!vertex_is_infinite(a) && vertex_is_local(a))
                 return false;
         remove(v);
@@ -379,12 +379,12 @@ public:
     {
         for(auto v : inserted) {
             if(vertex_is_infinite(v)) continue;
-            Id idv = id(v);
+            Id idv = vertex_id(v);
             std::vector<Vertex_const_handle> vadj;
             adjacent_vertices(v, std::back_inserter(vadj));
             for (auto w : vadj) {
                 if(vertex_is_infinite(w)) continue;
-                Id idw = id(w);
+                Id idw = vertex_id(w);
                 if(idw != idv)
                 {
                     // w is not new in the dt, insert it only if it is foreign and
@@ -460,8 +460,8 @@ public:
                 for(int i=0; i<=current_dimension(); ++i)
                 {
                     Vertex_const_handle v = vertex(cit,i);
-                    if(!vertex_is_infinite(v) && id(v) != id())
-                        out_edges.insert(id(v));
+                    if(!vertex_is_infinite(v) && vertex_is_foreign(v))
+                        out_edges.insert(vertex_id(v));
                 }
     }
 

@@ -28,7 +28,7 @@ public:
     typedef T value_type;
     Median_selector() : values() {}
     inline void insert(value_type v) { values.push_back(v); }
-    inline clear() { values.clear(); }
+    inline void clear() { values.clear(); }
     inline value_type select() {
         typedef typename std::vector<value_type>::iterator iterator;
         iterator begin = values.begin();

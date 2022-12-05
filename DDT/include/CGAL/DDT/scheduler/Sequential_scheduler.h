@@ -73,7 +73,7 @@ struct Sequential_scheduler
             assert(target != source);
             for(Vertex_const_handle v : vi.second)
             {
-                Id vid = tile.id(v);
+                Id vid = tile.vertex_id(v);
                 assert(target != vid);
                 const Point& p = tile.point(v);
                 inbox[target].emplace_back(p, vid);
@@ -86,7 +86,7 @@ struct Sequential_scheduler
     int send_all(const Tile& tile, const std::vector<Vertex_const_handle>& vertices)
     {
         for(Vertex_const_handle v : vertices)
-            allbox.emplace_back(tile.point(v),tile.id(v));
+            allbox.emplace_back(tile.point(v),tile.vertex_id(v));
         return vertices.size();
     }
 

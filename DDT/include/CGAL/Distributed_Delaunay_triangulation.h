@@ -141,7 +141,7 @@ public:
             {
                 assert(tile->vertex_is_infinite(v) || (tile->vertex_is_local(v) + tile->vertex_is_foreign(v) == 1));
                 if(tile->vertex_is_infinite(v)) continue;
-                Id tid = tile->id(v);
+                Id tid = tile->vertex_id(v);
                 if(tid == tile->id()) continue;
                 auto t = tiles.find(tid);
                 if(t->relocate_vertex(*tile, v) == t->vertices_end())
@@ -161,7 +161,7 @@ public:
                     auto c = tile->cell(f);
                     auto v = tile->vertex(c, d);
                     if(tile->vertex_is_infinite(v)) continue;
-                    Id tid = tile->id(v);
+                    Id tid = tile->vertex_id(v);
                     if(tid == tile->id()) continue;
                     tids.insert(tid);
                 }
@@ -185,7 +185,7 @@ public:
                 {
                     auto v = tile->vertex(c, d);
                     if(tile->vertex_is_infinite(v)) continue;
-                    Id tid = tile->id(v);
+                    Id tid = tile->vertex_id(v);
                     if(tid == tile->id()) continue;
                     tids.insert(tid);
                 }
@@ -233,9 +233,9 @@ public:
 
     /// \name Tile identifiers from iterators
     /// @{
-    Id id(const Vertex_const_iterator&v) const { return v.tile()->id(*v); }
-    Id id(const Facet_const_iterator& f) const { return f.tile()->id(*f); }
-    Id id(const Cell_const_iterator&  c) const { return c.tile()->id(*c); }
+    Id id(const Vertex_const_iterator&v) const { return v.tile()->vertex_id(*v); }
+    Id id(const Facet_const_iterator& f) const { return f.tile()->facet_id(*f); }
+    Id id(const Cell_const_iterator&  c) const { return c.tile()->cell_id(*c); }
 
     Id tile_id(const Vertex_const_iterator& v) const { return v.tile()->id(); }
     Id tile_id(const Facet_const_iterator&  f) const { return f.tile()->id(); }
@@ -394,7 +394,7 @@ public:
         Tile_const_iterator tile = f.tile();
         Tile_cell_const_iterator c = tile->cell(*f);
         if(tile->cell_is_main(c)) return local_index_of_covertex(f);
-        return local_index_of_covertex(relocate(f, tile->id(c)));
+        return local_index_of_covertex(relocate(f, tile->cell_id(c)));
     }
 
     /// @returns the covertex of a facet f

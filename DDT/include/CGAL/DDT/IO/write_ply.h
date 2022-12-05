@@ -75,7 +75,7 @@ void write_ply_property_cell(const Tile& tile, std::ostream& out)
             typename Tile::Vertex_const_handle v = tile.vertex(cit, i);
             int id = dict[v];
             out.write(reinterpret_cast<char *>(&id), sizeof(id));
-            local += tile.id(v) == tid;
+            local += tile.vertex_id(v) == tid;
         }
         out.write(reinterpret_cast<char *>(&tid), sizeof(tid));
         out.write(reinterpret_cast<char *>(&local), sizeof(local));
@@ -91,7 +91,7 @@ void write_ply_property_vert(const Tile& tile, std::ostream& out)
     for(auto it = tile.vertices_begin(); it != tile.vertices_end(); ++it)
     {
         if(tile.vertex_is_infinite(it)) continue;
-        unsigned char id = tile.id(it);
+        unsigned char id = tile.vertex_id(it);
         for(int d=0; d<D; ++d)
         {
             float coord = float(tile.coord(tile.point(it),d));

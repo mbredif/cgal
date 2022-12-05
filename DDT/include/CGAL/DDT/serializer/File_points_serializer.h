@@ -68,7 +68,7 @@ struct File_points_serializer
     out << std::setprecision(17) << tile.number_of_vertices() << " ";
     for(typename Tile::Vertex_const_iterator v = tile.vertices_begin(); v != tile.vertices_end(); ++v)
         if (!tile.vertex_is_infinite(v))
-            out << tile.point(v) << " " << tile.id(v) << " ";
+            out << tile.point(v) << " " << tile.vertex_id(v) << " ";
     return !out.fail();
   }
 

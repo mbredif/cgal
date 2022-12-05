@@ -54,7 +54,7 @@ public:
     boost::python::tuple point() const
     {
         const Tile::Point& p = tile.point(v);
-        return boost::python::make_tuple(p[0], p[1], tile.id(v));
+        return boost::python::make_tuple(p[0], p[1], tile.vertex_id(v));
     }
 };
 
@@ -99,7 +99,7 @@ public:
     {
         Tile::Vertex_const_handle v = tile.vertex(c, iv);
         Tile::Point p = tile.point(v);
-        return boost::python::make_tuple(p[0], p[1], tile.id(v));
+        return boost::python::make_tuple(p[0], p[1], tile.vertex_id(v));
     }
 
     inline bool is_infinite() const

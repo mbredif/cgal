@@ -26,7 +26,7 @@ class Minimum_selector
 public:
     typedef T value_type;
     Minimum_selector() : valid(false), value() {}
-    inline clear() { valid = false; }
+    inline void clear() { valid = false; }
     inline void insert(value_type v) { if (!valid || v < value) { value = v; valid = true; } }
     inline value_type select() { assert(valid); return value; }
 private:

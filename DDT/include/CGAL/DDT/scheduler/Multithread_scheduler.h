@@ -84,7 +84,7 @@ struct Multithread_scheduler
             assert(target != source);
             for(Vertex_const_handle v : vi.second)
             {
-                Id vid = tile.id(v);
+                Id vid = tile.vertex_id(v);
                 assert(target != vid);
                 const Point& p = tile.point(v);
                 points.emplace_back(p, vid);
@@ -99,7 +99,7 @@ struct Multithread_scheduler
     {
         Point_id_container points;
         for(Vertex_const_handle v : vertices)
-            points.emplace_back(tile.point(v),tile.id(v));
+            points.emplace_back(tile.point(v),tile.vertex_id(v));
         allbox.append(points);
         return points.size();
     }
