@@ -39,7 +39,6 @@ typedef CGAL::DDT::Tile_container<Traits, Tile, Serializer> TileContainer;
 typedef CGAL::Distributed_Delaunay_triangulation<TileContainer> Distributed_Delaunay_triangulation;
 #include <CGAL/DDT/IO/write_ply.h>
 #include <CGAL/DDT/IO/write_vrt.h>
-#include <CGAL/DDT/IO/logging.h>
 
 #include <CGAL/DDT/insert.h>
 
@@ -139,7 +138,6 @@ int main(int argc, char **argv)
 
     if ( vm.count("check")  )
     {
-        CGAL::DDT::logging<> log("Validity     ", loglevel);
         std::cout << "Validity     \t" << (tri.is_valid(true, 5) ? "OK" : "ERROR!") << std::endl;
     }
     return 0;

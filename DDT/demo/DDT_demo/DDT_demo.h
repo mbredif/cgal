@@ -7,6 +7,7 @@
 #include <CGAL/Distributed_Delaunay_triangulation.h>
 #include <CGAL/DDT/IO/write_ply.h>
 #include <CGAL/DDT/IO/write_vrt.h>
+#include <CGAL/DDT/IO/logging.h>
 #include <CGAL/DDT/insert.h>
 #include <boost/program_options.hpp>
 
@@ -79,6 +80,7 @@ int DDT_demo(int argc, char **argv)
       std::cerr << desc << std::endl;
       return -1;
   }
+
   typename Traits::Bbox bbox(dimension, range);
   Partitioner<Traits> partitioner(bbox, NT.begin(), NT.end());
   Scheduler<Tile> scheduler(max_concurrency);
@@ -96,26 +98,37 @@ int DDT_demo(int argc, char **argv)
   std::copy(partitioner.begin(), partitioner.end(), std::ostream_iterator<int>(std::cout, " "));
   std::cout << ")" << std::endl;
 
+  CGAL::DDT::logging<> log("--- Overall --> ", loglevel);
+  log.step("Random_points   ");
   Random_points points(dimension, range);
+  log.step("insertion       ");
   CGAL::DDT::insert(tiles, scheduler, points, NP, partitioner);
+  log.step("DDT view        ");
   Distributed_Delaunay_triangulation tri(tiles);
 
   if ( vm.count("vrt")  )
   {
+      log.step("write_vrt_verts ");
       CGAL::DDT::write_vrt_verts(tiles, scheduler, vrt+"_v");
+      log.step("write_vrt_facets");
       CGAL::DDT::write_vrt_facets(tiles, scheduler, vrt+"_f");
+      log.step("write_vrt_cells ");
       CGAL::DDT::write_vrt_cells(tiles, scheduler, vrt+"_c");
+      log.step("write_vrt_bboxes");
       CGAL::DDT::write_vrt_bboxes(tiles, vrt+"_b");
+      log.step("write_vrt_tins  ");
       CGAL::DDT::write_vrt_tins(tiles, scheduler, vrt+"_t");
   }
 
   if ( vm.count("ply")  )
   {
+      log.step("write_ply       ");
       CGAL::DDT::write_ply(tiles, ply+".ply");
   }
 
   if ( vm.count("check")  )
   {
+      log.step("validity        ");
       std::cout << "Validity     \t" << (tri.is_valid(true, 5) ? "OK" : "ERROR!") << std::endl;
   }
   return 0;
