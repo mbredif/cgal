@@ -94,8 +94,11 @@ struct Sequential_scheduler
     V for_range(TileContainer& tc, Id_iterator begin, Id_iterator end, UnaryOp op1, BinaryOp op2 = {}, V init = {})
     {
         V value = init;
-        for(Id_iterator it = begin; it != end; ++it)
-            value = op2(value, op1(*tc.load(*it)));
+        for(Id_iterator it = begin; it != end; ++it) {
+            typename TileContainer::Tile_iterator tile = tc.load(*it);
+            value = op2(value, op1(*tile));
+            tc.unload(tile);
+        }
         return value;
     }
 

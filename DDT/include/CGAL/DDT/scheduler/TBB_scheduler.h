@@ -112,16 +112,16 @@ struct TBB_scheduler
                 for (int i=r.begin(); i<r.end(); ++i)
                 {
                     Id id = ids[i];
-                    typename TileContainer::Tile_iterator tile = tc.end();
-                    while (tile == tc.end()) {
+                    std::pair<typename TileContainer::Tile_iterator, bool> insertion;
+                    do {
                         std::unique_lock<std::mutex> lock(tc_mutex);
-                        tile = tc.load(id);
-                        if (tile != tc.end()) tile->in_use = true;
-                    }
-                    c=op2(c,op1(*tile));
+                        insertion = tc.insert(id);
+                    } while (!tc.load(insertion));
+                    typename TileContainer::Tile_iterator tile = insertion.first;
+                    c = op2(c,op1(*tile));
                     {
                         std::unique_lock<std::mutex> lock(tc_mutex);
-                        tile->in_use = false;
+                        tc.unload(tile);
                     }
                 }
                 return c;

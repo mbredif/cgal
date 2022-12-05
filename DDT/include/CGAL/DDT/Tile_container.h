@@ -183,17 +183,6 @@ public:
         ids.insert(id);
     }
 
-    /// @todo attention à la perennité des handles (tile is possibly unloaded), ou alors lock ou shared pointer.
-    /// unload a tile from memory, automatically saving it.
-    /// returns true after the loaded tile id is successfully saved and unloaded from memory.
-    bool unload(Id id)
-    {
-        Tile_iterator tile = find(id);
-        if (tile == end() || tile->in_use || !serializer.save(*tile)) return false;
-        return tiles.erase(id);
-    }
-
-
      /*     auto it = begin();
             Id id0 = it->id();
             size_t count0 = inbox[id0].size();
@@ -207,34 +196,69 @@ public:
                 }
             }
        */
-    /// load the tile using the serializer, given its id.
+
     /// if necessary, tiles are automatically unloaded
-    /// @return the loaded tile
+    /// @return pair of tile iterator and bool : the tile is either end() on failure or has the query id. The bool is true upon insertion of a new empty tile for deferred loading.
     /// @todo implement other tile eviction strategies than the random strategy : LRU, prioritized by inbox size...
-    Tile_iterator load(Id id)
+    std::pair<Tile_iterator, bool> insert(Id id)
     {
         // return it if already loaded
         Tile_iterator tile = tiles.find(id);
-        if (tile != end()) return tile;
+        if (tile != end()) {
+            tile->in_use = true;
+            return {tile, false};
+        }
 
         // make room if necessary
         while(number_of_tiles() >= maximum_number_of_tiles()) {
             // pick a loaded id at random and try to unload it
             size_t n = rand() % number_of_tiles();
-            Tile_const_iterator it = begin();
+            Tile_iterator it = begin();
             std::advance(it, n);
-            if (it->id()!=id && !unload(it->id()))
-                return end();
+            if (it->id()!=id && !erase(it))
+                return {end(), false};
         }
 
+        Tile t(id, traits);
+        t.in_use = true;
+
         // initialize an empty tile
-        tile = tiles.emplace(id, std::move(Tile(id, traits))).first;
+        return tiles.emplace(id, std::move(t));
+    }
 
+    /// @todo attention à la perennité des handles (tile is possibly unloaded), ou alors lock ou shared pointer.
+    /// unload a tile from memory, automatically saving it.
+    /// returns true after the loaded tile id is successfully saved and unloaded from memory.
+    bool erase(Tile_iterator tile) {
+        assert(tile != end());
+        if (tile->in_use || !serializer.save(*tile)) return false;
+        return tiles.erase(tile->id());
+    }
+
+    /// Instead of using `load(id)`, use this function on the output of `insert` to load for better multithreading,
+    /// as a lock is only required during `insert` calls and but not during this `load` call.
+    /// @return whether the tile iterator is not at end and loading succeeded if a serialization was available.
+    bool load(const std::pair<Tile_iterator, bool>& insertion) const {
+        Tile_iterator tile = insertion.first;
+        if(Tile_const_iterator(tile) == end()) return false;
         // deserialize it if possible
-        if (serializer.has_tile(id))
-          serializer.load(*tile);
+        if (insertion.second && serializer.has_tile(tile->id()))
+            serializer.load(*tile); // / @todo handle loading error
+        return true;
+    }
 
-        return tile;
+    /// ensure tile id is loaded, possibly using deserialization. not threadsafe.
+    Tile_iterator load(Id id) {
+        std::pair<Tile_iterator, bool> insertion;
+        do { insertion = insert(id); } while (!load(insertion));
+        return insertion.first;
+    }
+
+    /// mark the tile as a candidate for unloading (no longer in use)
+    void unload(Tile_iterator tile) const
+    {
+        assert(Tile_const_iterator(tile) != end());
+        tile->in_use = false;
     }
 
     void get_adjacency_graph(std::unordered_multimap<Id,Id>& edges) const

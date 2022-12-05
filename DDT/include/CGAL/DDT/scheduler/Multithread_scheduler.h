@@ -109,18 +109,18 @@ struct Multithread_scheduler
     {
         std::function<V(Id)> func = [this, &tc, &op1](Id id)
         {
-            typename TileContainer::Tile_iterator tile = tc.end();
-            while (tile == tc.end()) {
+            std::pair<typename TileContainer::Tile_iterator, bool> insertion;
+            do {
                 std::unique_lock<std::mutex> lock(tc_mutex);
-                tile = tc.load(id);
-                if (tile != tc.end()) tile->in_use = true;
-            }
-            V count = op1(*tile);
+                insertion = tc.insert(id);
+            } while (!tc.load(insertion));
+            typename TileContainer::Tile_iterator tile = insertion.first;
+            V value = op1(*tile);
             {
                 std::unique_lock<std::mutex> lock(tc_mutex);
-                tile->in_use = false;
+                tc.unload(tile);
             }
-            return count;
+            return value;
         };
 
         // ensure allbox_sent has all the id inserted to prevent race conditions
@@ -171,21 +171,21 @@ struct Multithread_scheduler
     {
         std::function<V(Id)> func = [this, &tc, &op1](Id id)
         {
-            typename TileContainer::Tile_iterator tile = tc.end();
-            while (tile == tc.end()) {
+            std::pair<typename TileContainer::Tile_iterator, bool> insertion;
+            do {
                 std::unique_lock<std::mutex> lock(tc_mutex);
-                tile = tc.load(id);
-                if (tile != tc.end()) tile->in_use = true;
-            }
-            V count = op1(*tile);
+                insertion = tc.insert(id);
+            } while (!tc.load(insertion));
+            typename TileContainer::Tile_iterator tile = insertion.first;
+            V value = op1(*tile);
             {
                 std::unique_lock<std::mutex> lock(tc_mutex);
-                tile->in_use = false;
+                tc.unload(tile);
             }
-            return count;
+            return value;
         };
 
-        V count = init;
+        V value = init;
         std::map<Id, std::future<V>> futures;
         do {
             auto fit = futures.begin();
@@ -194,7 +194,7 @@ struct Multithread_scheduler
                 if (fit->second.wait_for(timeout_) != std::future_status::ready) {
                     ++fit;
                 } else {
-                    count = op2(count, fit->second.get());
+                    value = op2(value, fit->second.get());
                     futures.erase(fit++);
                 }
             }
@@ -212,7 +212,7 @@ struct Multithread_scheduler
                     futures[id] = pool.submit(func, id);
             }
         } while (!futures.empty());
-        return count;
+        return value;
     }
 
     safe<Point_id_container> allbox;
