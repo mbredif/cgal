@@ -94,9 +94,7 @@ int DDT_demo(int argc, char **argv)
   std::cout << "- memTiles    : " << max_number_of_tiles << std::endl;
   std::cout << "- VRT Out     : " << (vrt.empty() ? "[no output]" : vrt) << std::endl;
   std::cout << "- PLY Out     : " << (ply.empty() ? "[no output]" : ply) << std::endl;
-  std::cout << "- Tiles       : " << partitioner.size() << " ( ";
-  std::copy(partitioner.begin(), partitioner.end(), std::ostream_iterator<int>(std::cout, " "));
-  std::cout << ")" << std::endl;
+  std::cout << "- Tiles       : " << partitioner.size() << ", " << partitioner << std::endl;
 
   CGAL::DDT::logging<> log("--- Overall --> ", loglevel);
   log.step("Random_points   ");

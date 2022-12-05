@@ -46,12 +46,19 @@ public:
         return distribution(generator);
     }
 
-    int size() const { return distribution.b() - distribution.a(); }
+    inline Id a() const { return distribution.a(); }
+    inline Id b() const { return distribution.b(); }
+    inline size_t size() const { return 1+b()-a(); }
 
 private:
     std::uniform_int_distribution<Id> distribution;
     Generator generator;
 };
+
+template<typename Traits>
+std::ostream& operator<<(std::ostream& out, const Random_partitioner<Traits>& partitioner) {
+    return out << "Random_partitioner( [ " << partitioner.a() << " , " << partitioner.b() << " ] )";
+}
 
 }
 }

@@ -26,18 +26,18 @@ public:
 
     Const_partitioner(Id id) : id_(id) {}
 
-    inline Id operator()(const Point& p) const
-    {
-        return id_;
-    }
-
-    const Id *begin() const { return &id_; }
-    const Id *end() const { return &id_ + 1; }
+    inline Id operator()(const Point& p) const { return id_;}
+    inline Id id() const { return id_; }
     constexpr size_t size() const { return 1; }
 
 private:
     Id id_;
 };
+
+template<typename Traits>
+std::ostream& operator<<(std::ostream& out, const Const_partitioner<Traits>& partitioner) {
+    return out << "Const_partitioner( " << partitioner.id() << " )";
+}
 
 }
 }
