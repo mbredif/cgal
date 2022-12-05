@@ -17,7 +17,6 @@
 // #include <CGAL/Triangulation_vertex_base_with_info_3.h>
 #include <CGAL/point_generators_3.h>
 
-#include <CGAL/DDT/Bbox.h>
 #include <CGAL/DDT/traits/Facet_const_iterator_3.h>
 #include <CGAL/DDT/traits/ddt_vertex_base_with_info_3.h>
 #include <CGAL/DDT/traits/Data.h>
@@ -59,18 +58,28 @@ struct Cgal_traits_3
     typedef CGAL::Delaunay_triangulation_3<K, TDS>                 Delaunay_triangulation;
     typedef CGAL::Random_points_in_sphere_3<Point>                 Random_points_in_ball;
 
+    Cgal_traits_3(int d = 0) { assert(d==0 || d==D); }
+    inline constexpr int dimension() const { return D; }
+
+    struct Bbox : public CGAL::Bbox_3
+    {
+        Bbox(unsigned int d, double range) : CGAL::Bbox_3(-range, -range, -range, range, range, range) { CGAL_assertion(d==3); }
+        Bbox(unsigned int d = 3) : CGAL::Bbox_3() { CGAL_assertion(d==3); }
+        Bbox& operator+=(const CGAL::Bbox_3& bbox) { CGAL::Bbox_3::operator+=(bbox); return *this; }
+        Bbox& operator+=(const Point& p) { CGAL::Bbox_3 bbox(p.x(), p.y(), p.z(), p.x(), p.y(), p.z()); *this += bbox; return *this; }
+    };
+
     struct Random_points_in_box : CGAL::Random_points_in_cube_3<Point>
     {
         Random_points_in_box(int d, double g) : CGAL::Random_points_in_cube_3<Point>(g)
         {
-            CGAL_assertion(d==3);
+            CGAL_assertion(d==D);
         }
         Random_points_in_box(double g) : CGAL::Random_points_in_cube_3<Point>(g) {}
     };
 
-    Delaunay_triangulation triangulation(int dimension = D) const
+    inline Delaunay_triangulation triangulation() const
     {
-        CGAL_assertion(dimension == D);
         return Delaunay_triangulation();
     }
 

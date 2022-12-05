@@ -40,14 +40,13 @@ struct File_points_serializer
     return in.is_open();
   }
 
-  Tile load(typename Tile::Id id) const
+  bool load(Tile& id) const
   {
 #ifdef CGAL_DEBUG_DDT
     ++nb_loads;
 #endif
-    const std::string fname = filename(id);
+    const std::string fname = filename(tile.id());
     std::ifstream in(fname, std::ios::in | std::ios::binary);
-    Tile tile(id);
     size_t count;
     in >> count;
     typename Tile::Vertex_handle v;
@@ -57,7 +56,7 @@ struct File_points_serializer
         in >> p >> id;
         v = tile.insert(p,id,v).first;
     }
-    return tile;
+    return !in.fail();
   }
 
   bool save(const Tile& tile) const {

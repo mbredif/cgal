@@ -15,6 +15,7 @@ typedef CGAL::DDT::Cgal_traits_2<Id, Info> Traits;
 //typedef CGAL::DDT::Cgal_traits<4,Id, Info> Traits;
 
 typedef Traits::Random_points_in_box Random_points;
+typedef Traits::Bbox Bbox;
 
 #include <CGAL/DDT/partitioner/Grid_partitioner.h>
 #define DDT_USE_THREADS 1
@@ -94,7 +95,8 @@ int main(int argc, char **argv)
         std::cerr << desc << std::endl;
         return -1;
     }
-    CGAL::DDT::Bbox<D, double> bbox(range);
+
+    Bbox bbox(D, range);
     CGAL::DDT::Grid_partitioner<Traits> partitioner(bbox, NT.begin(), NT.end());
 
     if (0 < max_number_of_tiles) {
@@ -103,13 +105,13 @@ int main(int argc, char **argv)
     }
 
     Serializer serializer(ser);
-    TileContainer tiles(max_number_of_tiles, serializer);
+    TileContainer tiles(D, max_number_of_tiles, serializer);
     Scheduler scheduler(threads);
 
     std::cout << "- Loglevel : " << loglevel << std::endl;
     std::cout << "- Range    : " << range << std::endl;
     std::cout << "- Points   : " << NP << std::endl;
-    std::cout << "- Threads  : " << scheduler.number_of_threads() << std::endl;
+    std::cout << "- Threads  : " << scheduler.max_concurrency() << std::endl;
     std::cout << "- memTiles : " << max_number_of_tiles << std::endl;
     std::cout << "- VRT Out  : " << (vrt.empty() ? "[no output]" : vrt) << std::endl;
     std::cout << "- PLY Out  : " << (ply.empty() ? "[no output]" : ply) << std::endl;
@@ -126,7 +128,7 @@ int main(int argc, char **argv)
         CGAL::DDT::write_vrt_verts(tiles, scheduler, vrt+"_v");
         CGAL::DDT::write_vrt_facets(tiles, scheduler, vrt+"_f");
         CGAL::DDT::write_vrt_cells(tiles, scheduler, vrt+"_c");
-        CGAL::DDT::write_vrt_bboxes(tiles, scheduler, vrt+"_b");
+        CGAL::DDT::write_vrt_bboxes(tiles, vrt+"_b");
         CGAL::DDT::write_vrt_tins(tiles, scheduler, vrt+"_t");
     }
 

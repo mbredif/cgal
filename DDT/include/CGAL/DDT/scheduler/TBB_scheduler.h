@@ -40,12 +40,12 @@ struct TBB_scheduler
     typedef typename Tile::Id Id;
     typedef tbb::concurrent_vector<Point_id> Point_id_container;
 
-    TBB_scheduler()
+    TBB_scheduler(int num_threads = 0) : arena(num_threads ? num_threads : tbb::task_arena::automatic)
     {}
 
-    inline int number_of_threads() const
+    inline int max_concurrency() const
     {
-        return tbb::this_task_arena::max_concurrency();
+        return arena.max_concurrency();
     }
 
     inline void receive(Id id, Point_id_container& received)
@@ -96,39 +96,41 @@ struct TBB_scheduler
     }
 
     template<typename TileContainer, typename Id_iterator, typename UnaryOp, typename V = int, typename BinaryOp = std::plus<>>
-    T for_each(TileContainer& tc, Id_iterator begin, Id_iterator end, UnaryOp op1, BinaryOp op2 = {}, V init = {})
+    V for_each(TileContainer& tc, Id_iterator begin, Id_iterator end, UnaryOp op1, BinaryOp op2 = {}, V init = {})
     {
         // ensure allbox_sent has all the id inserted to prevent race conditions
         for(Id_iterator it = begin; it != end; ++it)
             allbox_sent.emplace(*it, 0);
 
         std::vector<Id> ids(begin, end);
-        return tbb::parallel_reduce(
-              tbb::blocked_range<int>(0,ids.size()),
-              init, [&](tbb::blocked_range<int> r, double running_total)
-        {
-            T c = init;
-            for (int i=r.begin(); i<r.end(); ++i)
+        return arena.execute([&]{
+            return tbb::parallel_reduce(
+                  tbb::blocked_range<int>(0,ids.size()),
+                  init, [&](tbb::blocked_range<int> r, double running_total)
             {
-                Id id = ids[i];
-                typename TileContainer::Tile_iterator tile;
+                V c = init;
+                for (int i=r.begin(); i<r.end(); ++i)
                 {
-                    std::unique_lock<std::mutex> lock(tc_mutex);
-                    tile = tc.load(id);
-                    tile->in_use = true;
+                    Id id = ids[i];
+                    typename TileContainer::Tile_iterator tile;
+                    {
+                        std::unique_lock<std::mutex> lock(tc_mutex);
+                        tile = tc.load(id);
+                        tile->in_use = true;
+                    }
+                    c=op2(c,op1(*tile));
+                    {
+                        std::unique_lock<std::mutex> lock(tc_mutex);
+                        tile->in_use = false;
+                    }
                 }
-                c=op2(c,op1(*tile));
-                {
-                    std::unique_lock<std::mutex> lock(tc_mutex);
-                    tile->in_use = false;
-                }
-            }
-            return c;
-        }, op2 );
+                return c;
+            }, op2 );
+        });
     }
 
     template<typename TileContainer, typename UnaryOp, typename V = int, typename BinaryOp = std::plus<>>
-    T for_all(TileContainer& tc, UnaryOp op1, BinaryOp op2 = {}, V init = {})
+    V for_all(TileContainer& tc, UnaryOp op1, BinaryOp op2 = {}, V init = {})
     {
         std::vector<Id> ids;
         {
@@ -139,7 +141,7 @@ struct TBB_scheduler
     }
 
     template<typename TileContainer, typename UnaryOp, typename V = int, typename BinaryOp = std::plus<>>
-    T for_each(TileContainer& tc, UnaryOp op1, BinaryOp op2 = {}, V init = {})
+    V for_each(TileContainer& tc, UnaryOp op1, BinaryOp op2 = {}, V init = {})
     {
         std::set<Id> ids;
         size_t n = allbox.size();
@@ -155,22 +157,23 @@ struct TBB_scheduler
     }
 
     template<typename TileContainer, typename UnaryOp, typename V = int, typename BinaryOp = std::plus<>>
-    T for_each_rec(TileContainer& tc, const std::function<T(Tile&)>& func, const std::function<T(T, T)>& op)
+    V for_each_rec(TileContainer& tc, UnaryOp op1, BinaryOp op2 = {}, V init = {})
     {
-        T value = init, v;
+        V value = init, v;
         do{
           v = for_each(tc, op1, op2, init);
-          value = op(value,v);
+          value = op2(value,v);
         } while (v!=init);
         return value;
     }
 
-private:
     Point_id_container allbox;
+private:
     std::map<Id, size_t> allbox_sent;
     std::map<Id, Point_id_container> inbox;
 
     std::mutex tc_mutex;
+    tbb::task_arena arena;
 };
 
 }

@@ -25,22 +25,11 @@ template<typename Tile>
 std::ostream & write_json(Tile & tile,std::string filename,std::ostream & ofile)
 {
     boost::property_tree::ptree root_node;
-    boost::property_tree::ptree bbox_node;
     root_node.put("filename", filename);
     root_node.put("id", tile.id());
     root_node.put("nbmc", tile.number_of_main_finite_cells());
     root_node.put("nbmv", tile.number_of_main_finite_vertices());
     root_node.put("nbmf", tile.number_of_main_finite_facets());
-
-    auto & bbox = tile.bbox();
-    for(auto iter = bbox.begin(); iter != bbox.end(); ++iter)
-    {
-        std::stringstream ss;
-        ss << iter->second;
-        bbox_node.put(std::to_string(iter->first),ss.str());
-    }
-
-    root_node.add_child("bbox", bbox_node);
     boost::property_tree::write_json(ofile, root_node);
     return ofile;
 }
@@ -106,6 +95,7 @@ int write_cgal(const TileContainer& tc, const std::string& dirname)
 {
     boost::property_tree::ptree root_node;
     boost::property_tree::ptree tiles_node;
+    boost::property_tree::ptree bboxes_node;
 
     for(auto  tile = tc.cbegin(); tile != tc.cend(); ++tile)
     {
@@ -114,11 +104,19 @@ int write_cgal(const TileContainer& tc, const std::string& dirname)
     }
     root_node.add_child("tiles", tiles_node);
 
+    const auto & bboxes = tc.bboxes();
+    for(auto iter = bboxes.begin(); iter != bboxes.end(); ++iter)
+    {
+        std::stringstream ss;
+        ss << iter->second;
+        bboxes_node.put(std::to_string(iter->first),ss.str());
+    }
+    root_node.add_child("bboxes", bboxes_node);
+
     std::string json_name = dirname + "/tiles.json";
     std::ofstream ofile(json_name, std::ios::out);
     boost::property_tree::write_json(ofile, root_node);
     ofile.close();
-
 
     int i = 0;
     for(auto tile = tc.cbegin(); tile != tc.cend(); ++tile)

@@ -19,7 +19,7 @@ template<typename Tile>
 struct No_serialization
 {
   bool has_tile(typename Tile::Id) const { return false; }
-  Tile load(typename Tile::Id Id) const {}
+  bool load(Tile& Id) const { return false; }
   bool save(const Tile& ) const { return false;}
 };
 

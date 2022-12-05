@@ -13,6 +13,7 @@
 #define CGAL_DDT_FACET_CONST_ITERATOR_D_H
 
 #include <cassert>
+#include <iterator>
 
 namespace CGAL {
 namespace DDT {

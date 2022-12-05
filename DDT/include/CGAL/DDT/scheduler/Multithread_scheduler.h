@@ -35,18 +35,18 @@ struct Multithread_scheduler
     typedef std::vector<Point_id> Point_id_container;
 
     /// constructor
-    Multithread_scheduler(int n_threads = 0) : pool(n_threads), timeout_(1)
+    Multithread_scheduler(int max_concurrency = 0) : pool(max_concurrency), timeout_(1)
     {
         pool.init();
     }
     template<class Duration>
-    Multithread_scheduler(int n_threads, Duration timeout) : pool(n_threads), timeout_(timeout)
+    Multithread_scheduler(int max_concurrency, Duration timeout) : pool(max_concurrency), timeout_(timeout)
     {
         pool.init();
     }
-    inline int number_of_threads() const
+    inline int max_concurrency() const
     {
-        return pool.number_of_threads();
+        return pool.max_concurrency();
     }
     ~Multithread_scheduler()
     {
@@ -215,8 +215,8 @@ struct Multithread_scheduler
         return count;
     }
 
-private:
     safe<Point_id_container> allbox;
+private:
     std::map<Id, size_t> allbox_sent;
     std::map<Id, safe<Point_id_container>> inbox;
 

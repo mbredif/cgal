@@ -15,99 +15,116 @@
 #include <boost/config.hpp> // defines BOOST_PREVENT_MACRO_SUBSTITUTION
 #include <stddef.h>
 #include <limits>
+#include <array>
 #include <iostream>
 
 namespace CGAL {
 namespace DDT {
 
-/// \ingroup PkgDDTMisc
-/// A D-dimensional axis aligned box
-template<int D, typename T>
-struct Bbox
+namespace Impl {
+template<typename Container, typename Derived>
+class Bbox
 {
-    Bbox(T range)
-    {
-        for(int i=0; i<D; ++i)
-        {
-            value[i  ] = -range;
-            value[i+D] =  range;
-        }
-    }
-    Bbox(T m, T M)
-    {
-        for(int i=0; i<D; ++i)
-        {
-            value[i  ] = m;
-            value[i+D] = M;
-        }
-    }
+protected:
+    typedef typename Container::value_type T;
+    Container min_values;
+    Container max_values;
 
-    // empty box (min>max in all dimensions)
-    Bbox()
-    {
-        for(int i=0; i<D; ++i)
-        {
-            value[i  ] = +std::numeric_limits<T>::infinity();
-            value[i+D] = -std::numeric_limits<T>::infinity();
-        }
-    }
-
-    template<typename It>
-    Bbox& insert(It begin, It end)
-    {
-        for(It it = begin; it != end; ++it)
-            *this += *it;
-        return *this;
-    }
-
-    template<typename P>
-    Bbox& operator+=(const P& p)
-    {
-        for(int i=0; i<D; ++i)
-        {
-            if(value[i  ] > p[i]) value[i  ] = p[i];
-            if(value[i+D] < p[i]) value[i+D] = p[i];
-        }
-        return *this;
-    }
-
+public:
     Bbox& operator+=(const Bbox& bbox)
     {
+        assert(min_values.size() == bbox.min_values.size());
+        int D = min_values.size();
         for(int i=0; i<D; ++i)
         {
-            if(value[i  ] > bbox.value[i  ]) value[i  ] = bbox.value[i  ];
-            if(value[i+D] < bbox.value[i+D]) value[i+D] = bbox.value[i+D];
+            if(min_values[i] > bbox.min_values[i]) min_values[i] = bbox.min_values[i];
+            if(max_values[i] < bbox.max_values[i]) max_values[i] = bbox.max_values[i];
         }
         return *this;
+    }
+
+    template<typename Point>
+    Bbox& operator+=(const Point& p)
+    {
+        return static_cast<Derived*>(this)->add_point(p);
+    }
+
+    inline int dimension() const
+    {
+        return static_cast<const Derived*>(this)->dimension();
     }
 
     inline T min BOOST_PREVENT_MACRO_SUBSTITUTION (int i) const
     {
-        return value[i  ];
+        return min_values[i];
     }
     inline T max BOOST_PREVENT_MACRO_SUBSTITUTION (int i) const
     {
-        return value[i+D];
+        return max_values[i];
     }
 
-    T value[2*D];
+    inline T& min BOOST_PREVENT_MACRO_SUBSTITUTION (int i)
+    {
+        return min_values[i];
+    }
+    inline T& max BOOST_PREVENT_MACRO_SUBSTITUTION (int i)
+    {
+        return max_values[i];
+    }
+
+protected:
+    void init(int d, T range = -std::numeric_limits<T>::infinity()) {
+        for(int i=0; i<d; ++i)
+        {
+            min_values[i] = -range;
+            max_values[i] =  range;
+        }
+    }
 };
 
+}
 
-template<int D, typename T>
-std::ostream& operator<<(std::ostream& out, const Bbox<D, T>& bbox)
+/// \ingroup PkgDDTMisc
+/// A D-dimensional axis aligned box
+template<int Dim, typename T, typename Derived>
+struct Bbox : public Impl::Bbox<std::array<T, Dim>, Derived>
 {
+public:
+    inline constexpr int dimension() const { return D; }
+private:
+    enum { D = Dim };
+};
+
+/// \ingroup PkgDDTMisc
+/// A D-dimensional axis aligned box
+template<typename T, typename Derived>
+class Bbox<0,T,Derived> : public Impl::Bbox<std::vector<T>, Derived>
+{
+public:
+    inline int dimension() const { return this->min_values.size(); }
+protected:
+    void init_values(int d) {
+        this->min_values.resize(d);
+        this->max_values.resize(d);
+    }
+};
+
+template<typename Container, typename Derived>
+std::ostream& operator<<(std::ostream& out, const Impl::Bbox<Container, Derived>& bbox)
+{
+    int D = bbox.dimension();
     for(int i=0; i<D; ++i)
-        out  << bbox.value[i] << "  " << bbox.value[i+D] << " ";
+        out  << bbox.min(i) << "  " << bbox.max(i) << " ";
     return out;
 }
 
 
-template<int D, typename T>
-std::istream& operator>>(std::istream& in, Bbox<D, T>& bbox)
+template<typename Container, typename Derived>
+std::istream& operator>>(std::istream& in, Impl::Bbox<Container, Derived>& bbox)
 {
+    int D = bbox.dimension();
     for(int i=0; i<D; ++i)
-        in  >> bbox.value[i] >> bbox.value[i+D];
+        in  >> bbox.min(i) >> bbox.max(i);
     return in;
 }
 

@@ -12,7 +12,6 @@
 #ifndef CGAL_DDT_TILE_H
 #define CGAL_DDT_TILE_H
 
-#include <CGAL/DDT/Bbox.h>
 #include <CGAL/DDT/selector/Median_selector.h>
 
 #include <vector>
@@ -50,12 +49,12 @@ public:
     typedef std::pair<Cell_const_handle,Id>          Cell_const_handle_and_id;
     typedef std::pair<Vertex_const_handle,Id>        Vertex_const_handle_and_id;
     typedef std::pair<Point,Id>                      Point_id;
-    enum { D = Traits::D };
 
     /// constructor
-    Tile(Id id, int dimension = D)
-        : id_(id),
-          dt_(traits.triangulation(dimension)),
+    Tile(Id id, Traits t)
+        : traits(t),
+          id_(id),
+          dt_(traits.triangulation()),
           number_of_main_finite_vertices_(0),
           number_of_main_finite_facets_(0),
           number_of_main_finite_cells_(0),
@@ -338,7 +337,9 @@ public:
     /// Collect at most 2*D vertices which points define the bounding box of the local tile vertices
     void get_axis_extreme_points(std::vector<Vertex_const_handle>& out) const
     {
-        Vertex_const_handle v[2*D];
+        std::vector<Vertex_const_handle> v;
+        int D = traits.dimension();
+        v.reserve(2*D);
         auto vit = vertices_begin();
         // first local point
         for(; vit != vertices_end(); ++vit)
@@ -416,7 +417,6 @@ public:
         {
             points.push_back(r.first);
             ids.push_back(r.second);
-            bbox_[r.second] += r.first;
             indices.push_back(index++);
         }
 
@@ -463,17 +463,6 @@ public:
                     if(!vertex_is_infinite(v) && id(v) != id())
                         out_edges.insert(id(v));
                 }
-    }
-
-    const std::map<Id, Bbox<D,double>>& bbox() const
-    {
-        return bbox_;
-    }
-
-
-    std::map<Id, Bbox<D,double>>& bbox()
-    {
-        return bbox_;
     }
 
     bool are_vertices_equal(Vertex_const_handle v, const Tile& t, Vertex_const_handle tv) const
@@ -585,8 +574,6 @@ private:
     size_t number_of_main_finite_cells_;
     size_t number_of_main_facets_;
     size_t number_of_main_cells_;
-
-    std::map<Id, Bbox<D, double>> bbox_;
 };
 
 

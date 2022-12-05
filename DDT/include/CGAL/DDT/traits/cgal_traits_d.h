@@ -12,10 +12,9 @@
 #ifndef CGAL_DDT_CGAL_TRAITS_D_H
 #define CGAL_DDT_CGAL_TRAITS_D_H
 
-
-#include <CGAL/DDT/Bbox.h>
 #include <CGAL/DDT/traits/Facet_const_iterator_d.h>
 #include <CGAL/DDT/traits/Data.h>
+#include <CGAL/DDT/Bbox.h>
 
 #include <CGAL/Epick_d.h>
 #include <CGAL/Delaunay_triangulation.h>
@@ -27,15 +26,12 @@
 #include <functional>
 #include <limits>
 
-
-typedef std::numeric_limits< double > dbl;
-
 namespace CGAL {
 namespace DDT {
 
-/// \ingroup PkgDDTTraitsClasses
-/// \cgalModels TriangulationTraits
-template<typename I, typename F = No_info, typename Dim = CGAL::Dynamic_dimension_tag>
+namespace Impl {
+
+template<typename Dim, typename I, typename F>
 struct Cgal_traits_d
 {
     typedef Dim                                                    Dim_tag;
@@ -67,10 +63,7 @@ struct Cgal_traits_d
     typedef CGAL::Delaunay_triangulation<K,TDS>                    Delaunay_triangulation;
     typedef CGAL::Random_points_in_cube_d<Point>                   Random_points_in_box;
 
-    Delaunay_triangulation triangulation(int dimension) const
-    {
-        return Delaunay_triangulation(dimension);
-    }
+    //inline constexpr int dimension() const { assert(false); return 0; }
 
     inline Id    id  (Vertex_const_handle v) const
     {
@@ -600,14 +593,89 @@ struct Cgal_traits_d
     }
 };
 
+}
+
+
+/// \ingroup PkgDDTTraitsClasses
+/// \cgalModels TriangulationTraits
+template<typename I, typename F = No_info>
+struct Cgal_traits_d : public Impl::Cgal_traits_d<CGAL::Dynamic_dimension_tag,I,F>
+{
+    typedef Impl::Cgal_traits_d<CGAL::Dynamic_dimension_tag,I,F> Base;
+    typedef typename Base::Delaunay_triangulation Delaunay_triangulation;
+    typedef typename Base::Point Point;
+    int dim;
+    enum { D = 0 };
+    Cgal_traits_d(int d) : dim(d) { assert(d >= 2); }
+    inline constexpr int dimension() const { return dim; }
+    Delaunay_triangulation triangulation() const { return Delaunay_triangulation(dimension()); }
+    struct Bbox : public CGAL::DDT::Bbox<0, double, Bbox> {
+        Bbox(                   ) { }
+        Bbox(int d              ) { this->init_values(d); this->init(d       ); }
+        Bbox(int d, double range) { this->init_values(d); this->init(d, range); }
+        Bbox(const Point& p     ) { init_point(p); }
+
+        Bbox& add_point(const Point& p)
+        {
+            if (this->dimension() == 0) { init_point(p); return *this; }
+            int i = 0;
+            for(auto it = p.cartesian_begin(); it != p.cartesian_end() ; ++it, ++i) {
+                std::pair<double, double> interval = CGAL::to_interval(*it);
+                if (interval.first  < this->min_values[i]) this->min_values[i] = interval.first;
+                if (interval.second > this->max_values[i]) this->max_values[i] = interval.second;
+            }
+            return *this;
+        }
+    private:
+        void init_point(const Point& p) {
+            this->init_values(p.dimension());
+            int i = 0;
+            for(auto it = p.cartesian_begin(); it != p.cartesian_end() ; ++it, ++i) {
+                std::pair<double, double> interval = CGAL::to_interval(*it);
+                this->min_values[i] = interval.first;
+                this->max_values[i] = interval.second;
+            }
+        }
+    };
+
+};
+
 /// \ingroup PkgDDTTraitsClasses
 /// \cgalModels TriangulationTraits
 template<unsigned int N, typename I, typename F = No_info>
-struct Cgal_traits : public Cgal_traits_d<I,F,CGAL::Dimension_tag<N>>
+struct Cgal_traits : public Impl::Cgal_traits_d<CGAL::Dimension_tag<N>,I,F>
 {
+    typedef Impl::Cgal_traits_d<CGAL::Dimension_tag<N>,I,F> Base;
+    typedef typename Base::Delaunay_triangulation Delaunay_triangulation;
+    typedef typename Base::Point Point;
     enum { D = N };
+    Cgal_traits(int d = 0) { assert(d==0 || d==D); }
+    inline constexpr int dimension() const { return D; }
+    Delaunay_triangulation triangulation() const { return Delaunay_triangulation(dimension()); }
+    struct Bbox : public CGAL::DDT::Bbox<D, double, Bbox> {
+        Bbox(int d = D          ) { assert(d==D) ; this->init(D       ); }
+        Bbox(int d, double range) { assert(d==D) ; this->init(D, range); }
+        Bbox(const Point& p     ) {
+            assert(D == p.dimension());
+            int i = 0;
+            for(auto it = p.cartesian_begin(); it != p.cartesian_end() ; ++it, ++i) {
+                std::pair<double, double> interval = CGAL::to_interval(*it);
+                this->min_values[i] = interval.first;
+                this->max_values[i] = interval.second;
+            }
+        }
+        Bbox& add_point(const Point& p)
+        {
+            assert(D == p.dimension());
+            for(int i = 0; i < D; ++i) {
+                std::pair<double, double> interval = CGAL::to_interval(p[i]);
+                if (interval.first  < this->min_values[i]) this->min_values[i] = interval.first;
+                if (interval.second > this->max_values[i]) this->max_values[i] = interval.second;
+            }
+            return *this;
+        }
+    };
 };
-
 }
 }
 

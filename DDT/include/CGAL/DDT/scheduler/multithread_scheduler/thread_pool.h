@@ -68,8 +68,8 @@ private:
     std::mutex m_conditional_mutex;
     std::condition_variable m_conditional_lock;
 public:
-    thread_pool(const int n_threads)
-        : m_threads(n_threads?n_threads:std::thread::hardware_concurrency()), m_shutdown(false)
+    thread_pool(const int max_concurrency)
+        : m_threads(max_concurrency?max_concurrency:std::thread::hardware_concurrency()), m_shutdown(false)
     {
     }
 
@@ -79,7 +79,7 @@ public:
     thread_pool & operator=(const thread_pool &) = delete;
     thread_pool & operator=(thread_pool &&) = delete;
 
-    inline int number_of_threads() const
+    inline int max_concurrency() const
     {
         return m_threads.size();
     }

@@ -40,16 +40,15 @@ struct File_serializer
     return in.is_open();
   }
 
-  Tile load(typename Tile::Id id) const
+  bool load(Tile& tile) const
   {
 #ifdef CGAL_DEBUG_DDT
     ++nb_loads;
 #endif
-    const std::string fname = filename(id);
+    const std::string fname = filename(tile.id());
     std::ifstream in(fname, std::ios::in | std::ios::binary);
-    Tile tile(id);
     in >> tile.triangulation();
-    return tile;
+    return !in.fail();
   }
 
   bool save(const Tile& tile) const {

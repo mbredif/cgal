@@ -18,7 +18,7 @@ int dump_2d_vrt(TileContainer& tiles, Scheduler& scheduler, const std::string& v
     CGAL::DDT::write_vrt_verts(tiles, scheduler, vrt+"_v");
     CGAL::DDT::write_vrt_facets(tiles, scheduler, vrt+"_f");
     CGAL::DDT::write_vrt_cells(tiles, scheduler, vrt+"_c");
-    CGAL::DDT::write_vrt_bboxes(tiles, scheduler, vrt+"_b");
+    CGAL::DDT::write_vrt_bboxes(tiles, vrt+"_b");
     CGAL::DDT::write_vrt_tins(tiles, scheduler, vrt+"_t");
     return 0;
 
@@ -45,7 +45,7 @@ bool is_euler_valid(T & tri)
 }
 
 template <typename T>
-int test_traits(const std::string& testname, int ND, int NP, int NT = -1, bool do_test_io = true)
+int test_traits(const std::string& testname, int ND, int NP, int dim = T::D, int NT = -1, bool do_test_io = true)
 {
     std::cout << "Test " << testname << std::endl;
     int result = 0;
@@ -57,13 +57,14 @@ int test_traits(const std::string& testname, int ND, int NP, int NT = -1, bool d
     typedef CGAL::Distributed_Delaunay_triangulation<TileContainer> Distributed_Delaunay_triangulation;
     typedef CGAL::DDT::Grid_partitioner<Traits> Partitioner;
     typedef typename Traits::Random_points_in_box Random_points;
+    typedef typename Traits::Bbox Bbox;
 
     std::cout << "== Delaunay ==" << std::endl;
     double range = 1;
-    CGAL::DDT::Bbox<Traits::D, double> bbox(range);
-    Random_points points(Traits::D, range);
+    Bbox bbox(dim, range);
+    Random_points points(dim, range);
     Partitioner partitioner(bbox, ND);
-    TileContainer tiles1(NT);
+    TileContainer tiles1(dim, NT);
     Scheduler scheduler;
     CGAL::DDT::insert(tiles1, scheduler, points, NP, partitioner);
     Distributed_Delaunay_triangulation tri1(tiles1);
@@ -74,12 +75,12 @@ int test_traits(const std::string& testname, int ND, int NP, int NT = -1, bool d
     }
 
     boost::filesystem::create_directories(testname);
-    if (Traits::D == 3)
+    if (dim == 3)
     {
         std::cout << "== write_ply ==" << std::endl;
         CGAL::DDT::write_ply(tiles1, testname + "/out.ply");
     }
-    else if (Traits::D == 2)
+    else if (dim == 2)
     {
         result += dump_2d_vrt(tiles1, scheduler, testname + "/tri1");
         if(!is_euler_valid(tri1))
@@ -94,7 +95,7 @@ int test_traits(const std::string& testname, int ND, int NP, int NT = -1, bool d
         std::cout << "write..." << std::endl;
         CGAL::DDT::write_cgal(tiles1, testname + "/cgal");
 
-        TileContainer tiles2;
+        TileContainer tiles2(dim);
         Distributed_Delaunay_triangulation tri2(tiles2);
         std::cout << "read..." << std::endl;
         CGAL::DDT::read_cgal(tiles2, testname + "/cgal");
@@ -102,7 +103,7 @@ int test_traits(const std::string& testname, int ND, int NP, int NT = -1, bool d
         CGAL::DDT::write_cgal(tiles2, testname + "/cgal2");
 
         result += dump_2d_vrt(tiles2, scheduler, testname + "/tri2");
-        if (Traits::D == 2)
+        if (dim == 2)
         {
             result += dump_2d_vrt(tiles1, scheduler, testname + "/tri1");
             if(!is_euler_valid(tri2))
@@ -110,7 +111,7 @@ int test_traits(const std::string& testname, int ND, int NP, int NT = -1, bool d
         }
     }
 
-    if (Traits::D == 2)
+    if (dim == 2)
     {
         std::cout << "== get_ring ==" << std::endl;
         auto finite_cell = tri1.cells_begin();
@@ -134,7 +135,7 @@ int test_traits(const std::string& testname, int ND, int NP, int NT = -1, bool d
 
     std::cout << "== Tile.get_* ==" << std::endl;
     {
-        Tile t(0);
+        Tile t(0, dim);
         std::vector<typename Tile::Vertex_const_handle> points;
         std::vector<typename Tile::Vertex_const_handle_and_id> points_and_ids;
         t.get_axis_extreme_points(points);

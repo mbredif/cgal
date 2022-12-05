@@ -48,14 +48,13 @@ size_t insert_and_send_all_axis_extreme_points(TileContainer& tc, Scheduler& sch
     typedef typename Tile::Vertex_const_handle Vertex_const_handle;
     return sch.for_each(tc, [&sch](Tile& tile)
     {
-        /// @todo  insert local points only (no need to simplify, no need to gather new vertices)
-
         size_t count = splay_tile(tile, sch);
 
         // send the extreme points along each axis to all tiles to initialize the star splaying
         std::vector<Vertex_const_handle> vertices;
         tile.get_axis_extreme_points(vertices);
         sch.send_all(tile, vertices);
+
         return count;
     });
 }
@@ -74,6 +73,15 @@ template<typename TileContainer, typename Scheduler>
 size_t insert_received(TileContainer& tc, Scheduler& sch){
     size_t n = tc.number_of_finite_vertices();
     insert_and_send_all_axis_extreme_points(tc, sch);
+
+    /// @todo find an API for bbox computation
+    auto& bboxes = tc.bboxes();
+    typename Scheduler::Point_id_container points;
+    sch.allbox.swap(points);
+    for(auto& pi : points)
+        bboxes[pi.second] += pi.first;
+    sch.allbox.swap(points);
+
     splay_stars(tc, sch);
     tc.finalize(); /// @todo : return 0 for unloaded tiles
     return tc.number_of_finite_vertices() - n;

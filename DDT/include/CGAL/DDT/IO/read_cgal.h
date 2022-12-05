@@ -34,16 +34,8 @@ std::istream& read_json(Tile & tile,std::istream&  ifile)
     typedef typename Tile::Id Id;
     boost::property_tree::ptree root_node;
     boost::property_tree::read_json(ifile, root_node);
-    auto & bbox = tile.bbox();
     int id =  root_node.get<Id>("id");
     tile.set_id(id);
-    for (auto its : root_node.get_child("bbox"))
-    {
-        int iid = std::stoi(its.first);
-        Id id = iid;
-        std::stringstream ss (its.second.data());
-        ss >> bbox[id];
-    }
     return ifile;
 }
 
@@ -89,6 +81,15 @@ int read_cgal(TileContainer& tc, const std::string& dirname)
         tc.init(tid);
         auto tile = tc.load(tid);
         read_cgal_tile(*tile,dirname);
+    }
+    auto & bboxes = tc.bboxes();
+    for (auto its : root_node.get_child("bboxes"))
+    {
+        int iid = std::stoi(its.first);
+        Id id = iid;
+        std::stringstream ss (its.second.data());
+        bboxes.emplace(id, tc.maximal_dimension());
+        ss >> bboxes[id];
     }
     tc.finalize();
     std::cout << tc.is_valid() << std::endl;

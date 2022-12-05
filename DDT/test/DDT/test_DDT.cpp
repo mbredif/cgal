@@ -8,6 +8,7 @@ typedef int Flag;
 #include <CGAL/DDT/traits/cgal_traits_d.h>
 typedef CGAL::DDT::Cgal_traits<2,Id,Flag> Traits;
 typedef Traits::Point Point;
+typedef Traits::Bbox Bbox;
 
 #include <CGAL/DDT/Tile_container.h>
 typedef CGAL::DDT::Tile<Traits> Tile;
@@ -50,10 +51,10 @@ int main(int, char **)
     points.emplace_back(1, 1);
 
     double range = 3;
-    CGAL::DDT::Bbox<Traits::D, double> bbox(range);
+    Bbox bbox(Traits::D, range);
 
     Partitioner partitioner(bbox, ND, ND+Traits::D);
-    TileContainer tiles;
+    TileContainer tiles(Traits::D);
     Scheduler scheduler;
     CGAL::DDT::insert(tiles, scheduler, points.begin(), points.size(), partitioner);
     Distributed_Delaunay_triangulation tri(tiles);

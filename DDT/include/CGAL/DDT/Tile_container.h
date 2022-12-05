@@ -99,6 +99,7 @@ public:
     typedef _Tile                                    Tile;
 
     typedef typename Traits::Point                   Point;
+    typedef typename Traits::Bbox                    Bbox;
     typedef typename Traits::Id                      Id;
     typedef typename Traits::Delaunay_triangulation  DT;
     typedef typename Traits::Vertex_handle           Tile_vertex_handle;
@@ -119,14 +120,13 @@ public:
     typedef std::set<Id> Tile_id_set;
     typedef typename Tile_id_set::const_iterator Tile_id_const_iterator;
 
-    enum { D = Traits::D };
-
-    inline int maximal_dimension() const
+    inline constexpr int maximal_dimension() const
     {
-        return D;
+        return traits.dimension();
     }
 
-    Tile_container(size_t max_number_of_tiles = 0, const Serializer& serializer = Serializer()) :
+    Tile_container(int dimension, size_t max_number_of_tiles = 0, const Serializer& serializer = Serializer()) :
+        traits(dimension),
         tiles(),
         serializer(serializer),
         number_of_finite_vertices_(0),
@@ -220,18 +220,20 @@ public:
         // make room if necessary
         while(number_of_tiles() >= maximum_number_of_tiles()) {
             // pick a loaded id at random and try to unload it
-            size_t n = rand() % ids.size();
-            Tile_id_const_iterator it = ids.begin();
+            size_t n = rand() % number_of_tiles();
+            Tile_const_iterator it = begin();
             std::advance(it, n);
-            if (*it!=id) unload(*it);
+            if (it->id()!=id) unload(it->id());
         }
+
+        // initialize an empty tile
+        tile = tiles.emplace(id, std::move(Tile(id, traits))).first;
 
         // deserialize it if possible
         if (serializer.has_tile(id))
-          return tiles.emplace(id, std::move(serializer.load(id))).first;
+          serializer.load(*tile);
 
-        // initialize an empty tile
-        return tiles.emplace(id, id).first;
+        return tile;
     }
 
     void get_adjacency_graph(std::unordered_multimap<Id,Id>& edges) const
@@ -311,10 +313,23 @@ public:
         return true;
     }
 
+    const std::map<Id, Bbox>& bboxes() const
+    {
+        return bboxes_;
+    }
+
+
+    std::map<Id, Bbox>& bboxes()
+    {
+        return bboxes_;
+    }
+
 private:
     Container tiles; /// loaded tiles
     Tile_id_set ids;
+    std::map<Id, Bbox> bboxes_;
     Serializer serializer;
+    Traits traits;
 
     size_t number_of_finite_vertices_;
     size_t number_of_finite_facets_;

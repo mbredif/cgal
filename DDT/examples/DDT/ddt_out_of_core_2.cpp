@@ -15,6 +15,7 @@
 typedef int Id;
 typedef CGAL::DDT::Cgal_traits_2<Id> Traits;
 typedef Traits::Random_points_in_box Random_points;
+typedef Traits::Bbox Bbox;
 
 typedef CGAL::DDT::Tile<Traits> Tile;
 typedef CGAL::DDT::Sequential_scheduler<Tile> Scheduler;
@@ -71,12 +72,12 @@ int main(int argc, char **argv)
     std::cerr << desc << std::endl;
     return -1;
   }
-  CGAL::DDT::Bbox<2, double> bbox(range);
+  Bbox bbox(D, range);
   CGAL::DDT::Grid_partitioner<Traits> partitioner(bbox, NT.begin(), NT.end());
 //  CGAL::DDT::Random_partitioner<Traits> partitioner(0, NT[0]-1);
 
   Serializer serializer(ser);
-  TileContainer tiles(max_number_of_tiles, serializer);
+  TileContainer tiles(D, max_number_of_tiles, serializer);
   Scheduler scheduler;
 
   std::cout << "- Range          : " << range << std::endl;
@@ -97,6 +98,8 @@ int main(int argc, char **argv)
       CGAL::DDT::write_vrt_verts(tiles, scheduler, vrt+"_v");
       CGAL::DDT::write_vrt_facets(tiles, scheduler, vrt+"_f");
       CGAL::DDT::write_vrt_cells(tiles, scheduler, vrt+"_c");
+      CGAL::DDT::write_vrt_bboxes(tiles, vrt+"_b");
+      CGAL::DDT::write_vrt_tins(tiles, scheduler, vrt+"_t");
   }
 
   if ( vm.count("check")  )

@@ -31,8 +31,9 @@ struct Sequential_scheduler
     typedef std::vector<Point_id> Point_id_container;
 
     /// constructor
+    Sequential_scheduler(int max_concurrency = 0) { assert(max_concurrency==1 || max_concurrency==0); }
 
-    inline int number_of_threads() const
+    inline int max_concurrency() const
     {
         return 1;
     }
@@ -132,8 +133,8 @@ struct Sequential_scheduler
         return value;
     }
 
-private:
     Point_id_container allbox;
+private:
     std::map<Id, size_t> allbox_sent;
     std::map<Id, std::vector<Point_id>> inbox;
 };

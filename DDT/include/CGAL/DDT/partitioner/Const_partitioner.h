@@ -31,6 +31,10 @@ public:
         return id_;
     }
 
+    const Id *begin() const { return &id_; }
+    const Id *end() const { return &id_ + 1; }
+    constexpr size_t size() const { return 1; }
+
 private:
     Id id_;
 };

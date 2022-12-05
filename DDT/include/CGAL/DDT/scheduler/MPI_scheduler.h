@@ -78,7 +78,7 @@ struct MPI_scheduler
     typedef typename Tile::Id Id;
     typedef std::vector<Point_id> Point_id_container;
 
-    MPI_scheduler() {
+    MPI_scheduler(int max_concurrency = 0) {
         // Initialize the MPI environment
         MPI_Init(NULL, NULL);
 
@@ -101,7 +101,7 @@ struct MPI_scheduler
         MPI_Finalize();
     }
 
-    inline int number_of_threads() const
+    inline int max_concurrency() const
     {
         return world_size;
     }

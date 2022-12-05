@@ -12,6 +12,8 @@
 #ifndef CGAL_DDT_VERTEX_CONST_ITERATOR_H
 #define CGAL_DDT_VERTEX_CONST_ITERATOR_H
 
+#include <iterator>
+
 namespace CGAL {
 namespace DDT {
 

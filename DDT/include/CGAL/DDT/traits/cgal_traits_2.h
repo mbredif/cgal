@@ -16,7 +16,6 @@
 #include <CGAL/Delaunay_triangulation_2.h>
 #include <CGAL/point_generators_2.h>
 
-#include <CGAL/DDT/Bbox.h>
 #include <CGAL/DDT/traits/Facet_const_iterator_2.h>
 #include <CGAL/DDT/traits/ddt_vertex_base_with_info_2.h>
 #include <CGAL/DDT/traits/Data.h>
@@ -58,6 +57,17 @@ struct Cgal_traits_2
     typedef CGAL::Delaunay_triangulation_2<K, TDS>                 Delaunay_triangulation;
     typedef CGAL::Random_points_in_disc_2<Point>                   Random_points_in_ball;
 
+    Cgal_traits_2(int d = 0) { assert(d==0 || d==D); }
+    inline constexpr int dimension() const { return D; }
+
+    struct Bbox : public CGAL::Bbox_2
+    {
+        Bbox(unsigned int d, double range) : CGAL::Bbox_2(-range, -range, range, range) { CGAL_assertion(d==2); }
+        Bbox(unsigned int d = 2) : CGAL::Bbox_2() { CGAL_assertion(d==2); }
+        Bbox& operator+=(const CGAL::Bbox_2& bbox) { CGAL::Bbox_2::operator+=(bbox); return *this; }
+        Bbox& operator+=(const Point& p) { CGAL::Bbox_2 bbox(p.x(), p.y(), p.x(), p.y()); *this += bbox; return *this; }
+    };
+
     struct Random_points_in_box : CGAL::Random_points_in_square_2<Point>
     {
         Random_points_in_box(int d, double g) : CGAL::Random_points_in_square_2<Point>(g)
@@ -67,9 +77,8 @@ struct Cgal_traits_2
         Random_points_in_box(double g) : CGAL::Random_points_in_square_2<Point>(g) {}
     };
 
-    Delaunay_triangulation triangulation(int dimension = D) const
+    Delaunay_triangulation triangulation() const
     {
-        assert(dimension == D);
         return Delaunay_triangulation();
     }
 

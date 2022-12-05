@@ -12,8 +12,6 @@
 #ifndef CGAL_DDT_PARITIONER_GRID_PARTITIONER_H
 #define CGAL_DDT_PARITIONER_GRID_PARTITIONER_H
 
-#include <CGAL/DDT/Bbox.h>
-
 namespace CGAL {
 namespace DDT {
 
@@ -24,39 +22,48 @@ class Grid_partitioner
 {
 public:
     typedef typename Traits::Point Point;
+    typedef typename Traits::Bbox Bbox;
     typedef typename Traits::Id    Id;
-    enum { D = Traits::D };
 
     template<typename Iterator>
-    Grid_partitioner(const Bbox<D, double>& bbox, Iterator it, Iterator end)
+    Grid_partitioner(const Bbox& bbox, Iterator it, Iterator end)
     {
-        M = 1;
+        int D = bbox.dimension();
         int n = 1;
+        M = 1;
+        N.resize(D);
+        inv_step.resize(D);
+        origin.resize(D);
         for(int i=0; i<D; ++i)
         {
             if (it!=end) n = *it++;
             N[i] = n;
-            M *= n;
             inv_step[i] = n/(bbox.max(i)-bbox.min(i));
             origin[i] = bbox.min(i);
+            M *= n;
         }
     }
 
-    Grid_partitioner(const Bbox<D, double>& bbox, int n)
+    Grid_partitioner(const Bbox& bbox, int n)
     {
+        int D = bbox.dimension();
         M = 1;
+        N.resize(D);
+        inv_step.resize(D);
+        origin.resize(D);
         for(int i=0; i<D; ++i)
         {
             N[i] = n;
-            M *= n;
             inv_step[i] = n/(bbox.max(i)-bbox.min(i));
             origin[i] = bbox.min(i);
+            M *= n;
         }
     }
 
     /// @todo : use a predicate, may be approximate (p[i] is a double approximation)
     Id operator()(const Point& p) const
     {
+        int D = N.size();
         int id = 0;
         for(int i=0; i<D; ++i)
         {
@@ -65,14 +72,15 @@ public:
         }
         return id;
     }
-    const int *begin() const { return N; }
-    const int *end() const { return N+D; }
-    int size() const { return M; }
+    typename std::vector<Id>::const_iterator begin() const { return N.begin(); }
+    typename std::vector<Id>::const_iterator end() const { return N.end(); }
+    size_t size() const { return M; }
 
 private:
-    int N[D], M;
-    double inv_step[D];
-    double origin[D];
+    size_t M;
+    std::vector<Id> N;
+    std::vector<double> inv_step;
+    std::vector<double> origin;
 };
 
 }

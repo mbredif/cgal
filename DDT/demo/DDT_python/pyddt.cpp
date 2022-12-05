@@ -171,7 +171,7 @@ private:
     typedef CGAL::DDT::DDT<Traits, Scheduler, py_tile> DDT;
 
 public:
-    py_DDT(int n_threads=0) : DDT(n_threads) {}
+    py_DDT(int max_concurrency=0) : DDT(max_concurrency) {}
 
     boost::python::tuple py_vertex(int id) const
     {
