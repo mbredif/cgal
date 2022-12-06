@@ -33,11 +33,11 @@ struct Cgal_traits_3
     typedef I                                                      Id;
     typedef F                                                      Info;
     typedef CGAL::DDT::Data<Id, Info>                              Data;
-    typedef CGAL::Exact_predicates_inexact_constructions_kernel    K;
-    typedef CGAL::DDT_vertex_base_with_info_3<Data, K>   Vb;
-    typedef CGAL::Delaunay_triangulation_cell_base_3<K>            Cb;
+    typedef CGAL::Exact_predicates_inexact_constructions_kernel    Geom_traits;
+    typedef CGAL::DDT_vertex_base_with_info_3<Data, Geom_traits>   Vb;
+    typedef CGAL::Delaunay_triangulation_cell_base_3<Geom_traits>  Cb;
     typedef CGAL::Triangulation_data_structure_3<Vb, Cb>           TDS;
-    typedef typename K::Point_3                                    Point;
+    typedef typename Geom_traits::Point_3                          Point;
 
     typedef typename TDS::Vertex_iterator                          Vertex_const_iterator;
     typedef typename TDS::Vertex_handle                            Vertex_const_handle;
@@ -55,7 +55,7 @@ struct Cgal_traits_3
     typedef Facet_const_iterator                                   Facet_iterator;
     typedef Facet_const_iterator                                   Facet_handle;
 
-    typedef CGAL::Delaunay_triangulation_3<K, TDS>                 Delaunay_triangulation;
+    typedef CGAL::Delaunay_triangulation_3<Geom_traits, TDS>       Delaunay_triangulation;
     typedef CGAL::Random_points_in_sphere_3<Point>                 Random_points_in_ball;
 
     Cgal_traits_3(int d = 0) { assert(d==0 || d==D); }
@@ -156,12 +156,9 @@ struct Cgal_traits_3
 
     void spatial_sort(const Delaunay_triangulation& dt, std::vector<std::size_t>& indices, const std::vector<Point>& points) const
     {
-        using Geom_traits = K;
         typedef typename Pointer_property_map<Point>::const_type Pmap;
         typedef Spatial_sort_traits_adapter_3<Geom_traits,Pmap> Search_traits;
-
-        CGAL::spatial_sort(indices.begin(), indices.end(),
-                     Search_traits(make_property_map(points), dt.geom_traits()));
+        CGAL::spatial_sort(indices.begin(), indices.end(), Search_traits(make_property_map(points), dt.geom_traits()));
     }
 
     template<typename OutputIterator>

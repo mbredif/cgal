@@ -22,7 +22,7 @@ namespace CGAL {
 namespace DDT {
 
 namespace Impl {
-template<typename Container, typename Derived>
+template<typename Container, typename Derived, typename Point>
 class Bbox
 {
 protected:
@@ -43,7 +43,6 @@ public:
         return *this;
     }
 
-    template<typename Point>
     Bbox& operator+=(const Point& p)
     {
         return static_cast<Derived*>(this)->add_point(p);
@@ -86,8 +85,8 @@ protected:
 
 /// \ingroup PkgDDTMisc
 /// A D-dimensional axis aligned box
-template<int Dim, typename T, typename Derived>
-struct Bbox : public Impl::Bbox<std::array<T, Dim>, Derived>
+template<int Dim, typename T, typename Derived, typename Point>
+struct Bbox : public Impl::Bbox<std::array<T, Dim>, Derived, Point>
 {
 public:
     inline constexpr int dimension() const { return D; }
@@ -97,8 +96,8 @@ private:
 
 /// \ingroup PkgDDTMisc
 /// A D-dimensional axis aligned box
-template<typename T, typename Derived>
-class Bbox<0,T,Derived> : public Impl::Bbox<std::vector<T>, Derived>
+template<typename T, typename Derived, typename Point>
+class Bbox<0,T,Derived,Point> : public Impl::Bbox<std::vector<T>, Derived, Point>
 {
 public:
     inline int dimension() const { return this->min_values.size(); }
@@ -109,8 +108,8 @@ protected:
     }
 };
 
-template<typename Container, typename Derived>
-std::ostream& operator<<(std::ostream& out, const Impl::Bbox<Container, Derived>& bbox)
+template<typename Container, typename Derived, typename Point>
+std::ostream& operator<<(std::ostream& out, const Impl::Bbox<Container, Derived, Point>& bbox)
 {
     int D = bbox.dimension();
     for(int i=0; i<D; ++i)
@@ -119,8 +118,8 @@ std::ostream& operator<<(std::ostream& out, const Impl::Bbox<Container, Derived>
 }
 
 
-template<typename Container, typename Derived>
-std::istream& operator>>(std::istream& in, Impl::Bbox<Container, Derived>& bbox)
+template<typename Container, typename Derived, typename Point>
+std::istream& operator>>(std::istream& in, Impl::Bbox<Container, Derived, Point>& bbox)
 {
     int D = bbox.dimension();
     for(int i=0; i<D; ++i)

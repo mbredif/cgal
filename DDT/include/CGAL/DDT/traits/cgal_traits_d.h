@@ -38,11 +38,11 @@ struct Cgal_traits_d
     typedef I                                                      Id;
     typedef F                                                      Info;
     typedef CGAL::DDT::Data<Id, Info>                              Data;
-    typedef CGAL::Epick_d<Dim_tag>                                 K;
-    typedef CGAL::Triangulation_vertex<K,Data>                     Vb;
-    typedef CGAL::Triangulation_full_cell<K>                       Cb;
+    typedef CGAL::Epick_d<Dim_tag>                                 Geom_traits;
+    typedef CGAL::Triangulation_vertex<Geom_traits,Data>           Vb;
+    typedef CGAL::Triangulation_full_cell<Geom_traits>             Cb;
     typedef CGAL::Triangulation_data_structure<Dim_tag,Vb,Cb>      TDS;
-    typedef typename K::Point_d                                    Point;
+    typedef typename Geom_traits::Point_d                          Point;
 
     typedef typename TDS::Vertex_const_iterator                    Vertex_const_iterator;
     typedef typename TDS::Vertex_const_handle                      Vertex_const_handle;
@@ -60,7 +60,7 @@ struct Cgal_traits_d
     typedef Facet_const_iterator                                   Facet_iterator;
     typedef Facet_const_iterator                                   Facet_handle;
 
-    typedef CGAL::Delaunay_triangulation<K,TDS>                    Delaunay_triangulation;
+    typedef CGAL::Delaunay_triangulation<Geom_traits,TDS>          Delaunay_triangulation;
     typedef CGAL::Random_points_in_cube_d<Point>                   Random_points_in_box;
 
     //inline constexpr int dimension() const { assert(false); return 0; }
@@ -138,12 +138,9 @@ struct Cgal_traits_d
 
     void spatial_sort(const Delaunay_triangulation& dt, std::vector<std::size_t>& indices, const std::vector<Point>& points) const
     {
-        using Geom_traits = K;
         typedef typename Pointer_property_map<Point>::const_type Pmap;
         typedef Spatial_sort_traits_adapter_d<Geom_traits,Pmap> Search_traits;
-
-        CGAL::spatial_sort(indices.begin(), indices.end(),
-                     Search_traits(make_property_map(points), dt.geom_traits()));
+        CGAL::spatial_sort(indices.begin(), indices.end(), Search_traits(make_property_map(points), dt.geom_traits()));
     }
 
     template<typename OutputIterator>
@@ -610,7 +607,7 @@ struct Cgal_traits_d : public Impl::Cgal_traits_d<CGAL::Dynamic_dimension_tag,I,
     Cgal_traits_d(int d) : dim(d) { assert(d >= 2); }
     inline constexpr int dimension() const { return dim; }
     Delaunay_triangulation triangulation() const { return Delaunay_triangulation(dimension()); }
-    struct Bbox : public CGAL::DDT::Bbox<0, double, Bbox> {
+    struct Bbox : public CGAL::DDT::Bbox<0, double, Bbox, Point> {
         Bbox(                   ) { }
         Bbox(int d              ) { this->init_values(d); this->init(d       ); }
         Bbox(int d, double range) { this->init_values(d); this->init(d, range); }
@@ -653,7 +650,7 @@ struct Cgal_traits : public Impl::Cgal_traits_d<CGAL::Dimension_tag<N>,I,F>
     Cgal_traits(int d = 0) { assert(d==0 || d==D); }
     inline constexpr int dimension() const { return D; }
     Delaunay_triangulation triangulation() const { return Delaunay_triangulation(dimension()); }
-    struct Bbox : public CGAL::DDT::Bbox<D, double, Bbox> {
+    struct Bbox : public CGAL::DDT::Bbox<D, double, Bbox, Point> {
         Bbox(int d = D          ) { assert(d==D) ; this->init(D       ); }
         Bbox(int d, double range) { assert(d==D) ; this->init(D, range); }
         Bbox(const Point& p     ) {
@@ -677,6 +674,7 @@ struct Cgal_traits : public Impl::Cgal_traits_d<CGAL::Dimension_tag<N>,I,F>
         }
     };
 };
+
 }
 }
 
