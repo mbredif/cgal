@@ -80,13 +80,13 @@ int main(int argc, char **argv)
   TileContainer tiles(D, max_number_of_tiles, serializer);
   Scheduler scheduler;
 
-  std::cout << "- Range          : " << range << std::endl;
-  std::cout << "- Points         : " << NP << std::endl;
-  std::cout << "- Output prefix  : " << ser <<  std::endl;
-  std::cout << "- VRT Out  : " << (vrt.empty() ? "[no output]" : vrt) << std::endl;
-  std::cout << "- Tiles          : " << partitioner.size() << " ( ";
-  std::copy(NT.begin(), NT.end(), std::ostream_iterator<int>(std::cout, " "));
-  std::cout << ")" << std::endl;
+  std::cout << "- Range       : " << range << std::endl;
+  std::cout << "- Points      : " << NP << std::endl;
+  std::cout << "- Concurrency : " << scheduler.max_concurrency() << std::endl;
+  std::cout << "- memTiles    : " << max_number_of_tiles << std::endl;
+  std::cout << "- VRT Out     : " << (vrt.empty() ? "[no output]" : vrt) << std::endl;
+  std::cout << "- Tiles       : " << partitioner.size() << ", " << partitioner << std::endl;
+  std::cout << "- Serializer  : " << serializer << std::endl;
 
   Random_points points(D, range);
   size_t n = CGAL::DDT::insert(tiles, scheduler, points, NP, partitioner);

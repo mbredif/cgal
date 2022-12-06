@@ -107,16 +107,15 @@ int main(int argc, char **argv)
     TileContainer tiles(D, max_number_of_tiles, serializer);
     Scheduler scheduler(threads);
 
-    std::cout << "- Loglevel : " << loglevel << std::endl;
-    std::cout << "- Range    : " << range << std::endl;
-    std::cout << "- Points   : " << NP << std::endl;
-    std::cout << "- Threads  : " << scheduler.max_concurrency() << std::endl;
-    std::cout << "- memTiles : " << max_number_of_tiles << std::endl;
-    std::cout << "- VRT Out  : " << (vrt.empty() ? "[no output]" : vrt) << std::endl;
-    std::cout << "- PLY Out  : " << (ply.empty() ? "[no output]" : ply) << std::endl;
-    std::cout << "- Tiles    : " << partitioner.size() << " ( ";
-    std::copy(partitioner.begin(), partitioner.end(), std::ostream_iterator<int>(std::cout, " "));
-    std::cout << ")" << std::endl;
+    std::cout << "- Loglevel    : " << loglevel << std::endl;
+    std::cout << "- Range       : " << range << std::endl;
+    std::cout << "- Points      : " << NP << std::endl;
+    std::cout << "- Concurrency : " << scheduler.max_concurrency() << std::endl;
+    std::cout << "- memTiles    : " << max_number_of_tiles << std::endl;
+    std::cout << "- VRT Out     : " << (vrt.empty() ? "[no output]" : vrt) << std::endl;
+    std::cout << "- PLY Out     : " << (ply.empty() ? "[no output]" : ply) << std::endl;
+    std::cout << "- Tiles       : " << partitioner.size() << ", " << partitioner << std::endl;
+    std::cout << "- Serializer  : " << serializer << std::endl;
 
     Random_points points(D, range);
     CGAL::DDT::insert(tiles, scheduler, points, NP, partitioner);
