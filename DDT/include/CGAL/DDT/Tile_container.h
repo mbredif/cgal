@@ -13,7 +13,7 @@
 #define CGAL_DDT_TILE_CONTAINER_H
 
 #include <CGAL/DDT/Tile.h>
-#include <CGAL/DDT/serializer/No_serialization.h>
+#include <CGAL/DDT/serializer/No_serializer.h>
 #include <map>
 
 namespace CGAL {
