@@ -21,7 +21,7 @@ struct File_serializer
 {
   typedef typename Tile::Id Id;
 
-  File_serializer(const std::string& prefix) : m_prefix(prefix) {
+  File_serializer(const std::string& prefix = "") : m_prefix(prefix) {
       boost::filesystem::path p(prefix);
       boost::filesystem::path q(p.parent_path());
       if(p.has_parent_path() && !boost::filesystem::exists(q))
@@ -50,10 +50,19 @@ struct File_serializer
 #endif
     const std::string fname = filename(tile.id());
     std::ifstream in(fname, std::ios::in | std::ios::binary);
-    typename Tile::Delaunay_triangulation dt;
+
+#ifdef IT_COMPILED_WITH_KERNELD
+    typename Tile::Delaunay_triangulation dt(tile.geom_traits().triangulation());
     in >> dt;
-    if (!in.fail()) std::swap(dt, tile.triangulation());
+    if (in.fail()) return false;
+    std::swap(dt, tile.triangulation());
+    return true;
+#else
+    tile.triangulation().clear();
+    in >> tile.triangulation();
     return !in.fail();
+#endif
+
   }
 
   bool save(const Tile& tile) const {

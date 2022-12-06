@@ -21,7 +21,7 @@ struct File_points_serializer
 {
   typedef typename Tile::Id Id;
 
-  File_points_serializer(const std::string& prefix) : m_prefix(prefix) {
+  File_points_serializer(const std::string& prefix = "") : m_prefix(prefix) {
       boost::filesystem::path p(prefix);
       boost::filesystem::path q(p.parent_path());
       if(p.has_parent_path() && !boost::filesystem::exists(q))
@@ -48,8 +48,11 @@ struct File_points_serializer
 #ifdef CGAL_DEBUG_DDT
     ++nb_loads;
 #endif
-    typename Tile::Delaunay_triangulation dt;
+
+#ifdef IT_COMPILED_WITH_KERNELD
+    typename Tile::Delaunay_triangulation dt(tile.geom_traits().triangulation());
     std::swap(dt, tile.triangulation());
+#endif
 
     const std::string fname = filename(tile.id());
     std::ifstream in(fname, std::ios::in | std::ios::binary);
@@ -63,8 +66,13 @@ struct File_points_serializer
         in >> p >> id;
         v = tile.insert(p,id,v).first;
     }
-    if(in.fail()) std::swap(dt, tile.triangulation());
-    return !in.fail();
+    if(!in.fail()) return true;
+
+#ifdef IT_COMPILED_WITH_KERNELD
+    std::swap(dt, tile.triangulation()); // revert changes
+#endif
+
+    return false;
   }
 
   bool save(const Tile& tile) const {
