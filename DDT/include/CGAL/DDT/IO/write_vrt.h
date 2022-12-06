@@ -169,13 +169,15 @@ template<typename Iterator>
 void write_vrt_header(const std::string& dirname, const std::string& type, const std::string& union_name, Iterator begin, Iterator end)
 {
     std::ofstream f(dirname+".vrt");
+    boost::filesystem::path path(dirname);
+    std::string stem = path.stem().string();
     f <<"<OGRVRTDataSource>" << std::endl;
     f <<"<OGRVRTUnionLayer name=\""<< union_name << "\">" << std::endl;
     f <<"<SourceLayerFieldName>tile</SourceLayerFieldName>" << std::endl;
     for(Iterator it = begin; it != end; ++it) {
         std::string name = std::to_string(*it);
         f <<  "<OGRVRTLayer name=\"" << name <<  "\">" << std::endl;
-        f <<    "<SrcDataSource relativeToVRT=\"1\">" << dirname << "/" << name << ".csv</SrcDataSource>" << std::endl;
+        f <<    "<SrcDataSource relativeToVRT=\"1\">" << stem << "/" << name << ".csv</SrcDataSource>" << std::endl;
         f <<    "<SrcLayer>" << name <<  "</SrcLayer>" << std::endl;
         f <<    "<LayerSRS>IGNF:LAMB93</LayerSRS> " << std::endl;
         f <<    "<GeometryType>" << type << "</GeometryType>" << std::endl;
