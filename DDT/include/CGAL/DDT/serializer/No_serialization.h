@@ -9,20 +9,26 @@
 //
 // Author(s)     : Mathieu Brédif and Laurent Caraffa
 
-#ifndef CGAL_DDT_NO__SERIALIZATION_H
-#define CGAL_DDT_NO__SERIALIZATION_H
+#ifndef CGAL_DDT_NO__SERIALIZER_H
+#define CGAL_DDT_NO__SERIALIZER_H
 
 namespace CGAL {
 namespace DDT {
 
 template<typename Tile>
-struct No_serialization
+struct No_serializer
 {
-  bool has_tile(typename Tile::Id) const { return false; }
-  bool load(Tile& Id) const { return false; }
+  typedef typename Tile::Id Id;
+  bool has_tile(Id) const { return false; }
+  bool load(Tile&) const { return false; }
   bool save(const Tile& ) const { return false;}
 };
 
+template<typename Tile>
+std::ostream& operator<<(std::ostream& out, const No_serializer<Tile>& serializer) {
+    return out << "No_serializer";
+}
+
 } }  // CGAL::DDT namespace
 
-#endif // CGAL_DDT_NO__SERIALIZATION_H
+#endif // CGAL_DDT_NO__SERIALIZER_H

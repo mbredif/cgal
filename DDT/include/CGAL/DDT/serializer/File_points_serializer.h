@@ -19,6 +19,8 @@ namespace DDT {
 template <class Tile>
 struct File_points_serializer
 {
+  typedef typename Tile::Id Id;
+
   File_points_serializer(const std::string& prefix) : m_prefix(prefix) {
       boost::filesystem::path p(prefix);
       boost::filesystem::path q(p.parent_path());
@@ -28,34 +30,40 @@ struct File_points_serializer
 #ifdef CGAL_DEBUG_DDT
   ~File_points_serializer()
   {
+    std::cout << *this << "\n";
     std::cout << "nb_loads " << nb_loads << "\n";
     std::cout << "nb_save " << nb_save << "\n";
   }
 #endif
 
-  bool has_tile(typename Tile::Id id) const
+  bool has_tile(Id id) const
   {
     const std::string fname = filename(id);
     std::ifstream in(fname, std::ios::in | std::ios::binary);
     return in.is_open();
   }
 
-  bool load(Tile& id) const
+  bool load(Tile& tile) const
   {
 #ifdef CGAL_DEBUG_DDT
     ++nb_loads;
 #endif
+    typename Tile::Delaunay_triangulation dt;
+    std::swap(dt, tile.triangulation());
+
     const std::string fname = filename(tile.id());
     std::ifstream in(fname, std::ios::in | std::ios::binary);
     size_t count;
     in >> count;
     typename Tile::Vertex_handle v;
     for(size_t i = 0; i < count; ++i) {
-        typename Tile::Point p;
-        typename Tile::Id id;
+        typedef typename Tile::Point Point;
+        Point p;
+        Id id;
         in >> p >> id;
         v = tile.insert(p,id,v).first;
     }
+    if(in.fail()) std::swap(dt, tile.triangulation());
     return !in.fail();
   }
 
@@ -63,17 +71,32 @@ struct File_points_serializer
 #ifdef CGAL_DEBUG_DDT
     ++nb_save;
 #endif
+    typedef typename Tile::Point Point;
+    typedef typename Tile::Vertex_const_iterator Vertex_const_iterator;
     const std::string fname = filename(tile.id());
     std::ofstream out(fname, std::ios::out | std::ios::binary);
-    out << std::setprecision(17) << tile.number_of_vertices() << " ";
-    for(typename Tile::Vertex_const_iterator v = tile.vertices_begin(); v != tile.vertices_end(); ++v)
-        if (!tile.vertex_is_infinite(v))
-            out << tile.point(v) << " " << tile.vertex_id(v) << " ";
+    out << std::setprecision(17) << tile.number_of_vertices() << "\n";
+    std::vector<size_t> indices;
+    std::vector<Point>  points;
+    std::vector<Vertex_const_iterator> vertices;
+    size_t index = 0;
+    for(Vertex_const_iterator v = tile.vertices_begin(); v != tile.vertices_end(); ++v) {
+      if (!tile.vertex_is_infinite(v)) {
+        points.push_back(tile.point(v));
+        vertices.push_back(v);
+        indices.push_back(index++);
+      }
+    }
+    tile.spatial_sort(indices, points);
+    for (size_t index : indices)
+      out << points[index] << " " << tile.vertex_id(vertices[index]) << "\n";
     return !out.fail();
   }
 
+  const std::string& prefix() const { return m_prefix; }
+
 private:
-  std::string filename(typename Tile::Id i) const
+  std::string filename(Id i) const
   {
     return m_prefix+std::to_string(i)+".txt";
   }
@@ -85,6 +108,10 @@ private:
 #endif
 };
 
+template<typename Tile>
+std::ostream& operator<<(std::ostream& out, const File_points_serializer<Tile>& serializer) {
+    return out << "File_points_serializer(prefix=" << serializer.prefix() << ")";
+}
 
 }
 }

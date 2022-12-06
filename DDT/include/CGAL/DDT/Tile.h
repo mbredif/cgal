@@ -36,7 +36,7 @@ public:
     typedef typename Traits::Id                      Id;
     typedef typename Traits::Info                    Info;
     typedef typename Traits::Point                   Point;
-    typedef typename Traits::Delaunay_triangulation  DT;
+    typedef typename Traits::Delaunay_triangulation  Delaunay_triangulation;
     typedef typename Traits::Vertex_handle           Vertex_handle;
     typedef typename Traits::Vertex_iterator         Vertex_iterator;
     typedef typename Traits::Vertex_const_handle     Vertex_const_handle;
@@ -63,8 +63,8 @@ public:
           in_use(false)
     {}
 
-    inline DT& triangulation() { return dt_; }
-    inline const DT& triangulation() const { return dt_; }
+    inline Delaunay_triangulation& triangulation() { return dt_; }
+    inline const Delaunay_triangulation& triangulation() const { return dt_; }
 
     inline Id id() const { return id_; }
     inline void set_id(Id i) { id_ = i; }
@@ -566,7 +566,7 @@ public:
 private:
     Traits traits;
     Id id_;
-    DT dt_;
+    Delaunay_triangulation dt_;
     mutable Selector<Id> selector;
 
     size_t number_of_main_finite_vertices_;

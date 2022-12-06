@@ -19,6 +19,8 @@ namespace DDT {
 template <class Tile>
 struct File_serializer
 {
+  typedef typename Tile::Id Id;
+
   File_serializer(const std::string& prefix) : m_prefix(prefix) {
       boost::filesystem::path p(prefix);
       boost::filesystem::path q(p.parent_path());
@@ -28,12 +30,13 @@ struct File_serializer
 #ifdef CGAL_DEBUG_DDT
   ~File_serializer()
   {
+    std::cout << *this << "\n";
     std::cout << "nb_loads " << nb_loads << "\n";
     std::cout << "nb_save " << nb_save << "\n";
   }
 #endif
 
-  bool has_tile(typename Tile::Id id) const
+  bool has_tile(Id id) const
   {
     const std::string fname = filename(id);
     std::ifstream in(fname, std::ios::in | std::ios::binary);
@@ -47,7 +50,9 @@ struct File_serializer
 #endif
     const std::string fname = filename(tile.id());
     std::ifstream in(fname, std::ios::in | std::ios::binary);
-    in >> tile.triangulation();
+    typename Tile::Delaunay_triangulation dt;
+    in >> dt;
+    if (!in.fail()) std::swap(dt, tile.triangulation());
     return !in.fail();
   }
 
@@ -61,8 +66,10 @@ struct File_serializer
     return !out.fail();
   }
 
+  const std::string& prefix() const { return m_prefix; }
+
 private:
-  std::string filename(typename Tile::Id i) const
+  std::string filename(Id i) const
   {
     return m_prefix+std::to_string(i)+".txt";
   }
@@ -74,6 +81,10 @@ private:
 #endif
 };
 
+template<typename Tile>
+std::ostream& operator<<(std::ostream& out, const File_serializer<Tile>& serializer) {
+    return out << "File_serializer(prefix=" << serializer.prefix() << ")";
+}
 
 }
 }

@@ -91,7 +91,7 @@ private:
 };
 
 /// \ingroup PkgDDTClasses
-template<typename _Traits, typename _Tile = CGAL::DDT::Tile<_Traits>, typename Serializer = No_serialization<_Tile> >
+template<typename _Traits, typename _Tile = CGAL::DDT::Tile<_Traits>, typename Serializer = No_serializer<_Tile> >
 class Tile_container
 {
 public:
