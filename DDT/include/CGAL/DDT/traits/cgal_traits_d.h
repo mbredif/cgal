@@ -14,7 +14,7 @@
 
 #include <CGAL/DDT/traits/Facet_const_iterator_d.h>
 #include <CGAL/DDT/traits/Data.h>
-#include <CGAL/DDT/Bbox.h>
+#include <CGAL/DDT/traits/Bbox.h>
 
 #include <CGAL/Epick_d.h>
 #include <CGAL/Delaunay_triangulation.h>
