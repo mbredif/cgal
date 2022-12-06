@@ -12,14 +12,65 @@
 #ifndef CGAL_DDT_SCHEDULER_MULTITHREAD_SCHEDULER_H
 #define CGAL_DDT_SCHEDULER_MULTITHREAD_SCHEDULER_H
 
-#include <map>
-#include <set>
-#include <vector>
-#include <chrono>
 #include <CGAL/DDT/scheduler/multithread_scheduler/thread_pool.h>
 
 namespace CGAL {
 namespace DDT {
+
+
+template< typename V, typename TileContainer, typename UnaryOp, typename Id>
+V for_each_function(TileContainer& tc, UnaryOp op1, std::mutex& mutex, Id id)
+{
+    // ensure tile is loaded
+    std::pair<typename TileContainer::Tile_iterator, bool> insertion;
+    do {
+        std::unique_lock<std::mutex> lock(mutex);
+        insertion = tc.insert(id);
+    } while (!tc.load(insertion));
+    typename TileContainer::Tile_iterator tile = insertion.first;
+
+    // acquire the tile and extract a copy of tc in tc2
+    size_t number_of_extreme_points_received1;
+    size_t number_of_extreme_points_received2;
+    TileContainer tc2(tc.maximal_dimension());
+    {
+        std::unique_lock<std::mutex> lock(mutex);
+        // "swap" moves the incoming points from tc to tc2, which had no points
+        tc2.points()[id].swap(tc.points()[id]);
+
+        // moves the unreceived axis extreme points
+        tc2.extreme_points().insert(tc2.extreme_points().end(),
+                                    tc.extreme_points().begin() + tile->number_of_extreme_points_received,
+                                    tc.extreme_points().end());
+        number_of_extreme_points_received1 = tc.extreme_points().size();
+        number_of_extreme_points_received2 = number_of_extreme_points_received1 - tile->number_of_extreme_points_received;
+        tile->number_of_extreme_points_received = 0;
+    }
+
+    // process the tile on the extracted copy tc2
+    V value = op1(tc2, *tile);
+
+    // release the tile and merge the extracted copy tc2 back to tc
+    {
+        tile->number_of_extreme_points_received = number_of_extreme_points_received1;
+        std::unique_lock<std::mutex> lock(mutex);
+        tc.unload(tile);
+        // moves the points emitted in tc2 to tc
+        for(auto& p : tc2.points()) {
+            auto& points = tc.points()[p.first];
+            points.insert(points.end(), p.second.begin(), p.second.end());
+        }
+
+        // moves the axis extreme points emitted in tc2 to tc
+        tc.extreme_points().insert(tc.extreme_points().end(),
+                                   tc2.extreme_points().begin() + number_of_extreme_points_received2,
+                                   tc2.extreme_points().end());
+        for(auto b : tc2.bboxes())
+            tc.bboxes()[b.first] += b.second;
+    }
+    return value;
+}
+
 
 /// \ingroup PkgDDTSchedulerClasses
 /// \cgalModels Scheduler
@@ -27,12 +78,7 @@ template<typename T>
 struct Multithread_scheduler
 {
     typedef T Tile;
-    typedef typename Tile::Vertex_const_handle_and_id Vertex_const_handle_and_id;
-    typedef typename Tile::Vertex_const_handle Vertex_const_handle;
-    typedef typename Tile::Point_id Point_id;
-    typedef typename Tile::Point Point;
     typedef typename Tile::Id Id;
-    typedef std::vector<Point_id> Point_id_container;
 
     /// constructor
     Multithread_scheduler(int max_concurrency = 0) : pool(max_concurrency), timeout_(1)
@@ -53,85 +99,12 @@ struct Multithread_scheduler
         pool.shutdown();
     }
 
-    inline void receive(Id id, Point_id_container& received)
+    template<typename TileContainer, typename UnaryOp, typename V = int, typename BinaryOp = std::plus<>>
+    V for_each(TileContainer& tc, UnaryOp op1, BinaryOp op2 = {}, V init = {})
     {
-        inbox[id].swap(received);
-        allbox_sent.emplace(id, 0);
-        size_t size0 = received.size();
-        allbox.copy_after(received, allbox_sent[id]);
-        size_t size1 = received.size();
-        allbox_sent[id] += size1 - size0;
-#ifdef CGAL_DEBUG_DDT
-        std::unique_lock<std::mutex> cout_lock(cout_mutex);
-        std::cout << int(id) << " : " << size0 << " + " << (size1-size0) << std::endl;
-#endif
-    }
-
-    void send(const Point& p, Id id, Id target)
-    {
-        inbox[target].emplace_back(p,id);
-    }
-
-    int send_one(const Tile& tile, const std::map<Id, std::set<Vertex_const_handle>>& vertices)
-    {
-        Point_id_container points;
-        Id source = tile.id();
-        int count = 0;
-        for(auto& vi : vertices)
-        {
-            points.clear();
-            Id target = vi.first;
-            assert(target != source);
-            for(Vertex_const_handle v : vi.second)
-            {
-                Id vid = tile.vertex_id(v);
-                assert(target != vid);
-                const Point& p = tile.point(v);
-                points.emplace_back(p, vid);
-            }
-            inbox[target].append(points);
-            count += points.size();
-        }
-        return count;
-    }
-
-    int send_all(const Tile& tile, const std::vector<Vertex_const_handle>& vertices)
-    {
-        Point_id_container points;
-        for(Vertex_const_handle v : vertices)
-            points.emplace_back(tile.point(v),tile.vertex_id(v));
-        allbox.append(points);
-        return points.size();
-    }
-
-    template<typename TileContainer, typename Id_iterator, typename UnaryOp, typename V = int, typename BinaryOp = std::plus<>>
-    V for_each(TileContainer& tc, Id_iterator begin, Id_iterator end, UnaryOp op1, BinaryOp op2 = {}, V init = {})
-    {
-        std::function<V(Id)> func = [this, &tc, &op1](Id id)
-        {
-            std::pair<typename TileContainer::Tile_iterator, bool> insertion;
-            do {
-                std::unique_lock<std::mutex> lock(tc_mutex);
-                insertion = tc.insert(id);
-            } while (!tc.load(insertion));
-            typename TileContainer::Tile_iterator tile = insertion.first;
-            V value = op1(*tile);
-            {
-                std::unique_lock<std::mutex> lock(tc_mutex);
-                tc.unload(tile);
-            }
-            return value;
-        };
-
-        // ensure allbox_sent has all the id inserted to prevent race conditions
-        for(Id_iterator it = begin; it != end; ++it)
-        {
-            allbox_sent.emplace(*it, 0);
-        }
-
         std::vector<std::future<V>> futures;
-        for(Id_iterator it = begin; it != end; ++it)
-            futures.push_back(pool.submit(func, *it));
+        for(auto it = tc.tile_ids_begin(); it != tc.tile_ids_end(); ++it)
+            futures.push_back(pool.submit([this, &tc, &op1](Id id){ return for_each_function<V>(tc, op1, mutex, id); }, *it));
 
         V value = init;
         for(auto& f: futures) value = op2(value, f.get());
@@ -139,55 +112,14 @@ struct Multithread_scheduler
     }
 
     template<typename TileContainer, typename UnaryOp, typename V = int, typename BinaryOp = std::plus<>>
-    V for_all(TileContainer& tc, UnaryOp op1, BinaryOp op2 = {}, V init = {})
-    {
-        std::vector<Id> ids;
-        {
-            std::unique_lock<std::mutex> lock(tc_mutex);
-            ids.insert(ids.end(), tc.tile_ids_begin(), tc.tile_ids_end());
-        }
-        return for_each(tc, ids.begin(), ids.end(), op1, op2, init);
-    }
-
-    template<typename TileContainer, typename UnaryOp, typename V = int, typename BinaryOp = std::plus<>>
-    V for_each(TileContainer& tc, UnaryOp op1, BinaryOp op2 = {}, V init = {})
-    {
-        std::set<Id> ids;
-        size_t n = allbox.size();
-        for(auto& it : allbox_sent)
-            if (it.second != n)
-                ids.insert(it.first);
-
-        for(auto& it : inbox)
-            if (!it.second.empty())
-                ids.insert(it.first);
-
-        return for_each(tc, ids.begin(), ids.end(), op1, op2, init);
-    }
-
-    // no barrier between each epoch, busy tiles are skipped
-    template<typename TileContainer, typename UnaryOp, typename V = int, typename BinaryOp = std::plus<>>
     V for_each_rec(TileContainer& tc, UnaryOp op1, BinaryOp op2 = {}, V init = {})
     {
-        std::function<V(Id)> func = [this, &tc, &op1](Id id)
-        {
-            std::pair<typename TileContainer::Tile_iterator, bool> insertion;
-            do {
-                std::unique_lock<std::mutex> lock(tc_mutex);
-                insertion = tc.insert(id);
-            } while (!tc.load(insertion));
-            typename TileContainer::Tile_iterator tile = insertion.first;
-            V value = op1(*tile);
-            {
-                std::unique_lock<std::mutex> lock(tc_mutex);
-                tc.unload(tile);
-            }
-            return value;
-        };
+        std::map<Id, std::future<V>> futures;
+        for(auto it = tc.tile_ids_begin(); it != tc.tile_ids_end(); ++it)
+            futures.emplace(*it, pool.submit([this, &tc, &op1](Id id){ return for_each_function<V>(tc, op1, mutex, id); }, *it));
 
         V value = init;
-        std::map<Id, std::future<V>> futures;
-        do {
+        while (!futures.empty()) {
             auto fit = futures.begin();
             while(fit!=futures.end())
             {
@@ -196,37 +128,26 @@ struct Multithread_scheduler
                 } else {
                     value = op2(value, fit->second.get());
                     futures.erase(fit++);
+                    std::vector<Id> ids;
+                    {
+                        std::unique_lock<std::mutex> lock(mutex);
+                        for(auto& p : tc.points())
+                            if (!p.second.empty())
+                                ids.push_back(p.first);
+                    }
+                    for(auto id : ids)
+                        if (futures.count(id) == 0)
+                            futures.emplace(id, pool.submit([this, &tc, &op1](Id id){ return for_each_function<V>(tc, op1, mutex, id); }, id));
                 }
             }
-            for(const auto& it : inbox)
-            {
-                Id id = it.first;
-                if (!it.second.empty() && futures.count(id) == 0)
-                    futures[id] = pool.submit(func, id);
-            }
-            size_t n = allbox.size();
-            for(const auto& it : allbox_sent)
-            {
-                Id id = it.first;
-                if (it.second != n && futures.count(id) == 0)
-                    futures[id] = pool.submit(func, id);
-            }
-        } while (!futures.empty());
+        }
         return value;
     }
 
-    safe<Point_id_container> allbox;
 private:
-    std::map<Id, size_t> allbox_sent;
-    std::map<Id, safe<Point_id_container>> inbox;
-
     thread_pool pool;
     std::chrono::milliseconds timeout_;
-
-    std::mutex tc_mutex;
-#ifdef CGAL_DEBUG_DDT
-    std::mutex cout_mutex;
-#endif
+    std::mutex mutex;
 };
 
 }

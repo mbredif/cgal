@@ -46,9 +46,11 @@ public:
     typedef typename Traits::Cell_const_iterator     Cell_const_iterator;
     typedef typename Traits::Facet_const_iterator    Facet_const_iterator;
     typedef typename Traits::Facet_const_iterator    Facet_const_handle;
-    typedef std::pair<Cell_const_handle,Id>          Cell_const_handle_and_id;
-    typedef std::pair<Vertex_const_handle,Id>        Vertex_const_handle_and_id;
-    typedef std::pair<Point,Id>                      Point_id;
+    typedef std::pair<Id,Vertex_const_handle>        Vertex_const_handle_and_id;
+    typedef std::pair<Id,Point>                      Point_id;
+    typedef std::vector<Point_id>                    Points;
+    typedef std::map<Id, Points>                     Points_map;
+
 
     /// constructor
     Tile(Id id, Traits t)
@@ -60,6 +62,7 @@ public:
           number_of_main_finite_cells_(0),
           number_of_main_facets_(0),
           number_of_main_cells_(0),
+          number_of_extreme_points_received(0),
           in_use(false)
     {}
 
@@ -415,8 +418,8 @@ public:
         points.reserve(received.size());
         for(auto& r : received)
         {
-            points.push_back(r.first);
-            ids.push_back(r.second);
+            points.push_back(r.second);
+            ids.push_back(r.first);
             indices.push_back(index++);
         }
 
@@ -561,7 +564,10 @@ public:
       return traits.is_valid(dt_, verbose, level);
     }
 
+    const Traits& geom_traits() const { return traits; }
+
     bool in_use;
+    size_t number_of_extreme_points_received;
 
 private:
     Traits traits;

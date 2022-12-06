@@ -113,9 +113,9 @@ public:
     typedef typename Traits::Facet_const_handle      Tile_facet_const_handle;
     typedef typename Traits::Facet_const_iterator    Tile_facet_const_iterator;
 
-    typedef std::map<Id, Tile>                                         Container;
-    typedef Mapped_const_iterator<typename Container::const_iterator>  Tile_const_iterator ;
-    typedef Mapped_iterator<typename Container::iterator>              Tile_iterator ;
+
+    typedef Mapped_const_iterator<typename std::map<Id, Tile>::const_iterator>  Tile_const_iterator ;
+    typedef Mapped_iterator<typename std::map<Id, Tile>::iterator>              Tile_iterator ;
 
     typedef std::set<Id> Tile_id_set;
     typedef typename Tile_id_set::const_iterator Tile_id_const_iterator;
@@ -139,12 +139,10 @@ public:
         if (max_number_of_tiles == 0) this->max_number_of_tiles = std::numeric_limits<size_t>::max();
     }
 
-    inline size_t maximum_number_of_tiles() const { return max_number_of_tiles;   }
-    inline size_t number_of_tiles   () const { return tiles.size();   }
+    inline size_t maximum_number_of_tiles() const { return max_number_of_tiles; }
 
     Tile_id_const_iterator tile_ids_begin() const { return ids.begin(); }
     Tile_id_const_iterator tile_ids_end  () const { return ids.end  (); }
-
 
     bool empty() const { return tiles.empty(); }
     Tile_const_iterator cbegin  () const { return tiles.begin (); }
@@ -152,16 +150,61 @@ public:
     Tile_const_iterator begin  () const { return tiles.begin (); }
     Tile_const_iterator end    () const { return tiles.end   (); }
     Tile_const_iterator find(Id id) const { return tiles.find(id); }
-
     Tile_iterator begin  () { return tiles.begin (); }
     Tile_iterator end    () { return tiles.end   (); }
     Tile_iterator find(Id id) { return tiles.find(id); }
-    bool is_loaded(Id id) const { return tiles.find(id) != tiles.end(); }
+
+    typedef std::map<Id, Bbox> Bbox_map;
+    typedef typename Tile::Points Points;
+    typedef typename Tile::Points_map Points_map;
+    const Bbox_map& bboxes() const { return bboxes_; }
+    Bbox_map& bboxes() { return bboxes_; }
+    const Points_map& points() const { return points_; }
+    Points_map& points() { return points_; }
+    const Points& extreme_points() const { return extreme_points_; }
+    Points& extreme_points() { return extreme_points_; }
+
+    void receive_points(Tile& tile, Points& received) {
+        Id id = tile.id();
+        received.swap(points_[id]);
+        size_t number_of_extreme_points = extreme_points_.size();
+        received.insert(received.end(),
+                        extreme_points_.begin() + tile.number_of_extreme_points_received,
+                        extreme_points_.end());
+        tile.number_of_extreme_points_received = number_of_extreme_points;
+    }
+
+    void send_point_to_its_tile(Id id, const Point& p) {
+        points_[id].push_back({id,p});
+        init(id);
+    }
+
+    size_t send_vertices_to_one_tile(const Tile& tile, const std::map<Id, std::set<Tile_vertex_const_handle>>& vertices) {
+        size_t count = 0;
+        for(auto& vi : vertices)
+        {
+            count += vi.second.size();
+            Points& points = points_[vi.first];
+            for(Tile_vertex_const_handle v : vi.second)
+                points.emplace_back(tile.vertex_id(v), tile.point(v));
+        }
+        return count;
+    }
+
+    void send_vertices_to_all_tiles(const Tile& tile, const std::vector<Tile_vertex_const_handle>& vertices) {
+        for(Tile_vertex_const_handle v : vertices) {
+           if (tile.vertex_is_infinite(v)) continue;
+           Id id = tile.vertex_id(v);
+           Point p = tile.point(v);
+           extreme_points_.emplace_back(id, p);
+           bboxes_[id] += p;
+        }
+    }
 
     /*
      *             typename TileContainer::Tile_iterator tile = tc.find(*it);
             if(tile == tc.end()) {
-                while(tc.number_of_tiles() >= tc.maximum_number_of_tiles()) {
+                while(tc.tiles.size() >= tc.maximum_number_of_tiles()) {
                     auto it = tc.begin();
                     Id id0 = it->id();
                     size_t count0 = inbox[id0].size();
@@ -210,9 +253,9 @@ public:
         }
 
         // make room if necessary
-        while(number_of_tiles() >= maximum_number_of_tiles()) {
+        while(tiles.size() >= maximum_number_of_tiles()) {
             // pick a loaded id at random and try to unload it
-            size_t n = rand() % number_of_tiles();
+            size_t n = rand() % tiles.size();
             Tile_iterator it = begin();
             std::advance(it, n);
             if (it->id()!=id && !erase(it))
@@ -338,21 +381,13 @@ public:
         return true;
     }
 
-    const std::map<Id, Bbox>& bboxes() const
-    {
-        return bboxes_;
-    }
-
-
-    std::map<Id, Bbox>& bboxes()
-    {
-        return bboxes_;
-    }
-
 private:
-    Container tiles; /// loaded tiles
     Tile_id_set ids;
-    std::map<Id, Bbox> bboxes_;
+    std::map<Id, Tile> tiles;
+    Bbox_map bboxes_;
+    Points_map points_;
+
+    Points extreme_points_;
     Serializer serializer;
     Traits traits;
 

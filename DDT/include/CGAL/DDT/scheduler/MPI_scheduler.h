@@ -110,7 +110,7 @@ struct MPI_scheduler
 
     void send(const Point& p, Id id, Id target)
     {
-        inbox[target].emplace_back(p,id);
+        inbox[target].emplace_back(id,p);
     }
 
     bool send_vertex(const Tile& tile, Vertex_const_handle v, Id target)
@@ -129,7 +129,7 @@ struct MPI_scheduler
         Id source = tile.id();
         int count = 0;
         for(auto& vi : outbox)
-            count += send_vertex(tile, vi.first, vi.second);
+            count += send_vertex(tile, vi.second, vi.first);
         return count;
     }
 

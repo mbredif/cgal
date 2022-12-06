@@ -96,22 +96,22 @@ void write_csv_cell(const std::string& filename, const Tile& tile)
     }
 }
 
-template<typename IdBoxMap>
-void write_csv_bboxes(const std::string& filename, const IdBoxMap& boxes)
+template<typename BboxMap>
+void write_csv_bboxes(const std::string& filename, const BboxMap& bboxes)
 {
     std::ofstream csv(filename+".csv");
     csv << "geom,id" << std::endl;
-    for(auto& pair : boxes)
+    for(auto& b : bboxes)
     {
-        auto bboxid = pair.first;
-        auto bbox   = pair.second;
+        size_t id = b.first;
+        auto& bbox = b.second;
         csv << "\"POLYGON((";
         csv << bbox.min(0) << " "<< bbox.min(1) << ", ";
         csv << bbox.max(0) << " "<< bbox.min(1) << ", ";
         csv << bbox.max(0) << " "<< bbox.max(1) << ", ";
         csv << bbox.min(0) << " "<< bbox.max(1) << ", ";
         csv << bbox.min(0) << " "<< bbox.min(1);
-        csv << "))\"," << int(bboxid) << "\n";
+        csv << "))\"," << id << "\n";
     }
 }
 
@@ -228,7 +228,7 @@ void write_vrt_verts(TileContainer& tc, Scheduler& sch, const std::string& dirna
 {
     boost::filesystem::path p(dirname);
     boost::filesystem::create_directories(p);
-    sch.for_all(tc, [&dirname](typename TileContainer::Tile& tile) {
+    sch.for_each(tc, [&dirname](const TileContainer&, typename TileContainer::Tile& tile) {
         std::string filename(dirname + "/" + std::to_string(tile.id()));
         write_tile_vrt_verts(filename, tile);
         return 1;
@@ -241,7 +241,7 @@ void write_vrt_facets(TileContainer& tc, Scheduler& sch, const std::string& dirn
 {
     boost::filesystem::path p(dirname);
     boost::filesystem::create_directories(p);
-    sch.for_all(tc, [&dirname](typename TileContainer::Tile& tile) {
+    sch.for_each(tc, [&dirname](const TileContainer&, typename TileContainer::Tile& tile) {
         std::string filename(dirname + "/" + std::to_string(tile.id()));
         write_tile_vrt_facets(filename, tile);
         return 1;
@@ -254,7 +254,7 @@ void write_vrt_cells(TileContainer& tc, Scheduler& sch, const std::string& dirna
 {
     boost::filesystem::path p(dirname);
     boost::filesystem::create_directories(p);
-    sch.for_all(tc, [&dirname](typename TileContainer::Tile& tile) {
+    sch.for_each(tc, [&dirname](const TileContainer&, typename TileContainer::Tile& tile) {
         std::string filename(dirname + "/" + std::to_string(tile.id()));
         write_tile_vrt_cells(filename, tile);
         return 1;
@@ -263,7 +263,7 @@ void write_vrt_cells(TileContainer& tc, Scheduler& sch, const std::string& dirna
 }
 
 template<typename TileContainer>
-void write_vrt_bboxes(TileContainer& tc, const std::string& filename)
+void write_vrt_bboxes(const TileContainer& tc, const std::string& filename)
 {
     write_vrt_header(filename, "wkbPolygon");
     write_csv_bboxes(filename, tc.bboxes());
@@ -274,7 +274,7 @@ void write_vrt_tins(TileContainer& tc, Scheduler& sch, const std::string& dirnam
 {
     boost::filesystem::path p(dirname);
     boost::filesystem::create_directories(p);
-    sch.for_all(tc, [&dirname](typename TileContainer::Tile& tile) {
+    sch.for_each(tc, [&dirname](const TileContainer&, typename TileContainer::Tile& tile) {
         std::string filename(dirname + "/" + std::to_string(tile.id()));
         write_tile_vrt_tins(filename, tile);
         return 1;
