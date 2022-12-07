@@ -75,8 +75,6 @@ V for_each_function(TileContainer& tc, UnaryOp op1, std::mutex& mutex, Id id)
         tc.extreme_points().insert(tc.extreme_points().end(),
                                    tc2.extreme_points().begin() + number_of_extreme_points_received2,
                                    tc2.extreme_points().end());
-        for(auto b : tc2.bboxes())
-            tc.bboxes()[b.first] += b.second;
     }
     return value;
 }

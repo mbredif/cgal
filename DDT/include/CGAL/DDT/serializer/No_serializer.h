@@ -19,6 +19,8 @@ template<typename Tile>
 struct No_serializer
 {
   typedef typename Tile::Id Id;
+  typedef typename Tile::Bbox Bbox;
+  bool load(Id id, Bbox& bbox) const { return false; }
   bool has_tile(Id) const { return false; }
   bool load(Tile&) const { return false; }
   bool save(const Tile& ) const { return false;}

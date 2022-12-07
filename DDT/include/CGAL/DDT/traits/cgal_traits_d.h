@@ -608,24 +608,9 @@ struct Cgal_traits_d : public Impl::Cgal_traits_d<CGAL::Dynamic_dimension_tag,I,
     inline constexpr int dimension() const { return dim; }
     Delaunay_triangulation triangulation() const { return Delaunay_triangulation(dimension()); }
     struct Bbox : public CGAL::DDT::Bbox<0, double, Bbox, Point> {
-        Bbox(                   ) { }
         Bbox(int d              ) { this->init_values(d); this->init(d       ); }
         Bbox(int d, double range) { this->init_values(d); this->init(d, range); }
-        Bbox(const Point& p     ) { init_point(p); }
-
-        Bbox& add_point(const Point& p)
-        {
-            if (this->dimension() == 0) { init_point(p); return *this; }
-            int i = 0;
-            for(auto it = p.cartesian_begin(); it != p.cartesian_end() ; ++it, ++i) {
-                std::pair<double, double> interval = CGAL::to_interval(*it);
-                if (interval.first  < this->min_values[i]) this->min_values[i] = interval.first;
-                if (interval.second > this->max_values[i]) this->max_values[i] = interval.second;
-            }
-            return *this;
-        }
-    private:
-        void init_point(const Point& p) {
+        Bbox(const Point& p     ) {
             this->init_values(p.dimension());
             int i = 0;
             for(auto it = p.cartesian_begin(); it != p.cartesian_end() ; ++it, ++i) {
@@ -633,6 +618,16 @@ struct Cgal_traits_d : public Impl::Cgal_traits_d<CGAL::Dynamic_dimension_tag,I,
                 this->min_values[i] = interval.first;
                 this->max_values[i] = interval.second;
             }
+        }
+        Bbox& add_point(const Point& p)
+        {
+            int i = 0;
+            for(auto it = p.cartesian_begin(); it != p.cartesian_end() ; ++it, ++i) {
+                std::pair<double, double> interval = CGAL::to_interval(*it);
+                if (interval.first  < this->min_values[i]) this->min_values[i] = interval.first;
+                if (interval.second > this->max_values[i]) this->max_values[i] = interval.second;
+            }
+            return *this;
         }
     };
 

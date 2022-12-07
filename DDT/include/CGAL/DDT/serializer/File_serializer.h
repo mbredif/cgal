@@ -20,6 +20,7 @@ template <class Tile>
 struct File_serializer
 {
   typedef typename Tile::Id Id;
+  typedef typename Tile::Bbox Bbox;
 
   File_serializer(const std::string& prefix = "") : m_prefix(prefix) {
       boost::filesystem::path p(prefix);
@@ -43,6 +44,13 @@ struct File_serializer
     return in.is_open();
   }
 
+  bool load(Id id, Bbox& bbox) const {
+      const std::string fname = filename(id);
+      std::ifstream in(fname, std::ios::in | std::ios::binary);
+      in >> bbox;
+      return !in.fail();
+  }
+
   bool load(Tile& tile) const
   {
 #ifdef CGAL_DEBUG_DDT
@@ -50,6 +58,7 @@ struct File_serializer
 #endif
     const std::string fname = filename(tile.id());
     std::ifstream in(fname, std::ios::in | std::ios::binary);
+    in >> tile.bbox();
 
 #ifdef IT_COMPILED_WITH_KERNELD
     typename Tile::Delaunay_triangulation dt(tile.geom_traits().triangulation());
@@ -71,7 +80,7 @@ struct File_serializer
 #endif
     const std::string fname = filename(tile.id());
     std::ofstream out(fname, std::ios::out | std::ios::binary);
-    out << std::setprecision(17) << tile.triangulation();
+    out << std::setprecision(17) << tile.bbox() << "\n" << tile.triangulation();
     return !out.fail();
   }
 

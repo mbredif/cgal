@@ -101,16 +101,11 @@ int write_cgal(const TileContainer& tc, const std::string& dirname)
     {
         std::string fpath = std::to_string(tile->id())  + ".bin";
         tiles_node.put(std::to_string(tile->id()),fpath);
+        std::ostringstream ss;
+        ss << tile->bbox();
+        bboxes_node.put(std::to_string(tile->id()),ss.str());
     }
     root_node.add_child("tiles", tiles_node);
-
-    const auto & bboxes = tc.bboxes();
-    for(auto iter = bboxes.begin(); iter != bboxes.end(); ++iter)
-    {
-        std::stringstream ss;
-        ss << iter->second;
-        bboxes_node.put(std::to_string(iter->first),ss.str());
-    }
     root_node.add_child("bboxes", bboxes_node);
 
     std::string json_name = dirname + "/tiles.json";

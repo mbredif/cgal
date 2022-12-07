@@ -72,24 +72,22 @@ int read_cgal(TileContainer& tc, const std::string& dirname)
 {
     typedef typename TileContainer::Id Id;
     boost::property_tree::ptree root_node;
+    boost::property_tree::ptree tiles_node;
+    boost::property_tree::ptree bboxes_node;
     std::string json_name = dirname + "/tiles.json";
     std::ifstream ifile_json(json_name, std::ifstream::in);
     boost::property_tree::read_json(ifile_json, root_node);
-    for (auto its : root_node.get_child("tiles"))
+
+    tiles_node = root_node.get_child("tiles");
+    bboxes_node = root_node.get_child("bboxes");
+    for (auto its : tiles_node)
     {
         Id tid = std::stoi(its.first);
         tc.init(tid);
         auto tile = tc.load(tid);
+        std::istringstream iss(bboxes_node.find(its.first)->second.data());
+        iss >> tile->bbox();
         read_cgal_tile(*tile,dirname);
-    }
-    auto & bboxes = tc.bboxes();
-    for (auto its : root_node.get_child("bboxes"))
-    {
-        int iid = std::stoi(its.first);
-        Id id = iid;
-        std::stringstream ss (its.second.data());
-        bboxes.emplace(id, tc.maximal_dimension());
-        ss >> bboxes[id];
     }
     tc.finalize();
     std::cout << tc.is_valid() << std::endl;

@@ -36,6 +36,7 @@ public:
     typedef typename Traits::Id                      Id;
     typedef typename Traits::Info                    Info;
     typedef typename Traits::Point                   Point;
+    typedef typename Traits::Bbox                    Bbox;
     typedef typename Traits::Delaunay_triangulation  Delaunay_triangulation;
     typedef typename Traits::Vertex_handle           Vertex_handle;
     typedef typename Traits::Vertex_iterator         Vertex_iterator;
@@ -57,6 +58,7 @@ public:
         : traits(t),
           id_(id),
           dt_(traits.triangulation()),
+          bbox_(traits.dimension()),
           number_of_main_finite_vertices_(0),
           number_of_main_finite_facets_(0),
           number_of_main_finite_cells_(0),
@@ -421,6 +423,8 @@ public:
             points.push_back(r.second);
             ids.push_back(r.first);
             indices.push_back(index++);
+            if (r.first == id())
+                bbox_ += r.second;
         }
 
         // sort spatially the points
@@ -566,6 +570,9 @@ public:
 
     const Traits& geom_traits() const { return traits; }
 
+    const Bbox& bbox() const { return bbox_; }
+    Bbox& bbox() { return bbox_; }
+
     bool in_use;
     size_t number_of_extreme_points_received;
 
@@ -573,6 +580,7 @@ private:
     Traits traits;
     Id id_;
     Delaunay_triangulation dt_;
+    Bbox bbox_;
     mutable Selector<Id> selector;
 
     size_t number_of_main_finite_vertices_;

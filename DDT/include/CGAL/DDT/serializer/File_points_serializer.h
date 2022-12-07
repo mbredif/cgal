@@ -20,6 +20,7 @@ template <class Tile>
 struct File_points_serializer
 {
   typedef typename Tile::Id Id;
+  typedef typename Tile::Bbox Bbox;
 
   File_points_serializer(const std::string& prefix = "") : m_prefix(prefix) {
       boost::filesystem::path p(prefix);
@@ -43,6 +44,13 @@ struct File_points_serializer
     return in.is_open();
   }
 
+  bool load(Id id, Bbox& bbox) const {
+      const std::string fname = filename(id);
+      std::ifstream in(fname, std::ios::in | std::ios::binary);
+      in >> bbox;
+      return !in.fail();
+  }
+
   bool load(Tile& tile) const
   {
 #ifdef CGAL_DEBUG_DDT
@@ -64,6 +72,7 @@ struct File_points_serializer
         Point p;
         Id id;
         in >> p >> id;
+        tile.bbox() += p;
         v = tile.insert(p,id,v).first;
     }
     if(!in.fail()) return true;

@@ -99,7 +99,6 @@ public:
     typedef _Tile                                    Tile;
 
     typedef typename Traits::Point                   Point;
-    typedef typename Traits::Bbox                    Bbox;
     typedef typename Traits::Id                      Id;
     typedef typename Traits::Delaunay_triangulation  DT;
     typedef typename Traits::Vertex_handle           Tile_vertex_handle;
@@ -128,7 +127,7 @@ public:
     Tile_container(int dimension, size_t max_number_of_tiles = 0, const Serializer& serializer = Serializer()) :
         traits(dimension),
         tiles(),
-        serializer(serializer),
+        serializer_(serializer),
         number_of_finite_vertices_(0),
         number_of_finite_facets_  (0),
         number_of_finite_cells_   (0),
@@ -154,11 +153,8 @@ public:
     Tile_iterator end    () { return tiles.end   (); }
     Tile_iterator find(Id id) { return tiles.find(id); }
 
-    typedef std::map<Id, Bbox> Bbox_map;
     typedef typename Tile::Points Points;
     typedef typename Tile::Points_map Points_map;
-    const Bbox_map& bboxes() const { return bboxes_; }
-    Bbox_map& bboxes() { return bboxes_; }
     const Points_map& points() const { return points_; }
     Points_map& points() { return points_; }
     const Points& extreme_points() const { return extreme_points_; }
@@ -197,7 +193,6 @@ public:
            Id id = tile.vertex_id(v);
            Point p = tile.point(v);
            extreme_points_.emplace_back(id, p);
-           bboxes_[id] += p;
         }
     }
 
@@ -274,7 +269,7 @@ public:
     /// returns true after the loaded tile id is successfully saved and unloaded from memory.
     bool erase(Tile_iterator tile) {
         assert(tile != end());
-        if (tile->in_use || !serializer.save(*tile)) return false;
+        if (tile->in_use || !serializer_.save(*tile)) return false;
         return tiles.erase(tile->id());
     }
 
@@ -285,8 +280,8 @@ public:
         Tile_iterator tile = insertion.first;
         if(Tile_const_iterator(tile) == end()) return false;
         // deserialize it if possible
-        if (insertion.second && serializer.has_tile(tile->id()))
-            serializer.load(*tile); // / @todo handle loading error
+        if (insertion.second && serializer_.has_tile(tile->id()))
+            serializer_.load(*tile); // / @todo handle loading error
         return true;
     }
 
@@ -381,14 +376,15 @@ public:
         return true;
     }
 
+    const Serializer& serializer() const { return serializer_; }
+
 private:
     Tile_id_set ids;
     std::map<Id, Tile> tiles;
-    Bbox_map bboxes_;
     Points_map points_;
 
     Points extreme_points_;
-    Serializer serializer;
+    Serializer serializer_;
     Traits traits;
 
     size_t number_of_finite_vertices_;

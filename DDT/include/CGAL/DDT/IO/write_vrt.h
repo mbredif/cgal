@@ -96,25 +96,25 @@ void write_csv_cell(const std::string& filename, const Tile& tile)
     }
 }
 
-template<typename BboxMap>
-void write_csv_bboxes(const std::string& filename, const BboxMap& bboxes)
+template<typename TileContainer>
+void write_csv_bboxes(const std::string& filename, const TileContainer& tc)
 {
     std::ofstream csv(filename+".csv");
     csv << "geom,id" << std::endl;
-    for(auto& b : bboxes)
+    for(auto it = tc.tile_ids_begin(); it != tc.tile_ids_end(); ++it)
     {
-        size_t id = b.first;
-        auto& bbox = b.second;
+        typename TileContainer::Traits::Bbox bbox(tc.maximal_dimension());
+        typename TileContainer::Traits::Id id = *it;
+        if (!tc.serializer().load(id, bbox)) continue;
         csv << "\"POLYGON((";
         csv << bbox.min(0) << " "<< bbox.min(1) << ", ";
         csv << bbox.max(0) << " "<< bbox.min(1) << ", ";
         csv << bbox.max(0) << " "<< bbox.max(1) << ", ";
         csv << bbox.min(0) << " "<< bbox.max(1) << ", ";
         csv << bbox.min(0) << " "<< bbox.min(1);
-        csv << "))\"," << id << "\n";
+        csv << "))\"," << size_t(id) << "\n";
     }
 }
-
 
 template<typename Tile>
 void write_csv_tin(const std::string& filename, const Tile& tile)
@@ -266,7 +266,7 @@ template<typename TileContainer>
 void write_vrt_bboxes(const TileContainer& tc, const std::string& filename)
 {
     write_vrt_header(filename, "wkbPolygon");
-    write_csv_bboxes(filename, tc.bboxes());
+    write_csv_bboxes(filename, tc);
 }
 
 template<typename TileContainer, typename Scheduler>
