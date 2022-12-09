@@ -16,10 +16,10 @@ public:
 /// \name Types
 /// @{
 
-    /// Must be the same as the point type defined by the geometric traits class of the triangulation.
+    /// Point type
     typedef unspecified_type Point;
 
-    /// The type of the tile identifier.
+    /// Identifier type of a tile the partion
     typedef unspecified_type Id;
 
 /// @}
@@ -28,10 +28,6 @@ public:
     Id operator()(const Point& p) const;
 
     /// The number of possible Ids.
-    size_t size() const;
+    std::size_t size() const;
 
 }; /* end Partitioner */
-
-
-/// Streaming
-std::ostream& operator<<(std::ostream& out, const Partitioner& partitioner);

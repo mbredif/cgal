@@ -3,8 +3,10 @@
 \ingroup PkgDDTConcepts
 \cgalConcept
 
-The concept `Scheduler` describes the requirements for the
-...
+The concept `Scheduler` describes the requirements for the scheduling of the tasks
+manipulating tiles stored in a tile container (for example computing the distributed
+Delaunay triangulation).
+
 
 \cgalHasModel `CGAL::DDT::Sequential_scheduler`
 \cgalHasModel `CGAL::DDT::Multithread_scheduler`
@@ -26,36 +28,40 @@ public:
 
 /// @}
 
-    /// default constructor
-    Scheduler(int max_concurrency = 0);
-
-    /// maximum concurrency (number of threads, of mpi processes...). returns 1 for sequential schedulers.
-    int max_concurrency() const;
-
-
-/// \name Iteration Functions
+/// \name Scheduling Functions
 /// @{
-    /// \brief execute, possibly in parallel, a function on all tiles that have received at least one point.
-    /// The function calls op1(tc, tile), may receive points to the tile t, and send points from this tile t using tc.
-    /// op1 is called exactly once on each tile.
+    /// \brief executes a function on all tiles of `tc`, calling `transform(tc, t)` on each tile `t` in `tc`.
     /// \param tc  a tile container.
-    /// \param op1 unary function object
-    /// \param op2 binary function object
-    /// \param init value
-    /// \return the reduction by op2 of the values return by op1, starting at the init value
-    template<typename TileContainer, typename UnaryOp, typename V = int, typename BinaryOp = std::plus<>>
-    V for_each(TileContainer& tc, UnaryOp op1, BinaryOp op2 = {}, V init = {});
+    /// \param transform function called on each tile
+    /// \param reduce function called to produce the aggregated result
+    /// \param init initial value aggregated to the result with a call to `reduce`
 
-    /// \brief execute, possibly in parallel, a function on all tiles that have received at least one point.
-    /// The function calls op1(tc, tile), may receive points to the tile t, and send points from this tile t using tc.
-    /// op1 is called on repeatedly on each tile until all tiles return the init value.
-    /// \param tc  a tile container.
-    /// \param op1 unary function object
-    /// \param op2 binary function object
-    /// \param init value
-    /// \return the reduction by op2 of the values return by op1, starting at the init value
-    template<typename TileContainer, typename UnaryOp, typename V = int, typename BinaryOp = std::plus<>>
-    V for_each_rec(TileContainer& tc, UnaryOp op1, BinaryOp op2 = {}, V init = {});
+    /// \tparam TileContainer a model of X
+    /// \tparam Transform a model of `Callable` with `TileContainer&` and `Tile&` as argument types
+    ///                   and with `V` implicitly constructible from the value type.
+    /// \tparam Reduce a model of `Callable` with two instances of `V` as argument types and `V` as value type
+    /// \tparam V return type of the function
+    /// \return the reduction by `reduce` of the values returned by `transform`, starting at the value `init`.
+    template<typename TileContainer,
+             typename Transform,
+             typename Reduce = std::plus<>,
+             typename V = std::invoke_result_t<BinaryOp,
+                                               std::invoke_result_t<Transform, TileContainer, Tile>,
+                                               std::invoke_result_t<Transform, TileContainer, Tile> > >
+    for_each(TileContainer& tc, Transform transform, Reduce reduce = {}, V init = {});
+
+    /// \brief repeatedly executes `transform(tc, t)` on all tiles `t` of `tc`, until each call returns a value `v`
+    ///        such that for any value `w` the following invariant is verified `reduce(v, w)==w`.
+    ///        There is no requirement on the order of the tiles on which `transform` is called,
+    ///        the only requirement is that any further call to `transform` verifies the aforementioned invariant.
+    /// \copydetails for_each
+    template<typename TileContainer,
+             typename Transform,
+             typename Reduce = std::plus<>,
+             typename V = std::invoke_result_t<BinaryOp,
+                                               std::invoke_result_t<Transform, TileContainer, Tile>,
+                                               std::invoke_result_t<Transform, TileContainer, Tile> > >
+    for_each_rec(TileContainer& tc, Transform transform, Reduce reduce = {}, V init = {});
 /// @}
 
 }; /* end Scheduler */
