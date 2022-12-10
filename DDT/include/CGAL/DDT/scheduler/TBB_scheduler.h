@@ -91,8 +91,13 @@ struct TBB_scheduler
 
     inline int max_concurrency() const { return arena.max_concurrency(); }
 
-    template<typename TileContainer, typename UnaryOp, typename V = int, typename BinaryOp = std::plus<>>
-    V for_each(TileContainer& tc, UnaryOp op1, BinaryOp op2 = {}, V init = {})
+    template<typename TileContainer,
+         typename Transform,
+         typename Reduce = std::plus<>,
+         typename V = std::invoke_result_t<Reduce,
+                                           std::invoke_result_t<Transform, TileContainer&, Tile&>,
+                                           std::invoke_result_t<Transform, TileContainer&, Tile&> > >
+    V for_each(TileContainer& tc, Transform transform, Reduce reduce = {}, V init = {})
     {
         std::vector<Id> ids(tc.ids_begin(), tc.ids_end());
         return arena.execute([&]{
@@ -102,19 +107,24 @@ struct TBB_scheduler
             {
                 V c = init;
                 for (int i=r.begin(); i<r.end(); ++i)
-                    c = op2(c, for_each_function<V>(tc, op1, mutex, ids[i]));
+                    c = reduce(c, for_each_function<V>(tc, transform, mutex, ids[i]));
                 return c;
-            }, op2 );
+            }, reduce);
         });
     }
 
-    template<typename TileContainer, typename UnaryOp, typename V = int, typename BinaryOp = std::plus<>>
-    V for_each_rec(TileContainer& tc, UnaryOp op1, BinaryOp op2 = {}, V init = {})
+    template<typename TileContainer,
+         typename Transform,
+         typename Reduce = std::plus<>,
+         typename V = std::invoke_result_t<Reduce,
+                                           std::invoke_result_t<Transform, TileContainer&, Tile&>,
+                                           std::invoke_result_t<Transform, TileContainer&, Tile&> > >
+    V for_each_rec(TileContainer& tc, Transform transform, Reduce reduce = {}, V init = {})
     {
         V value = init, v;
         do {
-            v = for_each(tc, op1, op2, init);
-            value = op2(value, v);
+            v = for_each(tc, transform, reduce, init);
+            value = reduce(value, v);
         } while (v != init);
         return value;
     }

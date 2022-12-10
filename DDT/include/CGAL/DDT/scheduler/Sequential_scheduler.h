@@ -28,8 +28,13 @@ struct Sequential_scheduler
 
     inline int max_concurrency() const { return 1; }
 
-    template<typename TileContainer, typename UnaryOp, typename V = int, typename BinaryOp = std::plus<>>
-    V for_each(TileContainer& tc, UnaryOp transform, BinaryOp reduce = {}, V init = {})
+    template<typename TileContainer,
+             typename Transform,
+             typename Reduce = std::plus<>,
+             typename V = std::invoke_result_t<Reduce,
+                                               std::invoke_result_t<Transform, TileContainer&, Tile&>,
+                                               std::invoke_result_t<Transform, TileContainer&, Tile&> > >
+    V for_each(TileContainer& tc, Transform transform, Reduce reduce = {}, V init = {})
     {
         V value = init;
         for(Tile& tile : tc) {
@@ -41,8 +46,13 @@ struct Sequential_scheduler
         return value;
     }
 
-    template<typename TileContainer, typename UnaryOp, typename V = int, typename BinaryOp = std::plus<>>
-    V for_each_rec(TileContainer& tc, UnaryOp transform, BinaryOp reduce = {}, V init = {})
+    template<typename TileContainer,
+         typename Transform,
+         typename Reduce = std::plus<>,
+         typename V = std::invoke_result_t<Reduce,
+                                           std::invoke_result_t<Transform, TileContainer&, Tile&>,
+                                           std::invoke_result_t<Transform, TileContainer&, Tile&> > >
+    V for_each_rec(TileContainer& tc, Transform transform, Reduce reduce = {}, V init = {})
     {
         V value = init, v;
         do {

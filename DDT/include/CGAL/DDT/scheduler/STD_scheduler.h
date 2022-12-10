@@ -38,8 +38,13 @@ struct STD_scheduler
 
     inline int max_concurrency() const { return 0; }
 
-    template<typename TileContainer, typename UnaryOp, typename V = int, typename BinaryOp = std::plus<>>
-    V for_each(TileContainer& tc, UnaryOp transform, BinaryOp reduce = {}, V init = {})
+    template<typename TileContainer,
+         typename Transform,
+         typename Reduce = std::plus<>,
+         typename V = std::invoke_result_t<Reduce,
+                                           std::invoke_result_t<Transform, TileContainer&, Tile&>,
+                                           std::invoke_result_t<Transform, TileContainer&, Tile&> > >
+    V for_each(TileContainer& tc, Transform transform, Reduce reduce = {}, V init = {})
     {
         return std::transform_reduce(CGAL_DDT_SCHEDULER_SEQUENTIAL_SCHEDULER_PAR
                                      tc.begin(), tc.end(), init, reduce, [&tc, &transform](Tile& t){
@@ -51,8 +56,13 @@ struct STD_scheduler
         } );
     }
 
-    template<typename TileContainer, typename UnaryOp, typename V = int, typename BinaryOp = std::plus<>>
-    V for_each_rec(TileContainer& tc, UnaryOp transform, BinaryOp reduce = {}, V init = {})
+    template<typename TileContainer,
+         typename Transform,
+         typename Reduce = std::plus<>,
+         typename V = std::invoke_result_t<Reduce,
+                                           std::invoke_result_t<Transform, TileContainer&, Tile&>,
+                                           std::invoke_result_t<Transform, TileContainer&, Tile&> > >
+    V for_each_rec(TileContainer& tc, Transform transform, Reduce reduce = {}, V init = {})
     {
         V value = init, v;
         do {

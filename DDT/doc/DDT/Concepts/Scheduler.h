@@ -45,10 +45,10 @@ public:
     template<typename TileContainer,
              typename Transform,
              typename Reduce = std::plus<>,
-             typename V = std::invoke_result_t<BinaryOp,
-                                               std::invoke_result_t<Transform, TileContainer, Tile>,
-                                               std::invoke_result_t<Transform, TileContainer, Tile> > >
-    for_each(TileContainer& tc, Transform transform, Reduce reduce = {}, V init = {});
+             typename V = std::invoke_result_t<Reduce,
+                                               std::invoke_result_t<Transform, TileContainer&, Tile&>,
+                                               std::invoke_result_t<Transform, TileContainer&, Tile&> > >
+    V for_each(TileContainer& tc, Transform transform, Reduce reduce = {}, V init = {});
 
     /// \brief repeatedly executes `transform(tc, t)` on all tiles `t` of `tc`, until each call returns a value `v`
     ///        such that for any value `w` the following invariant is verified `reduce(v, w)==w`.
@@ -58,10 +58,10 @@ public:
     template<typename TileContainer,
              typename Transform,
              typename Reduce = std::plus<>,
-             typename V = std::invoke_result_t<BinaryOp,
-                                               std::invoke_result_t<Transform, TileContainer, Tile>,
-                                               std::invoke_result_t<Transform, TileContainer, Tile> > >
-    for_each_rec(TileContainer& tc, Transform transform, Reduce reduce = {}, V init = {});
+             typename V = std::invoke_result_t<Reduce,
+                                               std::invoke_result_t<Transform, TileContainer&, Tile&>,
+                                               std::invoke_result_t<Transform, TileContainer&, Tile&> > >
+    V for_each_rec(TileContainer& tc, Transform transform, Reduce reduce = {}, V init = {});
 /// @}
 
 }; /* end Scheduler */
