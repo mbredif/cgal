@@ -25,7 +25,8 @@ class Vertex_const_iterator
 public:
     typedef typename TileContainer::Traits                     Traits;
     typedef typename TileContainer::Tile_vertex_const_iterator Tile_vertex_const_iterator;
-    typedef typename TileContainer::Tile_const_iterator        Tile_const_iterator;
+    typedef typename TileContainer::const_iterator             Tile_const_iterator;
+    typedef typename TileContainer::Tile_triangulation Tile_triangulation;
 
     using iterator_category = std::forward_iterator_tag;
     using value_type = Tile_vertex_const_iterator;
@@ -44,7 +45,7 @@ public:
     {
         if(tile_ != tiles_->cend())
         {
-            vertex_ = tile_->vertices_begin();
+            vertex_ = tile_->triangulation().vertices_begin();
             advance_to_main();
         }
         assert(is_valid());
@@ -68,12 +69,12 @@ public:
     {
         while(tile_ != tiles_->cend())
         {
-            if(vertex_ == tile_->vertices_end())
+            if(vertex_ == tile_->triangulation().vertices_end())
             {
                 if (++tile_ != tiles_->cend())
-                    vertex_ = tile_->vertices_begin();
+                    vertex_ = tile_->triangulation().vertices_begin();
             }
-            else if(tile_->vertex_is_main(vertex_))
+            else if(tile_->triangulation().vertex_is_main(vertex_))
             {
                 break;
             }
@@ -100,8 +101,8 @@ public:
 
     Vertex_const_iterator& operator+=(int n)
     {
-        for(auto vit = tile_->vertices_begin(); vit != vertex_; ++vit)
-            if(tile_->vertex_is_main(vit))
+        for(auto vit = tile_->triangulation().vertices_begin(); vit != vertex_; ++vit)
+            if(tile_->triangulation().vertex_is_main(vit))
                 ++n;
         int num_main_vertices = tile_->number_of_main_vertices();
         while(n >= num_main_vertices)
@@ -110,7 +111,7 @@ public:
             ++tile_;
             num_main_vertices = tile_->number_of_main_vertices();
         }
-        vertex_ = tile_->vertices_begin();
+        vertex_ = tile_->triangulation().vertices_begin();
         advance_to_main();
         for(; n>0 ; --n)
             ++(*this);
@@ -122,17 +123,18 @@ public:
         if (tiles_ != v.tiles_) return false;
         if (tile_ == tiles_->cend() || v.tile_ == tiles_->cend()) return tile_ == v.tile_;
         if (tile_ == v.tile_) return vertex_==v.vertex_;
-        return tile_->are_vertices_equal(vertex_, *(v.tile_), v.vertex_);
+        return tile_->triangulation().are_vertices_equal(vertex_, v.triangulation(), v.vertex_);
     }
 
     bool operator!=(const Vertex_const_iterator& rhs) const { return !(*this == rhs); }
 
     const Tile_const_iterator&        tile  () const { return tile_;   }
     const value_type&  operator*() const { return vertex_; }
+    const Tile_triangulation&    triangulation() const { return tile_->triangulation(); }
 
     bool is_valid()    const
     {
-        return tile_ == tiles_->cend() || vertex_ != tile_->vertices_end();
+        return tile_ == tiles_->cend() || vertex_ != tile_->triangulation().vertices_end();
     }
 };
 

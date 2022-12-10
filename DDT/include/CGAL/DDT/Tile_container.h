@@ -119,6 +119,9 @@ public:
     typedef Mapped_iterator<Pair_iterator>             iterator ;
     typedef Key_const_iterator<Pair_const_iterator>    Id_const_iterator ;
 
+    typedef typename Tile::Points             Points;
+    typedef typename Tile::Tile_triangulation Tile_triangulation;
+
     inline constexpr int maximal_dimension() const
     {
         return traits.dimension();
@@ -159,7 +162,6 @@ public:
     const Tile& at(Id id) const { return tiles.at(id); }
     Tile& at(Id id) { return tiles.at(id); }
 
-    typedef typename Tile::Points Points;
     const Points& extreme_points() const { return extreme_points_; }
     Points& extreme_points() { return extreme_points_; }
 
@@ -187,7 +189,7 @@ public:
             count += vi.second.size();
             Points& points = operator[](vi.first).points();
             for(Tile_vertex_const_handle v : vi.second)
-                points.emplace_back(tile.vertex_id(v), tile.point(v));
+                points.emplace_back(tile.triangulation().vertex_id(v), tile.triangulation().point(v));
 
             // debug
             //if(!vi.second.empty()) std::cout << "\x1B[32m" << tile.id() << "\t->\t" << size_t(vi.first) << "\t:\t" << vi.second.size()   << "\x1B[0m"<< std::endl;
@@ -197,9 +199,9 @@ public:
 
     void send_vertices_to_all_tiles(const Tile& tile, const std::vector<Tile_vertex_const_handle>& vertices) {
         for(Tile_vertex_const_handle v : vertices) {
-           if (tile.vertex_is_infinite(v)) continue;
-           Id id = tile.vertex_id(v);
-           Point p = tile.point(v);
+           if (tile.triangulation().vertex_is_infinite(v)) continue;
+           Id id = tile.triangulation().vertex_id(v);
+           Point p = tile.triangulation().point(v);
            extreme_points_.emplace_back(id, p);
         }
         // debug
@@ -339,6 +341,7 @@ public:
 
         for(const Tile& tile : *this)
         {
+
             if(!tile.is_valid(verbose, level))
             {
                 std::cerr << "Tile " << int(tile.id()) << " is invalid" << std::endl;

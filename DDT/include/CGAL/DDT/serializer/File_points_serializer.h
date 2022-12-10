@@ -59,11 +59,12 @@ struct File_points_serializer
 
 #ifdef IT_COMPILED_WITH_KERNELD
     typename Tile::Delaunay_triangulation dt(tile.geom_traits().triangulation());
-    std::swap(dt, tile.triangulation());
+    std::swap(dt, tile.triangulation().triangulation());
 #endif
 
     const std::string fname = filename(tile.id());
     std::ifstream in(fname, std::ios::in | std::ios::binary);
+    in >> tile.bbox();
     size_t count;
     in >> count;
     typename Tile::Vertex_handle v;
@@ -73,12 +74,12 @@ struct File_points_serializer
         Id id;
         in >> p >> id;
         tile.bbox() += p;
-        v = tile.insert(p,id,v).first;
+        v = tile.triangulation().insert(p,id,v).first;
     }
     if(!in.fail()) return true;
 
 #ifdef IT_COMPILED_WITH_KERNELD
-    std::swap(dt, tile.triangulation()); // revert changes
+    std::swap(dt, tile.triangulation().triangulation()); // revert changes
 #endif
 
     return false;
@@ -89,24 +90,28 @@ struct File_points_serializer
     ++nb_save;
 #endif
     typedef typename Tile::Point Point;
+    typename Tile::Tile_triangulation  Tile_triangulation;
     typedef typename Tile::Vertex_const_iterator Vertex_const_iterator;
     const std::string fname = filename(tile.id());
     std::ofstream out(fname, std::ios::out | std::ios::binary);
-    out << std::setprecision(17) << tile.number_of_vertices() << "\n";
+    out << std::setprecision(17) << tile.bbox() << "\n";
+
+    Tile_triangulation& triangulation = tile.triangulation();
+    out << triangulation.number_of_vertices() << "\n";
     std::vector<size_t> indices;
     std::vector<Point>  points;
     std::vector<Vertex_const_iterator> vertices;
     size_t index = 0;
-    for(Vertex_const_iterator v = tile.vertices_begin(); v != tile.vertices_end(); ++v) {
-      if (!tile.vertex_is_infinite(v)) {
-        points.push_back(tile.point(v));
+    for(Vertex_const_iterator v = triangulation.vertices_begin(); v != triangulation.vertices_end(); ++v) {
+      if (!triangulation.vertex_is_infinite(v)) {
+        points.push_back(triangulation.point(v));
         vertices.push_back(v);
         indices.push_back(index++);
       }
     }
-    tile.spatial_sort(indices, points);
+    triangulation.spatial_sort(indices, points);
     for (size_t index : indices)
-      out << points[index] << " " << tile.vertex_id(vertices[index]) << "\n";
+      out << points[index] << " " << triangulation.vertex_id(vertices[index]) << "\n";
     return !out.fail();
   }
 

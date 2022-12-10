@@ -53,12 +53,8 @@ int read_cgal_tile(Tile& tile, const std::string& dirname)
         return 1;
     }
 
-    ifile_tri >> tile;
+    ifile_tri >> tile.triangulation();
     ifile_tri.close();
-    std::cout << filename << " : id=" << int(tile.id()) << " valid=" << tile.is_valid();
-    std::cout << " nv="<<tile.number_of_main_finite_vertices()<<"/"<<tile.number_of_vertices();
-    std::cout << " nf="<<tile.number_of_main_finite_facets();
-    std::cout << " nc="<<tile.number_of_main_finite_cells()<<"/"<<tile.number_of_cells() << std::endl;
 
     std::ifstream ifile_json(json_name, std::ifstream::in);
     read_json(tile,ifile_json);
@@ -83,11 +79,11 @@ int read_cgal(TileContainer& tc, const std::string& dirname)
     for (auto its : tiles_node)
     {
         Id tid = std::stoi(its.first);
-        tc.init(tid);
-        auto tile = tc.load(tid);
+        auto& tile = tc[tid];
+        tc.load(tile);
         std::istringstream iss(bboxes_node.find(its.first)->second.data());
-        iss >> tile->bbox();
-        read_cgal_tile(*tile,dirname);
+        iss >> tile.bbox();
+        read_cgal_tile(tile,dirname);
     }
     tc.finalize();
     std::cout << tc.is_valid() << std::endl;

@@ -27,7 +27,7 @@ size_t splay_tile(TileContainer& tc, Tile& tile)
 {
     typedef typename Tile::Id Id;
     typedef typename Tile::Points Points;
-    typedef typename Tile::Vertex_const_handle Vertex_const_handle;
+    typedef typename Tile::Tile_triangulation::Vertex_const_handle Vertex_const_handle;
     Points received;
     tc.receive_points(tile, received);
     if (received.empty()) return 0;
@@ -35,10 +35,10 @@ size_t splay_tile(TileContainer& tc, Tile& tile)
 
     // insert them into the current tile triangulation and get the new foreign points
     std::set<Vertex_const_handle> inserted;
-    if(!tile.insert(received, inserted, true)) return 0;
+    if(!tile.triangulation().insert(received, inserted, true)) return 0;
     // get the relevant neighbor points
     std::map<Id, std::set<Vertex_const_handle>> vertices;
-    tile.get_finite_neighbors(inserted, vertices);
+    tile.triangulation().get_finite_neighbors(inserted, vertices);
     // send them to the relevant neighboring tiles
     return tc.send_vertices_to_one_tile(tile, vertices);
 }
@@ -47,16 +47,18 @@ template<typename TileContainer, typename Scheduler>
 size_t insert_and_send_all_axis_extreme_points(TileContainer& tc, Scheduler& sch)
 {
     typedef typename TileContainer::Tile Tile;
-    typedef typename Tile::Vertex_const_handle Vertex_const_handle;
     typedef typename Tile::Point Point;
     typedef typename Tile::Id Id;
     return sch.for_each(tc, [](TileContainer& tc, Tile& tile)
     {
+        typedef typename Tile::Tile_triangulation::Vertex_const_handle Vertex_const_handle;
         size_t count = splay_tile(tc, tile);
 
         // send the extreme points along each axis to all tiles to initialize the star splaying
         std::vector<Vertex_const_handle> vertices;
-        tile.get_axis_extreme_points(vertices);
+        tile.triangulation().get_axis_extreme_points(vertices);
+        for(Vertex_const_handle v : vertices)
+            tile.bbox() += tile.triangulation().point(v);
         tc.send_vertices_to_all_tiles(tile, vertices);
         return count;
     });

@@ -136,9 +136,8 @@ int test_traits(const std::string& testname, int ND, int NP, int dim = T::D, int
     std::cout << "== Tile.get_* ==" << std::endl;
     {
         Tile t(0, dim);
-        std::vector<typename Tile::Vertex_const_handle> points;
-        std::vector<typename Tile::Vertex_const_handle_and_id> points_and_ids;
-        t.get_axis_extreme_points(points);
+        std::vector<typename TileContainer::Tile_vertex_const_handle> points;
+        t.triangulation().get_axis_extreme_points(points);
     }
     return result;
 }

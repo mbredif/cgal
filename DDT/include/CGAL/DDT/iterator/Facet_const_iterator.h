@@ -25,7 +25,8 @@ class Facet_const_iterator
 public:
     typedef typename TileContainer::Traits                    Traits;
     typedef typename TileContainer::Tile_facet_const_iterator Tile_facet_const_iterator;
-    typedef typename TileContainer::Tile_const_iterator       Tile_const_iterator;
+    typedef typename TileContainer::const_iterator            Tile_const_iterator;
+    typedef typename TileContainer::Tile_triangulation Tile_triangulation;
 
     using iterator_category = std::forward_iterator_tag;
     using value_type = Tile_facet_const_iterator;
@@ -44,7 +45,7 @@ public:
     {
         if(tile_ != tiles_->cend())
         {
-            facet_ = tile_->facets_begin();
+            facet_ = tile_->triangulation().facets_begin();
             advance_to_main();
         }
         assert(is_valid());
@@ -67,12 +68,12 @@ public:
     {
         while(tile_ != tiles_->cend())
         {
-            if(facet_ == tile_->facets_end())
+            if(facet_ == tile_->triangulation().facets_end())
             {
                 if (++tile_ != tiles_->cend())
-                    facet_ = tile_->facets_begin();
+                    facet_ = tile_->triangulation().facets_begin();
             }
-            else if(tile_->facet_is_main(facet_))
+            else if(tile_->triangulation().facet_is_main(facet_))
             {
                 break;
             }
@@ -103,17 +104,18 @@ public:
         if (tiles_ != f.tiles_) return false;
         if (tile_ == tiles_->cend() || f.tile_ == tiles_->cend()) return tile_ == f.tile_;
         if (tile_ == f.tile_) return facet_==f.facet_;
-        return tile_->are_facets_equal(facet_, *(f.tile_), f.facet_);
+        return tile_->triangulation().are_facets_equal(facet_, f.triangulation(), f.facet_);
     }
 
     bool operator!=(const Facet_const_iterator& rhs) const { return !(*this == rhs); }
 
     const Tile_const_iterator&       tile()  const { return tile_;  }
     const value_type& operator*() const { return facet_; }
+    const Tile_triangulation&    triangulation() const { return tile_->triangulation(); }
 
     bool is_valid()    const
     {
-        return tile_ == tiles_->cend() || facet_ != tile_->facets_end();
+        return tile_ == tiles_->cend() || facet_ != tile_->triangulation().facets_end();
     }
 };
 

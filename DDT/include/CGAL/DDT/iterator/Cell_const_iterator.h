@@ -24,8 +24,9 @@ class Cell_const_iterator
 {
 public:
     typedef typename TileContainer::Traits                    Traits;
+    typedef typename TileContainer::const_iterator            Tile_const_iterator;
     typedef typename TileContainer::Tile_cell_const_iterator  Tile_cell_const_iterator;
-    typedef typename TileContainer::Tile_const_iterator       Tile_const_iterator;
+    typedef typename TileContainer::Tile_triangulation Tile_triangulation;
 
     using iterator_category = std::forward_iterator_tag;
     using value_type = Tile_cell_const_iterator;
@@ -44,7 +45,7 @@ public:
     {
         if(tile_ != tiles_->cend())
         {
-            cell_ = tile_->cells_begin();
+            cell_ = tile_->triangulation().cells_begin();
             advance_to_main();
         }
         assert(is_valid());
@@ -68,12 +69,12 @@ public:
     {
         while(tile_ != tiles_->cend())
         {
-            if(cell_ == tile_->cells_end())
+            if(cell_ == tile_->triangulation().cells_end())
             {
                 if (++tile_ != tiles_->cend())
-                    cell_ = tile_->cells_begin();
+                    cell_ = tile_->triangulation().cells_begin();
             }
-            else if(tile_->cell_is_main(cell_))
+            else if(tile_->triangulation().cell_is_main(cell_))
             {
                 break;
             }
@@ -110,8 +111,8 @@ public:
     Cell_const_iterator& operator+=(int n)
     {
         assert(tile_ != tiles_->cend());
-        for(auto cit = tile_->cells_begin(); cit != cell_; ++cit)
-            if(tile_->cell_is_main(cit))
+        for(auto cit = tile_->triangulation().cells_begin(); cit != cell_; ++cit)
+            if(tile_->triangulation().cell_is_main(cit))
                 ++n;
         int num_main_cells = tile_->number_of_main_cells();
         while(n >= num_main_cells)
@@ -120,7 +121,7 @@ public:
             ++tile_;
             num_main_cells = tile_->number_of_main_cells();
         }
-        cell_ = tile_->cells_begin();
+        cell_ = tile_->triangulation().cells_begin();
         advance_to_main();
         for(; n>0 ; --n)
             ++(*this);
@@ -133,17 +134,18 @@ public:
         if (tiles_ != c.tiles_) return false;
         if (tile_ == tiles_->cend() || c.tile_ == tiles_->cend()) return tile_ == c.tile_;
         if (tile_ == c.tile_) return cell_==c.cell_;
-        return tile_->are_cells_equal(cell_, *(c.tile_), c.cell_);
+        return tile_->triangulation().are_cells_equal(cell_, c.triangulation(), c.cell_);
     }
 
     bool operator!=(const Cell_const_iterator& rhs) const { return !(*this == rhs); }
 
     const Tile_const_iterator&    tile() const { return tile_; }
     const value_type& operator*() const { return cell_; }
+    const Tile_triangulation&    triangulation() const { return tile_->triangulation(); }
 
     bool is_valid()    const
     {
-        return tile_ == tiles_->cend() || cell_ != tile_->cells_end();
+        return tile_ == tiles_->cend() || cell_ != tile_->triangulation().cells_end();
     }
 };
 
