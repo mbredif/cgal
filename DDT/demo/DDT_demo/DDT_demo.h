@@ -87,6 +87,7 @@ int DDT_demo(int argc, char **argv)
   Serializer<Tile> serializer(ser);
   TileContainer tiles(dimension, max_number_of_tiles, serializer);
 
+  std::cout << "- Program     : " << argv[0] << std::endl;
   std::cout << "- Loglevel    : " << loglevel << std::endl;
   std::cout << "- Range       : " << range << std::endl;
   std::cout << "- Points      : " << NP << std::endl;

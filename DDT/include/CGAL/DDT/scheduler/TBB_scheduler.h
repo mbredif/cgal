@@ -31,13 +31,13 @@ namespace DDT {
 template< typename V, typename TileContainer, typename UnaryOp, typename Id>
 V for_each_function(TileContainer& tc, UnaryOp op1, std::mutex& mutex, Id id)
 {
+    typedef typename TileContainer::Tile_iterator Tile_iterator;
     // ensure tile is loaded
-    std::pair<typename TileContainer::Tile_iterator, bool> insertion;
+    Tile_iterator tile;
     do {
         std::unique_lock<std::mutex> lock(mutex);
-        insertion = tc.insert(id);
-    } while (!tc.load(insertion));
-    typename TileContainer::Tile_iterator tile = insertion.first;
+        tile = tc.insert(id);
+    } while (!tc.load(tile));
 
     // acquire the tile and extract a copy of tc in tc2
     size_t number_of_extreme_points_received1;
@@ -46,7 +46,7 @@ V for_each_function(TileContainer& tc, UnaryOp op1, std::mutex& mutex, Id id)
     {
         std::unique_lock<std::mutex> lock(mutex);
         // "swap" moves the incoming points from tc to tc2, which had no points
-        tc2.points()[id].swap(tc.points()[id]);
+        tc2[id].points().swap(tc[id].points());
 
         // moves the unreceived axis extreme points
         tc2.extreme_points().insert(tc2.extreme_points().end(),
@@ -66,9 +66,9 @@ V for_each_function(TileContainer& tc, UnaryOp op1, std::mutex& mutex, Id id)
         std::unique_lock<std::mutex> lock(mutex);
         tc.unload(tile);
         // moves the points emitted in tc2 to tc
-        for(auto& p : tc2.points()) {
-            auto& points = tc.points()[p.first];
-            points.insert(points.end(), p.second.begin(), p.second.end());
+        for(auto& tile : tc2) {
+            auto& points = tc[tile.id()].points();
+            points.insert(points.end(), tile.points().begin(), tile.points().end());
         }
 
         // moves the axis extreme points emitted in tc2 to tc
@@ -94,7 +94,7 @@ struct TBB_scheduler
     template<typename TileContainer, typename UnaryOp, typename V = int, typename BinaryOp = std::plus<>>
     V for_each(TileContainer& tc, UnaryOp op1, BinaryOp op2 = {}, V init = {})
     {
-        std::vector<Id> ids(tc.tile_ids_begin(), tc.tile_ids_end());
+        std::vector<Id> ids(tc.ids_begin(), tc.ids_end());
         return arena.execute([&]{
             return tbb::parallel_reduce(
                   tbb::blocked_range<int>(0,ids.size()),

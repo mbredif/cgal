@@ -59,13 +59,15 @@ public:
           id_(id),
           dt_(traits.triangulation()),
           bbox_(traits.dimension()),
+          points_(),
           number_of_main_finite_vertices_(0),
           number_of_main_finite_facets_(0),
           number_of_main_finite_cells_(0),
           number_of_main_facets_(0),
           number_of_main_cells_(0),
           number_of_extreme_points_received(0),
-          in_use(false)
+          in_mem(false),
+          locked(false)
     {}
 
     inline Delaunay_triangulation& triangulation() { return dt_; }
@@ -573,13 +575,18 @@ public:
     const Bbox& bbox() const { return bbox_; }
     Bbox& bbox() { return bbox_; }
 
-    bool in_use;
+    const Points& points() const { return points_; }
+    Points& points() { return points_; }
+
+    bool locked;
+    bool in_mem;
     size_t number_of_extreme_points_received;
 
 private:
     Traits traits;
     Id id_;
     Delaunay_triangulation dt_;
+    Points points_;
     Bbox bbox_;
     mutable Selector<Id> selector;
 

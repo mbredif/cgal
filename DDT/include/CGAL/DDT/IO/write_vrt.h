@@ -101,11 +101,10 @@ void write_csv_bboxes(const std::string& filename, const TileContainer& tc)
 {
     std::ofstream csv(filename+".csv");
     csv << "geom,id" << std::endl;
-    for(auto it = tc.tile_ids_begin(); it != tc.tile_ids_end(); ++it)
+    for(auto& tile : tc)
     {
-        typename TileContainer::Traits::Bbox bbox(tc.maximal_dimension());
-        typename TileContainer::Traits::Id id = *it;
-        if (!tc.serializer().load(id, bbox)) continue;
+        typename TileContainer::Traits::Bbox const& bbox = tile.bbox();
+        typename TileContainer::Traits::Id id = tile.id();
         csv << "\"POLYGON((";
         csv << bbox.min(0) << " "<< bbox.min(1) << ", ";
         csv << bbox.max(0) << " "<< bbox.min(1) << ", ";
@@ -233,7 +232,7 @@ void write_vrt_verts(TileContainer& tc, Scheduler& sch, const std::string& dirna
         write_tile_vrt_verts(filename, tile);
         return 1;
     });
-    write_vrt_header(dirname, "wkbPoint", "vertices", tc.tile_ids_begin(), tc.tile_ids_end());
+    write_vrt_header(dirname, "wkbPoint", "vertices", tc.ids_begin(), tc.ids_end());
 }
 
 template<typename TileContainer, typename Scheduler>
@@ -246,7 +245,7 @@ void write_vrt_facets(TileContainer& tc, Scheduler& sch, const std::string& dirn
         write_tile_vrt_facets(filename, tile);
         return 1;
     });
-    write_vrt_header(dirname, "wkbLineString", "facets", tc.tile_ids_begin(), tc.tile_ids_end());
+    write_vrt_header(dirname, "wkbLineString", "facets", tc.ids_begin(), tc.ids_end());
 }
 
 template<typename TileContainer, typename Scheduler>
@@ -259,7 +258,7 @@ void write_vrt_cells(TileContainer& tc, Scheduler& sch, const std::string& dirna
         write_tile_vrt_cells(filename, tile);
         return 1;
     });
-    write_vrt_header(dirname, "wkbPolygon", "cells", tc.tile_ids_begin(), tc.tile_ids_end());
+    write_vrt_header(dirname, "wkbPolygon", "cells", tc.ids_begin(), tc.ids_end());
 }
 
 template<typename TileContainer>
@@ -279,7 +278,7 @@ void write_vrt_tins(TileContainer& tc, Scheduler& sch, const std::string& dirnam
         write_tile_vrt_tins(filename, tile);
         return 1;
     });
-    write_vrt_header(dirname, "wkbTIN", "tins", tc.tile_ids_begin(), tc.tile_ids_end());
+    write_vrt_header(dirname, "wkbTIN", "tins", tc.ids_begin(), tc.ids_end());
 }
 
 }

@@ -26,7 +26,9 @@ class Distributed_Delaunay_triangulation
 {
 private:
     typedef typename TileContainer::Traits              Traits;
-    typedef typename TileContainer::Tile_const_iterator Tile_const_iterator;
+    typedef typename TileContainer::Tile                Tile;
+    typedef typename TileContainer::iterator            Tile_iterator;
+    typedef typename TileContainer::const_iterator      Tile_const_iterator;
     typedef typename Traits::Vertex_const_iterator      Tile_vertex_const_iterator;
     typedef typename Traits::Cell_const_iterator        Tile_cell_const_iterator;
     typedef typename Traits::Facet_const_iterator       Tile_facet_const_iterator;
@@ -135,40 +137,40 @@ public:
     bool is_valid(bool verbose = false, int level = 0) const
     {
         if (!tiles.is_valid(verbose, level)) return false;
-        for(auto tile = tiles.begin(); tile != tiles.end(); ++tile)
+        for(const Tile& tile : tiles)
         {
-            for(auto v = tile->vertices_begin(); v != tile->vertices_end(); ++v)
+            for(auto v = tile.vertices_begin(); v != tile.vertices_end(); ++v)
             {
-                assert(tile->vertex_is_infinite(v) || (tile->vertex_is_local(v) + tile->vertex_is_foreign(v) == 1));
-                if(tile->vertex_is_infinite(v)) continue;
-                Id tid = tile->vertex_id(v);
-                if(tid == tile->id()) continue;
-                auto t = tiles.find(tid);
-                if(t->relocate_vertex(*tile, v) == t->vertices_end())
+                assert(tile.vertex_is_infinite(v) || (tile.vertex_is_local(v) + tile.vertex_is_foreign(v) == 1));
+                if(tile.vertex_is_infinite(v)) continue;
+                Id tid = tile.vertex_id(v);
+                if(tid == tile.id()) continue;
+                Tile_iterator t = tiles.find(tid);
+                if(t->relocate_vertex(tile, v) == t->vertices_end())
                 {
                     assert(! "relocate_vertex failed" );
                     return false;
                 }
             }
-            for(auto f = tile->facets_begin(); f != tile->facets_end(); ++f)
+            for(auto f = tile.facets_begin(); f != tile.facets_end(); ++f)
             {
-                assert(tile->facet_is_local(f) + tile->facet_is_mixed(f) + tile->facet_is_foreign(f) == 1);
-                if(!tile->facet_is_mixed(f)) continue;
+                assert(tile.facet_is_local(f) + tile.facet_is_mixed(f) + tile.facet_is_foreign(f) == 1);
+                if(!tile.facet_is_mixed(f)) continue;
                 std::set<Id> tids;
-                for(int d = 0; d <= tile->current_dimension(); ++d)
+                for(int d = 0; d <= tile.current_dimension(); ++d)
                 {
-                    if(d==tile->index_of_covertex(f)) continue;
-                    auto c = tile->cell(f);
-                    auto v = tile->vertex(c, d);
-                    if(tile->vertex_is_infinite(v)) continue;
-                    Id tid = tile->vertex_id(v);
-                    if(tid == tile->id()) continue;
+                    if(d==tile.index_of_covertex(f)) continue;
+                    auto c = tile.cell(f);
+                    auto v = tile.vertex(c, d);
+                    if(tile.vertex_is_infinite(v)) continue;
+                    Id tid = tile.vertex_id(v);
+                    if(tid == tile.id()) continue;
                     tids.insert(tid);
                 }
                 for(auto tid : tids)
                 {
-                    auto t = tiles.find(tid);
-                    if(t->relocate_facet(*tile, f) == t->facets_end())
+                    Tile_iterator t = tiles.find(tid);
+                    if(t->relocate_facet(tile, f) == t->facets_end())
                     {
                       assert(! "relocate_facet failed" );
                       return false;
@@ -176,23 +178,23 @@ public:
                 }
 
             }
-            for(auto c = tile->cells_begin(); c != tile->cells_end(); ++c)
+            for(auto c = tile.cells_begin(); c != tile.cells_end(); ++c)
             {
-                assert(tile->cell_is_local(c) + tile->cell_is_mixed(c) + tile->cell_is_foreign(c) == 1);
-                if(!tile->cell_is_mixed(c)) continue;
+                assert(tile.cell_is_local(c) + tile.cell_is_mixed(c) + tile.cell_is_foreign(c) == 1);
+                if(!tile.cell_is_mixed(c)) continue;
                 std::set<Id> tids;
-                for(int d = 0; d <= tile->current_dimension(); ++d)
+                for(int d = 0; d <= tile.current_dimension(); ++d)
                 {
-                    auto v = tile->vertex(c, d);
-                    if(tile->vertex_is_infinite(v)) continue;
-                    Id tid = tile->vertex_id(v);
-                    if(tid == tile->id()) continue;
+                    auto v = tile.vertex(c, d);
+                    if(tile.vertex_is_infinite(v)) continue;
+                    Id tid = tile.vertex_id(v);
+                    if(tid == tile.id()) continue;
                     tids.insert(tid);
                 }
                 for(auto tid : tids)
                 {
-                    auto t = tiles.find(tid);
-                    if(t->relocate_cell(*tile, c) == t->cells_end())
+                    Tile_iterator t = tiles.find(tid);
+                    if(t->relocate_cell(tile, c) == t->cells_end())
                     {
                       assert(! "relocate_facet failed" );
                         return false;
@@ -253,7 +255,9 @@ public:
     {
         assert(is_valid(v));
         if (id == tile_id(v)) return v; // v is already in tile id
-        Tile_const_iterator tile = tiles.load(id);
+        Tile_const_iterator tile = tiles.find(id);
+        if (tile == tiles.end()) return vertices_end();
+        tiles.load(*tile);
         Tile_vertex_const_iterator vertex = tile->relocate_vertex(*(v.tile()), *v);
         if (vertex==tile->vertices_end()) return vertices_end();
         return Vertex_const_iterator(&tiles, tile, vertex);
@@ -264,7 +268,9 @@ public:
     {
         assert(is_valid(f));
         if (id == tile_id(f)) return f; // f is already in tile id
-        Tile_const_iterator tile = tiles.load(id);
+        Tile_const_iterator tile = tiles.find(id);
+        if (tile == tiles.end()) return vertices_end();
+        tiles.load(*tile);
         Tile_facet_const_iterator facet = tile->relocate_facet(*(f.tile()), *f);
         if (facet==tile->facets_end()) return facets_end();
         return Facet_const_iterator(&tiles, tile, facet);
@@ -275,7 +281,9 @@ public:
     {
         assert(is_valid(c));
         if (id == tile_id(c)) return c; // c is already in tile id
-        Tile_const_iterator tile = tiles.load(id);
+        Tile_const_iterator tile = tiles.find(id);
+        if (tile == tiles.end()) return vertices_end();
+        tiles.load(*tile);
         Tile_cell_const_iterator cell = tile->relocate_cell(*(c.tile()), *c);
         if (cell==tile->cells_end()) return cells_end();
         return Cell_const_iterator(&tiles, tile, cell);

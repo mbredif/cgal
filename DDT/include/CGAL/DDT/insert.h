@@ -30,6 +30,9 @@ size_t splay_tile(TileContainer& tc, Tile& tile)
     typedef typename Tile::Vertex_const_handle Vertex_const_handle;
     Points received;
     tc.receive_points(tile, received);
+    if (received.empty()) return 0;
+
+
     // insert them into the current tile triangulation and get the new foreign points
     std::set<Vertex_const_handle> inserted;
     if(!tile.insert(received, inserted, true)) return 0;
@@ -55,7 +58,6 @@ size_t insert_and_send_all_axis_extreme_points(TileContainer& tc, Scheduler& sch
         std::vector<Vertex_const_handle> vertices;
         tile.get_axis_extreme_points(vertices);
         tc.send_vertices_to_all_tiles(tile, vertices);
-
         return count;
     });
 }

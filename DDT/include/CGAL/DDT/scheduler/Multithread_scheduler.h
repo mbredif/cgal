@@ -19,53 +19,54 @@ namespace DDT {
 
 
 template< typename V, typename TileContainer, typename UnaryOp, typename Id>
-V for_each_function(TileContainer& tc, UnaryOp op1, std::mutex& mutex, Id id)
+V transform_id(TileContainer& tc, UnaryOp transform, std::mutex& mutex, Id id)
 {
+    typedef typename TileContainer::Tile Tile;
+    Tile& tile = tc.at(id);
     // ensure tile is loaded
-    std::pair<typename TileContainer::Tile_iterator, bool> insertion;
-    do {
+    {
         std::unique_lock<std::mutex> lock(mutex);
-        insertion = tc.insert(id);
-    } while (!tc.load(insertion));
-    typename TileContainer::Tile_iterator tile = insertion.first;
+        tc.lock(tile);
+        tc.load(tile);
+    }
 
     // acquire the tile and extract a copy of tc in tc2
     size_t number_of_extreme_points_received1;
     size_t number_of_extreme_points_received2;
     TileContainer tc2(tc.maximal_dimension());
+
     {
         std::unique_lock<std::mutex> lock(mutex);
-        // "swap" moves the incoming points from tc to tc2, which had no points
-        tc2.points()[id].swap(tc.points()[id]);
-
+        // "swap" moves the incoming points from tc to the tile, which had no points
+        tile.points().swap(tc[id].points());
         // moves the unreceived axis extreme points
-        tc2.extreme_points().insert(tc2.extreme_points().end(),
-                                    tc.extreme_points().begin() + tile->number_of_extreme_points_received,
-                                    tc.extreme_points().end());
         number_of_extreme_points_received1 = tc.extreme_points().size();
-        number_of_extreme_points_received2 = number_of_extreme_points_received1 - tile->number_of_extreme_points_received;
-        tile->number_of_extreme_points_received = 0;
+        tc2.extreme_points().insert(tc2.extreme_points().end(),
+                                    tc.extreme_points().begin() + tile.number_of_extreme_points_received,
+                                    tc.extreme_points().end());
+                                 // tc.extreme_points().begin() + number_of_extreme_points_received1); // == end
     }
-
+    number_of_extreme_points_received2 = number_of_extreme_points_received1 - tile.number_of_extreme_points_received;
+    tile.number_of_extreme_points_received = 0;
     // process the tile on the extracted copy tc2
-    V value = op1(tc2, *tile);
+    V value = transform(tc2, tile);
+    tile.number_of_extreme_points_received = number_of_extreme_points_received1;
 
-    // release the tile and merge the extracted copy tc2 back to tc
+    // unlock the tile and merge the extracted copy tc2 back to tc
     {
-        tile->number_of_extreme_points_received = number_of_extreme_points_received1;
         std::unique_lock<std::mutex> lock(mutex);
-        tc.unload(tile);
+        tc.unlock(tile);
         // moves the points emitted in tc2 to tc
-        for(auto& p : tc2.points()) {
-            auto& points = tc.points()[p.first];
-            points.insert(points.end(), p.second.begin(), p.second.end());
+        for(auto& t : tc2) {
+            auto& points = tc[t.id()].points();
+            points.insert(points.end(), t.points().begin(), t.points().end());
         }
-
         // moves the axis extreme points emitted in tc2 to tc
         tc.extreme_points().insert(tc.extreme_points().end(),
                                    tc2.extreme_points().begin() + number_of_extreme_points_received2,
                                    tc2.extreme_points().end());
     }
+
     return value;
 }
 
@@ -98,23 +99,23 @@ struct Multithread_scheduler
     }
 
     template<typename TileContainer, typename UnaryOp, typename V = int, typename BinaryOp = std::plus<>>
-    V for_each(TileContainer& tc, UnaryOp op1, BinaryOp op2 = {}, V init = {})
+    V for_each(TileContainer& tc, UnaryOp transform, BinaryOp reduce = {}, V init = {})
     {
-        std::vector<std::future<V>> futures;
-        for(auto it = tc.tile_ids_begin(); it != tc.tile_ids_end(); ++it)
-            futures.push_back(pool.submit([this, &tc, &op1](Id id){ return for_each_function<V>(tc, op1, mutex, id); }, *it));
+        std::vector<std::future<V>> futures;        
+        for(const Tile& tile : tc)
+            futures.push_back(pool.submit([this, &tc, &transform](Id id){ return transform_id<V>(tc, transform, mutex, id); }, tile.id()));
 
         V value = init;
-        for(auto& f: futures) value = op2(value, f.get());
+        for(auto& f: futures) value = reduce(value, f.get());
         return value;
     }
 
     template<typename TileContainer, typename UnaryOp, typename V = int, typename BinaryOp = std::plus<>>
-    V for_each_rec(TileContainer& tc, UnaryOp op1, BinaryOp op2 = {}, V init = {})
+    V for_each_rec(TileContainer& tc, UnaryOp transform, BinaryOp reduce = {}, V init = {})
     {
         std::map<Id, std::future<V>> futures;
-        for(auto it = tc.tile_ids_begin(); it != tc.tile_ids_end(); ++it)
-            futures.emplace(*it, pool.submit([this, &tc, &op1](Id id){ return for_each_function<V>(tc, op1, mutex, id); }, *it));
+        for(const Tile& tile : tc)
+            futures.emplace(tile.id(), pool.submit([this, &tc, &transform](Id id){ return transform_id<V>(tc, transform, mutex, id); }, tile.id()));
 
         V value = init;
         while (!futures.empty()) {
@@ -124,18 +125,18 @@ struct Multithread_scheduler
                 if (fit->second.wait_for(timeout_) != std::future_status::ready) {
                     ++fit;
                 } else {
-                    value = op2(value, fit->second.get());
+                    value = reduce(value, fit->second.get());
                     futures.erase(fit++);
                     std::vector<Id> ids;
                     {
                         std::unique_lock<std::mutex> lock(mutex);
-                        for(auto& p : tc.points())
-                            if (!p.second.empty())
-                                ids.push_back(p.first);
+                        for(const Tile& tile : tc)
+                            if (!tile.points().empty())
+                                ids.push_back(tile.id());
                     }
                     for(auto id : ids)
                         if (futures.count(id) == 0)
-                            futures.emplace(id, pool.submit([this, &tc, &op1](Id id){ return for_each_function<V>(tc, op1, mutex, id); }, id));
+                            futures.emplace(id, pool.submit([this, &tc, &transform](Id id){ return transform_id<V>(tc, transform, mutex, id); }, id));
                 }
             }
         }

@@ -1,7 +1,6 @@
 #define CGAL_DEBUG_DDT
 
 #include <CGAL/DDT/traits/cgal_traits_2.h>
-//#include <CGAL/DDT/partitioner/Random_partitioner.h>
 #include <CGAL/DDT/partitioner/Grid_partitioner.h>
 #include <CGAL/DDT/Tile_container.h>
 #include <CGAL/DDT/scheduler/Sequential_scheduler.h>

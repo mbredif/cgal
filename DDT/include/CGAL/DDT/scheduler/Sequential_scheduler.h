@@ -29,24 +29,25 @@ struct Sequential_scheduler
     inline int max_concurrency() const { return 1; }
 
     template<typename TileContainer, typename UnaryOp, typename V = int, typename BinaryOp = std::plus<>>
-    V for_each(TileContainer& tc, UnaryOp op1, BinaryOp op2 = {}, V init = {})
+    V for_each(TileContainer& tc, UnaryOp transform, BinaryOp reduce = {}, V init = {})
     {
         V value = init;
-        for(auto it = tc.tile_ids_begin(); it != tc.tile_ids_end(); ++it) {
-            auto tile = tc.load(*it);
-            value = op2(value, op1(tc, *tile));
-            tc.unload(tile);
+        for(Tile& tile : tc) {
+            tc.lock(tile);
+            tc.load(tile);
+            value = reduce(value, transform(tc, tile));
+            tc.unlock(tile);
         }
         return value;
     }
 
     template<typename TileContainer, typename UnaryOp, typename V = int, typename BinaryOp = std::plus<>>
-    V for_each_rec(TileContainer& tc, UnaryOp op1, BinaryOp op2 = {}, V init = {})
+    V for_each_rec(TileContainer& tc, UnaryOp transform, BinaryOp reduce = {}, V init = {})
     {
         V value = init, v;
         do {
-            v = for_each(tc, op1, op2, init);
-            value = op2(value, v);
+            v = for_each(tc, transform, reduce, init);
+            value = reduce(value, v);
         } while (v != init);
         return value;
     }

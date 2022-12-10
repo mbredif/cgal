@@ -109,8 +109,8 @@ void write_ply_cell(const TileContainer& tc, const std::string& filename)
     write_ply_header_begin(out);
     write_ply_element_cell(tc, out);
     write_ply_header_end(out);
-    for(auto tile = tc.begin(); tile != tc.end(); ++tile)
-        write_ply_property_cell(*tile, out);
+    for(const auto& tile : tc)
+        write_ply_property_cell(tile, out);
     out.close();
 }
 
@@ -121,8 +121,8 @@ void write_ply_vert(const TileContainer& tc, const std::string& filename)
     write_ply_header_begin(out);
     write_ply_element_vert(tc, out);
     write_ply_header_end(out);
-    for(auto tile = tc.begin(); tile != tc.end(); ++tile)
-        write_ply_property_vert(*tile, out);
+    for(const auto& tile : tc)
+        write_ply_property_vert(tile, out);
     out.close();
 }
 
@@ -134,10 +134,10 @@ void write_ply(const TileContainer& tc, const std::string& filename)
     write_ply_element_vert(tc, out);
     write_ply_element_cell(tc, out);
     write_ply_header_end(out);
-    for(auto tile = tc.begin(); tile != tc.end(); ++tile)
-        write_ply_property_vert(*tile, out);
-    for(auto tile = tc.begin(); tile != tc.end(); ++tile)
-        write_ply_property_cell(*tile, out);
+    for(const auto& tile : tc)
+        write_ply_property_vert(tile, out);
+    for(const auto& tile : tc)
+        write_ply_property_cell(tile, out);
     out.close();
 }
 
