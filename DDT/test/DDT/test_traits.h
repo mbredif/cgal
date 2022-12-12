@@ -77,12 +77,12 @@ int test_traits(const std::string& testname, int ND, int NP, int dim = T::D, int
     }
 
     boost::filesystem::create_directories(testname);
-    if (dim == 3)
+    if (dim <= 3)
     {
         std::cout << "== write_ply ==" << std::endl;
         CGAL::DDT::write_ply(tiles1, testname + "/out.ply");
     }
-    else if (dim == 2)
+    if (dim == 2)
     {
         result += dump_2d_vrt(tiles1, scheduler, testname + "/tri1");
         if(!is_euler_valid(tri1))

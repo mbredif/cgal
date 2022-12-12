@@ -28,8 +28,8 @@ namespace DDT {
 
 // CSV tile writers
 
-template<typename DelaunayTriangulationTile>
-void write_csv_vert(const std::string& filename, const DelaunayTriangulationTile& triangulation)
+template<typename TileTriangulation>
+void write_csv_vert(const std::string& filename, const TileTriangulation& triangulation)
 {
     std::ofstream csv(filename+".csv");
     csv << "geom,id" << std::endl;
@@ -44,13 +44,13 @@ void write_csv_vert(const std::string& filename, const DelaunayTriangulationTile
     }
 }
 
-template<typename DelaunayTriangulationTile>
-void write_csv_facet(const std::string& filename, const DelaunayTriangulationTile& triangulation)
+template<typename TileTriangulation>
+void write_csv_facet(const std::string& filename, const TileTriangulation& triangulation)
 {
     std::ofstream csv(filename+".csv");
     csv << "geom,id,local" << std::endl;
     int D = triangulation.maximal_dimension();
-    for(typename DelaunayTriangulationTile::Facet_const_iterator fit = triangulation.facets_begin(); fit != triangulation.facets_end(); ++fit)
+    for(typename TileTriangulation::Facet_const_iterator fit = triangulation.facets_begin(); fit != triangulation.facets_end(); ++fit)
     {
         if(triangulation.facet_is_infinite(fit)) continue;
         auto cit = triangulation.cell(fit);
@@ -71,8 +71,8 @@ void write_csv_facet(const std::string& filename, const DelaunayTriangulationTil
     }
 }
 
-template<typename DelaunayTriangulationTile>
-void write_csv_cell(const std::string& filename, const DelaunayTriangulationTile& triangulation)
+template<typename TileTriangulation>
+void write_csv_cell(const std::string& filename, const TileTriangulation& triangulation)
 {
     std::ofstream csv(filename+".csv");
     csv << "geom,id,local" << std::endl;
@@ -84,7 +84,7 @@ void write_csv_cell(const std::string& filename, const DelaunayTriangulationTile
         int local = 0;
         for(int i=0; i<=D; ++i)
         {
-            const typename DelaunayTriangulationTile::Vertex_const_handle v = triangulation.vertex(cit,i);
+            const typename TileTriangulation::Vertex_const_handle v = triangulation.vertex(cit,i);
             local += triangulation.vertex_is_local(v);
             for(int d=0; d<D; ++d)
                 csv << triangulation.point(v)[d] << " ";
@@ -115,8 +115,8 @@ void write_csv_bboxes(const std::string& filename, const TileContainer& tc)
     }
 }
 
-template<typename DelaunayTriangulationTile>
-void write_csv_tin(const std::string& filename, const DelaunayTriangulationTile& triangulation)
+template<typename TileTriangulation>
+void write_csv_tin(const std::string& filename, const TileTriangulation& triangulation)
 {
     std::ofstream csv(filename+".csv");
     csv << "geom,id" << std::endl;
@@ -127,7 +127,7 @@ void write_csv_tin(const std::string& filename, const DelaunayTriangulationTile&
         if(triangulation.cell_is_infinite(cit)|| !triangulation.cell_is_main(cit)) continue;
         csv << (first ? "\"TIN (((" : ", ((");
         first = false;
-        typename DelaunayTriangulationTile::Vertex_const_handle v;
+        typename TileTriangulation::Vertex_const_handle v;
         for(int i=0; i<=D; ++i)
         {
             v = triangulation.vertex(cit,i);
@@ -140,7 +140,7 @@ void write_csv_tin(const std::string& filename, const DelaunayTriangulationTile&
             csv << triangulation.point(v)[d] << " ";
         csv << "))";
     }
-    if (!first) csv << ")\"," << int(triangulation.id()) << "\n";
+    if (!first) csv << ")\"," << std::to_string(triangulation.id()) << "\n";
  }
 
 // VRT header writers
@@ -192,29 +192,29 @@ void write_vrt_header(const std::string& dirname, const std::string& type, const
 
 // VRT+CSV tile writers
 
-template<typename DelaunayTriangulationTile>
-void write_tile_vrt_verts(const std::string& filename, const DelaunayTriangulationTile& triangulation)
+template<typename TileTriangulation>
+void write_tile_vrt_verts(const std::string& filename, const TileTriangulation& triangulation)
 {
     write_vrt_header(filename, "wkbPoint");
     write_csv_vert(filename, triangulation);
 }
 
-template<typename DelaunayTriangulationTile>
-void write_tile_vrt_facets(const std::string& filename, const DelaunayTriangulationTile& triangulation)
+template<typename TileTriangulation>
+void write_tile_vrt_facets(const std::string& filename, const TileTriangulation& triangulation)
 {
     write_vrt_header(filename, "wkbLineString");
     write_csv_facet(filename, triangulation);
 }
 
-template<typename DelaunayTriangulationTile>
-void write_tile_vrt_cells(const std::string& filename, const DelaunayTriangulationTile& triangulation)
+template<typename TileTriangulation>
+void write_tile_vrt_cells(const std::string& filename, const TileTriangulation& triangulation)
 {
     write_vrt_header(filename, "wkbPolygon");
     write_csv_cell(filename, triangulation);
 }
 
-template<typename DelaunayTriangulationTile>
-void write_tile_vrt_tins(const std::string& filename, const DelaunayTriangulationTile& triangulation)
+template<typename TileTriangulation>
+void write_tile_vrt_tins(const std::string& filename, const TileTriangulation& triangulation)
 {
     write_vrt_header(filename, "wkbTIN");
     write_csv_tin(filename, triangulation);

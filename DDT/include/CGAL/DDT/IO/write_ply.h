@@ -19,11 +19,21 @@
 namespace CGAL {
 namespace DDT {
 
+template <typename T> struct ply_types {};
+template <> struct ply_types <char >{ constexpr static const char *string = "int8";  };
+template <> struct ply_types <short>{ constexpr static const char *string = "int16"; };
+template <> struct ply_types <int  >{ constexpr static const char *string = "int32"; };
+template <> struct ply_types <long >{ constexpr static const char *string = "int64"; };
+template <> struct ply_types <unsigned char >{ constexpr static const char *string = "uint8";  };
+template <> struct ply_types <unsigned short>{ constexpr static const char *string = "uint16"; };
+template <> struct ply_types <unsigned int  >{ constexpr static const char *string = "uint32"; };
+template <> struct ply_types <unsigned long >{ constexpr static const char *string = "uint64"; };
+
 inline void write_ply_header_begin(std::ostream& out)
 {
     out << "ply" << std::endl;
     out << "format binary_little_endian 1.0" << std::endl;
-    out << "comment creator: Mathieu Bredif" << std::endl;
+    out << "comment creator: CGAL::DDT::write_ply" << std::endl;
 }
 
 inline void write_ply_header_end(std::ostream& out)
@@ -37,7 +47,7 @@ void write_ply_element_cell(const TileContainer& tc, std::ostream& out)
     int nc = tc.number_of_cells();
     out << "element face " << nc << std::endl;
     out << "property list uint8 int vertex_indices" << std::endl;
-    out << "property uint8 tile" << std::endl;
+    out << "property " << ply_types<typename TileContainer::Id>::string << " tile" << std::endl;
     out << "property uint8 local" << std::endl;
 }
 
@@ -50,16 +60,17 @@ void write_ply_element_vert(const TileContainer& tc, std::ostream& out)
     out << "property float32 x" << std::endl;
     out << "property float32 y" << std::endl;
     if(D>2) out << "property float32 z" << std::endl;
-    out << "property uint8 tile" << std::endl;
-    out << "property uint8 id" << std::endl;
+    out << "property " << ply_types<typename TileContainer::Id>::string << " tile" << std::endl;
+    out << "property " << ply_types<typename TileContainer::Id>::string << " id" << std::endl;
 }
 
-template<typename DelaunayTriangulationTile>
-void write_ply_property_cell(const DelaunayTriangulationTile& dt, std::ostream& out)
+template<typename TileTriangulation>
+void write_ply_property_cell(const TileTriangulation& dt, std::ostream& out)
 {
+    typedef typename TileTriangulation::Id Id;
     unsigned char N = (unsigned char)(dt.maximal_dimension()+1);
-    unsigned char tid = dt.id();
-    std::map<typename DelaunayTriangulationTile::Vertex_const_handle, int> dict;
+    Id tid = dt.id();
+    std::map<typename TileTriangulation::Vertex_const_handle, int> dict;
 
     int id = 0;
     for(auto it = dt.vertices_begin(); it != dt.vertices_end(); ++it)
@@ -72,7 +83,7 @@ void write_ply_property_cell(const DelaunayTriangulationTile& dt, std::ostream& 
         out.write(reinterpret_cast<char *>(&N), sizeof(N));
         for(int i=0; i<N; ++i)
         {
-            typename DelaunayTriangulationTile::Vertex_const_handle v = dt.vertex(cit, i);
+            typename TileTriangulation::Vertex_const_handle v = dt.vertex(cit, i);
             int id = dict[v];
             out.write(reinterpret_cast<char *>(&id), sizeof(id));
             local += dt.vertex_id(v) == tid;
@@ -83,15 +94,16 @@ void write_ply_property_cell(const DelaunayTriangulationTile& dt, std::ostream& 
     }
 }
 
-template<typename DelaunayTriangulationTile>
-void write_ply_property_vert(const DelaunayTriangulationTile& dt, std::ostream& out)
+template<typename TileTriangulation>
+void write_ply_property_vert(const TileTriangulation& dt, std::ostream& out)
 {
+    typedef typename TileTriangulation::Id Id;
     int D = dt.maximal_dimension();
-    unsigned char tid = dt.id();
+    Id tid = dt.id();
     for(auto it = dt.vertices_begin(); it != dt.vertices_end(); ++it)
     {
         if(dt.vertex_is_infinite(it)) continue;
-        unsigned char id = dt.vertex_id(it);
+        Id id = dt.vertex_id(it);
         for(int d=0; d<D; ++d)
         {
             float coord = float(dt.coord(dt.point(it),d));
