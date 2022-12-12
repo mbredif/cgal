@@ -22,8 +22,6 @@
 
 #include <boost/filesystem.hpp>
 #undef BOOST_NO_CXX11_SCOPED_ENUMS
-// #include "conf_header/conf.hpp"
-
 
 // https://en.wikipedia.org/wiki/GeoJSON
 namespace CGAL {

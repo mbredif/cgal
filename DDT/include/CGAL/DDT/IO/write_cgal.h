@@ -35,7 +35,7 @@ std::ostream & write_json(Tile & tile,std::string filename,std::ostream & ofile)
 }
 
 template<typename Tile>
-int write_cgal_tile(const Tile& tile, std::string dirname)
+bool write_cgal_tile(const Tile& tile, std::string dirname)
 {
     std::string filename = dirname + "/" + std::to_string(tile.id() ) + ".bin";
     std::string json_name = dirname + "/" + std::to_string(tile.id() ) + ".json";
@@ -43,51 +43,17 @@ int write_cgal_tile(const Tile& tile, std::string dirname)
     std::ofstream ofile_json(json_name, std::ios::out);
     if(!ofile_tri.is_open())
     {
-        std::cerr << "dump_tri_binary : File could not be opened" << std::endl;
+        std::cerr << "write_cgal_tile : File could not be opened" << std::endl;
         std::cerr << filename << std::endl;
-        return 1;
+        return false;
     }
 
-    std::cout << filename << " : " << tile.is_valid() << std::endl;
-    //tile.write_cgal(ofile_tri);
     ofile_tri.precision(17);
-    ofile_tri << tile.triangulation();
+    ofile_tri << tile.triangulation().triangulation();
     ofile_tri.close();
     write_json(tile,filename,ofile_json);
     ofile_json.close();
-    return 0;
-}
-
-
-
-template <typename list_edges>
-int dump_edge_binary(const std::string& filename, list_edges & edge)
-{
-
-    std::ofstream ofile(filename, std::ios::binary | std::ios::out);
-    if(!ofile.is_open())
-    {
-        std::cerr << "dump_edge_binary : File could not be opened" << std::endl;
-        std::cerr << filename << std::endl;
-        return 1;
-    }
-    uint nbe = edge.size();
-    ofile.write(reinterpret_cast<char *>(&nbe), sizeof(nbe));
-    for(auto it = edge.begin(); it != edge.end(); ++it)
-    {
-        int id1 = it->first;
-        int id2 = it->second;
-        ofile.write(reinterpret_cast<char *>(&id1), sizeof(id1));
-        ofile.write(reinterpret_cast<char *>(&id2), sizeof(id2));
-    }
-    return 0;
-}
-
-template<typename Tile>
-int write_iedge_tile(const Tile& tile, std::string dirname)
-{
-    tile.write_maps();
-    return 0;
+    return true;
 }
 
 template<typename TileContainer>
@@ -97,34 +63,24 @@ int write_cgal(const TileContainer& tc, const std::string& dirname)
     boost::property_tree::ptree tiles_node;
     boost::property_tree::ptree bboxes_node;
 
-    for(auto  tile = tc.cbegin(); tile != tc.cend(); ++tile)
+    int i = 0;
+    for(auto& tile : tc)
     {
-        std::string fpath = std::to_string(tile->id())  + ".bin";
-        tiles_node.put(std::to_string(tile->id()),fpath);
+        std::string id = std::to_string(tile.id());
+        std::string fpath = id + ".bin";
         std::ostringstream ss;
-        ss << tile->bbox();
-        bboxes_node.put(std::to_string(tile->id()),ss.str());
+        ss << tile.bbox();
+        tiles_node.put (id, fpath);
+        bboxes_node.put(id, ss.str());
+        i += !write_cgal_tile(tile, dirname);
     }
     root_node.add_child("tiles", tiles_node);
     root_node.add_child("bboxes", bboxes_node);
-
     std::string json_name = dirname + "/tiles.json";
     std::ofstream ofile(json_name, std::ios::out);
     boost::property_tree::write_json(ofile, root_node);
     ofile.close();
 
-    int i = 0;
-    for(auto tile = tc.cbegin(); tile != tc.cend(); ++tile)
-        i += write_cgal_tile(*tile, dirname);
-    return i;
-}
-
-template<typename TileContainer>
-int write_iedge(const TileContainer& tc, const std::string& dirname)
-{
-    int i = 0;
-    for(auto tile = tc.cbegin(); tile != tc.cend(); ++tile)
-        i += write_iedge_tile(*tile, dirname);
     return i;
 }
 

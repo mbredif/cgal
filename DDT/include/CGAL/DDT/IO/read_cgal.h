@@ -35,7 +35,7 @@ std::istream& read_json(Tile & tile,std::istream&  ifile)
     boost::property_tree::ptree root_node;
     boost::property_tree::read_json(ifile, root_node);
     int id =  root_node.get<Id>("id");
-    tile.set_id(id);
+    assert(id == tile.id());
     return ifile;
 }
 
@@ -53,7 +53,7 @@ int read_cgal_tile(Tile& tile, const std::string& dirname)
         return 1;
     }
 
-    ifile_tri >> tile.triangulation();
+    ifile_tri >> tile.triangulation().triangulation();
     ifile_tri.close();
 
     std::ifstream ifile_json(json_name, std::ifstream::in);

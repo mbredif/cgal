@@ -173,14 +173,6 @@ public:
     inline Cell_const_handle neighbor(Cell_const_handle c, int i) const { return traits.neighbor(dt_, c, i); }
     /// @}
 
-    /// \name CGAL IO
-    /// @{
-    /// @todo : remove unused function ?
-    ///
-    void write_cgal(std::ostream & ofile) const { traits.write_cgal(ofile,dt_); }
-    void read_cgal(std::istream & ifile) { traits.read_cgal(ifile,dt_); }
-    /// @}
-
     /// \name Tile_triangulation locality tests
     /// @{
     /// A finite vertex is local if its tile id matches the id of the tile triangulation (tile.vertex_id(vertex) == tile.id()), otherwise, it is foreign
@@ -619,22 +611,6 @@ private:
     size_t number_of_main_facets_;
     size_t number_of_main_cells_;
 };
-
-
-template<class T>
-std::istream& operator>> (std::istream& is,Tile_triangulation<T> & tt)
-{
-
-  is >> tt.triangulation();
-  return is;
-}
-
-template<class T>
-std::ostream& operator<< (std::ostream& os,const Tile_triangulation<T> & tt)
-{
-    os << tt.triangulation();
-    return os;
-}
 
 }
 }

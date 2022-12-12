@@ -100,16 +100,8 @@ public:
 
     typedef typename Traits::Point                   Point;
     typedef typename Traits::Id                      Id;
-    typedef typename Traits::Delaunay_triangulation  DT;
-    typedef typename Traits::Vertex_handle           Tile_vertex_handle;
-    typedef typename Traits::Vertex_iterator         Tile_vertex_iterator;
-    typedef typename Traits::Vertex_const_handle     Tile_vertex_const_handle;
     typedef typename Traits::Vertex_const_iterator   Tile_vertex_const_iterator;
-    typedef typename Traits::Cell_handle             Tile_cell_handle;
-    typedef typename Traits::Cell_const_handle       Tile_cell_const_handle;
     typedef typename Traits::Cell_const_iterator     Tile_cell_const_iterator;
-    typedef typename Traits::Facet_handle            Tile_facet_handle;
-    typedef typename Traits::Facet_const_handle      Tile_facet_const_handle;
     typedef typename Traits::Facet_const_iterator    Tile_facet_const_iterator;
 
     typedef std::map<Id, Tile>                         Container;

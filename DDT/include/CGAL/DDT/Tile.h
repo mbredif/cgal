@@ -46,7 +46,6 @@ public:
         locked(false)
     {}
 
-    inline void set_id(Id i) { id_ = i; }
     inline Id id() const { return id_; }
     const Bbox& bbox() const { return bbox_; }
     Bbox& bbox() { return bbox_; }

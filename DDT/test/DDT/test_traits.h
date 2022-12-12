@@ -3,10 +3,12 @@
 
 #include <vector>
 #include <boost/filesystem.hpp>
-#include <CGAL/DDT/IO/write.h>
-#include <CGAL/DDT/IO/read.h>
+#include <CGAL/DDT/IO/write_vrt.h>
+#include <CGAL/DDT/IO/write_ply.h>
+#include <CGAL/DDT/IO/write_cgal.h>
+#include <CGAL/DDT/IO/read_cgal.h>
 #include <CGAL/DDT/partitioner/Grid_partitioner.h>
-#include <CGAL/DDT/Scheduler.h>
+#include <CGAL/DDT/scheduler/Sequential_scheduler.h>
 #include <CGAL/DDT/insert.h>
 #include <CGAL/DDT/Tile_container.h>
 #include <CGAL/Distributed_Delaunay_triangulation.h>
@@ -52,7 +54,7 @@ int test_traits(const std::string& testname, int ND, int NP, int dim = T::D, int
 
     typedef T Traits;
     typedef CGAL::DDT::Tile<Traits> Tile;
-    typedef CGAL::DDT::Scheduler<Tile> Scheduler;
+    typedef CGAL::DDT::Sequential_scheduler<Tile> Scheduler;
     typedef CGAL::DDT::Tile_container<Traits> TileContainer;
     typedef CGAL::Distributed_Delaunay_triangulation<TileContainer> Distributed_Delaunay_triangulation;
     typedef CGAL::DDT::Grid_partitioner<Traits> Partitioner;
@@ -136,7 +138,7 @@ int test_traits(const std::string& testname, int ND, int NP, int dim = T::D, int
     std::cout << "== Tile.get_* ==" << std::endl;
     {
         Tile t(0, dim);
-        std::vector<typename TileContainer::Tile_vertex_const_handle> points;
+        std::vector<typename Tile::Vertex_const_handle> points;
         t.triangulation().get_axis_extreme_points(points);
     }
     return result;
