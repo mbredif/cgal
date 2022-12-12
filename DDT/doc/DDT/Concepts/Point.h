@@ -16,8 +16,21 @@ The concept `Point` describes the requirements of a point in D dimensions.
 #define CGAL_DDT_CONCEPT_POINT
 
 struct Point {
+#ifndef DOXYGEN_RUNNING
+    Point() {}
+    Point(double x, double y) {}
+    Point(double x, double y, double z) {}
+#endif
+    /// copy constructible
+    Point(const Point&) {}
+    /// \name Access to ith coordinate
+    /// @{
+    /// precondition : 0 <= i < ambient dimension
+
     double& operator[](int i) { return coord; }
     const double& operator[](int i) const { return coord; }
+    /// @}
+
 private:
     double coord;
 };

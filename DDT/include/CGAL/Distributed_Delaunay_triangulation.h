@@ -393,7 +393,7 @@ public:
         const Tile_triangulation& ctriangulation = ctile->triangulation();
         if (ctile == vtile)
             for(int d = 0; d <= ctriangulation.current_dimension(); ++d)
-                if(tc->vertex(d) == tv)
+                if(ctriangulation.vertex(tc, d) == tv)
                     return true;
         for(int d = 0; d <= ctriangulation.current_dimension(); ++d)
             if(ctriangulation.are_vertices_equal(ctriangulation.vertex(tc, d), vtile->triangulation(), tv))

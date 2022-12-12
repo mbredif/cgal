@@ -343,14 +343,18 @@ struct Cgal_traits_d
 
 
 /// \ingroup PkgDDTTraitsClasses
+/// D dimensional triangulation traits, where D is specified dynamically at runtime.
 /// \cgalModels TriangulationTraits
 template<typename I, typename F = No_info>
 struct Cgal_traits_d : public Impl::Cgal_traits_d<CGAL::Dynamic_dimension_tag,I,F>
 {
+private:
+    int dim;
     typedef Impl::Cgal_traits_d<CGAL::Dynamic_dimension_tag,I,F> Base;
+
+public:
     typedef typename Base::Delaunay_triangulation Delaunay_triangulation;
     typedef typename Base::Point Point;
-    int dim;
     enum { D = 0 };
     Cgal_traits_d(int d) : dim(d) { assert(d >= 2); }
     inline constexpr int dimension() const { return dim; }
@@ -378,15 +382,18 @@ struct Cgal_traits_d : public Impl::Cgal_traits_d<CGAL::Dynamic_dimension_tag,I,
             return *this;
         }
     };
-
 };
 
 /// \ingroup PkgDDTTraitsClasses
+/// D dimensional triangulation traits, where D is specified statically at compile-time.
 /// \cgalModels TriangulationTraits
 template<unsigned int N, typename I, typename F = No_info>
 struct Cgal_traits : public Impl::Cgal_traits_d<CGAL::Dimension_tag<N>,I,F>
 {
+private:
     typedef Impl::Cgal_traits_d<CGAL::Dimension_tag<N>,I,F> Base;
+
+public:
     typedef typename Base::Delaunay_triangulation Delaunay_triangulation;
     typedef typename Base::Point Point;
     enum { D = N };

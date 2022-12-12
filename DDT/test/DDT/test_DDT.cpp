@@ -1,11 +1,8 @@
 typedef int Id;
-typedef int Flag;
-
-#include <vector>
-#include <boost/filesystem.hpp>
+typedef int Info;
 
 #include <CGAL/DDT/traits/cgal_traits_d.h>
-typedef CGAL::DDT::Cgal_traits<2,Id,Flag> Traits;
+typedef CGAL::DDT::Cgal_traits<2,Id,Info> Traits;
 typedef Traits::Point Point;
 typedef Traits::Bbox Bbox;
 

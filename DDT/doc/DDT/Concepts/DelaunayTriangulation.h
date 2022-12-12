@@ -4,7 +4,9 @@
 \cgalConcept
 
 The concept `DelaunayTriangulation` describes the requirements for a Delaunay triangulation.
-The only requirement are the stream operators. All operations on Delaunay triangulations are delegated to the TriangulationTraits that operate on the opaque `DelaunayTriangulation` type.
+
+The only requirement are the stream operators. All operations on Delaunay triangulations are delegated
+to the TriangulationTraits that operates on the opaque `DelaunayTriangulation` type.
 
 */
 

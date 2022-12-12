@@ -17,6 +17,7 @@
 
 #include <map>
 #include <iomanip>
+#include <limits>
 
 namespace CGAL {
 namespace DDT {
