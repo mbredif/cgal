@@ -22,17 +22,15 @@ namespace CGAL {
 namespace DDT {
 namespace impl {
 
-template<typename TileContainer, typename Tile>
-size_t splay_tile(TileContainer& tc, Tile& tile)
+template<typename Tile>
+size_t splay_tile(Tile& tile)
 {
     typedef typename Tile::Id Id;
     typedef typename Tile::Points Points;
     typedef typename Tile::Tile_triangulation::Vertex_const_handle Vertex_const_handle;
     Points received;
-    tc.receive_points(tile, received);
+    tile.receive_points(received);
     if (received.empty()) return 0;
-
-
     // insert them into the current tile triangulation and get the new foreign points
     std::set<Vertex_const_handle> inserted;
     if(!tile.triangulation().insert(received, inserted, true)) return 0;
@@ -40,7 +38,7 @@ size_t splay_tile(TileContainer& tc, Tile& tile)
     std::map<Id, std::set<Vertex_const_handle>> vertices;
     tile.triangulation().get_finite_neighbors(inserted, vertices);
     // send them to the relevant neighboring tiles
-    return tc.send_vertices_to_one_tile(tile, vertices);
+    return tile.send_vertices_to_one_tile(vertices);
 }
 
 template<typename TileContainer, typename Scheduler>
@@ -49,17 +47,17 @@ size_t insert_and_send_all_axis_extreme_points(TileContainer& tc, Scheduler& sch
     typedef typename TileContainer::Tile Tile;
     typedef typename Tile::Point Point;
     typedef typename Tile::Id Id;
-    return sch.for_each(tc, [](TileContainer& tc, Tile& tile)
+    return sch.for_each(tc, [](Tile& tile)
     {
         typedef typename Tile::Tile_triangulation::Vertex_const_handle Vertex_const_handle;
-        size_t count = splay_tile(tc, tile);
+        size_t count = splay_tile(tile);
 
         // send the extreme points along each axis to all tiles to initialize the star splaying
         std::vector<Vertex_const_handle> vertices;
         tile.triangulation().get_axis_extreme_points(vertices);
         for(Vertex_const_handle v : vertices)
             tile.bbox() += tile.triangulation().point(v);
-        tc.send_vertices_to_all_tiles(tile, vertices);
+        tile.send_vertices_to_all_tiles(vertices);
         return count;
     });
 }
@@ -68,7 +66,7 @@ template<typename TileContainer, typename Scheduler>
 size_t splay_stars(TileContainer& tc, Scheduler& sch)
 {
     typedef typename TileContainer::Tile Tile;
-    return sch.for_each_rec(tc, [](TileContainer& tc, Tile& tile) { return splay_tile(tc, tile); });
+    return sch.for_each_rec(tc, [](Tile& tile) { return splay_tile(tile); });
 }
 
 // Inserts the recieved points, in the Delaunay triangulation stored in the tile container.
@@ -104,7 +102,7 @@ typename TileContainer::Vertex_const_iterator insert(TileContainer& tc, Schedule
 template<typename TileContainer, typename Scheduler, typename PointIdRange>
 size_t insert(TileContainer& tc, Scheduler& sch, const PointIdRange& range) {
     for (auto& p : range)
-        tc.send_point_to_its_tile(p.first,p.second);
+        tc[p.first].send_point(p.first,p.first,p.second);
     return impl::insert_received(tc, sch);
 }
 
@@ -114,8 +112,10 @@ size_t insert(TileContainer& tc, Scheduler& sch, const PointIdRange& range) {
 /// @returns the number of newly inserted vertices
 template<typename TileContainer, typename Scheduler, typename PointRange, typename Partitioner>
 size_t insert(TileContainer& tc, Scheduler& sch, PointRange points, Partitioner& part) {
-    for(auto& p : points)
-        tc.send_point_to_its_tile(part(p),p);
+    for(auto& p : points)  {
+        typename Partitioner::Id id = part(p);
+        tc[id].send_point(id,id,p);
+    }
     return impl::insert_received(tc, sch);
 }
 
@@ -124,14 +124,15 @@ size_t insert(TileContainer& tc, Scheduler& sch, PointRange points, Partitioner&
 /// The scheduler provides the distribution environment (single thread, multithread, MPI...)
 /// @returns the number of newly inserted vertices
 template<typename TileContainer, typename Scheduler, typename Iterator, typename Partitioner>
-size_t insert(TileContainer& tc, Scheduler& sch, Iterator it, int count, Partitioner& part) {
+std::size_t insert(TileContainer& tc, Scheduler& sch, Iterator it, int count, Partitioner& part) {
 #if __cplusplus >= 202002L
     // using c++20 and #include <ranges>
     return impl::insert(tc, sch, std::views::counted(it, count), part);
 #else
     for(; count; --count, ++it) {
         auto p(*it);
-        tc.send_point_to_its_tile(part(p),p);
+        typename Partitioner::Id id = part(p);
+        tc[id].send_point(id,id,p);
     }
     return impl::insert_received(tc, sch);
 #endif

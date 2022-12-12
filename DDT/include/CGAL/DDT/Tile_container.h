@@ -165,47 +165,21 @@ public:
     const Points& extreme_points() const { return extreme_points_; }
     Points& extreme_points() { return extreme_points_; }
 
-    void receive_points(Tile& tile, Points& received) {
-        received.swap(tile.points());
-        size_t number_of_extreme_points = extreme_points_.size();
-        received.insert(received.end(),
-                        extreme_points_.begin() + tile.number_of_extreme_points_received,
-                        extreme_points_.end());
-        tile.number_of_extreme_points_received = number_of_extreme_points;
 
-        // debug
-        //if(!received.empty()) std::cout << "\x1B[31m" << tile.id() << "\t<-\t*\t:\t" << received.size()   << "\x1B[0m" << std::endl;
-
-    }
-
-    void send_point_to_its_tile(Id id, const Point& p) {
-        operator[](id).points().push_back({id,p});
-    }
-
-    size_t send_vertices_to_one_tile(const Tile& tile, const std::map<Id, std::set<Tile_vertex_const_handle>>& vertices) {
-        size_t count = 0;
-        for(auto& vi : vertices)
-        {
-            count += vi.second.size();
-            Points& points = operator[](vi.first).points();
-            for(Tile_vertex_const_handle v : vi.second)
-                points.emplace_back(tile.triangulation().vertex_id(v), tile.triangulation().point(v));
-
-            // debug
-            //if(!vi.second.empty()) std::cout << "\x1B[32m" << tile.id() << "\t->\t" << size_t(vi.first) << "\t:\t" << vi.second.size()   << "\x1B[0m"<< std::endl;
+    void send_points(Tile& tile) {
+        for(auto& p : tile.points()) {
+            if(p.first != tile.id()) {
+                auto& points = operator[](p.first).points()[p.first];
+                points.insert(points.end(), p.second.begin(), p.second.end());
+                p.second.clear();
+            }
         }
-        return count;
-    }
-
-    void send_vertices_to_all_tiles(const Tile& tile, const std::vector<Tile_vertex_const_handle>& vertices) {
-        for(Tile_vertex_const_handle v : vertices) {
-           if (tile.triangulation().vertex_is_infinite(v)) continue;
-           Id id = tile.triangulation().vertex_id(v);
-           Point p = tile.triangulation().point(v);
-           extreme_points_.emplace_back(id, p);
+        for(Tile& t : *this) {
+            Points& p = t.points()[t.id()];
+            p.insert(p.end(), tile.extreme_points().begin(), tile.extreme_points().end());
         }
-        // debug
-        //if(!vertices.empty()) std::cout << "\x1B[33m" << tile.id() << "\t->\t*\t:\t" << vertices.size()   << "\x1B[0m" << std::endl;
+        extreme_points_.insert(extreme_points_.end(), tile.extreme_points().begin(), tile.extreme_points().end());
+        tile.extreme_points().clear();
     }
 
     /*
@@ -232,55 +206,70 @@ public:
     /// returns true after the loaded tile id is successfully saved and unloaded from memory.
     /// @todo attention à la perennité des handles (tile is possibly unloaded), ou alors lock ou shared pointer.
     void unload(Tile& tile) {
+
+        std::cout << "[" << std::setw(4) << std::to_string(tile.id()) << "] " << std::setfill('_');
+        for(const Tile& t : *this) {
+            if(t.locked           ) std::cout << "\x1b[1m" ; // blocked
+            if(t.id() == tile.id()) std::cout << "\x1b[41m\x1b[1m" ; // bg red
+            else if(!t.in_mem     ) std::cout << "\x1b[37m" ; // gray
+            std::cout << t.id() << "\x1B[0m" ; // reset
+        }
+        std::cout << std::setfill(' ') << " (" << number_of_triangulations_mem_ << " in mem)" << std::endl;
+
         if (!tile.locked && tile.in_mem && serializer_.save(tile)) {
+            tile.finalize();
             tile.triangulation().clear();
             tile.in_mem = false;
             --number_of_triangulations_mem_;
-            std::cout << int(tile.id()) << " saved and cleared : " << number_of_triangulations_mem_ << " -> ";
-            for(const Tile& t : *this) {
-                if(t.locked) std::cout <<  "\x1B[31m";
-                if(t.in_mem) std::cout << size_t(t.id()); else std::cout << "_";
-                if(t.locked) std::cout <<  "\x1B[0m";
-            }
-            std::cout << std::endl;
         }
     }
 
     /// load a tile to memory, automatically saving it.
-    void load(Tile& tile) {
+    void prepare_load(Tile& tile) {
+        if(tile.in_mem) return;
+
+        std::cout << "[" << std::setw(4) << std::to_string(tile.id()) << "] " << std::setfill('_');
+        for(const Tile& t : *this) {
+            if(t.locked           ) std::cout << "\x1b[1m" ; // blocked
+            if(t.id() == tile.id()) std::cout << "\x1b[42m" ; // bg green
+            else if(!t.in_mem     ) std::cout << "\x1b[37m" ; // gray
+            std::cout << t.id() << "\x1B[0m" ; // reset
+        }
+        std::cout << std::setfill(' ') << " (" << number_of_triangulations_mem_ << " in mem)" << std::endl;
+
         // make room if necessary
         while(number_of_triangulations_mem_ >= number_of_triangulations_mem_max_) {
             // pick a loaded id at random and try to unload it
-            size_t n = rand() % tiles.size();
-            iterator it = begin();
-            std::advance(it, n);
-            if (it->id()!=tile.id()) unload(*it);
-        }
-
-        if (!tile.in_mem && (!serializer_.has_tile(tile.id()) || serializer_.load(tile))) {
-            tile.in_mem = true;
-            ++number_of_triangulations_mem_;
-            std::cout << int(tile.id()) << " read  and loaded  : " << number_of_triangulations_mem_ << " -> ";
-            for(const Tile& t : *this) {
-                if(t.locked) std::cout <<  "\x1B[31m";
-                if(t.in_mem) std::cout << size_t(t.id()); else std::cout << "_";
-                if(t.locked) std::cout <<  "\x1B[0m";
+            size_t n = rand() % number_of_triangulations_mem_;
+            for(Tile& tile : *this) {
+                if(tile.in_mem) {
+                    if (n == 0) {
+                        if (!tile.locked) unload(tile);
+                        break;
+                    }
+                    --n;
+                 }
             }
-            std::cout << std::endl;
+        }
+        // reserve the mem slot in memory, so that it is not stealed by a concurrent thread
+        ++number_of_triangulations_mem_;
+    }
+
+    bool safe_load(Tile& tile) {
+        if(tile.in_mem) return true;
+        if (!serializer_.has_tile(tile.id()) || serializer_.load(tile)) {
+            tile.in_mem = true;
+            return true;
+        } else {
+            --number_of_triangulations_mem_;
+            return false;
         }
     }
 
-    /// @return whether the tile iterator is not at end and loading succeeded if a serialization was available.
-    /// if necessary, tiles are automatically unloaded
-    /// @todo implement other tile eviction strategies than the random strategy : LRU, prioritized by inbox size...
-    void lock(Tile& tile) {
-        tile.locked = true;
-    }
-
-    /// mark the tile as a candidate for unloading (no longer in use)
-    void unlock(Tile& tile) const
-    {
-        tile.locked = false;
+    /// load a tile to memory.
+    bool load(Tile& tile) {
+        prepare_load(tile);
+        return safe_load(tile);
     }
 
     void get_adjacency_graph(std::unordered_multimap<Id,Id>& edges) const

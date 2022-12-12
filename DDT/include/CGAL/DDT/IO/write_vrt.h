@@ -227,7 +227,7 @@ void write_vrt_verts(TileContainer& tc, Scheduler& sch, const std::string& dirna
 {
     boost::filesystem::path p(dirname);
     boost::filesystem::create_directories(p);
-    sch.for_each(tc, [&dirname](const TileContainer&, typename TileContainer::Tile& tile) {
+    sch.for_each(tc, [&dirname](typename TileContainer::Tile& tile) {
         std::string filename(dirname + "/" + std::to_string(tile.id()));
         write_tile_vrt_verts(filename, tile.triangulation());
         return 1;
@@ -240,7 +240,7 @@ void write_vrt_facets(TileContainer& tc, Scheduler& sch, const std::string& dirn
 {
     boost::filesystem::path p(dirname);
     boost::filesystem::create_directories(p);
-    sch.for_each(tc, [&dirname](const TileContainer&, typename TileContainer::Tile& tile) {
+    sch.for_each(tc, [&dirname](typename TileContainer::Tile& tile) {
         std::string filename(dirname + "/" + std::to_string(tile.id()));
         write_tile_vrt_facets(filename, tile.triangulation());
         return 1;
@@ -253,7 +253,7 @@ void write_vrt_cells(TileContainer& tc, Scheduler& sch, const std::string& dirna
 {
     boost::filesystem::path p(dirname);
     boost::filesystem::create_directories(p);
-    sch.for_each(tc, [&dirname](const TileContainer&, typename TileContainer::Tile& tile) {
+    sch.for_each(tc, [&dirname](typename TileContainer::Tile& tile) {
         std::string filename(dirname + "/" + std::to_string(tile.id()));
         write_tile_vrt_cells(filename, tile.triangulation());
         return 1;
@@ -273,7 +273,7 @@ void write_vrt_tins(TileContainer& tc, Scheduler& sch, const std::string& dirnam
 {
     boost::filesystem::path p(dirname);
     boost::filesystem::create_directories(p);
-    sch.for_each(tc, [&dirname](const TileContainer&, typename TileContainer::Tile& tile) {
+    sch.for_each(tc, [&dirname](typename TileContainer::Tile& tile) {
         std::string filename(dirname + "/" + std::to_string(tile.id()));
         write_tile_vrt_tins(filename, tile.triangulation());
         return 1;

@@ -32,16 +32,16 @@ struct Sequential_scheduler
              typename Transform,
              typename Reduce = std::plus<>,
              typename V = std::invoke_result_t<Reduce,
-                                               std::invoke_result_t<Transform, TileContainer&, Tile&>,
-                                               std::invoke_result_t<Transform, TileContainer&, Tile&> > >
+                                               std::invoke_result_t<Transform, Tile&>,
+                                               std::invoke_result_t<Transform, Tile&> > >
     V for_each(TileContainer& tc, Transform transform, Reduce reduce = {}, V init = {})
     {
         V value = init;
         for(Tile& tile : tc) {
-            tc.lock(tile);
-            tc.load(tile);
-            value = reduce(value, transform(tc, tile));
-            tc.unlock(tile);
+            tile.locked = true;
+            if (tc.load(tile)) value = reduce(value, transform(tile));
+            tc.send_points(tile);
+            tile.locked = false;
         }
         return value;
     }
@@ -50,8 +50,8 @@ struct Sequential_scheduler
          typename Transform,
          typename Reduce = std::plus<>,
          typename V = std::invoke_result_t<Reduce,
-                                           std::invoke_result_t<Transform, TileContainer&, Tile&>,
-                                           std::invoke_result_t<Transform, TileContainer&, Tile&> > >
+                                           std::invoke_result_t<Transform, Tile&>,
+                                           std::invoke_result_t<Transform, Tile&> > >
     V for_each_rec(TileContainer& tc, Transform transform, Reduce reduce = {}, V init = {})
     {
         V value = init, v;

@@ -204,8 +204,7 @@ public:
         {
             if (i == icv) continue;
             auto v = vertex(c,i);
-            if ( vertex_is_infinite(v) ) continue;
-            if ( vertex_is_foreign(v) ) return false;
+            if ( !vertex_is_infinite(v) && vertex_is_foreign(v) ) return false;
         }
         return true;
     }
@@ -247,8 +246,7 @@ public:
         {
             if ( i == icv ) continue;
             auto v = vertex(c,i);
-            if ( vertex_is_infinite(v) ) continue;
-            if ( vertex_is_local(v) ) return false;
+            if ( !vertex_is_infinite(v) && vertex_is_local(v) ) return false;
         }
         return true;
     }
@@ -260,8 +258,7 @@ public:
         for(int i=0; i<=current_dimension(); ++i)
         {
             auto v = vertex(c,i);
-            if ( vertex_is_infinite(v) ) continue;
-            if ( vertex_is_foreign(v) ) return false;
+            if ( !vertex_is_infinite(v) && vertex_is_foreign(v) ) return false;
         }
         return true;
     }
@@ -297,10 +294,59 @@ public:
         for(int i=0; i<=current_dimension(); ++i)
         {
             auto v = vertex(c,i);
-            if ( vertex_is_infinite(v) ) continue;
-            if ( vertex_is_local(v) ) return false;
+            if ( !vertex_is_infinite(v) && vertex_is_local(v) ) return false;
         }
 
+        return true;
+    }
+
+    /// checks if the star of a vertex is mixed : all its finite vertices are local
+    bool star_is_local(Vertex_const_handle v) const {
+        if (!vertex_is_infinite(v) && vertex_is_foreign(v)) return false;
+        std::vector<Vertex_const_handle> adj;
+        adjacent_vertices(v, std::back_inserter(adj));
+        for (Vertex_const_handle a : adj)
+            if(!vertex_is_infinite(a) && vertex_is_foreign(a))
+                return false;
+        return true;
+    }
+
+    /// checks if the star of a vertex is mixed : some of its finite vertices are local and some are foreign
+    bool star_is_mixed(Vertex_const_handle v) const {
+        bool local_found = false;
+        bool foreign_found = false;
+        if ( vertex_is_infinite(v) ) {
+            if ( vertex_is_local(v) )
+                local_found = true;
+            else
+                foreign_found = true;
+        }
+        std::vector<Vertex_const_handle> adj;
+        adjacent_vertices(v, std::back_inserter(adj));
+        for (Vertex_const_handle a : adj) {
+            if ( vertex_is_infinite(a) ) continue;
+            if ( vertex_is_local(a) )
+            {
+                if (foreign_found) return true;
+                local_found = true;
+            }
+            else
+            {
+                if (local_found) return true;
+                foreign_found = true;
+            }
+        }
+        return true;
+    }
+
+    /// checks if the star of a vertex is foreign : all its finite vertices are foreign
+    bool star_is_foreign(Vertex_const_handle v) const {
+        if (!vertex_is_infinite(v) && vertex_is_local(v)) return false;
+        std::vector<Vertex_const_handle> adj;
+        adjacent_vertices(v, std::back_inserter(adj));
+        for (Vertex_const_handle a : adj)
+            if(!vertex_is_infinite(a) && vertex_is_local(a))
+                return false;
         return true;
     }
     /// @}
@@ -395,13 +441,12 @@ public:
     }
 
     /// Insert a range of received points with tile ids.
-    /// reports either the set of all inserted points by default.
-    /// If foreign_only is true, then only foreign inserted points are reported.
-    /// Foreign vertices of the tile triangulation are automatically simplified if the insertion makes it possible.
-    /// @returns the number of inserted points (disregarding the reinsertions of already inserted points
-    /// and the foreign point simplifications)
+    /// reports the set of all inserted points by default.
+    /// If report_vertices_with_mixed_stars_only is true, then only the new vertices with mixed stars are reported.
+    /// foreign vertices of the tile triangulation are automatically simplified if their star is foreign as well.
+    /// @returns the number of inserted points (not counting the number of simplified points and the insertion of already inserted points)
     template <class PointIdContainer>
-    int insert(const PointIdContainer& received, std::set<Vertex_const_handle>& inserted, bool foreign_only=false)
+    int insert(const PointIdContainer& received, std::set<Vertex_const_handle>& inserted, bool report_vertices_with_mixed_stars_only=false)
     {
         // retrieve the input points and ids in separate vectors
         // compute the axis-extreme points on the way
@@ -427,10 +472,12 @@ public:
         for (size_t index : indices) {
           std::pair<Vertex_handle,bool> p = insert(points[index], ids[index], v);
           if (!p.second) {
+              // update the hint, but do not process as the point was already inserted
               v = p.first;
           } else if (!simplify(p.first)) {
+              // update the hint and mark the unsimplified vertex for processing
               v = p.first;
-              if (!foreign_only || vertex_is_foreign(v))
+              if (!(report_vertices_with_mixed_stars_only && star_is_local(v)))
                 inserted.insert(v);
               else
                 ++local_inserted_size;
@@ -440,7 +487,7 @@ public:
         // simplify neighbors: collect vertices adjacent to newly inserted foreign points
         std::set<Vertex_handle> adj;
         for (Vertex_const_handle v : inserted)
-            if(foreign_only || vertex_is_foreign(v))
+            if(vertex_is_foreign(v))
                 adjacent_vertices(v, std::inserter(adj, adj.begin()));
 
         for (Vertex_handle v : adj)

@@ -17,59 +17,28 @@
 namespace CGAL {
 namespace DDT {
 
-
-template< typename V, typename TileContainer, typename UnaryOp, typename Id>
-V transform_id(TileContainer& tc, UnaryOp transform, std::mutex& mutex, Id id)
+namespace Impl {
+template< typename TileContainer, typename Transform, typename V, typename Id >
+V transform_id(TileContainer& tc, Transform transform, V init, Id id, std::mutex& mutex)
 {
-    typedef typename TileContainer::Tile Tile;
-    Tile& tile = tc.at(id);
-    // ensure tile is loaded
+    typedef typename TileContainer::iterator Tile_iterator;
+    Tile_iterator tile;
     {
         std::unique_lock<std::mutex> lock(mutex);
-        tc.lock(tile);
-        tc.load(tile);
+        tile = tc.find(id);
+        tile->locked = true;
+        tc.prepare_load(*tile);
     }
-
-    // acquire the tile and extract a copy of tc in tc2
-    size_t number_of_extreme_points_received1;
-    size_t number_of_extreme_points_received2;
-    TileContainer tc2(tc.maximal_dimension());
-
+    V value = (tc.safe_load(*tile)) ? transform(*tile) : init;
     {
         std::unique_lock<std::mutex> lock(mutex);
-        // "swap" moves the incoming points from tc to the tile, which had no points
-        tile.points().swap(tc[id].points());
-        // moves the unreceived axis extreme points
-        number_of_extreme_points_received1 = tc.extreme_points().size();
-        tc2.extreme_points().insert(tc2.extreme_points().end(),
-                                    tc.extreme_points().begin() + tile.number_of_extreme_points_received,
-                                    tc.extreme_points().end());
-                                 // tc.extreme_points().begin() + number_of_extreme_points_received1); // == end
+        tc.send_points(*tile);
+        tile->locked = false;
     }
-    number_of_extreme_points_received2 = number_of_extreme_points_received1 - tile.number_of_extreme_points_received;
-    tile.number_of_extreme_points_received = 0;
-    // process the tile on the extracted copy tc2
-    V value = transform(tc2, tile);
-    tile.number_of_extreme_points_received = number_of_extreme_points_received1;
-
-    // unlock the tile and merge the extracted copy tc2 back to tc
-    {
-        std::unique_lock<std::mutex> lock(mutex);
-        tc.unlock(tile);
-        // moves the points emitted in tc2 to tc
-        for(auto& t : tc2) {
-            auto& points = tc[t.id()].points();
-            points.insert(points.end(), t.points().begin(), t.points().end());
-        }
-        // moves the axis extreme points emitted in tc2 to tc
-        tc.extreme_points().insert(tc.extreme_points().end(),
-                                   tc2.extreme_points().begin() + number_of_extreme_points_received2,
-                                   tc2.extreme_points().end());
-    }
-
     return value;
 }
 
+}
 
 /// \ingroup PkgDDTSchedulerClasses
 /// \cgalModels Scheduler
@@ -102,14 +71,15 @@ struct Multithread_scheduler
          typename Transform,
          typename Reduce = std::plus<>,
          typename V = std::invoke_result_t<Reduce,
-                                           std::invoke_result_t<Transform, TileContainer&, Tile&>,
-                                           std::invoke_result_t<Transform, TileContainer&, Tile&> > >
+                                           std::invoke_result_t<Transform, Tile&>,
+                                           std::invoke_result_t<Transform, Tile&> > >
     V for_each(TileContainer& tc, Transform transform, Reduce reduce = {}, V init = {})
     {
-        std::vector<std::future<V>> futures;        
+        std::vector<std::future<V>> futures;
         for(const Tile& tile : tc)
-            futures.push_back(pool.submit([this, &tc, &transform](Id id){ return transform_id<V>(tc, transform, mutex, id); }, tile.id()));
-
+            futures.push_back(pool.submit([this, &tc, &transform, &init](Id id){
+                return Impl::transform_id(tc, transform, init, id, mutex);
+            }, tile.id()));
         V value = init;
         for(auto& f: futures) value = reduce(value, f.get());
         return value;
@@ -119,13 +89,15 @@ struct Multithread_scheduler
          typename Transform,
          typename Reduce = std::plus<>,
          typename V = std::invoke_result_t<Reduce,
-                                           std::invoke_result_t<Transform, TileContainer&, Tile&>,
-                                           std::invoke_result_t<Transform, TileContainer&, Tile&> > >
+                                           std::invoke_result_t<Transform, Tile&>,
+                                           std::invoke_result_t<Transform, Tile&> > >
     V for_each_rec(TileContainer& tc, Transform transform, Reduce reduce = {}, V init = {})
     {
         std::map<Id, std::future<V>> futures;
         for(const Tile& tile : tc)
-            futures.emplace(tile.id(), pool.submit([this, &tc, &transform](Id id){ return transform_id<V>(tc, transform, mutex, id); }, tile.id()));
+            futures.emplace(tile.id(), pool.submit([this, &tc, &transform, &init](Id id){
+                return Impl::transform_id(tc, transform, init, id, mutex);
+            }, tile.id()));
 
         V value = init;
         while (!futures.empty()) {
@@ -141,12 +113,14 @@ struct Multithread_scheduler
                     {
                         std::unique_lock<std::mutex> lock(mutex);
                         for(const Tile& tile : tc)
-                            if (!tile.points().empty())
+                            if (!tile.points().at(tile.id()).empty())
                                 ids.push_back(tile.id());
                     }
                     for(auto id : ids)
                         if (futures.count(id) == 0)
-                            futures.emplace(id, pool.submit([this, &tc, &transform](Id id){ return transform_id<V>(tc, transform, mutex, id); }, id));
+                            futures.emplace(id, pool.submit([this, &tc, &transform, &init](Id id){
+                                return Impl::transform_id(tc, transform, init, id, mutex);
+                            }, id));
                 }
             }
         }

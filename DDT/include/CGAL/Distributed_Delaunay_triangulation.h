@@ -368,7 +368,7 @@ public:
     Cell_const_iterator cell(const Vertex_const_iterator& v) const
     {
         Tile_const_iterator tile = v.tile();
-        Tile_triangulation& triangulation = tile->triangulation();
+        const Tile_triangulation& triangulation = tile->triangulation();
         Tile_vertex_const_iterator tv = *v;
         Tile_cell_const_iterator tc = triangulation.cell(tv);
         if(!triangulation.cell_is_foreign(tc))
@@ -390,7 +390,7 @@ public:
         Tile_const_iterator vtile = v.tile();
         Tile_cell_const_iterator tc = *c;
         Tile_vertex_const_iterator tv = *v;
-        Tile_triangulation& ctriangulation = ctile->triangulation();
+        const Tile_triangulation& ctriangulation = ctile->triangulation();
         if (ctile == vtile)
             for(int d = 0; d <= ctriangulation.current_dimension(); ++d)
                 if(tc->vertex(d) == tv)
@@ -407,7 +407,7 @@ public:
     {
         assert(is_valid(f));
         Tile_const_iterator tile = f.tile();
-        Tile_triangulation& triangulation = tile->triangulation();
+        const Tile_triangulation& triangulation = tile->triangulation();
         Tile_cell_const_iterator c = triangulation.cell(*f);
         if(triangulation.cell_is_main(c)) return local_index_of_covertex(f);
         return local_index_of_covertex(relocate(f, triangulation.cell_id(c)));
@@ -419,7 +419,7 @@ public:
     {
         assert(is_valid(f));
         Tile_const_iterator tile = f.tile();
-        Tile_triangulation& triangulation = tile->triangulation();
+        const Tile_triangulation& triangulation = tile->triangulation();
         Tile_cell_const_iterator c = triangulation.cell(*f);
         if(triangulation.cell_is_foreign(c)) return local_covertex(main(f)); // any non foreign representative could do
         return Vertex_const_iterator(&tiles, tile, triangulation.covertex(*f));
@@ -509,7 +509,7 @@ public:
     {
         assert(is_valid(f));
         Tile_const_iterator tile = f.tile();
-        Tile_triangulation& triangulation = tile->triangulation();
+        const Tile_triangulation& triangulation = tile->triangulation();
         Tile_cell_const_iterator c = triangulation.cell(*f);
         assert(!triangulation.cell_is_foreign(c));
         return tile->mirror_index(c,triangulation.index_of_covertex(*f));

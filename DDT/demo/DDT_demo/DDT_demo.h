@@ -81,6 +81,13 @@ int DDT_demo(int argc, char **argv)
       return -1;
   }
 
+  if (max_number_of_tiles > 0 && (max_concurrency > max_number_of_tiles || max_concurrency == 0))
+  {
+      std::cout << "Limiting concurrency to the maximum number of tiles in memory : ";
+      std::cout << max_concurrency << " --> " << max_number_of_tiles << std::endl;
+      max_concurrency = max_number_of_tiles;
+  }
+
   typename Traits::Bbox bbox(dimension, range);
   Partitioner<Traits> partitioner(bbox, NT.begin(), NT.end());
   Scheduler<Tile> scheduler(max_concurrency);
@@ -102,7 +109,7 @@ int DDT_demo(int argc, char **argv)
   log.step("Random_points   ");
   Random_points points(dimension, range);
   log.step("insertion       ");
-  CGAL::DDT::insert(tiles, scheduler, points, NP, partitioner);
+  std::size_t count = CGAL::DDT::insert(tiles, scheduler, points, NP, partitioner);
   log.step("DDT view        ");
   Distributed_Delaunay_triangulation tri(tiles);
 
@@ -131,6 +138,7 @@ int DDT_demo(int argc, char **argv)
       log.step("validity        ");
       std::cout << "Validity     \t" << (tri.is_valid(true, 5) ? "OK" : "ERROR!") << std::endl;
   }
+  std::cout << std::endl << count << " points were inserted." << std::endl;
   return 0;
 }
 
