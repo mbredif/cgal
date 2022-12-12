@@ -52,17 +52,17 @@ public:
     /// the dimension of the triangulation
     inline int maximal_dimension() const { return tiles.maximal_dimension(); }
     /// The number of finite cells in the triangulation, including cells incident to the vertex at infinity.
-    inline size_t number_of_finite_cells   () const { return tiles.number_of_finite_cells();    }
+    inline std::size_t number_of_finite_cells   () const { return tiles.number_of_finite_cells();    }
     /// The number of finite vertices in the triangulation, including the vertex at infinity.
-    inline size_t number_of_finite_vertices() const { return tiles.number_of_finite_vertices(); }
+    inline std::size_t number_of_finite_vertices() const { return tiles.number_of_finite_vertices(); }
     /// The number of facets in the triangulation, including facets incident to the vertex at infinity.
-    inline size_t number_of_finite_facets  () const { return tiles.number_of_finite_facets();   }
+    inline std::size_t number_of_finite_facets  () const { return tiles.number_of_finite_facets();   }
     /// The number of finite cells in the triangulation.
-    inline size_t number_of_cells   () const { return tiles.number_of_cells();    }
+    inline std::size_t number_of_cells   () const { return tiles.number_of_cells();    }
     /// The number of finite vertices in the triangulation.
-    inline size_t number_of_vertices() const { return tiles.number_of_vertices(); }
+    inline std::size_t number_of_vertices() const { return tiles.number_of_vertices(); }
     /// The number of finite facets in the triangulation.
-    inline size_t number_of_facets  () const { return tiles.number_of_facets();   }
+    inline std::size_t number_of_facets  () const { return tiles.number_of_facets();   }
 
 
 

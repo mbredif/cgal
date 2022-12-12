@@ -58,7 +58,7 @@ template<typename T> std::istream &read_data_element(std::istream& is, T& t) {
 
 template<> std::ostream &write_data_element<unsigned char>(std::ostream& os, unsigned char t) {
     if(CGAL::is_ascii(os))
-        os << " " << int(t);
+        os << " " << std::to_string(t);
     else
         os.write((char*)(&t), sizeof(unsigned char));
     return os;

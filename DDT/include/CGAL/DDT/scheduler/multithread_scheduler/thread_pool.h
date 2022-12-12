@@ -87,7 +87,7 @@ public:
     // Inits thread pool
     void init()
     {
-        for (size_t i = 0; i < m_threads.size(); ++i)
+        for (std::size_t i = 0; i < m_threads.size(); ++i)
         {
             m_threads[i] = std::thread(thread_worker(this, i));
         }
@@ -99,7 +99,7 @@ public:
         m_shutdown = true;
         m_conditional_lock.notify_all();
 
-        for (size_t i = 0; i < m_threads.size(); ++i)
+        for (std::size_t i = 0; i < m_threads.size(); ++i)
         {
             m_threads[i].join();
         }

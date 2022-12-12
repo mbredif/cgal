@@ -73,7 +73,7 @@ public:
         for(Vertex_const_handle v : vertices)
             p.emplace_back(triangulation_.vertex_id(v), triangulation_.point(v));
         // debug
-        //if(!vertices.empty()) std::cout << "\x1B[32m" << id() << "\t->\t" << size_t(id) << "\t:\t" << vertices.size()   << "\x1B[0m"<< std::endl;
+        //if(!vertices.empty()) std::cout << "\x1B[32m" << id() << "\t->\t" << std::to_string(id) << "\t:\t" << vertices.size()   << "\x1B[0m"<< std::endl;
         return vertices.size();
     }
 
@@ -105,11 +105,11 @@ public:
     /// is the triangulation in memory ?
     bool in_mem;
 
-    inline size_t number_of_main_facets  () const { return number_of_main_facets_;   }
-    inline size_t number_of_main_cells   () const { return number_of_main_cells_;    }
-    inline size_t number_of_main_finite_vertices() const { return number_of_main_finite_vertices_; }
-    inline size_t number_of_main_finite_facets  () const { return number_of_main_finite_facets_;   }
-    inline size_t number_of_main_finite_cells   () const { return number_of_main_finite_cells_;    }
+    inline std::size_t number_of_main_facets  () const { return number_of_main_facets_;   }
+    inline std::size_t number_of_main_cells   () const { return number_of_main_cells_;    }
+    inline std::size_t number_of_main_finite_vertices() const { return number_of_main_finite_vertices_; }
+    inline std::size_t number_of_main_finite_facets  () const { return number_of_main_finite_facets_;   }
+    inline std::size_t number_of_main_finite_cells   () const { return number_of_main_finite_cells_;    }
 
     void finalize()
     {
@@ -124,11 +124,11 @@ public:
     }
     bool is_valid(bool verbose = false, int level = 0) const
     {
-        size_t number_of_main_finite_vertices = 0;
-        size_t number_of_main_finite_facets = 0;
-        size_t number_of_main_finite_cells = 0;
-        size_t number_of_main_facets = 0;
-        size_t number_of_main_cells = 0;
+        std::size_t number_of_main_finite_vertices = 0;
+        std::size_t number_of_main_finite_facets = 0;
+        std::size_t number_of_main_finite_cells = 0;
+        std::size_t number_of_main_facets = 0;
+        std::size_t number_of_main_cells = 0;
         if (in_mem) {
             if(!triangulation_.is_valid(verbose, level))
             {
@@ -157,11 +157,11 @@ private:
     Points_map points_;
     Points extreme_points_;
 
-    size_t number_of_main_finite_vertices_;
-    size_t number_of_main_finite_facets_;
-    size_t number_of_main_finite_cells_;
-    size_t number_of_main_facets_;
-    size_t number_of_main_cells_;
+    std::size_t number_of_main_finite_vertices_;
+    std::size_t number_of_main_finite_facets_;
+    std::size_t number_of_main_finite_cells_;
+    std::size_t number_of_main_facets_;
+    std::size_t number_of_main_cells_;
 };
 
 

@@ -23,7 +23,7 @@ namespace DDT {
 namespace impl {
 
 template<typename Tile>
-size_t splay_tile(Tile& tile)
+std::size_t splay_tile(Tile& tile)
 {
     typedef typename Tile::Id Id;
     typedef typename Tile::Points Points;
@@ -42,7 +42,7 @@ size_t splay_tile(Tile& tile)
 }
 
 template<typename TileContainer, typename Scheduler>
-size_t insert_and_send_all_axis_extreme_points(TileContainer& tc, Scheduler& sch)
+std::size_t insert_and_send_all_axis_extreme_points(TileContainer& tc, Scheduler& sch)
 {
     typedef typename TileContainer::Tile Tile;
     typedef typename Tile::Point Point;
@@ -50,7 +50,7 @@ size_t insert_and_send_all_axis_extreme_points(TileContainer& tc, Scheduler& sch
     return sch.for_each(tc, [](Tile& tile)
     {
         typedef typename Tile::Tile_triangulation::Vertex_const_handle Vertex_const_handle;
-        size_t count = splay_tile(tile);
+        std::size_t count = splay_tile(tile);
 
         // send the extreme points along each axis to all tiles to initialize the star splaying
         std::vector<Vertex_const_handle> vertices;
@@ -63,7 +63,7 @@ size_t insert_and_send_all_axis_extreme_points(TileContainer& tc, Scheduler& sch
 }
 
 template<typename TileContainer, typename Scheduler>
-size_t splay_stars(TileContainer& tc, Scheduler& sch)
+std::size_t splay_stars(TileContainer& tc, Scheduler& sch)
 {
     typedef typename TileContainer::Tile Tile;
     return sch.for_each_rec(tc, [](Tile& tile) { return splay_tile(tile); });
@@ -73,8 +73,8 @@ size_t splay_stars(TileContainer& tc, Scheduler& sch)
 // The scheduler provides the distribution environment (single thread, multithread, MPI...)
 // @returns the vertex const iterator to the inserted point, or the already existing point if if it was already present
 template<typename TileContainer, typename Scheduler>
-size_t insert_received(TileContainer& tc, Scheduler& sch){
-    size_t n = tc.number_of_finite_vertices();
+std::size_t insert_received(TileContainer& tc, Scheduler& sch){
+    std::size_t n = tc.number_of_finite_vertices();
     insert_and_send_all_axis_extreme_points(tc, sch);
     splay_stars(tc, sch);
     tc.finalize(); /// @todo : return 0 for unloaded tiles
@@ -91,7 +91,7 @@ size_t insert_received(TileContainer& tc, Scheduler& sch){
 template<typename TileContainer, typename Scheduler, typename Point, typename Id>
 typename TileContainer::Vertex_const_iterator insert(TileContainer& tc, Scheduler& sch, const Point& point, Id id){
     tc.send_point_to_its_tile(id,point);
-    return impl::insert_received(tc, sch); /// @todo this returns a size_t, not a Vertex_const_iterator
+    return impl::insert_received(tc, sch); /// @todo this returns a std::size_t, not a Vertex_const_iterator
 }
 */
 
@@ -100,7 +100,7 @@ typename TileContainer::Vertex_const_iterator insert(TileContainer& tc, Schedule
 /// The scheduler provides the distribution environment (single thread, multithread, MPI...)
 /// @returns the number of newly inserted vertices
 template<typename TileContainer, typename Scheduler, typename PointIdRange>
-size_t insert(TileContainer& tc, Scheduler& sch, const PointIdRange& range) {
+std::size_t insert(TileContainer& tc, Scheduler& sch, const PointIdRange& range) {
     for (auto& p : range)
         tc[p.first].send_point(p.first,p.first,p.second);
     return impl::insert_received(tc, sch);
@@ -111,7 +111,7 @@ size_t insert(TileContainer& tc, Scheduler& sch, const PointIdRange& range) {
 /// The scheduler provides the distribution environment (single thread, multithread, MPI...)
 /// @returns the number of newly inserted vertices
 template<typename TileContainer, typename Scheduler, typename PointRange, typename Partitioner>
-size_t insert(TileContainer& tc, Scheduler& sch, PointRange points, Partitioner& part) {
+std::size_t insert(TileContainer& tc, Scheduler& sch, PointRange points, Partitioner& part) {
     for(auto& p : points)  {
         typename Partitioner::Id id = part(p);
         tc[id].send_point(id,id,p);

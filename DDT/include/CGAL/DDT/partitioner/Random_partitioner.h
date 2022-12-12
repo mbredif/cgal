@@ -48,7 +48,7 @@ public:
 
     inline Id a() const { return distribution.a(); }
     inline Id b() const { return distribution.b(); }
-    inline size_t size() const { return 1+b()-a(); }
+    inline std::size_t size() const { return 1+b()-a(); }
 
 private:
     std::uniform_int_distribution<Id> distribution;

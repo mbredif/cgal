@@ -88,7 +88,7 @@ int main(int argc, char **argv)
   std::cout << "- Serializer  : " << serializer << std::endl;
 
   Random_points points(D, range);
-  size_t n = CGAL::DDT::insert(tiles, scheduler, points, NP, partitioner);
+  std::size_t n = CGAL::DDT::insert(tiles, scheduler, points, NP, partitioner);
   std::cout << n << " points inserted" << std::endl;
 
   Distributed_Delaunay_triangulation tri(tiles);

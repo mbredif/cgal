@@ -81,11 +81,11 @@ struct Cgal_traits_d
     {
         return dt.maximal_dimension();
     }
-    inline size_t number_of_cells(const Delaunay_triangulation& dt) const
+    inline std::size_t number_of_cells(const Delaunay_triangulation& dt) const
     {
         return dt.number_of_full_cells();
     }
-    inline size_t number_of_vertices(const Delaunay_triangulation& dt) const
+    inline std::size_t number_of_vertices(const Delaunay_triangulation& dt) const
     {
         return dt.number_of_vertices();
     }

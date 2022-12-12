@@ -111,7 +111,7 @@ void write_csv_bboxes(const std::string& filename, const TileContainer& tc)
         csv << bbox.max(0) << " "<< bbox.max(1) << ", ";
         csv << bbox.min(0) << " "<< bbox.max(1) << ", ";
         csv << bbox.min(0) << " "<< bbox.min(1);
-        csv << "))\"," << size_t(id) << "\n";
+        csv << "))\"," << std::to_string(id) << "\n";
     }
 }
 

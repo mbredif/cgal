@@ -65,10 +65,10 @@ struct File_points_serializer
     const std::string fname = filename(tile.id());
     std::ifstream in(fname, std::ios::in | std::ios::binary);
     in >> tile.bbox();
-    size_t count;
+    std::size_t count;
     in >> count;
     typename Tile::Vertex_handle v;
-    for(size_t i = 0; i < count; ++i) {
+    for(std::size_t i = 0; i < count; ++i) {
         typedef typename Tile::Point Point;
         Point p;
         Id id;
@@ -98,10 +98,10 @@ struct File_points_serializer
 
     Tile_triangulation& triangulation = tile.triangulation();
     out << triangulation.number_of_vertices() << "\n";
-    std::vector<size_t> indices;
+    std::vector<std::size_t> indices;
     std::vector<Point>  points;
     std::vector<Vertex_const_iterator> vertices;
-    size_t index = 0;
+    std::size_t index = 0;
     for(Vertex_const_iterator v = triangulation.vertices_begin(); v != triangulation.vertices_end(); ++v) {
       if (!triangulation.vertex_is_infinite(v)) {
         points.push_back(triangulation.point(v));
@@ -110,7 +110,7 @@ struct File_points_serializer
       }
     }
     triangulation.spatial_sort(indices, points);
-    for (size_t index : indices)
+    for (std::size_t index : indices)
       out << points[index] << " " << triangulation.vertex_id(vertices[index]) << "\n";
     return !out.fail();
   }

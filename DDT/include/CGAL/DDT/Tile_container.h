@@ -119,7 +119,7 @@ public:
         return traits.dimension();
     }
 
-    Tile_container(int dimension, size_t number_of_triangulations_mem_max = 0, const Serializer& serializer = Serializer()) :
+    Tile_container(int dimension, std::size_t number_of_triangulations_mem_max = 0, const Serializer& serializer = Serializer()) :
         traits(dimension),
         tiles(),
         serializer_(serializer),
@@ -131,11 +131,11 @@ public:
         number_of_triangulations_mem_(0),
         number_of_triangulations_mem_max_(number_of_triangulations_mem_max)
     {
-        if (number_of_triangulations_mem_max_ == 0) number_of_triangulations_mem_max_ = std::numeric_limits<size_t>::max();
+        if (number_of_triangulations_mem_max_ == 0) number_of_triangulations_mem_max_ = std::numeric_limits<std::size_t>::max();
     }
 
-    inline size_t number_of_triangulations_mem_max() const { return number_of_triangulations_mem_max_; }
-    inline size_t number_of_triangulations_mem() const { return number_of_triangulations_mem_; }
+    inline std::size_t number_of_triangulations_mem_max() const { return number_of_triangulations_mem_max_; }
+    inline std::size_t number_of_triangulations_mem() const { return number_of_triangulations_mem_; }
 
     Id_const_iterator ids_begin() const { return tiles.begin(); }
     Id_const_iterator ids_end  () const { return tiles.end  (); }
@@ -180,11 +180,11 @@ public:
                 while(tc.number_of_triangulations_mem_ >= tc.number_of_triangulations_mem_max_) {
                     auto it = tc.begin();
                     Id id0 = it->id();
-                    size_t count0 = inbox[id0].size();
+                    std::size_t count0 = inbox[id0].size();
                     for(++it; it != tc.end() && count0; ++it)
                     {
                         Id id = it->id();
-                        size_t count = inbox[id].size();
+                        std::size_t count = inbox[id].size();
                         if(count0 > count) {
                             count0 = count;
                             id0 = id;
@@ -232,7 +232,7 @@ public:
         // make room if necessary
         while(number_of_triangulations_mem_ >= number_of_triangulations_mem_max_) {
             // pick a loaded id at random and try to unload it
-            size_t n = rand() % number_of_triangulations_mem_;
+            std::size_t n = rand() % number_of_triangulations_mem_;
             for(Tile& tile : *this) {
                 if(tile.in_mem) {
                     if (n == 0) {
@@ -304,21 +304,21 @@ public:
         }
     }
 
-    inline size_t number_of_finite_vertices() const { return number_of_finite_vertices_; }
-    inline size_t number_of_finite_facets  () const { return number_of_finite_facets_;   }
-    inline size_t number_of_finite_cells   () const { return number_of_finite_cells_;    }
-    inline size_t number_of_vertices() const { return number_of_finite_vertices_ + 1; }
-    inline size_t number_of_facets  () const { return number_of_facets_;   }
-    inline size_t number_of_cells   () const { return number_of_cells_;    }
+    inline std::size_t number_of_finite_vertices() const { return number_of_finite_vertices_; }
+    inline std::size_t number_of_finite_facets  () const { return number_of_finite_facets_;   }
+    inline std::size_t number_of_finite_cells   () const { return number_of_finite_cells_;    }
+    inline std::size_t number_of_vertices() const { return number_of_finite_vertices_ + 1; }
+    inline std::size_t number_of_facets  () const { return number_of_facets_;   }
+    inline std::size_t number_of_cells   () const { return number_of_cells_;    }
 
 
     bool is_valid(bool verbose = false, int level = 0) const
     {
-        size_t number_of_finite_vertices = 0;
-        size_t number_of_finite_facets = 0;
-        size_t number_of_finite_cells = 0;
-        size_t number_of_facets = 0;
-        size_t number_of_cells = 0;
+        std::size_t number_of_finite_vertices = 0;
+        std::size_t number_of_finite_facets = 0;
+        std::size_t number_of_finite_cells = 0;
+        std::size_t number_of_facets = 0;
+        std::size_t number_of_cells = 0;
 
         for(const Tile& tile : *this)
         {
@@ -351,13 +351,13 @@ private:
     Serializer serializer_;
     Traits traits;
 
-    size_t number_of_finite_vertices_;
-    size_t number_of_finite_facets_;
-    size_t number_of_finite_cells_;
-    size_t number_of_facets_;
-    size_t number_of_cells_;
-    size_t number_of_triangulations_mem_max_;
-    size_t number_of_triangulations_mem_;
+    std::size_t number_of_finite_vertices_;
+    std::size_t number_of_finite_facets_;
+    std::size_t number_of_finite_cells_;
+    std::size_t number_of_facets_;
+    std::size_t number_of_cells_;
+    std::size_t number_of_triangulations_mem_max_;
+    std::size_t number_of_triangulations_mem_;
 };
 
 }

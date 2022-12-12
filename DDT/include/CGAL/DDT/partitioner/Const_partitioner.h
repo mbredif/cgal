@@ -28,7 +28,7 @@ public:
 
     inline Id operator()(const Point& p) const { return id_;}
     inline Id id() const { return id_; }
-    constexpr size_t size() const { return 1; }
+    constexpr std::size_t size() const { return 1; }
 
 private:
     Id id_;

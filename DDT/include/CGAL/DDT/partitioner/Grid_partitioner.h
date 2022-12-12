@@ -24,13 +24,13 @@ public:
     typedef typename Traits::Point Point;
     typedef typename Traits::Bbox Bbox;
     typedef typename Traits::Id    Id;
-    typedef typename std::vector<size_t>::const_iterator const_iterator;
+    typedef typename std::vector<std::size_t>::const_iterator const_iterator;
 
     template<typename Iterator>
     Grid_partitioner(const Bbox& bbox, Iterator it, Iterator end)
     {
         int D = bbox.dimension();
-        size_t n = 1;
+        std::size_t n = 1;
         M = 1;
         N.resize(D);
         inv_step.resize(D);
@@ -45,7 +45,7 @@ public:
         }
     }
 
-    Grid_partitioner(const Bbox& bbox, size_t n)
+    Grid_partitioner(const Bbox& bbox, std::size_t n)
     {
         int D = bbox.dimension();
         M = 1;
@@ -64,9 +64,9 @@ public:
     /// @todo : use a predicate, may be approximate (p[i] is a double approximation)
     Id operator()(const Point& p) const
     {
-        size_t D = N.size();
+        std::size_t D = N.size();
         int id = 0;
-        for(size_t i=0; i<D; ++i)
+        for(std::size_t i=0; i<D; ++i)
         {
             id = id*N[i] + (int((p[i]-origin[i])*inv_step[i]) % N[i]);
             /// @todo : check compare_x/y/z/d with neighbors to check approximation validity
@@ -75,11 +75,11 @@ public:
     }
     const_iterator size_begin() const { return N.begin(); }
     const_iterator size_end() const { return N.end(); }
-    size_t size() const { return M; }
+    std::size_t size() const { return M; }
 
 private:
-    size_t M;
-    std::vector<size_t> N;
+    std::size_t M;
+    std::vector<std::size_t> N;
     std::vector<double> inv_step;
     std::vector<double> origin;
 };
@@ -87,7 +87,7 @@ private:
 template<typename Traits>
 std::ostream& operator<<(std::ostream& out, const Grid_partitioner<Traits>& partitioner) {
     out << "Grid_partitioner( ";
-    std::copy(partitioner.size_begin(), partitioner.size_end(), std::ostream_iterator<size_t>(out, " "));
+    std::copy(partitioner.size_begin(), partitioner.size_end(), std::ostream_iterator<std::size_t>(out, " "));
     return out << ")";
 }
 

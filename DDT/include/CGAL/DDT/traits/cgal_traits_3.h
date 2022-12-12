@@ -99,11 +99,11 @@ struct Cgal_traits_3
     {
         return D;
     }
-    inline size_t number_of_cells(const Delaunay_triangulation& dt) const
+    inline std::size_t number_of_cells(const Delaunay_triangulation& dt) const
     {
         return dt.number_of_cells();
     }
-    inline size_t number_of_vertices(const Delaunay_triangulation& dt) const
+    inline std::size_t number_of_vertices(const Delaunay_triangulation& dt) const
     {
         return dt.number_of_vertices();
     }

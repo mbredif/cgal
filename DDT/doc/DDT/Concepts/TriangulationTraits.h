@@ -74,9 +74,9 @@ public:
     /// get the maximal dimension of a Delaunay triangulation
     int maximal_dimension(const Delaunay_triangulation& dt) const;
     /// get the number of cells, including infinite cells
-    size_t number_of_cells(const Delaunay_triangulation& dt) const;
+    std::size_t number_of_cells(const Delaunay_triangulation& dt) const;
     /// get the number of vertices, including the infinite vertex
-    size_t number_of_vertices(const Delaunay_triangulation& dt) const;
+    std::size_t number_of_vertices(const Delaunay_triangulation& dt) const;
 
 /// \name Iterators
 /// @{

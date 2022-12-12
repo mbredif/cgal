@@ -81,14 +81,14 @@ public:
     inline Facet_const_iterator  facets_begin()  const { return traits.facets_begin(dt_); }
     inline Facet_const_iterator  facets_end  ()  const { return traits.facets_end  (dt_); }
 
-    inline size_t number_of_vertices() const { return traits.number_of_vertices(dt_); }
-    inline size_t number_of_cells   () const { return traits.number_of_cells   (dt_); }
+    inline std::size_t number_of_vertices() const { return traits.number_of_vertices(dt_); }
+    inline std::size_t number_of_cells   () const { return traits.number_of_cells   (dt_); }
 
-    inline size_t number_of_main_facets  () const { return number_of_main_facets_;   }
-    inline size_t number_of_main_cells   () const { return number_of_main_cells_;    }
-    inline size_t number_of_main_finite_vertices() const { return number_of_main_finite_vertices_; }
-    inline size_t number_of_main_finite_facets  () const { return number_of_main_finite_facets_;   }
-    inline size_t number_of_main_finite_cells   () const { return number_of_main_finite_cells_;    }
+    inline std::size_t number_of_main_facets  () const { return number_of_main_facets_;   }
+    inline std::size_t number_of_main_cells   () const { return number_of_main_cells_;    }
+    inline std::size_t number_of_main_finite_vertices() const { return number_of_main_finite_vertices_; }
+    inline std::size_t number_of_main_finite_facets  () const { return number_of_main_finite_facets_;   }
+    inline std::size_t number_of_main_finite_cells   () const { return number_of_main_finite_cells_;    }
 
     inline Info& info(Vertex_const_handle v) const { assert(!vertex_is_infinite(v)); return traits.info(v); }
     inline Id vertex_id(Vertex_const_handle v) const { assert(!vertex_is_infinite(v)); return traits.id(v); }
@@ -461,7 +461,7 @@ public:
         // check immediately for simplification
         Vertex_handle v;
         int local_inserted_size = 0;
-        for (size_t index : indices) {
+        for (std::size_t index : indices) {
           std::pair<Vertex_handle,bool> p = insert(points[index], ids[index], v);
           if (!p.second) {
               // update the hint, but do not process as the point was already inserted
@@ -605,11 +605,11 @@ private:
     Delaunay_triangulation dt_;
     mutable Selector<Id> selector;
 
-    size_t number_of_main_finite_vertices_;
-    size_t number_of_main_finite_facets_;
-    size_t number_of_main_finite_cells_;
-    size_t number_of_main_facets_;
-    size_t number_of_main_cells_;
+    std::size_t number_of_main_finite_vertices_;
+    std::size_t number_of_main_finite_facets_;
+    std::size_t number_of_main_finite_cells_;
+    std::size_t number_of_main_facets_;
+    std::size_t number_of_main_cells_;
 };
 
 }
