@@ -12,19 +12,16 @@
 #ifndef CGAL_DDT_CGAL_TRAITS_D_H
 #define CGAL_DDT_CGAL_TRAITS_D_H
 
-#include <CGAL/DDT/traits/Facet_const_iterator_d.h>
-#include <CGAL/DDT/traits/Data.h>
-#include <CGAL/DDT/traits/Bbox.h>
 
 #include <CGAL/Epick_d.h>
 #include <CGAL/Delaunay_triangulation.h>
-#include <CGAL/Triangulation_ds_vertex.h>
 #include <CGAL/point_generators_d.h>
+#include <CGAL/Triangulation_ds_vertex.h>
 #include <CGAL/Spatial_sort_traits_adapter_d.h>
 
-
-#include <functional>
-#include <limits>
+#include <CGAL/DDT/traits/Facet_const_iterator_d.h>
+#include <CGAL/DDT/traits/Bbox.h>
+#include <CGAL/DDT/traits/Data.h>
 
 namespace CGAL {
 namespace DDT {
@@ -62,8 +59,6 @@ struct Cgal_traits_d
 
     typedef CGAL::Delaunay_triangulation<Geom_traits,TDS>          Delaunay_triangulation;
     typedef CGAL::Random_points_in_cube_d<Point>                   Random_points_in_box;
-
-    //inline constexpr int dimension() const { assert(false); return 0; }
 
     inline Id    id  (Vertex_const_handle v) const
     {
@@ -177,7 +172,7 @@ struct Cgal_traits_d
         return (lt==Delaunay_triangulation::ON_VERTEX) ? f.vertex(0) : Vertex_const_handle();
     }
 
-    inline std::pair<Vertex_handle, bool> insert(Delaunay_triangulation& dt, const Point& p, Id id, Vertex_handle hint = Vertex_handle()) const
+    std::pair<Vertex_handle, bool> insert(Delaunay_triangulation& dt, const Point& p, Id id, Vertex_handle hint = Vertex_handle()) const
     {
         typename Delaunay_triangulation::Locate_type lt;
         typename Delaunay_triangulation::Face f(dt.maximal_dimension());
@@ -195,16 +190,9 @@ struct Cgal_traits_d
         return std::make_pair(v, true);
     }
 
-
     inline void remove(Delaunay_triangulation& dt, Vertex_handle v) const
     {
         dt.remove(v);
-    }
-
-    inline Point circumcenter(const Delaunay_triangulation& dt, Cell_const_handle c) const
-    {
-        /// @todo
-        return Point();
     }
 
     inline bool vertex_is_infinite(const Delaunay_triangulation& dt, Vertex_const_handle v) const
@@ -296,16 +284,6 @@ struct Cgal_traits_d
         return f->second;
     }
 
-    inline Cell_const_handle cell(const Delaunay_triangulation& dt, Facet_const_handle f) const
-    {
-        return f->first;
-    }
-
-    inline Cell_const_handle cell(const Delaunay_triangulation& dt, Vertex_const_handle v) const
-    {
-        return v->full_cell();
-    }
-
     inline Vertex_const_handle covertex(const Delaunay_triangulation& dt, Facet_const_handle f) const
     {
         return vertex(dt, f->first, f->second);
@@ -315,6 +293,16 @@ struct Cgal_traits_d
     {
         Cell_const_iterator c = f->first;
         return vertex(dt, c->neighbor(f->second), c->mirror_index(f->second));
+    }
+
+    inline Cell_const_handle cell(const Delaunay_triangulation& dt, Facet_const_handle f) const
+    {
+        return f->first;
+    }
+
+    inline Cell_const_handle cell(const Delaunay_triangulation& dt, Vertex_const_handle v) const
+    {
+        return v->full_cell();
     }
 
     Facet_const_handle mirror_facet(const Delaunay_triangulation& dt, Facet_const_handle f) const
@@ -343,27 +331,6 @@ struct Cgal_traits_d
     {
         Facet f(c, i);
         return Facet_const_iterator(dt.tds(), f);
-    }
-
-    Point get_cell_barycenter(Cell_const_handle ch)
-    {
-        int D = ch->maximal_dimension();
-        std::vector<double> coords(D);
-        for(uint d = 0; d < D; d++)
-            coords[d] = 0;
-        for(auto vht = ch->vertices_begin() ;
-                vht != ch->vertices_end() ;
-                ++vht)
-        {
-            Vertex_handle v = *vht;
-            for(uint d = 0; d < D; d++)
-            {
-                coords[d] += (v->point())[d];
-            }
-        }
-        for(uint d = 0; d < D; d++)
-            coords[d] /= ((double)D+1);
-        return Point(D,coords.begin(),coords.end());
     }
 
     inline bool is_valid(const Delaunay_triangulation& dt, bool verbose = false, int level = 0) const

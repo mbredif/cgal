@@ -14,7 +14,6 @@
 
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
 #include <CGAL/Delaunay_triangulation_3.h>
-// #include <CGAL/Triangulation_vertex_base_with_info_3.h>
 #include <CGAL/point_generators_3.h>
 
 #include <CGAL/DDT/traits/Facet_const_iterator_3.h>
@@ -201,11 +200,6 @@ struct Cgal_traits_3
         dt.remove(v);
     }
 
-    inline Point circumcenter(const Delaunay_triangulation& dt, Cell_const_handle c) const
-    {
-        return dt.dual(c);
-    }
-
     inline bool vertex_is_infinite(const Delaunay_triangulation& dt, Vertex_const_handle v) const
     {
         return dt.is_infinite(v);
@@ -324,7 +318,7 @@ struct Cgal_traits_3
         Facet g(c->neighbor(f->second), dt.mirror_index(c, f->second));
         return Facet_const_iterator(dt.tds(), g);
     }
-    
+
     inline int mirror_index(const Delaunay_triangulation& dt, Facet_const_handle f) const
     {
         return dt.mirror_index(f->first, f->second);

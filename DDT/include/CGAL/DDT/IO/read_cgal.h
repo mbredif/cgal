@@ -34,7 +34,7 @@ std::istream& read_json(Tile & tile,std::istream&  ifile)
     typedef typename Tile::Id Id;
     boost::property_tree::ptree root_node;
     boost::property_tree::read_json(ifile, root_node);
-    int id =  root_node.get<Id>("id");
+    Id id =  root_node.get<Id>("id");
     assert(id == tile.id());
     return ifile;
 }

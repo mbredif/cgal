@@ -12,6 +12,8 @@
 #ifndef CGAL_DDT_PARITIONER_GRID_PARTITIONER_H
 #define CGAL_DDT_PARITIONER_GRID_PARTITIONER_H
 
+#include <iterator>
+
 namespace CGAL {
 namespace DDT {
 
@@ -27,7 +29,7 @@ public:
     typedef typename std::vector<std::size_t>::const_iterator const_iterator;
 
     template<typename Iterator>
-    Grid_partitioner(const Bbox& bbox, Iterator it, Iterator end)
+    Grid_partitioner(const Bbox& bbox, Iterator it, Iterator end, Id id0 = {}) : id0(id0)
     {
         int D = bbox.dimension();
         std::size_t n = 1;
@@ -47,7 +49,7 @@ public:
 
     Grid_partitioner(const Bbox& bbox, std::size_t n)
     {
-        int D = bbox.dimension();
+        std::size_t D = bbox.dimension();
         M = 1;
         N.resize(D);
         inv_step.resize(D);
@@ -65,10 +67,10 @@ public:
     Id operator()(const Point& p) const
     {
         std::size_t D = N.size();
-        int id = 0;
+        Id id = id0;
         for(std::size_t i=0; i<D; ++i)
         {
-            id = id*N[i] + (int((p[i]-origin[i])*inv_step[i]) % N[i]);
+            id = id*N[i] + (Id((p[i]-origin[i])*inv_step[i]) % N[i]);
             /// @todo : check compare_x/y/z/d with neighbors to check approximation validity
         }
         return id;
@@ -82,6 +84,7 @@ private:
     std::vector<std::size_t> N;
     std::vector<double> inv_step;
     std::vector<double> origin;
+    Id id0;
 };
 
 template<typename Traits>

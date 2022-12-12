@@ -26,7 +26,7 @@ std::ostream & write_json(Tile & tile,std::string filename,std::ostream & ofile)
 {
     boost::property_tree::ptree root_node;
     root_node.put("filename", filename);
-    root_node.put("id", tile.id());
+    root_node.put("id", std::to_string(tile.id()));
     root_node.put("nbmc", tile.number_of_main_finite_cells());
     root_node.put("nbmv", tile.number_of_main_finite_vertices());
     root_node.put("nbmf", tile.number_of_main_finite_facets());

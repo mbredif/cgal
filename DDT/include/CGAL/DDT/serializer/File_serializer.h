@@ -11,7 +11,9 @@
 
 #ifndef CGAL_DDT_FILE_SERIALIZER_H
 #define CGAL_DDT_FILE_SERIALIZER_H
+
 #include <boost/filesystem.hpp>
+#include <iomanip>
 
 namespace CGAL {
 namespace DDT {

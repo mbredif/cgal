@@ -23,8 +23,6 @@ public:
 
     /// the type of a tile
     typedef unspecified_type Tile;
-    /// the type of a tile identifier
-    typedef unspecified_type Id;
 
 /// @}
 

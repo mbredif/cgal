@@ -19,7 +19,7 @@
 namespace CGAL {
 namespace DDT {
 
-template <typename T> struct ply_types {};
+template <typename T> struct ply_types { constexpr static const char *string = {}; };
 template <> struct ply_types <char >{ constexpr static const char *string = "int8";  };
 template <> struct ply_types <short>{ constexpr static const char *string = "int16"; };
 template <> struct ply_types <int  >{ constexpr static const char *string = "int32"; };

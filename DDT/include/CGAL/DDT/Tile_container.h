@@ -14,7 +14,9 @@
 
 #include <CGAL/DDT/Tile.h>
 #include <CGAL/DDT/serializer/No_serializer.h>
+
 #include <map>
+#include <iomanip>
 
 namespace CGAL {
 namespace DDT {
@@ -204,7 +206,7 @@ public:
             if(t.locked           ) std::cout << "\x1b[1m" ; // blocked
             if(t.id() == tile.id()) std::cout << "\x1b[41m\x1b[1m" ; // bg red
             else if(!t.in_mem     ) std::cout << "\x1b[37m" ; // gray
-            std::cout << t.id() << "\x1B[0m" ; // reset
+            std::cout << std::to_string(t.id()) << "\x1B[0m" ; // reset
         }
         std::cout << std::setfill(' ') << " (" << number_of_triangulations_mem_ << " in mem)" << std::endl;
 
@@ -225,7 +227,7 @@ public:
             if(t.locked           ) std::cout << "\x1b[1m" ; // blocked
             if(t.id() == tile.id()) std::cout << "\x1b[42m" ; // bg green
             else if(!t.in_mem     ) std::cout << "\x1b[37m" ; // gray
-            std::cout << t.id() << "\x1B[0m" ; // reset
+            std::cout << std::to_string(t.id()) << "\x1B[0m" ; // reset
         }
         std::cout << std::setfill(' ') << " (" << number_of_triangulations_mem_ << " in mem)" << std::endl;
 
@@ -325,7 +327,7 @@ public:
 
             if(!tile.is_valid(verbose, level))
             {
-                std::cerr << "Tile " << int(tile.id()) << " is invalid" << std::endl;
+                std::cerr << "Tile " << std::to_string(tile.id()) << " is invalid" << std::endl;
                 //assert(! "CGAL tile not valid" );
                 return false;
             }

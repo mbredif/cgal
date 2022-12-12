@@ -212,11 +212,6 @@ struct Cgal_traits_2
         dt.remove(v);
     }
 
-    inline Point circumcenter(const Delaunay_triangulation& dt, Cell_const_handle c) const
-    {
-        return dt.dual(c);
-    }
-
     inline bool vertex_is_infinite(const Delaunay_triangulation& dt, Vertex_const_handle v) const
     {
         return dt.is_infinite(v);

@@ -132,7 +132,7 @@ public:
         if (in_mem) {
             if(!triangulation_.is_valid(verbose, level))
             {
-                std::cerr << "DT Tile " << int(id()) << " is invalid" << std::endl;
+                std::cerr << "DT Tile " << std::to_string(id()) << " is invalid" << std::endl;
                 //assert(! "CGAL tile not valid" );
                 return false;
             }

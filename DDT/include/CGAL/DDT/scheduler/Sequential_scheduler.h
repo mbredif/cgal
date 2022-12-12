@@ -12,6 +12,8 @@
 #ifndef CGAL_DDT_SCHEDULER_SEQUENTIAL_SCHEDULER_H
 #define CGAL_DDT_SCHEDULER_SEQUENTIAL_SCHEDULER_H
 
+#include <assert.h>
+
 namespace CGAL {
 namespace DDT {
 

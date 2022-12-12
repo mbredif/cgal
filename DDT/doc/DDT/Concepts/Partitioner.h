@@ -17,10 +17,11 @@ public:
 /// @{
 
     /// Point type
-    typedef unspecified_type Point;
+    typedef ::Point Point;
 
-    /// Identifier type of a tile the partion
-    typedef unspecified_type Id;
+    /// Identifier type of a tile the partition
+    /// \cgalModels Id
+    typedef ::Id Id;
 
 /// @}
 

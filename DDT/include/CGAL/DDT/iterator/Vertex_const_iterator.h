@@ -26,7 +26,7 @@ public:
     typedef typename TileContainer::Traits                     Traits;
     typedef typename TileContainer::Tile_vertex_const_iterator Tile_vertex_const_iterator;
     typedef typename TileContainer::const_iterator             Tile_const_iterator;
-    typedef typename TileContainer::Tile_triangulation Tile_triangulation;
+    typedef typename TileContainer::Tile_triangulation         Tile_triangulation;
 
     using iterator_category = std::forward_iterator_tag;
     using value_type = Tile_vertex_const_iterator;

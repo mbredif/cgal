@@ -51,8 +51,10 @@ else()
   target_link_libraries(test_DDT PUBLIC CGAL::Eigen3_support PRIVATE Boost::filesystem ${DDT_LIBRARIES})
 endif()
 
+create_single_source_cgal_program( "test_DDT_traits_concept.cpp" )
 create_single_source_cgal_program( "test_DDT_traits_2.cpp" )
 create_single_source_cgal_program( "test_DDT_traits_3.cpp" )
+target_link_libraries(test_DDT_traits_concept PRIVATE Boost::filesystem ${DDT_LIBRARIES})
 target_link_libraries(test_DDT_traits_2 PRIVATE Boost::filesystem ${DDT_LIBRARIES})
 target_link_libraries(test_DDT_traits_3 PRIVATE Boost::filesystem ${DDT_LIBRARIES})
 

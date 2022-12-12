@@ -40,7 +40,7 @@ void write_csv_vert(const std::string& filename, const TileTriangulation& triang
         csv << "POINT( ";
         for(int d=0; d<D; ++d)
             csv << triangulation.point(vit)[d] << " ";
-        csv << ")," << int(triangulation.vertex_id(vit)) << "\n";
+        csv << ")," << std::to_string(triangulation.vertex_id(vit)) << "\n";
     }
 }
 
@@ -67,7 +67,7 @@ void write_csv_facet(const std::string& filename, const TileTriangulation& trian
                 csv << triangulation.point(v)[d] << " ";
             if (++j < D) csv << ",";
         }
-        csv << ")\"," << int(triangulation.facet_id(fit)) << "," << local << "\n";
+        csv << ")\"," << std::to_string(triangulation.facet_id(fit)) << "," << local << "\n";
     }
 }
 
@@ -92,7 +92,7 @@ void write_csv_cell(const std::string& filename, const TileTriangulation& triang
         }
         for(int d=0; d<D; ++d) // repeat first to close the polygon
             csv << triangulation.point(triangulation.vertex(cit, 0))[d] << " ";
-        csv << "))\"," << int(triangulation.cell_id(cit)) << "," << local << "\n";
+        csv << "))\"," << std::to_string(triangulation.cell_id(cit)) << "," << local << "\n";
     }
 }
 
