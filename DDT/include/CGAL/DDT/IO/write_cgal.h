@@ -49,7 +49,7 @@ bool write_cgal_tile(const Tile& tile, std::string dirname)
     }
 
     ofile_tri.precision(17);
-    ofile_tri << tile.triangulation().triangulation();
+    ofile_tri << tile.triangulation();
     ofile_tri.close();
     write_json(tile,filename,ofile_json);
     ofile_json.close();

@@ -612,6 +612,18 @@ private:
     std::size_t number_of_main_cells_;
 };
 
+template<class T, template <class> class Selector>
+std::ostream& operator<<(std::ostream& out, const Tile_triangulation<T, Selector>& tt)
+{
+    return tt.geom_traits().write(out, tt.triangulation());
+}
+
+template<class T, template <class> class Selector>
+std::istream& operator>>(std::istream& in, Tile_triangulation<T, Selector>& tt)
+{
+    return tt.geom_traits().read(in, tt.triangulation());
+}
+
 }
 }
 

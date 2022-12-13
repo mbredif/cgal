@@ -12,11 +12,10 @@
 #ifndef CGAL_DDT_CGAL_TRAITS_D_H
 #define CGAL_DDT_CGAL_TRAITS_D_H
 
-
 #include <CGAL/Epick_d.h>
+#include <CGAL/Triangulation_ds_vertex.h>
 #include <CGAL/Delaunay_triangulation.h>
 #include <CGAL/point_generators_d.h>
-#include <CGAL/Triangulation_ds_vertex.h>
 #include <CGAL/Spatial_sort_traits_adapter_d.h>
 
 #include <CGAL/DDT/traits/Facet_const_iterator_d.h>
@@ -337,6 +336,9 @@ struct Cgal_traits_d
     {
         return dt.is_valid(verbose, level);
     }
+
+    inline std::ostream& write(std::ostream& out, const Delaunay_triangulation& dt) const { return out << dt; }
+    inline std::istream& read(std::istream& in, Delaunay_triangulation& dt) const { return in >> dt; }
 };
 
 }

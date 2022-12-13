@@ -23,7 +23,6 @@ The concept `TriangulationTraits` describes the requirements of a traits that ad
 #include "FacetIterator.h"
 #include "RandomPointsInBox.h"
 #include "RandomPointsInBall.h"
-#include "DelaunayTriangulation.h"
 #include <vector>
 
 class TriangulationTraits {
@@ -69,7 +68,7 @@ public:
     typedef ::FacetIterator Facet_handle;
 
     /// The adapted Delaunay Triangulation
-    typedef ::DelaunayTriangulation Delaunay_triangulation;
+    typedef unspecified_type Delaunay_triangulation;
     /// Random point generator, in a ball
     typedef ::RandomPointsInBall Random_points_in_ball;
     /// Random point generator, in a box
@@ -200,6 +199,13 @@ public:
     /// get the neighboring cell of a cell, opposite to its itg vertex
     Cell_const_iterator neighbor(const Delaunay_triangulation& dt, Cell_const_iterator c, int i) const { return {}; }
 /// @}
+
+/// \name Streaming
+/// @{
+    std::ostream& write(std::ostream& out, const Delaunay_triangulation& dt) const { return out; }
+    std::istream& read(std::istream& in, Delaunay_triangulation& dt) const { return in; }
+/// @}
+
 
 private:
     Point p;

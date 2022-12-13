@@ -53,7 +53,7 @@ int read_cgal_tile(Tile& tile, const std::string& dirname)
         return 1;
     }
 
-    ifile_tri >> tile.triangulation().triangulation();
+    ifile_tri >> tile.triangulation();
     ifile_tri.close();
 
     std::ifstream ifile_json(json_name, std::ifstream::in);

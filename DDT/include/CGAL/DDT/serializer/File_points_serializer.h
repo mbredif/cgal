@@ -57,11 +57,6 @@ struct File_points_serializer
     ++nb_loads;
 #endif
 
-#ifdef IT_COMPILED_WITH_KERNELD
-    typename Tile::Delaunay_triangulation dt(tile.geom_traits().triangulation());
-    std::swap(dt, tile.triangulation().triangulation());
-#endif
-
     const std::string fname = filename(tile.id());
     std::ifstream in(fname, std::ios::in | std::ios::binary);
     in >> tile.bbox();
@@ -77,11 +72,7 @@ struct File_points_serializer
         v = tile.triangulation().insert(p,id,v).first;
     }
     if(!in.fail()) return true;
-
-#ifdef IT_COMPILED_WITH_KERNELD
-    std::swap(dt, tile.triangulation().triangulation()); // revert changes
-#endif
-
+    tile.triangulation().clear();
     return false;
   }
 

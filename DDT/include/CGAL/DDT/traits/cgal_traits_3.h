@@ -13,11 +13,11 @@
 #define CGAL_DDT_CGAL_TRAITS_3_H
 
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
+#include <CGAL/Triangulation_vertex_base_with_info_3.h>
 #include <CGAL/Delaunay_triangulation_3.h>
 #include <CGAL/point_generators_3.h>
 
 #include <CGAL/DDT/traits/Facet_const_iterator_3.h>
-#include <CGAL/Triangulation_vertex_base_with_info_3.h>
 #include <CGAL/DDT/traits/Data.h>
 
 namespace CGAL {
@@ -345,6 +345,9 @@ struct Cgal_traits_3
     {
         return dt.is_valid(verbose, level);
     }
+
+    inline std::ostream& write(std::ostream& out, const Delaunay_triangulation& dt) const { return out << dt; }
+    inline std::istream& read(std::istream& in, Delaunay_triangulation& dt) const { return in >> dt; }
 };
 
 }

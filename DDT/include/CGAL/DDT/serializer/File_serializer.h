@@ -61,20 +61,12 @@ struct File_serializer
 #endif
     const std::string fname = filename(tile.id());
     std::ifstream in(fname, std::ios::in | std::ios::binary);
-    in >> tile.bbox();
-
-#ifdef IT_COMPILED_WITH_KERNELD
-    typename Tile::Delaunay_triangulation triangulation(tile.geom_traits().triangulation());
-    in >> triangulation;
-    if (in.fail()) return false;
-    std::swap(triangulation, tile.triangulation().triangulation());
-    return true;
-#else
     tile.triangulation().clear();
-    in >> tile.triangulation().triangulation();
-    return !in.fail();
-#endif
-
+    in >> tile.bbox();
+    in >> tile.triangulation();
+    if(!in.fail()) return true;
+    tile.triangulation().clear();
+    return false;
   }
 
   bool save(const Tile& tile) const {
@@ -83,7 +75,7 @@ struct File_serializer
 #endif
     const std::string fname = filename(tile.id());
     std::ofstream out(fname, std::ios::out | std::ios::binary);
-    out << std::setprecision(17) << tile.bbox() << "\n" << tile.triangulation().triangulation();
+    out << std::setprecision(17) << tile.bbox() << "\n" << tile.triangulation();
     return !out.fail();
   }
 
