@@ -46,7 +46,7 @@ public:
     /// Const handle to a vertex
     typedef ::VertexIterator Vertex_const_handle;
     /// Iterator to a vertex, model of `InputIterator` and `LessThanComparable`
-    typedef unspecified_type Vertex_iterator;
+    typedef ::VertexIterator Vertex_iterator;
     /// Handle to a vertex
     typedef ::VertexIterator Vertex_handle;
 
