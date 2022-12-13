@@ -52,6 +52,8 @@ else()
 endif()
 
 create_single_source_cgal_program( "test_DDT_traits_concept.cpp" )
+target_compile_options(test_DDT_traits_concept PRIVATE -Wno-unused-parameter)
+
 create_single_source_cgal_program( "test_DDT_traits_2.cpp" )
 create_single_source_cgal_program( "test_DDT_traits_3.cpp" )
 target_link_libraries(test_DDT_traits_concept PRIVATE Boost::filesystem ${DDT_LIBRARIES})

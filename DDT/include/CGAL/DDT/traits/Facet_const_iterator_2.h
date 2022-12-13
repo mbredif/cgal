@@ -12,10 +12,10 @@
 #ifndef CGAL_DDT_FACET_CONST_ITERATOR_2_H
 #define CGAL_DDT_FACET_CONST_ITERATOR_2_H
 
+#include <iterator>
+
 namespace CGAL {
 namespace DDT {
-
-#include <iterator>
 
 template <typename TDS> using Cell_const_iterator_2 = typename TDS::Face_iterator;
 template <typename TDS> using Facet_2 = std::pair<Cell_const_iterator_2<TDS>, int>;
