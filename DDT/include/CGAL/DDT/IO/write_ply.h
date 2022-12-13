@@ -19,6 +19,7 @@
 namespace CGAL {
 namespace DDT {
 
+namespace Impl {
 template <typename T> struct ply_types { constexpr static const char *string = {}; };
 template <> struct ply_types <char >{ constexpr static const char *string = "int8";  };
 template <> struct ply_types <short>{ constexpr static const char *string = "int16"; };
@@ -28,6 +29,7 @@ template <> struct ply_types <unsigned char >{ constexpr static const char *stri
 template <> struct ply_types <unsigned short>{ constexpr static const char *string = "uint16"; };
 template <> struct ply_types <unsigned int  >{ constexpr static const char *string = "uint32"; };
 template <> struct ply_types <unsigned long >{ constexpr static const char *string = "uint64"; };
+}
 
 inline void write_ply_header_begin(std::ostream& out)
 {
@@ -44,24 +46,26 @@ inline void write_ply_header_end(std::ostream& out)
 template<typename TileContainer>
 void write_ply_element_cell(const TileContainer& tc, std::ostream& out)
 {
+    const char *id_string = Impl::ply_types<typename TileContainer::Id>::string;
     int nc = tc.number_of_cells();
     out << "element face " << nc << std::endl;
     out << "property list uint8 int vertex_indices" << std::endl;
-    out << "property " << ply_types<typename TileContainer::Id>::string << " tile" << std::endl;
+    out << "property " << id_string << " tile" << std::endl;
     out << "property uint8 local" << std::endl;
 }
 
 template<typename TileContainer>
 void write_ply_element_vert(const TileContainer& tc, std::ostream& out)
 {
+    const char *id_string = Impl::ply_types<typename TileContainer::Id>::string;
     int D = tc.maximal_dimension();
     int nv = tc.number_of_vertices();
     out << "element vertex " << nv << std::endl;
     out << "property float32 x" << std::endl;
     out << "property float32 y" << std::endl;
     if(D>2) out << "property float32 z" << std::endl;
-    out << "property " << ply_types<typename TileContainer::Id>::string << " tile" << std::endl;
-    out << "property " << ply_types<typename TileContainer::Id>::string << " id" << std::endl;
+    out << "property " << id_string << " tile" << std::endl;
+    out << "property " << id_string << " id" << std::endl;
 }
 
 template<typename TileTriangulation>
