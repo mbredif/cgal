@@ -17,7 +17,7 @@
 #include <CGAL/point_generators_2.h>
 
 #include <CGAL/DDT/traits/Facet_const_iterator_2.h>
-#include <CGAL/DDT/traits/ddt_vertex_base_with_info_2.h>
+#include <CGAL/Triangulation_vertex_base_with_info_2.h>
 #include <CGAL/DDT/traits/Data.h>
 
 namespace CGAL {
@@ -34,7 +34,8 @@ struct Cgal_traits_2
     typedef F                                                      Info;
     typedef CGAL::DDT::Data<Id, Info>                              Data;
     typedef CGAL::Exact_predicates_inexact_constructions_kernel    Geom_traits;
-    typedef CGAL::DDT_vertex_base_with_info_2<Data, Geom_traits>   Vb;
+    typedef Triangulation_vertex_base_with_info_2<Data,
+                                                  Geom_traits>     Vb;
     typedef CGAL::Triangulation_data_structure_2<Vb>               TDS;
     typedef typename Geom_traits::Point_2                          Point;
 
