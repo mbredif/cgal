@@ -20,15 +20,15 @@ public:
     typedef ::Point Point;
 
     /// Identifier type of a tile the partition
-    /// \cgalModels Id
-    typedef ::Id Id;
+    /// \cgalModels Tile_index
+    typedef ::Tile_index Tile_index;
 
 /// @}
 
-    /// Returns tile Id of the given point.
-    Id operator()(const Point& p) const;
+    /// Returns Tile_index of the given point.
+    Tile_index operator()(const Point& p) const;
 
-    /// The number of possible Ids.
+    /// The number of tile indices.
     std::size_t size() const;
 
 }; /* end Partitioner */

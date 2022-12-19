@@ -22,16 +22,16 @@ class Const_partitioner
 {
 public:
     typedef typename Traits::Point Point;
-    typedef typename Traits::Id    Id;
+    typedef typename Traits::Tile_index    Tile_index;
 
-    Const_partitioner(Id id) : id_(id) {}
+    Const_partitioner(Tile_index id) : id_(id) {}
 
-    inline Id operator()(const Point& p) const { return id_;}
-    inline Id id() const { return id_; }
+    inline Tile_index operator()(const Point& p) const { return id_;}
+    inline Tile_index id() const { return id_; }
     constexpr std::size_t size() const { return 1; }
 
 private:
-    Id id_;
+    Tile_index id_;
 };
 
 template<typename Traits>

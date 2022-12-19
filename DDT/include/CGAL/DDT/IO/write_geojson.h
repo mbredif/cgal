@@ -30,8 +30,8 @@ namespace DDT {
 template<typename DDT, typename Iterator>
 void write_geojson_vert_range(const DDT& ddt, Iterator begin, Iterator end, std::ostream & ofs, bool is_first = true)
 {
-    typedef typename Iterator::value_type Vertex_const_iterator;
-    typedef typename Vertex_const_iterator::Traits Traits;
+    typedef typename Iterator::value_type Vertex_index;
+    typedef typename Vertex_index::Traits Traits;
     int D = Traits::D;
     for(auto vit = begin; vit != end; ++vit)
     {
@@ -61,9 +61,9 @@ template<typename DDT, typename Iterator>
 void write_geojson_cell_range(const DDT& ddt, Iterator begin, Iterator end, std::ostream & ofs,bool is_first = true)
 {
 
-    typedef typename Iterator::value_type Cell_const_iterator;
-    typedef typename Cell_const_iterator::Traits Traits;
-    std::map<Cell_const_iterator, int> cmap;
+    typedef typename Iterator::value_type Cell_index;
+    typedef typename Cell_index::Traits Traits;
+    std::map<Cell_index, int> cmap;
     int nextid = 0;
     int D = Traits::D;
     for(auto iit = begin; iit != end; ++iit)

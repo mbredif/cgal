@@ -21,23 +21,23 @@ namespace DDT {
 struct No_info {};
 
 /// \ingroup PkgDDTMisc
-/// A pair used to store the Id and (optional) Info data of a vertex in the distributed Delaunay triangulation
+/// A pair used to store the Tile_index and (optional) Info data of a vertex in the distributed Delaunay triangulation
 template<typename I, typename F>
 struct Data
 {
-    typedef I Id;
+    typedef I Tile_index;
     typedef F Info;
     Data() : id(), info() {}
-    Id id;
+    Tile_index id;
     Info info;
 };
 
 template<typename I>
 struct Data<I, No_info>
 {
-    typedef I Id;
+    typedef I Tile_index;
     Data() {}
-    Id id;
+    Tile_index id;
 };
 
 template<typename T> std::ostream &write_data_element(std::ostream& os, T t) {
@@ -74,34 +74,34 @@ template<> std::istream &read_data_element<unsigned char>(std::istream& is, unsi
     return is;
 }
 
-template< typename Id, typename Info >
+template< typename Tile_index, typename Info >
 std::ostream &
-operator<<(std::ostream & os, const Data<Id, Info>& data)
+operator<<(std::ostream & os, const Data<Tile_index, Info>& data)
 {
     write_data_element(os, data.id);
     write_data_element(os, data.info);
     return os;
 }
 
-template< typename Id, typename Info >
+template< typename Tile_index, typename Info >
 std::istream &
-operator>>(std::istream & is, Data<Id, Info>& data)
+operator>>(std::istream & is, Data<Tile_index, Info>& data)
 {
     read_data_element(is, data.id);
     read_data_element(is, data.info);
     return is;
 }
 
-template< typename Id >
+template< typename Tile_index >
 std::ostream &
-operator<<(std::ostream & os, const Data<Id, No_info>& data)
+operator<<(std::ostream & os, const Data<Tile_index, No_info>& data)
 {
     return write_data_element(os, data.id);
 }
 
-template< typename Id >
+template< typename Tile_index >
 std::istream &
-operator>>(std::istream & is, Data<Id, No_info>& data)
+operator>>(std::istream & is, Data<Tile_index, No_info>& data)
 {
     return read_data_element(is, data.id);
 }

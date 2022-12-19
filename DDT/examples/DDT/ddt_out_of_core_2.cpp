@@ -1,109 +1,47 @@
-#define CGAL_DEBUG_DDT
-
 #include <CGAL/DDT/traits/cgal_traits_2.h>
 #include <CGAL/DDT/partitioner/Grid_partitioner.h>
 #include <CGAL/DDT/Tile_container.h>
 #include <CGAL/DDT/scheduler/Sequential_scheduler.h>
 #include <CGAL/DDT/serializer/File_serializer.h>
 #include <CGAL/Distributed_Delaunay_triangulation.h>
-#include <CGAL/DDT/insert.h>
+#include <CGAL/DDT/IO/write_ply.h>
 #include <CGAL/DDT/IO/write_vrt.h>
+#include <CGAL/DDT/insert.h>
 
-#include <boost/program_options.hpp>
-
-typedef int Id;
-typedef CGAL::DDT::Cgal_traits_2<Id> Traits;
+typedef int Tile_index;
+typedef unsigned char Vertex_info; // unused user data
+typedef CGAL::DDT::Cgal_traits_2<Tile_index, Vertex_info> Traits;
 typedef Traits::Random_points_in_box Random_points;
 typedef Traits::Bbox Bbox;
-
 typedef CGAL::DDT::Tile<Traits> Tile;
 typedef CGAL::DDT::Sequential_scheduler<Tile> Scheduler;
 typedef CGAL::DDT::File_serializer<Tile> Serializer;
-typedef CGAL::DDT::Tile_container<Traits, Tile, Serializer> TileContainer;
-typedef CGAL::Distributed_Delaunay_triangulation<TileContainer> Distributed_Delaunay_triangulation;
-
-namespace po = boost::program_options;
+typedef CGAL::DDT::Tile_container<Traits, Tile, Serializer> Tile_container;
+typedef CGAL::Distributed_Delaunay_triangulation<Tile_container> Distributed_Delaunay_triangulation;
 
 int main(int argc, char **argv)
 {
-  enum { D = Traits::D };
+    enum { D = Traits::D };
 
-  int NP;
-  std::vector<int> NT;
-  std::string ser, vrt;
-  double range;
-  int max_number_of_tiles;
+    int number_of_points          = (argc>1) ? atoi(argv[1]) : 1000;
+    int number_of_tiles_per_axis  = (argc>2) ? atoi(argv[2]) : 3;
+    int max_number_of_tiles       = (argc>3) ? atoi(argv[3]) : 1;
+    double range = 1;
 
-  po::options_description desc("Allowed options");
-  desc.add_options()
-  ("help,h", "produce help message")
-  ("check", "check validity")
-  ("points,p", po::value<int>(&NP)->default_value(10000), "number of points")
-  ("tiles,t", po::value<std::vector<int>>(&NT), "number of tiles")
-  ("range,r", po::value<double>(&range)->default_value(1), "range")
-  ("serialize_prefix,s", po::value<std::string>(&ser)->default_value("tile_"), "prefix for tile serialization")
-  ("vrt", po::value<std::string>(&vrt)->default_value("out"), "prefix for vrt output")
-  ("memory,m", po::value<int>(&max_number_of_tiles)->default_value(1), "max number of tiles in memory")
-  ;
+    Bbox bbox(D, range);
+    CGAL::DDT::Grid_partitioner<Traits> partitioner(bbox, number_of_tiles_per_axis);
+    Serializer serializer("tile_");
+    Tile_container tiles(D, max_number_of_tiles, serializer);
+    Scheduler scheduler;
+    Random_points points(D, range);
+    CGAL::DDT::insert(tiles, scheduler, points, number_of_points, partitioner);
+    Distributed_Delaunay_triangulation tri(tiles);
 
-  po::variables_map vm;
-  try
-  {
-    po::store(po::parse_command_line(argc, argv, desc), vm);
-    if ( vm.count("help")  )
-    {
-      std::cout << "Distributed Delaunay Triangulation" << std::endl
-                << desc << std::endl;
-      return 0;
-    }
-    po::notify(vm);
-    if ( NT.size() > D )
-    {
-      std::cout << "Discarding excess tile grid dimension(s) : ";
-      std::copy(NT.begin()+D, NT.end(), std::ostream_iterator<int>(std::cout, " "));
-      std::cout << std::endl;
-      NT.resize(D);
-    }
-  }
-  catch(po::error& e)
-  {
-    std::cerr << "ERROR: " << e.what() << std::endl << std::endl;
-    std::cerr << desc << std::endl;
-    return -1;
-  }
-  Bbox bbox(D, range);
-  CGAL::DDT::Grid_partitioner<Traits> partitioner(bbox, NT.begin(), NT.end());
-//  CGAL::DDT::Random_partitioner<Traits> partitioner(0, NT[0]-1);
+    CGAL::DDT::write_vrt_verts(tiles, scheduler, "out_v");
+    CGAL::DDT::write_vrt_facets(tiles, scheduler, "out_f");
+    CGAL::DDT::write_vrt_cells(tiles, scheduler, "out_c");
+    CGAL::DDT::write_vrt_bboxes(tiles, "out_b");
+    CGAL::DDT::write_vrt_tins(tiles, scheduler, "out_t");
 
-  Serializer serializer(ser);
-  TileContainer tiles(D, max_number_of_tiles, serializer);
-  Scheduler scheduler;
-
-  std::cout << "- Range       : " << range << std::endl;
-  std::cout << "- Points      : " << NP << std::endl;
-  std::cout << "- Concurrency : " << scheduler.max_concurrency() << std::endl;
-  std::cout << "- memTiles    : " << max_number_of_tiles << std::endl;
-  std::cout << "- VRT Out     : " << (vrt.empty() ? "[no output]" : vrt) << std::endl;
-  std::cout << "- Tiles       : " << partitioner.size() << ", " << partitioner << std::endl;
-  std::cout << "- Serializer  : " << serializer << std::endl;
-
-  Random_points points(D, range);
-  std::size_t n = CGAL::DDT::insert(tiles, scheduler, points, NP, partitioner);
-  std::cout << n << " points inserted" << std::endl;
-
-  Distributed_Delaunay_triangulation tri(tiles);
-  if ( vm.count("vrt")  )
-  {
-      CGAL::DDT::write_vrt_verts(tiles, scheduler, vrt+"_v");
-      CGAL::DDT::write_vrt_facets(tiles, scheduler, vrt+"_f");
-      CGAL::DDT::write_vrt_cells(tiles, scheduler, vrt+"_c");
-      CGAL::DDT::write_vrt_bboxes(tiles, vrt+"_b");
-      CGAL::DDT::write_vrt_tins(tiles, scheduler, vrt+"_t");
-  }
-
-  if ( vm.count("check")  )
-  {
-    std::cout << "Validity     \t" << (tri.is_valid(true, 5) ? "OK" : "ERROR!") << std::endl;
-  }
-  return 0;
+    return 0;
 }

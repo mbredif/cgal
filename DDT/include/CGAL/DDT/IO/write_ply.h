@@ -46,7 +46,7 @@ inline void write_ply_header_end(std::ostream& out)
 template<typename TileContainer>
 void write_ply_element_cell(const TileContainer& tc, std::ostream& out)
 {
-    const char *id_string = Impl::ply_types<typename TileContainer::Id>::string;
+    const char *id_string = Impl::ply_types<typename TileContainer::Tile_index>::string;
     int nc = tc.number_of_cells();
     out << "element face " << nc << std::endl;
     out << "property list uint8 int vertex_indices" << std::endl;
@@ -57,7 +57,7 @@ void write_ply_element_cell(const TileContainer& tc, std::ostream& out)
 template<typename TileContainer>
 void write_ply_element_vert(const TileContainer& tc, std::ostream& out)
 {
-    const char *id_string = Impl::ply_types<typename TileContainer::Id>::string;
+    const char *id_string = Impl::ply_types<typename TileContainer::Tile_index>::string;
     int D = tc.maximal_dimension();
     int nv = tc.number_of_vertices();
     out << "element vertex " << nv << std::endl;
@@ -71,23 +71,25 @@ void write_ply_element_vert(const TileContainer& tc, std::ostream& out)
 template<typename TileTriangulation>
 void write_ply_property_cell(const TileTriangulation& dt, std::ostream& out)
 {
-    typedef typename TileTriangulation::Id Id;
+    typedef typename TileTriangulation::Tile_index Tile_index;
+    typedef typename TileTriangulation::Vertex_index Vertex_index;
+    typedef typename TileTriangulation::Cell_index Cell_index;
     unsigned char N = (unsigned char)(dt.maximal_dimension()+1);
-    Id tid = dt.id();
-    std::map<typename TileTriangulation::Vertex_const_handle, int> dict;
+    Tile_index tid = dt.id();
+    std::map<Vertex_index, int> dict;
 
     int id = 0;
-    for(auto it = dt.vertices_begin(); it != dt.vertices_end(); ++it)
-        if(!dt.vertex_is_infinite(it)) dict[it] = id++;
+    for(Vertex_index v = dt.vertices_begin(); v != dt.vertices_end(); ++v)
+        if(!dt.vertex_is_infinite(v)) dict[v] = id++;
 
-    for(auto cit = dt.cells_begin(); cit != dt.cells_end(); ++cit)
+    for(Cell_index c = dt.cells_begin(); c != dt.cells_end(); ++c)
     {
-        if(dt.cell_is_infinite(cit)) continue;
+        if(dt.cell_is_infinite(c)) continue;
         unsigned char local = 0;
         out.write(reinterpret_cast<char *>(&N), sizeof(N));
         for(int i=0; i<N; ++i)
         {
-            typename TileTriangulation::Vertex_const_handle v = dt.vertex(cit, i);
+            Vertex_index v = dt.vertex(c, i);
             int id = dict[v];
             out.write(reinterpret_cast<char *>(&id), sizeof(id));
             local += dt.vertex_id(v) == tid;
@@ -101,16 +103,17 @@ void write_ply_property_cell(const TileTriangulation& dt, std::ostream& out)
 template<typename TileTriangulation>
 void write_ply_property_vert(const TileTriangulation& dt, std::ostream& out)
 {
-    typedef typename TileTriangulation::Id Id;
+    typedef typename TileTriangulation::Tile_index Tile_index;
+    typedef typename TileTriangulation::Vertex_index Vertex_index;
     int D = dt.maximal_dimension();
-    Id tid = dt.id();
-    for(auto it = dt.vertices_begin(); it != dt.vertices_end(); ++it)
+    Tile_index tid = dt.id();
+    for(Vertex_index v = dt.vertices_begin(); v != dt.vertices_end(); ++v)
     {
-        if(dt.vertex_is_infinite(it)) continue;
-        Id id = dt.vertex_id(it);
+        if(dt.vertex_is_infinite(v)) continue;
+        Tile_index id = dt.vertex_id(v);
         for(int d=0; d<D; ++d)
         {
-            float coord = float(dt.coord(dt.point(it),d));
+            float coord = float(dt.coord(dt.point(v),d));
             out.write(reinterpret_cast<char *>(&coord), sizeof(coord));
         }
         out.write(reinterpret_cast<char *>(&tid), sizeof(tid));

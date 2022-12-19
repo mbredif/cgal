@@ -19,7 +19,7 @@ namespace DDT {
 template <class Tile>
 struct File_points_serializer
 {
-  typedef typename Tile::Id Id;
+  typedef typename Tile::Tile_index Tile_index;
   typedef typename Tile::Bbox Bbox;
 
   File_points_serializer(const std::string& prefix = "") : m_prefix(prefix) {
@@ -37,14 +37,14 @@ struct File_points_serializer
   }
 #endif
 
-  bool has_tile(Id id) const
+  bool has_tile(Tile_index id) const
   {
     const std::string fname = filename(id);
     std::ifstream in(fname, std::ios::in | std::ios::binary);
     return in.is_open();
   }
 
-  bool load(Id id, Bbox& bbox) const {
+  bool load(Tile_index id, Bbox& bbox) const {
       const std::string fname = filename(id);
       std::ifstream in(fname, std::ios::in | std::ios::binary);
       in >> bbox;
@@ -66,7 +66,7 @@ struct File_points_serializer
     for(std::size_t i = 0; i < count; ++i) {
         typedef typename Tile::Point Point;
         Point p;
-        Id id;
+        Tile_index id;
         in >> p >> id;
         tile.bbox() += p;
         v = tile.triangulation().insert(p,id,v).first;
@@ -82,7 +82,7 @@ struct File_points_serializer
 #endif
     typedef typename Tile::Point Point;
     typename Tile::Tile_triangulation  Tile_triangulation;
-    typedef typename Tile::Vertex_const_iterator Vertex_const_iterator;
+    typedef typename Tile::Vertex_index Vertex_index;
     const std::string fname = filename(tile.id());
     std::ofstream out(fname, std::ios::out | std::ios::binary);
     out << std::setprecision(17) << tile.bbox() << "\n";
@@ -91,9 +91,9 @@ struct File_points_serializer
     out << triangulation.number_of_vertices() << "\n";
     std::vector<std::size_t> indices;
     std::vector<Point>  points;
-    std::vector<Vertex_const_iterator> vertices;
+    std::vector<Vertex_index> vertices;
     std::size_t index = 0;
-    for(Vertex_const_iterator v = triangulation.vertices_begin(); v != triangulation.vertices_end(); ++v) {
+    for(Vertex_index v = triangulation.vertices_begin(); v != triangulation.vertices_end(); ++v) {
       if (!triangulation.vertex_is_infinite(v)) {
         points.push_back(triangulation.point(v));
         vertices.push_back(v);
@@ -109,7 +109,7 @@ struct File_points_serializer
   const std::string& prefix() const { return m_prefix; }
 
 private:
-  std::string filename(Id i) const
+  std::string filename(Tile_index i) const
   {
     return m_prefix+std::to_string(i)+".txt";
   }

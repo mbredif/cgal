@@ -31,10 +31,10 @@ template<typename Tile>
 std::istream& read_json(Tile & tile,std::istream&  ifile)
 {
 
-    typedef typename Tile::Id Id;
+    typedef typename Tile::Tile_index Tile_index;
     boost::property_tree::ptree root_node;
     boost::property_tree::read_json(ifile, root_node);
-    Id id =  root_node.get<Id>("id");
+    Tile_index id =  root_node.get<Tile_index>("id");
     assert(id == tile.id());
     return ifile;
 }
@@ -66,7 +66,7 @@ int read_cgal_tile(Tile& tile, const std::string& dirname)
 template<typename TileContainer>
 int read_cgal(TileContainer& tc, const std::string& dirname)
 {
-    typedef typename TileContainer::Id Id;
+    typedef typename TileContainer::Tile_index Tile_index;
     boost::property_tree::ptree root_node;
     boost::property_tree::ptree tiles_node;
     boost::property_tree::ptree bboxes_node;
@@ -78,7 +78,7 @@ int read_cgal(TileContainer& tc, const std::string& dirname)
     bboxes_node = root_node.get_child("bboxes");
     for (auto its : tiles_node)
     {
-        Id tid = std::stoi(its.first);
+        Tile_index tid = std::stoi(its.first);
         auto& tile = tc[tid];
         tc.load(tile);
         std::istringstream iss(bboxes_node.find(its.first)->second.data());

@@ -18,10 +18,10 @@ namespace DDT {
 template<typename Tile>
 struct No_serializer
 {
-  typedef typename Tile::Id Id;
+  typedef typename Tile::Tile_index Tile_index;
   typedef typename Tile::Bbox Bbox;
-  bool load(Id id, Bbox& bbox) const { return false; }
-  bool has_tile(Id) const { return false; }
+  bool load(Tile_index id, Bbox& bbox) const { return false; }
+  bool has_tile(Tile_index) const { return false; }
   bool load(Tile&) const { return false; }
   bool save(const Tile& ) const { return false;}
 };

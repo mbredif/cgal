@@ -1,8 +1,8 @@
-typedef int Id;
-typedef int Info;
+typedef int Tile_index;
+typedef int Vertex_Info;
 
 #include <CGAL/DDT/traits/cgal_traits_d.h>
-typedef CGAL::DDT::Cgal_traits<2,Id,Info> Traits;
+typedef CGAL::DDT::Cgal_traits<2,Tile_index,Vertex_Info> Traits;
 typedef Traits::Point Point;
 typedef Traits::Bbox Bbox;
 

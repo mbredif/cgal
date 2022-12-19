@@ -26,9 +26,9 @@ class Random_partitioner
 {
 public:
     typedef typename Traits::Point Point;
-    typedef typename Traits::Id    Id;
+    typedef typename Traits::Tile_index    Tile_index;
 
-    Random_partitioner(Id a, Id b, unsigned int seed = 0) : distribution(a,b), generator(seed)
+    Random_partitioner(Tile_index a, Tile_index b, unsigned int seed = 0) : distribution(a,b), generator(seed)
     {
         if(seed == 0)
         {
@@ -37,21 +37,21 @@ public:
         }
     }
 
-    Random_partitioner(Id a, Id b, const Generator& g) : distribution(a,b), generator(g)
+    Random_partitioner(Tile_index a, Tile_index b, const Generator& g) : distribution(a,b), generator(g)
     {
     }
 
-    inline Id operator()(const Point& p)
+    inline Tile_index operator()(const Point& p)
     {
         return distribution(generator);
     }
 
-    inline Id a() const { return distribution.a(); }
-    inline Id b() const { return distribution.b(); }
+    inline Tile_index a() const { return distribution.a(); }
+    inline Tile_index b() const { return distribution.b(); }
     inline std::size_t size() const { return 1+b()-a(); }
 
 private:
-    std::uniform_int_distribution<Id> distribution;
+    std::uniform_int_distribution<Tile_index> distribution;
     Generator generator;
 };
 

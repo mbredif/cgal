@@ -25,11 +25,11 @@ class Grid_partitioner
 public:
     typedef typename Traits::Point Point;
     typedef typename Traits::Bbox Bbox;
-    typedef typename Traits::Id    Id;
+    typedef typename Traits::Tile_index    Tile_index;
     typedef typename std::vector<std::size_t>::const_iterator const_iterator;
 
     template<typename Iterator>
-    Grid_partitioner(const Bbox& bbox, Iterator it, Iterator end, Id id0 = {}) : id0(id0)
+    Grid_partitioner(const Bbox& bbox, Iterator it, Iterator end, Tile_index id0 = {}) : id0(id0)
     {
         int D = bbox.dimension();
         std::size_t n = 1;
@@ -47,7 +47,7 @@ public:
         }
     }
 
-    Grid_partitioner(const Bbox& bbox, std::size_t n)
+    Grid_partitioner(const Bbox& bbox, std::size_t n, Tile_index id0 = {}) : id0(id0)
     {
         std::size_t D = bbox.dimension();
         M = 1;
@@ -64,13 +64,13 @@ public:
     }
 
     /// @todo : use a predicate, may be approximate (p[i] is a double approximation)
-    Id operator()(const Point& p) const
+    Tile_index operator()(const Point& p) const
     {
         std::size_t D = N.size();
-        Id id = id0;
+        Tile_index id = id0;
         for(std::size_t i=0; i<D; ++i)
         {
-            id = id*N[i] + (Id((p[i]-origin[i])*inv_step[i]) % N[i]);
+            id = id*N[i] + (Tile_index((p[i]-origin[i])*inv_step[i]) % N[i]);
             /// @todo : check compare_x/y/z/d with neighbors to check approximation validity
         }
         return id;
@@ -84,7 +84,7 @@ private:
     std::vector<std::size_t> N;
     std::vector<double> inv_step;
     std::vector<double> origin;
-    Id id0;
+    Tile_index id0;
 };
 
 template<typename Traits>

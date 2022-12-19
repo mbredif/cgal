@@ -22,7 +22,7 @@ namespace CGAL {
 namespace DDT {
 
 namespace Impl {
-template<typename Container, typename Derived, typename Point>
+template<typename Container, typename Point, typename Derived>
 class Bbox
 {
 protected:
@@ -43,11 +43,6 @@ public:
         return *this;
     }
 
-    Bbox& operator+=(const Point& p)
-    {
-        return static_cast<Derived*>(this)->add_point(p);
-    }
-
     inline int dimension() const
     {
         return static_cast<const Derived*>(this)->dimension();
@@ -57,6 +52,7 @@ public:
     {
         return min_values[i];
     }
+
     inline T max BOOST_PREVENT_MACRO_SUBSTITUTION (int i) const
     {
         return max_values[i];
@@ -66,6 +62,7 @@ public:
     {
         return min_values[i];
     }
+
     inline T& max BOOST_PREVENT_MACRO_SUBSTITUTION (int i)
     {
         return max_values[i];
@@ -85,22 +82,26 @@ protected:
 
 /// \ingroup PkgDDTMisc
 /// A D-dimensional axis aligned box
-template<int Dim, typename T, typename Derived, typename Point>
-struct Bbox : public Impl::Bbox<std::array<T, Dim>, Derived, Point>
+template<unsigned int N, typename T, typename Point>
+class Bbox : public Impl::Bbox<std::array<T, N>, Point, Bbox<N,T,Point>>
 {
+    enum { D = N };
 public:
     inline constexpr int dimension() const { return D; }
-private:
-    enum { D = Dim };
+    Bbox(int d = 0          ) { assert(d==N || d==0); this->init(d       ); }
+    Bbox(int d, double range) { assert(d==N || d==0); this->init(d, range); }
 };
 
 /// \ingroup PkgDDTMisc
 /// A D-dimensional axis aligned box
-template<typename T, typename Derived, typename Point>
-class Bbox<0,T,Derived,Point> : public Impl::Bbox<std::vector<T>, Derived, Point>
+template<typename T, typename Point>
+class Bbox<0,T,Point> : public Impl::Bbox<std::vector<T>, Point, Bbox<0,T,Point>>
 {
 public:
     inline int dimension() const { return this->min_values.size(); }
+    Bbox(int d = 0          ) { init_values(d); this->init(d       ); }
+    Bbox(int d, double range) { init_values(d); this->init(d, range); }
+
 protected:
     void init_values(int d) {
         this->min_values.resize(d);
@@ -108,21 +109,21 @@ protected:
     }
 };
 
-template<typename Container, typename Derived, typename Point>
-std::ostream& operator<<(std::ostream& out, const Impl::Bbox<Container, Derived, Point>& bbox)
+template<typename Container, typename Point, typename Derived>
+std::ostream& operator<<(std::ostream& out, const Impl::Bbox<Container, Point, Derived>& bbox)
 {
-    int D = bbox.dimension();
-    for(int i=0; i<D; ++i)
+    int d = bbox.dimension();
+    for(int i=0; i<d; ++i)
         out  << bbox.min(i) << "  " << bbox.max(i) << " ";
     return out;
 }
 
 
-template<typename Container, typename Derived, typename Point>
-std::istream& operator>>(std::istream& in, Impl::Bbox<Container, Derived, Point>& bbox)
+template<typename Container, typename Point, typename Derived>
+std::istream& operator>>(std::istream& in, Impl::Bbox<Container, Point, Derived>& bbox)
 {
-    int D = bbox.dimension();
-    for(int i=0; i<D; ++i)
+    int d = bbox.dimension();
+    for(int i=0; i<d; ++i)
         in  >> bbox.min(i) >> bbox.max(i);
     return in;
 }

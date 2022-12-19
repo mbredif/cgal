@@ -23,13 +23,13 @@ template<typename TileContainer>
 class Vertex_const_iterator
 {
 public:
-    typedef typename TileContainer::Traits                     Traits;
-    typedef typename TileContainer::Tile_vertex_const_iterator Tile_vertex_const_iterator;
-    typedef typename TileContainer::const_iterator             Tile_const_iterator;
-    typedef typename TileContainer::Tile_triangulation         Tile_triangulation;
+    typedef typename TileContainer::Traits             Traits;
+    typedef typename TileContainer::Tile_vertex_index  Tile_vertex_index;
+    typedef typename TileContainer::const_iterator     Tile_const_iterator;
+    typedef typename TileContainer::Tile_triangulation Tile_triangulation;
 
     using iterator_category = std::forward_iterator_tag;
-    using value_type = Tile_vertex_const_iterator;
+    using value_type = Tile_vertex_index;
     using difference_type = std::ptrdiff_t;
     using pointer = value_type*;
     using reference = value_type&;
@@ -37,7 +37,7 @@ public:
 private:
     const TileContainer *tiles_;
     Tile_const_iterator tile_;
-    Tile_vertex_const_iterator vertex_;
+    Tile_vertex_index vertex_;
 
 public:
     Vertex_const_iterator(const TileContainer *tiles, Tile_const_iterator tile)
@@ -51,7 +51,7 @@ public:
         assert(is_valid());
     }
 
-    Vertex_const_iterator(const TileContainer *tiles, Tile_const_iterator tile, Tile_vertex_const_iterator vertex)
+    Vertex_const_iterator(const TileContainer *tiles, Tile_const_iterator tile, Tile_vertex_index vertex)
         : tiles_(tiles), tile_(tile), vertex_(vertex)
     {
         // do not enforce main here !
@@ -101,8 +101,8 @@ public:
 
     Vertex_const_iterator& operator+=(int n)
     {
-        for(auto vit = tile_->triangulation().vertices_begin(); vit != vertex_; ++vit)
-            if(tile_->triangulation().vertex_is_main(vit))
+        for(Tile_vertex_index v = tile_->triangulation().vertices_begin(); v != vertex_; ++v)
+            if(tile_->triangulation().vertex_is_main(v))
                 ++n;
         int num_main_vertices = tile_->number_of_main_vertices();
         while(n >= num_main_vertices)

@@ -1,8 +1,8 @@
-typedef int Id;
-typedef int Flag;
+typedef int Tile_index;
+typedef int Vertex_info;
 
 #include <CGAL/DDT/traits/cgal_traits_d.h>
-typedef CGAL::DDT::Cgal_traits_d<Id,Flag> Traits;
+typedef CGAL::DDT::Cgal_traits_d<Tile_index,Vertex_info> Traits;
 
 #include "test_traits.h"
 

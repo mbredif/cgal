@@ -22,8 +22,8 @@ namespace DDT {
 template<typename DDT>
 void write_adjacency_graph_dot(const DDT& tri, const std::string& dot, bool oriented=false)
 {
-    typedef typename DDT::Id Id;
-    std::unordered_multimap<Id,Id> edges;
+    typedef typename DDT::Tile_index Tile_index;
+    std::unordered_multimap<Tile_index,Tile_index> edges;
     tri.get_adjacency_graph(edges);
     std::ofstream out(dot);
     out << (oriented?"digraph":"graph") << " tile_adjacency {\n";

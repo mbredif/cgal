@@ -23,7 +23,7 @@
 namespace CGAL {
 namespace DDT {
 
-/// @todo make the point, count and Id (de)serialization fully generic.
+/// @todo make the point, count and Tile_index (de)serialization fully generic.
 template<typename T> char * save_value_1(char * buf, T t) {
     *buf++ = (char)(t);
     return buf;
@@ -75,7 +75,7 @@ struct MPI_scheduler
     typedef typename Tile::Vertex_const_handle Vertex_const_handle;
     typedef typename Tile::Point_id Point_id;
     typedef typename Tile::Point Point;
-    typedef typename Tile::Id Id;
+    typedef typename Tile::Tile_index Tile_index;
     typedef std::vector<Point_id> Point_id_container;
 
     MPI_scheduler(int max_concurrency = 0) {
@@ -106,18 +106,18 @@ struct MPI_scheduler
         return world_size;
     }
 
-    inline void receive(Id id, Point_id_container& received) { inbox[id].swap(received); }
+    inline void receive(Tile_index id, Point_id_container& received) { inbox[id].swap(received); }
 
-    void send(const Point& p, Id id, Id target)
+    void send(const Point& p, Tile_index id, Tile_index target)
     {
         inbox[target].emplace_back(id,p);
     }
 
-    bool send_vertex(const Tile& tile, Vertex_const_handle v, Id target)
+    bool send_vertex(const Tile& tile, Vertex_const_handle v, Tile_index target)
     {
         assert(!tile.vertex_is_infinite(v));
-        Id source = tile.id();
-        Id vid = tile.vertex_id(v);
+        Tile_index source = tile.id();
+        Tile_index vid = tile.vertex_id(v);
         if(target==vid || target == source || !sent_[target].insert(v).second)
             return false;
         send(tile.point(v), vid, target);
@@ -126,42 +126,42 @@ struct MPI_scheduler
 
     int send_one(const Tile& tile, std::vector<Vertex_const_handle_and_id>& outbox)
     {
-        Id source = tile.id();
+        Tile_index source = tile.id();
         int count = 0;
         for(auto& vi : outbox)
             count += send_vertex(tile, vi.second, vi.first);
         return count;
     }
 
-    template<typename Id_iterator>
-    int send_all(const Tile& tile, std::vector<Vertex_const_handle>& outbox, Id_iterator begin, Id_iterator end)
+    template<typename Tile_index_index>
+    int send_all(const Tile& tile, std::vector<Vertex_const_handle>& outbox, Tile_index_index begin, Tile_index_index end)
     {
-        Id source = tile.id();
+        Tile_index source = tile.id();
         int count = 0;
         for(Vertex_const_handle v : outbox)
-            for(Id_iterator target = begin; target != end; ++target)
+            for(Tile_index_index target = begin; target != end; ++target)
                 count += send_vertex(tile, v, *target);
         return count;
     }
 
-    inline int rank(Id id) const
+    inline int rank(Tile_index id) const
     {
         // Surely not the most optimal repartition of tile ids across processing elements
         assert(id>=0);
         return id % world_size;
     }
 
-    inline bool is_local(Id id) const
+    inline bool is_local(Tile_index id) const
     {
         return rank(id) == world_rank;
     }
 
-    template<typename TileContainer, typename Id_iterator>
-    int for_each(TileContainer& tc, Id_iterator begin, Id_iterator end, const std::function<int(Tile&)>& func, bool sync = true)
+    template<typename TileContainer, typename Tile_index_index>
+    int for_each(TileContainer& tc, Tile_index_index begin, Tile_index_index end, const std::function<int(Tile&)>& func, bool sync = true)
     {
         if (sync) send_all_to_all();
         int count = 0;
-        for(Id_iterator it = begin; it != end; ++it)
+        for(Tile_index_index it = begin; it != end; ++it)
             count += func(*(tc.find(*it)));
         return count;
     }
@@ -170,10 +170,10 @@ struct MPI_scheduler
     int for_each(TileContainer& tc, const std::function<int(Tile&)>& func, bool sync = true)
     {
         if (sync) send_all_to_all();
-        std::vector<Id> ids;
+        std::vector<Tile_index> ids;
         for(auto& it : inbox) {
             if (it.second.empty()) continue;
-            Id id = it.first;
+            Tile_index id = it.first;
             ids.push_back(id);
         }
         return for_each(tc, ids.begin(), ids.end(), func, false);
@@ -189,7 +189,7 @@ struct MPI_scheduler
             do {
                 c = 0;
                 for(const auto& it : inbox) {
-                    Id id = it.first;
+                    Tile_index id = it.first;
                     if (!it.second.empty() && rank(id) == world_rank)
                         c += func(*(tc.find(id)));
                 }
@@ -201,7 +201,7 @@ struct MPI_scheduler
 
     char *load_points(char *bytes)
     {
-        Id id;
+        Tile_index id;
         int count;
         bytes = load_value_4(bytes, id);
         bytes = load_value_4(bytes, count);
@@ -209,21 +209,21 @@ struct MPI_scheduler
         for(int i = 0; i< count; ++i) {
             Point_id p;
             bytes = load_point(bytes, p.first);
-            bytes = load_value_4(bytes, p.second); // Id point id
+            bytes = load_value_4(bytes, p.second); // Tile_index point id
             box.push_back(p);
         }
         // std::cout << processor_name << "[" << world_rank << "] " << count  << " points recieved by " << int(id) << std::endl;
         return bytes;
     }
 
-    char *save_points(char *bytes, Id id, const std::vector<Point_id>& msg) const
+    char *save_points(char *bytes, Tile_index id, const std::vector<Point_id>& msg) const
     {
         int count = msg.size();
         bytes = save_value_4(bytes, id);
         bytes = save_value_4(bytes, count);
         for(auto p : msg) {
             bytes = save_point(bytes, p.first);
-            bytes = save_value_4(bytes, p.second); // Id point id
+            bytes = save_value_4(bytes, p.second); // Tile_index point id
         }
         //std::cout << processor_name << "[" << world_rank << "] " << count  << " points sent to " << int(id) << std::endl;
         return bytes;
@@ -268,7 +268,7 @@ struct MPI_scheduler
         std::vector<int> offset(world_size, 0);
         for(auto it : inbox)
         {
-            Id id = it.first;
+            Tile_index id = it.first;
             int r = rank(id);
             if(r == world_rank) continue; // local, no need to communicate !
             char *bytes = save_points(&sendbuf[offset[r]], id, it.second);
@@ -327,8 +327,8 @@ struct MPI_scheduler
     }
 
 private:
-    std::map<Id, Point_id_container> inbox;
-    std::map<Id, std::set<Vertex_const_handle>> sent_;
+    std::map<Tile_index, Point_id_container> inbox;
+    std::map<Tile_index, std::set<Vertex_const_handle>> sent_;
     int world_size;
     int world_rank;
     char processor_name[MPI_MAX_PROCESSOR_NAME];

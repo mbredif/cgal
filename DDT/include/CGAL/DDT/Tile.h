@@ -27,16 +27,16 @@ class Tile
 {
 public:
     typedef T                                         Traits;
-    typedef typename Traits::Id                       Id;
+    typedef typename Traits::Tile_index               Tile_index;
     typedef typename Traits::Bbox                     Bbox;
     typedef typename Traits::Point                    Point;
-    typedef typename Traits::Vertex_const_handle      Vertex_const_handle;
-    typedef std::pair<Id,Point>                       Point_id;
+    typedef typename Traits::Vertex_index             Vertex_index;
+    typedef std::pair<Tile_index,Point>               Point_id;
     typedef std::vector<Point_id>                     Points;
-    typedef std::map<Id, Points>                      Points_map;
-    typedef CGAL::DDT::Tile_triangulation<T> Tile_triangulation;
+    typedef std::map<Tile_index, Points>              Points_map;
+    typedef CGAL::DDT::Tile_triangulation<T>          Tile_triangulation;
 
-    Tile(Id id, Traits t) :
+    Tile(Tile_index id, Traits t) :
         id_(id),
         traits(t),
         triangulation_(id, t),
@@ -46,7 +46,7 @@ public:
         locked(false)
     {}
 
-    inline Id id() const { return id_; }
+    inline Tile_index id() const { return id_; }
     const Bbox& bbox() const { return bbox_; }
     Bbox& bbox() { return bbox_; }
 
@@ -60,32 +60,32 @@ public:
     Tile_triangulation& triangulation() { return triangulation_; }
 
 
-    void send_point(Id id, Id i, const Point& p) {
+    void send_point(Tile_index id, Tile_index i, const Point& p) {
         points_[id].push_back({i,p});
     }
 
-    void send_vertex(Id id, Vertex_const_handle v) {
+    void send_vertex(Tile_index id, Vertex_index v) {
         points_[id].emplace_back(triangulation_.vertex_id(v), triangulation_.point(v));
     }
 
-    std::size_t send_vertices(Id id, const std::set<Vertex_const_handle>& vertices) {
+    std::size_t send_vertices(Tile_index id, const std::set<Vertex_index>& vertices) {
         Points& p = points_[id];
-        for(Vertex_const_handle v : vertices)
+        for(Vertex_index v : vertices)
             p.emplace_back(triangulation_.vertex_id(v), triangulation_.point(v));
         // debug
         //if(!vertices.empty()) std::cout << "\x1B[32m" << id() << "\t->\t" << std::to_string(id) << "\t:\t" << vertices.size()   << "\x1B[0m"<< std::endl;
         return vertices.size();
     }
 
-    std::size_t send_vertices_to_one_tile(const std::map<Id, std::set<Vertex_const_handle>>& vertices) {
+    std::size_t send_vertices_to_one_tile(const std::map<Tile_index, std::set<Vertex_index>>& vertices) {
         std::size_t count = 0;
         for(auto& vi : vertices)
             count += send_vertices(vi.first, vi.second);
         return count;
     }
 
-    void send_vertices_to_all_tiles(const std::vector<Vertex_const_handle>& vertices) {
-        for(Vertex_const_handle v : vertices)
+    void send_vertices_to_all_tiles(const std::vector<Vertex_index>& vertices) {
+        for(Vertex_index v : vertices)
             if (!triangulation_.vertex_is_infinite(v))
                 extreme_points_.emplace_back(triangulation_.vertex_id(v), triangulation_.point(v));
         // debug
@@ -151,7 +151,7 @@ public:
     }
 private:
     Traits traits;
-    Id id_;
+    Tile_index id_;
     Tile_triangulation triangulation_;
     Bbox bbox_;
     Points_map points_;

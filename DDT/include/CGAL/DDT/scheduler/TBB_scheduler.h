@@ -28,11 +28,11 @@ namespace CGAL {
 namespace DDT {
 
 namespace Impl {
-template<typename TileContainer, typename Transform, typename Reduce, typename V, typename Id>
-V transform_reduce_id(TileContainer& tc, Transform transform, Reduce reduce, V value, Id id, std::mutex& mutex)
+template<typename TileContainer, typename Transform, typename Reduce, typename V, typename Tile_index>
+V transform_reduce_id(TileContainer& tc, Transform transform, Reduce reduce, V value, Tile_index id, std::mutex& mutex)
 {
-    typedef typename TileContainer::iterator Tile_iterator;
-    Tile_iterator tile;
+    typedef typename TileContainer::iterator Tile_const_iterator;
+    Tile_const_iterator tile;
     {
         std::unique_lock<std::mutex> lock(mutex);
         tile = tc.find(id);
@@ -55,7 +55,7 @@ template<typename T>
 struct TBB_scheduler
 {
     typedef T Tile;
-    typedef typename Tile::Id Id;
+    typedef typename Tile::Tile_index Tile_index;
 
     TBB_scheduler(int max_concurrency = 0) : arena(max_concurrency ? max_concurrency : tbb::task_arena::automatic) {}
 
@@ -69,7 +69,7 @@ struct TBB_scheduler
                                            std::invoke_result_t<Transform, Tile&> > >
     V for_each(TileContainer& tc, Transform transform, Reduce reduce = {}, V init = {})
     {
-        std::vector<Id> ids(tc.ids_begin(), tc.ids_end());
+        std::vector<Tile_index> ids(tc.ids_begin(), tc.ids_end());
         return arena.execute([&]{
             return tbb::parallel_reduce(
                   tbb::blocked_range<int>(0,ids.size()),

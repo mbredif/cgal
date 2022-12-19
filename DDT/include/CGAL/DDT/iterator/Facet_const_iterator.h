@@ -23,13 +23,13 @@ template<typename TileContainer>
 class Facet_const_iterator
 {
 public:
-    typedef typename TileContainer::Traits                    Traits;
-    typedef typename TileContainer::Tile_facet_const_iterator Tile_facet_const_iterator;
-    typedef typename TileContainer::const_iterator            Tile_const_iterator;
-    typedef typename TileContainer::Tile_triangulation        Tile_triangulation;
+    typedef typename TileContainer::Traits             Traits;
+    typedef typename TileContainer::Tile_facet_index   Tile_facet_index;
+    typedef typename TileContainer::const_iterator     Tile_const_iterator;
+    typedef typename TileContainer::Tile_triangulation Tile_triangulation;
 
     using iterator_category = std::forward_iterator_tag;
-    using value_type = Tile_facet_const_iterator;
+    using value_type = Tile_facet_index;
     using difference_type = std::ptrdiff_t;
     using pointer = value_type*;
     using reference = value_type&;
@@ -37,7 +37,7 @@ public:
 private:
     const TileContainer *tiles_;
     Tile_const_iterator tile_;
-    Tile_facet_const_iterator facet_;
+    Tile_facet_index facet_;
 
 public:
     Facet_const_iterator(const TileContainer *tiles, Tile_const_iterator tile)
@@ -51,7 +51,7 @@ public:
         assert(is_valid());
     }
 
-    Facet_const_iterator(const TileContainer *tiles, Tile_const_iterator tile, Tile_facet_const_iterator facet)
+    Facet_const_iterator(const TileContainer *tiles, Tile_const_iterator tile, Tile_facet_index facet)
         : tiles_(tiles), tile_(tile), facet_(facet)
     {
         // do not enforce main here !

@@ -32,13 +32,13 @@ bool is_euler_valid(T & tri)
     std::cout << "== Euler ==" << std::endl;
 
     int nv = tri.number_of_finite_vertices();
-    int nf = tri.number_of_finite_facets();
+    int nf = tri.number_of_finite_facets() / 2;
     int nc = tri.number_of_finite_cells();
     int finite_euler = nv - nf + nc;
     std::cout <<nv<<"-"<<nf<<"+"<<nc<<"="<<finite_euler <<  " (euler characteristic of finite elements should be 1)" << std::endl;
 
     nv = tri.number_of_vertices();
-    nf = tri.number_of_facets();
+    nf = tri.number_of_facets() / 2;
     nc = tri.number_of_cells();
     int euler = nv - nf + nc;
     std::cout <<nv<<"-"<<nf<<"+"<<nc<<"="<<euler << " (euler characteristic of both finite and infinite elements should be 2)"  << std::endl;
@@ -138,7 +138,7 @@ int test_traits(const std::string& testname, int ND, int NP, int dim = T::D, int
     std::cout << "== Tile.get_* ==" << std::endl;
     {
         Tile t(0, dim);
-        std::vector<typename Tile::Vertex_const_handle> points;
+        std::vector<typename Tile::Vertex_index> points;
         t.triangulation().get_axis_extreme_points(points);
     }
     return result;

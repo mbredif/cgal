@@ -31,68 +31,74 @@ namespace DDT {
 template<typename TileTriangulation>
 void write_csv_vert(const std::string& filename, const TileTriangulation& triangulation)
 {
+    typedef typename TileTriangulation::Vertex_index Vertex_index;
     std::ofstream csv(filename+".csv");
     csv << "geom,id" << std::endl;
     int D = triangulation.maximal_dimension();
-    for(auto vit = triangulation.vertices_begin(); vit != triangulation.vertices_end(); ++vit)
+    for(Vertex_index v = triangulation.vertices_begin(); v != triangulation.vertices_end(); ++v)
     {
-        if(triangulation.vertex_is_infinite(vit)) continue;
+        if(triangulation.vertex_is_infinite(v)) continue;
         csv << "POINT( ";
         for(int d=0; d<D; ++d)
-            csv << triangulation.point(vit)[d] << " ";
-        csv << ")," << std::to_string(triangulation.vertex_id(vit)) << "\n";
+            csv << triangulation.point(v)[d] << " ";
+        csv << ")," << std::to_string(triangulation.vertex_id(v)) << "\n";
     }
 }
 
 template<typename TileTriangulation>
 void write_csv_facet(const std::string& filename, const TileTriangulation& triangulation)
 {
+    typedef typename TileTriangulation::Vertex_index Vertex_index;
+    typedef typename TileTriangulation::Facet_index  Facet_index;
+    typedef typename TileTriangulation::Cell_index   Cell_index;
     std::ofstream csv(filename+".csv");
     csv << "geom,id,local" << std::endl;
     int D = triangulation.maximal_dimension();
-    for(typename TileTriangulation::Facet_const_iterator fit = triangulation.facets_begin(); fit != triangulation.facets_end(); ++fit)
+    for(Facet_index f = triangulation.facets_begin(); f != triangulation.facets_end(); ++f)
     {
-        if(triangulation.facet_is_infinite(fit)) continue;
-        auto cit = triangulation.cell(fit);
-        int idx = triangulation.index_of_covertex(fit);
+        if(triangulation.facet_is_infinite(f)) continue;
+        Cell_index c = triangulation.cell(f);
+        int idx = triangulation.index_of_covertex(f);
         csv << "\"LINESTRING(";
         int local = 0;
         int j = 0;
         for(int i=0; i<=D; ++i)
         {
             if(i == idx) continue;
-            auto v = triangulation.vertex(cit,i);
+            Vertex_index v = triangulation.vertex(c,i);
             local += triangulation.vertex_is_local(v);
             for(int d=0; d<D; ++d)
                 csv << triangulation.point(v)[d] << " ";
             if (++j < D) csv << ",";
         }
-        csv << ")\"," << std::to_string(triangulation.facet_id(fit)) << "," << local << "\n";
+        csv << ")\"," << std::to_string(triangulation.facet_id(f)) << "," << local << "\n";
     }
 }
 
 template<typename TileTriangulation>
 void write_csv_cell(const std::string& filename, const TileTriangulation& triangulation)
 {
+    typedef typename TileTriangulation::Vertex_index Vertex_index;
+    typedef typename TileTriangulation::Cell_index   Cell_index;
     std::ofstream csv(filename+".csv");
     csv << "geom,id,local" << std::endl;
     int D = triangulation.maximal_dimension();
-    for(auto cit = triangulation.cells_begin(); cit != triangulation.cells_end(); ++cit)
+    for(Cell_index c = triangulation.cells_begin(); c != triangulation.cells_end(); ++c)
     {
-        if(triangulation.cell_is_infinite(cit)) continue;
+        if(triangulation.cell_is_infinite(c)) continue;
         csv << "\"POLYGON((";
         int local = 0;
         for(int i=0; i<=D; ++i)
         {
-            const typename TileTriangulation::Vertex_const_handle v = triangulation.vertex(cit,i);
+            Vertex_index v = triangulation.vertex(c,i);
             local += triangulation.vertex_is_local(v);
             for(int d=0; d<D; ++d)
                 csv << triangulation.point(v)[d] << " ";
             csv << ",";
         }
         for(int d=0; d<D; ++d) // repeat first to close the polygon
-            csv << triangulation.point(triangulation.vertex(cit, 0))[d] << " ";
-        csv << "))\"," << std::to_string(triangulation.cell_id(cit)) << "," << local << "\n";
+            csv << triangulation.point(triangulation.vertex(c, 0))[d] << " ";
+        csv << "))\"," << std::to_string(triangulation.cell_id(c)) << "," << local << "\n";
     }
 }
 
@@ -104,7 +110,7 @@ void write_csv_bboxes(const std::string& filename, const TileContainer& tc)
     for(auto& tile : tc)
     {
         typename TileContainer::Traits::Bbox const& bbox = tile.bbox();
-        typename TileContainer::Traits::Id id = tile.id();
+        typename TileContainer::Traits::Tile_index id = tile.id();
         csv << "\"POLYGON((";
         csv << bbox.min(0) << " "<< bbox.min(1) << ", ";
         csv << bbox.max(0) << " "<< bbox.min(1) << ", ";
@@ -118,24 +124,26 @@ void write_csv_bboxes(const std::string& filename, const TileContainer& tc)
 template<typename TileTriangulation>
 void write_csv_tin(const std::string& filename, const TileTriangulation& triangulation)
 {
+    typedef typename TileTriangulation::Vertex_index Vertex_index;
+    typedef typename TileTriangulation::Cell_index   Cell_index;
     std::ofstream csv(filename+".csv");
     csv << "geom,id" << std::endl;
     int D = triangulation.maximal_dimension();
     bool first = true;
-    for(auto cit = triangulation.cells_begin(); cit != triangulation.cells_end(); ++cit)
+    for(Cell_index c = triangulation.cells_begin(); c != triangulation.cells_end(); ++c)
     {
-        if(triangulation.cell_is_infinite(cit)|| !triangulation.cell_is_main(cit)) continue;
+        if(triangulation.cell_is_infinite(c)|| !triangulation.cell_is_main(c)) continue;
         csv << (first ? "\"TIN (((" : ", ((");
         first = false;
-        typename TileTriangulation::Vertex_const_handle v;
+        Vertex_index v;
         for(int i=0; i<=D; ++i)
         {
-            v = triangulation.vertex(cit,i);
+            v = triangulation.vertex(c,i);
             for(int d=0; d<D; ++d)
                 csv << triangulation.point(v)[d] << " ";
             csv << ",";
         }
-        v = triangulation.vertex(cit,0);
+        v = triangulation.vertex(c,0);
         for(int d=0; d<D; ++d) // repeat first to close the polygon
             csv << triangulation.point(v)[d] << " ";
         csv << "))";
@@ -145,7 +153,7 @@ void write_csv_tin(const std::string& filename, const TileTriangulation& triangu
 
 // VRT header writers
 
-void write_vrt_header(const std::string& filename, const std::string& type)
+void write_vrt_header(const std::string& filename, const std::string& type, bool local)
 {
     boost::filesystem::path path(filename);
     std::string stem = path.stem().string();
@@ -158,14 +166,14 @@ void write_vrt_header(const std::string& filename, const std::string& type)
     f <<    "<GeometryType>" << type << "</GeometryType>" << std::endl;
     f <<    "<GeometryField encoding=\"WKT\" field=\"geom\"/>" << std::endl;
     f <<    "<Field name=\"id\" type=\"Integer\"/>" << std::endl;
-    f <<    "<Field name=\"local\" type=\"Integer\"/>" << std::endl;
+    if (local) f <<    "<Field name=\"local\" type=\"Integer\"/>" << std::endl;
     f <<  "</OGRVRTLayer>" << std::endl;
     f <<"</OGRVRTDataSource>" << std::endl;
 }
 
 
 template<typename Iterator>
-void write_vrt_header(const std::string& dirname, const std::string& type, const std::string& union_name, Iterator begin, Iterator end)
+void write_vrt_header(const std::string& dirname, const std::string& type, const std::string& union_name, Iterator begin, Iterator end, bool local)
 {
     std::ofstream f(dirname+".vrt");
     boost::filesystem::path path(dirname);
@@ -182,7 +190,7 @@ void write_vrt_header(const std::string& dirname, const std::string& type, const
         f <<    "<GeometryType>" << type << "</GeometryType>" << std::endl;
         f <<    "<GeometryField encoding=\"WKT\" field=\"geom\"/>" << std::endl;
         f <<    "<Field name=\"id\" type=\"Integer\"/>" << std::endl;
-        f <<    "<Field name=\"local\" type=\"Integer\"/>" << std::endl;
+        if (local) f <<    "<Field name=\"local\" type=\"Integer\"/>" << std::endl;
         f <<  "</OGRVRTLayer>" << std::endl;
     }
     f <<"</OGRVRTUnionLayer>" << std::endl;
@@ -195,28 +203,28 @@ void write_vrt_header(const std::string& dirname, const std::string& type, const
 template<typename TileTriangulation>
 void write_tile_vrt_verts(const std::string& filename, const TileTriangulation& triangulation)
 {
-    write_vrt_header(filename, "wkbPoint");
+    write_vrt_header(filename, "wkbPoint", false);
     write_csv_vert(filename, triangulation);
 }
 
 template<typename TileTriangulation>
 void write_tile_vrt_facets(const std::string& filename, const TileTriangulation& triangulation)
 {
-    write_vrt_header(filename, "wkbLineString");
+    write_vrt_header(filename, "wkbLineString", true);
     write_csv_facet(filename, triangulation);
 }
 
 template<typename TileTriangulation>
 void write_tile_vrt_cells(const std::string& filename, const TileTriangulation& triangulation)
 {
-    write_vrt_header(filename, "wkbPolygon");
+    write_vrt_header(filename, "wkbPolygon", true);
     write_csv_cell(filename, triangulation);
 }
 
 template<typename TileTriangulation>
 void write_tile_vrt_tins(const std::string& filename, const TileTriangulation& triangulation)
 {
-    write_vrt_header(filename, "wkbTIN");
+    write_vrt_header(filename, "wkbTIN", false);
     write_csv_tin(filename, triangulation);
 }
 
@@ -232,7 +240,7 @@ void write_vrt_verts(TileContainer& tc, Scheduler& sch, const std::string& dirna
         write_tile_vrt_verts(filename, tile.triangulation());
         return 1;
     });
-    write_vrt_header(dirname, "wkbPoint", "vertices", tc.ids_begin(), tc.ids_end());
+    write_vrt_header(dirname, "wkbPoint", "vertices", tc.ids_begin(), tc.ids_end(), false);
 }
 
 template<typename TileContainer, typename Scheduler>
@@ -245,7 +253,7 @@ void write_vrt_facets(TileContainer& tc, Scheduler& sch, const std::string& dirn
         write_tile_vrt_facets(filename, tile.triangulation());
         return 1;
     });
-    write_vrt_header(dirname, "wkbLineString", "facets", tc.ids_begin(), tc.ids_end());
+    write_vrt_header(dirname, "wkbLineString", "facets", tc.ids_begin(), tc.ids_end(), true);
 }
 
 template<typename TileContainer, typename Scheduler>
@@ -258,13 +266,13 @@ void write_vrt_cells(TileContainer& tc, Scheduler& sch, const std::string& dirna
         write_tile_vrt_cells(filename, tile.triangulation());
         return 1;
     });
-    write_vrt_header(dirname, "wkbPolygon", "cells", tc.ids_begin(), tc.ids_end());
+    write_vrt_header(dirname, "wkbPolygon", "cells", tc.ids_begin(), tc.ids_end(), true);
 }
 
 template<typename TileContainer>
 void write_vrt_bboxes(const TileContainer& tc, const std::string& filename)
 {
-    write_vrt_header(filename, "wkbPolygon");
+    write_vrt_header(filename, "wkbPolygon", false);
     write_csv_bboxes(filename, tc);
 }
 
@@ -278,7 +286,7 @@ void write_vrt_tins(TileContainer& tc, Scheduler& sch, const std::string& dirnam
         write_tile_vrt_tins(filename, tile.triangulation());
         return 1;
     });
-    write_vrt_header(dirname, "wkbTIN", "tins", tc.ids_begin(), tc.ids_end());
+    write_vrt_header(dirname, "wkbTIN", "tins", tc.ids_begin(), tc.ids_end(), false);
 }
 
 }

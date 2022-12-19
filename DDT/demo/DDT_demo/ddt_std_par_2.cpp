@@ -5,10 +5,10 @@
 
 #include "DDT_demo.h"
 
-typedef int Id;
+typedef int Tile_index;
 int main(int argc, char **argv) {
     return DDT_demo<
-            CGAL::DDT::Cgal_traits_2<Id>,
+            CGAL::DDT::Cgal_traits_2<Tile_index>,
             CGAL::DDT::Grid_partitioner,
             CGAL::DDT::STD_scheduler_par,
             CGAL::DDT::File_serializer

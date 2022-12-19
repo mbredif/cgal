@@ -32,7 +32,7 @@ template<typename T
 struct STD_scheduler
 {
     typedef T Tile;
-    typedef typename Tile::Id Id;
+    typedef typename Tile::Tile_index Tile_index;
 
     STD_scheduler(int max_concurrency = 0) {}
 

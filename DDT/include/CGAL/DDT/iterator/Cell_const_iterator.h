@@ -23,13 +23,13 @@ template<typename TileContainer>
 class Cell_const_iterator
 {
 public:
-    typedef typename TileContainer::Traits                    Traits;
-    typedef typename TileContainer::const_iterator            Tile_const_iterator;
-    typedef typename TileContainer::Tile_cell_const_iterator  Tile_cell_const_iterator;
-    typedef typename TileContainer::Tile_triangulation        Tile_triangulation;
+    typedef typename TileContainer::Traits             Traits;
+    typedef typename TileContainer::Tile_cell_index    Tile_cell_index;
+    typedef typename TileContainer::const_iterator     Tile_const_iterator;
+    typedef typename TileContainer::Tile_triangulation Tile_triangulation;
 
     using iterator_category = std::forward_iterator_tag;
-    using value_type = Tile_cell_const_iterator;
+    using value_type = Tile_cell_index;
     using difference_type = std::ptrdiff_t;
     using pointer = value_type*;
     using reference = value_type&;
@@ -37,7 +37,7 @@ public:
 private:
     const TileContainer *tiles_;
     Tile_const_iterator tile_;
-    Tile_cell_const_iterator cell_;
+    Tile_cell_index cell_;
 
 public:
     Cell_const_iterator(const TileContainer *tiles, Tile_const_iterator tile)
@@ -51,7 +51,7 @@ public:
         assert(is_valid());
     }
 
-    Cell_const_iterator(const TileContainer *tiles, Tile_const_iterator tile, Tile_cell_const_iterator cell)
+    Cell_const_iterator(const TileContainer *tiles, Tile_const_iterator tile, Tile_cell_index cell)
         : tiles_(tiles), tile_(tile), cell_(cell)
     {
         // do not enforce main here !
@@ -111,8 +111,8 @@ public:
     Cell_const_iterator& operator+=(int n)
     {
         assert(tile_ != tiles_->cend());
-        for(auto cit = tile_->triangulation().cells_begin(); cit != cell_; ++cit)
-            if(tile_->triangulation().cell_is_main(cit))
+        for(Tile_cell_index c = tile_->triangulation().cells_begin(); c != cell_; ++c)
+            if(tile_->triangulation().cell_is_main(c))
                 ++n;
         int num_main_cells = tile_->number_of_main_cells();
         while(n >= num_main_cells)

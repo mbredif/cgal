@@ -17,7 +17,7 @@
 #include <CGAL/Delaunay_triangulation_2.h>
 #include <CGAL/point_generators_2.h>
 
-#include <CGAL/DDT/traits/Facet_const_iterator_2.h>
+#include <CGAL/DDT/traits/Facet_index.h>
 #include <CGAL/DDT/traits/Data.h>
 
 namespace CGAL {
@@ -29,33 +29,20 @@ template<typename I, typename F = No_info>
 struct Cgal_traits_2
 {
     enum { D = 2 };
-    typedef I                                                      Id;
-    typedef F                                                      Info;
-    typedef CGAL::DDT::Data<Id, Info>                              Data;
-    typedef CGAL::Exact_predicates_inexact_constructions_kernel    Geom_traits;
-    typedef Triangulation_vertex_base_with_info_2<Data,
-                                                  Geom_traits>     Vb;
-    typedef CGAL::Triangulation_data_structure_2<Vb>               TDS;
-    typedef typename Geom_traits::Point_2                          Point;
+    typedef I                                                        Tile_index;
+    typedef F                                                        Info;
+    typedef CGAL::DDT::Data<Tile_index, Info>                        Data;
+    typedef CGAL::Exact_predicates_inexact_constructions_kernel      Geom_traits;
+    typedef Triangulation_vertex_base_with_info_2<Data, Geom_traits> Vb;
+    typedef CGAL::Triangulation_data_structure_2<Vb>                 TDS;
+    typedef typename Geom_traits::Point_2                            Point;
 
-    typedef typename TDS::Vertex_iterator                          Vertex_const_iterator;
-    typedef typename TDS::Vertex_handle                            Vertex_const_handle;
-    typedef typename TDS::Vertex_iterator                          Vertex_iterator;
-    typedef typename TDS::Vertex_handle                            Vertex_handle;
+    typedef typename TDS::Vertex_iterator                            Vertex_index;
+    typedef typename TDS::Face_iterator                              Cell_index;
+    typedef CGAL::DDT::Facet_index<2, Cell_index>                    Facet_index;
 
-    typedef typename TDS::Face_iterator                            Cell_const_iterator;
-    typedef typename TDS::Face_handle                              Cell_const_handle;
-    typedef typename TDS::Face_iterator                            Cell_iterator;
-    typedef typename TDS::Face_handle                              Cell_handle;
-
-    typedef std::pair<Cell_const_handle, int>                      Facet;
-    typedef Facet_const_iterator_2<TDS>                            Facet_const_iterator;
-    typedef Facet_const_iterator                                   Facet_const_handle;
-    typedef Facet_const_iterator                                   Facet_iterator;
-    typedef Facet_const_iterator                                   Facet_handle;
-
-    typedef CGAL::Delaunay_triangulation_2<Geom_traits, TDS>       Delaunay_triangulation;
-    typedef CGAL::Random_points_in_disc_2<Point>                   Random_points_in_ball;
+    typedef CGAL::Delaunay_triangulation_2<Geom_traits, TDS>         Delaunay_triangulation;
+    typedef CGAL::Random_points_in_disc_2<Point>                     Random_points_in_ball;
 
     Cgal_traits_2(int d = 0) { assert(d==0 || d==D); }
     inline constexpr int dimension() const { return D; }
@@ -64,9 +51,12 @@ struct Cgal_traits_2
     {
         Bbox(unsigned int d, double range) : CGAL::Bbox_2(-range, -range, range, range) { CGAL_assertion(d==2); }
         Bbox(unsigned int d = 2) : CGAL::Bbox_2() { CGAL_assertion(d==2); }
-        Bbox& operator+=(const CGAL::Bbox_2& bbox) { CGAL::Bbox_2::operator+=(bbox); return *this; }
-        Bbox& operator+=(const Point& p) { CGAL::Bbox_2 bbox(p.x(), p.y(), p.x(), p.y()); *this += bbox; return *this; }
+        Bbox(const CGAL::Bbox_2& bbox) : CGAL::Bbox_2(bbox) {}
     };
+
+    inline Bbox bbox(const Point& p) const {
+        return CGAL::Bbox_2(p.x(), p.y(), p.x(), p.y());
+    }
 
     struct Random_points_in_box : CGAL::Random_points_in_square_2<Point>
     {
@@ -77,16 +67,16 @@ struct Cgal_traits_2
         Random_points_in_box(double g) : CGAL::Random_points_in_square_2<Point>(g) {}
     };
 
-    Delaunay_triangulation triangulation() const
+    inline Delaunay_triangulation triangulation() const
     {
         return Delaunay_triangulation();
     }
 
-    inline Id    id  (Vertex_const_handle v) const
+    inline Tile_index    id  (Vertex_index v) const
     {
         return v->info().id;
     }
-    inline Info& info(Vertex_const_handle v) const
+    inline Info& info(Vertex_index v) const
     {
         return v->info().info;
     }
@@ -106,44 +96,36 @@ struct Cgal_traits_2
     {
         return dt.number_of_vertices();
     }
-    inline Vertex_const_handle vertex(const Delaunay_triangulation& dt, Cell_const_handle c, int i) const
+    inline Vertex_index vertex(const Delaunay_triangulation& dt, Cell_index c, int i) const
     {
         return c->vertex(i);
     }
-    inline Vertex_const_iterator vertices_begin(const Delaunay_triangulation& dt) const
+    inline Vertex_index vertices_begin(const Delaunay_triangulation& dt) const
     {
         return dt.all_vertices_begin();
     }
-    inline Vertex_const_iterator vertices_end(const Delaunay_triangulation& dt) const
+    inline Vertex_index vertices_end(const Delaunay_triangulation& dt) const
     {
         return dt.all_vertices_end();
     }
-    inline Vertex_iterator vertices_begin(Delaunay_triangulation& dt) const
+    inline Facet_index facets_begin(const Delaunay_triangulation& dt) const
     {
-        return dt.all_vertices_begin();
+        return facet(dt, cells_begin(dt), 0);
     }
-    inline Vertex_iterator vertices_end(Delaunay_triangulation& dt) const
+    inline Facet_index facets_end(const Delaunay_triangulation& dt) const
     {
-        return dt.all_vertices_end();
+        return facet(dt, cells_end(dt), 0);
     }
-    inline Facet_const_iterator facets_begin(const Delaunay_triangulation& dt) const
-    {
-        return Facet_const_iterator(dt.tds());
-    }
-    inline Facet_const_iterator facets_end(const Delaunay_triangulation& dt) const
-    {
-        return Facet_const_iterator();
-    }
-    inline Cell_const_iterator cells_begin(const Delaunay_triangulation& dt) const
+    inline Cell_index cells_begin(const Delaunay_triangulation& dt) const
     {
         return dt.all_faces_begin();
     }
-    inline Cell_const_iterator cells_end(const Delaunay_triangulation& dt) const
+    inline Cell_index cells_end(const Delaunay_triangulation& dt) const
     {
         return dt.all_faces_end();
     }
 
-    inline Vertex_handle infinite_vertex(const Delaunay_triangulation& dt) const
+    inline Vertex_index infinite_vertex(const Delaunay_triangulation& dt) const
     {
         return dt.infinite_vertex();
     }
@@ -161,7 +143,7 @@ struct Cgal_traits_2
     }
 
     template<typename OutputIterator>
-    OutputIterator incident_cells(const Delaunay_triangulation& dt, Vertex_handle v, OutputIterator out) const
+    OutputIterator incident_cells(const Delaunay_triangulation& dt, Vertex_index v, OutputIterator out) const
     {
         typename TDS::Face_circulator c = dt.incident_faces(v), done = c;
         if ( ! c.is_empty()) {
@@ -173,7 +155,7 @@ struct Cgal_traits_2
     }
 
     template<typename OutputIterator>
-    OutputIterator adjacent_vertices(const Delaunay_triangulation& dt, Vertex_handle v, OutputIterator out) const
+    OutputIterator adjacent_vertices(const Delaunay_triangulation& dt, Vertex_index v, OutputIterator out) const
     {
         typename TDS::Vertex_circulator c = dt.incident_vertices(v), done = c;
         if ( ! c.is_empty()) {
@@ -184,48 +166,48 @@ struct Cgal_traits_2
         return out;
     }
 
-    Vertex_const_handle locate_vertex(const Delaunay_triangulation& dt, const Point& p, Vertex_handle hint = Vertex_handle()) const
+    Vertex_index locate_vertex(const Delaunay_triangulation& dt, const Point& p, Vertex_index hint = Vertex_index()) const
     {
         typename Delaunay_triangulation::Locate_type  lt;
         int li;
-        Cell_handle c = dt.locate(p, lt, li);
-        return (lt==Delaunay_triangulation::VERTEX) ? vertex(dt, c, li) : Vertex_const_handle();
+        Cell_index c = dt.locate(p, lt, li, hint == Vertex_index() ? Cell_index() : hint->face());
+        return (lt==Delaunay_triangulation::VERTEX) ? vertex(dt, c, li) : vertices_end(dt);
     }
 
-    std::pair<Vertex_handle, bool> insert(Delaunay_triangulation& dt, const Point& p, Id id, Vertex_handle hint = Vertex_handle()) const
+    std::pair<Vertex_index, bool> insert(Delaunay_triangulation& dt, const Point& p, Tile_index id, Vertex_index hint = Vertex_index()) const
     {
         typename Delaunay_triangulation::Locate_type lt;
         int li;
-        Cell_handle c = dt.locate(p, lt, li, hint == Vertex_handle() ? Cell_handle() : hint->face());
+        Cell_index c = dt.locate(p, lt, li, hint == Vertex_index() ? Cell_index() : hint->face());
         if(lt == Delaunay_triangulation::VERTEX) {
-            Vertex_handle v = c->vertex(li);
+            Vertex_index v = c->vertex(li);
             assert(id == v->info().id);
             return std::make_pair(v, false);
         }
-        Vertex_handle v = dt.insert(p, lt, c, li);
+        Vertex_index v = dt.insert(p, lt, c, li);
         v->info().id = id;
         return std::make_pair(v, true);
     }
 
-    inline void remove(Delaunay_triangulation& dt, Vertex_handle v) const
+    inline void remove(Delaunay_triangulation& dt, Vertex_index v) const
     {
         dt.remove(v);
     }
 
-    inline bool vertex_is_infinite(const Delaunay_triangulation& dt, Vertex_const_handle v) const
+    inline bool vertex_is_infinite(const Delaunay_triangulation& dt, Vertex_index v) const
     {
         return dt.is_infinite(v);
     }
 
-    inline bool facet_is_infinite(const Delaunay_triangulation& dt, Facet_const_handle f) const
+    inline bool facet_is_infinite(const Delaunay_triangulation& dt, Facet_index f) const
     {
         for(int i = 0; i<=D; ++i)
-            if(i!=f->second && dt.is_infinite(f->first->vertex(i)))
+            if(i!=f.index_of_covertex() && dt.is_infinite(f.cell()->vertex(i)))
                 return true;
         return false;
     }
 
-    inline bool cell_is_infinite(const Delaunay_triangulation& dt, Cell_const_handle c) const
+    inline bool cell_is_infinite(const Delaunay_triangulation& dt, Cell_index c) const
     {
         for(int i = 0; i<=D; ++i)
             if(dt.is_infinite(c->vertex(i)))
@@ -233,7 +215,7 @@ struct Cgal_traits_2
         return false;
     }
 
-    inline const Point& point(const Delaunay_triangulation& dt, Vertex_const_handle v) const
+    inline const Point& point(const Delaunay_triangulation& dt, Vertex_index v) const
     {
         return v->point();
     }
@@ -243,19 +225,19 @@ struct Cgal_traits_2
         return CGAL::to_double(p[i]);
     }
 
-    bool are_vertices_equal(const Delaunay_triangulation& t1, Vertex_const_handle v1, const Delaunay_triangulation& t2, Vertex_const_handle v2) const
+    bool are_vertices_equal(const Delaunay_triangulation& t1, Vertex_index v1, const Delaunay_triangulation& t2, Vertex_index v2) const
     {
         bool inf1 = vertex_is_infinite(t1, v1);
         bool inf2 = vertex_is_infinite(t2, v2);
         return (inf1 || inf2) ? (inf1 == inf2) : v1->point() == v2->point();
     }
 
-    bool are_facets_equal(const Delaunay_triangulation& t1, Facet_const_handle f1, const Delaunay_triangulation& t2, Facet_const_handle f2) const
+    bool are_facets_equal(const Delaunay_triangulation& t1, Facet_index f1, const Delaunay_triangulation& t2, Facet_index f2) const
     {
-        auto c1 = f1->first;
-        auto c2 = f2->first;
-        int icv1 = f1->second;
-        int icv2 = f2->second;
+        Cell_index c1 = f1.cell();
+        Cell_index c2 = f2.cell();
+        int icv1 = f1.index_of_covertex();
+        int icv2 = f2.index_of_covertex();
         for(int i1 = 0; i1 < t1.dimension(); ++i1 )
         {
             if(i1 == icv1) continue;
@@ -277,15 +259,15 @@ struct Cgal_traits_2
         return true;
     }
 
-    bool are_cells_equal(const Delaunay_triangulation& t1, Cell_const_handle c1, const Delaunay_triangulation& t2, Cell_const_handle c2) const
+    bool are_cells_equal(const Delaunay_triangulation& t1, Cell_index c1, const Delaunay_triangulation& t2, Cell_index c2) const
     {
         for(int i1=0; i1<=D; ++i1)
         {
-            Vertex_handle v1 = c1->vertex(i1);
+            Vertex_index v1 = c1->vertex(i1);
             bool is_equal = false;
             for(int i2=0; i2<=D; ++i2)
             {
-                Vertex_handle v2 = c2->vertex(i2);
+                Vertex_index v2 = c2->vertex(i2);
                 if(are_vertices_equal(t1, v1, t2, v2))
                 {
                     is_equal = true;
@@ -298,60 +280,58 @@ struct Cgal_traits_2
         return true;
     }
 
-    inline int index_of_covertex(const Delaunay_triangulation& dt, Facet_const_handle f) const
+    inline int index_of_covertex(const Delaunay_triangulation& dt, Facet_index f) const
     {
-        return f->second;
+        return f.index_of_covertex();
     }
 
-    inline Vertex_const_handle covertex(const Delaunay_triangulation& dt, Facet_const_handle f) const
+    inline Vertex_index covertex(const Delaunay_triangulation& dt, Facet_index f) const
     {
-        return vertex(dt, f->first, f->second);
+        return vertex(dt, f.cell(), f.index_of_covertex());
     }
 
-    inline Vertex_const_handle mirror_vertex(const Delaunay_triangulation& dt, Facet_const_handle f) const
+    inline Vertex_index mirror_vertex(const Delaunay_triangulation& dt, Facet_index f) const
     {
-        Cell_const_iterator c = f->first;
-        Cell_const_iterator n = c->neighbor(f->second);
+        Cell_index c = f.cell();
+        Cell_index n = c->neighbor(f.index_of_covertex());
         return vertex(dt, n, n->index(c));
     }
 
-    inline Cell_const_handle cell(const Delaunay_triangulation& dt, Facet_const_handle f) const
+    inline Cell_index cell(const Delaunay_triangulation& dt, Facet_index f) const
     {
-        return f->first;
+        return f.cell();
     }
 
-    inline Cell_const_handle cell(const Delaunay_triangulation& dt, Vertex_const_handle v) const
+    inline Cell_index cell(const Delaunay_triangulation& dt, Vertex_index v) const
     {
         return v->face();
     }
 
-    Facet_const_handle mirror_facet(const Delaunay_triangulation& dt, Facet_const_handle f) const
+    Facet_index mirror_facet(const Delaunay_triangulation& dt, Facet_index f) const
     {
-        Cell_const_iterator c = f->first;
-        Cell_const_iterator n = c->neighbor(f->second);
-        Facet g(n, n->index(c));
-        return Facet_const_iterator(dt.tds(), g);
+        Cell_index c = f.cell();
+        Cell_index n = c->neighbor(f.index_of_covertex());
+        return facet(dt, n, n->index(c));
     }
 
-    inline int mirror_index(const Delaunay_triangulation& dt, Facet_const_handle f) const
+    inline int mirror_index(const Delaunay_triangulation& dt, Facet_index f) const
     {
-        return mirror_index(f->first, f->second);
+        return mirror_index(f.cell(), f.index_of_covertex());
     }
 
-    inline int mirror_index(const Delaunay_triangulation& dt, Cell_const_handle c, int i) const
+    inline int mirror_index(const Delaunay_triangulation& dt, Cell_index c, int i) const
     {
         return c->neighbor(i)->index(c);
     }
 
-    inline Cell_const_iterator neighbor(const Delaunay_triangulation& dt, Cell_const_iterator c, int i) const
+    inline Cell_index neighbor(const Delaunay_triangulation& dt, Cell_index c, int i) const
     {
         return c->neighbor(i);
     }
 
-    Facet_const_iterator facet(const Delaunay_triangulation& dt, Cell_const_iterator c, int i) const
+    inline Facet_index facet(const Delaunay_triangulation& dt, Cell_index c, int i) const
     {
-        Facet f(c, i);
-        return Facet_const_iterator(dt.tds(), f);
+        return Facet_index(c, cells_end(dt), i);
     }
 
     inline bool is_valid(const Delaunay_triangulation& dt, bool verbose = false, int level = 0) const

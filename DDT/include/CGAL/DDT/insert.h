@@ -25,17 +25,17 @@ namespace impl {
 template<typename Tile>
 std::size_t splay_tile(Tile& tile)
 {
-    typedef typename Tile::Id Id;
-    typedef typename Tile::Points Points;
-    typedef typename Tile::Tile_triangulation::Vertex_const_handle Vertex_const_handle;
+    typedef typename Tile::Tile_index   Tile_index;
+    typedef typename Tile::Vertex_index Vertex_index;
+    typedef typename Tile::Points       Points;
     Points received;
     tile.receive_points(received);
     if (received.empty()) return 0;
     // insert them into the current tile triangulation and get the new foreign points
-    std::set<Vertex_const_handle> inserted;
+    std::set<Vertex_index> inserted;
     if(!tile.triangulation().insert(received, inserted, true)) return 0;
     // get the relevant neighbor points
-    std::map<Id, std::set<Vertex_const_handle>> vertices;
+    std::map<Tile_index, std::set<Vertex_index>> vertices;
     tile.triangulation().get_finite_neighbors(inserted, vertices);
     // send them to the relevant neighboring tiles
     return tile.send_vertices_to_one_tile(vertices);
@@ -45,18 +45,16 @@ template<typename TileContainer, typename Scheduler>
 std::size_t insert_and_send_all_axis_extreme_points(TileContainer& tc, Scheduler& sch)
 {
     typedef typename TileContainer::Tile Tile;
-    typedef typename Tile::Point Point;
-    typedef typename Tile::Id Id;
+    typedef typename Tile::Vertex_index Vertex_index;
     return sch.for_each(tc, [](Tile& tile)
     {
-        typedef typename Tile::Tile_triangulation::Vertex_const_handle Vertex_const_handle;
         std::size_t count = splay_tile(tile);
 
         // send the extreme points along each axis to all tiles to initialize the star splaying
-        std::vector<Vertex_const_handle> vertices;
+        std::vector<Vertex_index> vertices;
         tile.triangulation().get_axis_extreme_points(vertices);
-        for(Vertex_const_handle v : vertices)
-            tile.bbox() += tile.triangulation().point(v);
+        for(Vertex_index v : vertices)
+            tile.bbox() += tile.triangulation().bbox(v);
         tile.send_vertices_to_all_tiles(vertices);
         return count;
     });
@@ -88,10 +86,10 @@ std::size_t insert_received(TileContainer& tc, Scheduler& sch){
 /// Inserts the given point in the tile given by the given id, in the Delaunay triangulation stored in the tile container.
 /// The scheduler provides the distribution environment (single thread, multithread, MPI...)
 /// @returns the vertex const iterator to the inserted point, or the already existing point if if it was already present
-template<typename TileContainer, typename Scheduler, typename Point, typename Id>
-typename TileContainer::Vertex_const_iterator insert(TileContainer& tc, Scheduler& sch, const Point& point, Id id){
+template<typename TileContainer, typename Scheduler, typename Point, typename Tile_index>
+typename TileContainer::Vertex_index insert(TileContainer& tc, Scheduler& sch, const Point& point, Tile_index id){
     tc.send_point_to_its_tile(id,point);
-    return impl::insert_received(tc, sch); /// @todo this returns a std::size_t, not a Vertex_const_iterator
+    return impl::insert_received(tc, sch); /// @todo this returns a std::size_t, not a Vertex_index
 }
 */
 
@@ -99,8 +97,8 @@ typename TileContainer::Vertex_const_iterator insert(TileContainer& tc, Schedule
 /// Inserts the points of the provided point+id range in the tiles given by the given ids, in the Delaunay triangulation stored in the tile container.
 /// The scheduler provides the distribution environment (single thread, multithread, MPI...)
 /// @returns the number of newly inserted vertices
-template<typename TileContainer, typename Scheduler, typename PointIdRange>
-std::size_t insert(TileContainer& tc, Scheduler& sch, const PointIdRange& range) {
+template<typename TileContainer, typename Scheduler, typename PointTile_indexRange>
+std::size_t insert(TileContainer& tc, Scheduler& sch, const PointTile_indexRange& range) {
     for (auto& p : range)
         tc[p.first].send_point(p.first,p.first,p.second);
     return impl::insert_received(tc, sch);
@@ -113,7 +111,7 @@ std::size_t insert(TileContainer& tc, Scheduler& sch, const PointIdRange& range)
 template<typename TileContainer, typename Scheduler, typename PointRange, typename Partitioner>
 std::size_t insert(TileContainer& tc, Scheduler& sch, PointRange points, Partitioner& part) {
     for(auto& p : points)  {
-        typename Partitioner::Id id = part(p);
+        typename Partitioner::Tile_index id = part(p);
         tc[id].send_point(id,id,p);
     }
     return impl::insert_received(tc, sch);
@@ -131,7 +129,7 @@ std::size_t insert(TileContainer& tc, Scheduler& sch, Iterator it, int count, Pa
 #else
     for(; count; --count, ++it) {
         auto p(*it);
-        typename Partitioner::Id id = part(p);
+        typename Partitioner::Tile_index id = part(p);
         tc[id].send_point(id,id,p);
     }
     return impl::insert_received(tc, sch);

@@ -40,6 +40,7 @@ public:
     bool operator==(const Key_const_iterator& rhs) const { return it == rhs.it; }
     bool operator!=(const Key_const_iterator& rhs) const { return it != rhs.it; }
     Key_const_iterator& operator++() { ++it; return *this; }
+    Key_const_iterator operator++(int) { Key_const_iterator it(*this); ++it; return it; }
 private:
     Map_const_iterator it;
 };
@@ -63,6 +64,7 @@ public:
     bool operator==(const Mapped_iterator& rhs) const { return it == rhs.it; }
     bool operator!=(const Mapped_iterator& rhs) const { return it != rhs.it; }
     Mapped_iterator& operator++() { ++it; return *this; }
+    Mapped_iterator operator++(int) { Mapped_iterator it(*this); ++it; return it; }
 
 private:
     Map_iterator it;
@@ -88,6 +90,7 @@ public:
     bool operator==(const Mapped_const_iterator& rhs) const { return it == rhs.it; }
     bool operator!=(const Mapped_const_iterator& rhs) const { return it != rhs.it; }
     Mapped_const_iterator& operator++() { ++it; return *this; }
+    Mapped_const_iterator operator++(int) { Mapped_const_iterator it(*this); ++it; return it; }
 
 private:
     Map_const_iterator it;
@@ -98,24 +101,24 @@ template<typename _Traits, typename _Tile = CGAL::DDT::Tile<_Traits>, typename S
 class Tile_container
 {
 public:
-    typedef _Traits                                  Traits;
-    typedef _Tile                                    Tile;
+    typedef _Traits                                    Traits;
+    typedef _Tile                                      Tile;
 
-    typedef typename Traits::Point                   Point;
-    typedef typename Traits::Id                      Id;
-    typedef typename Traits::Vertex_const_iterator   Tile_vertex_const_iterator;
-    typedef typename Traits::Cell_const_iterator     Tile_cell_const_iterator;
-    typedef typename Traits::Facet_const_iterator    Tile_facet_const_iterator;
+    typedef typename Traits::Point                     Point;
+    typedef typename Traits::Tile_index                Tile_index;
+    typedef typename Traits::Vertex_index              Tile_vertex_index;
+    typedef typename Traits::Cell_index                Tile_cell_index;
+    typedef typename Traits::Facet_index               Tile_facet_index;
 
-    typedef std::map<Id, Tile>                         Container;
+    typedef std::map<Tile_index, Tile>                 Container;
     typedef typename Container::iterator               Pair_iterator;
     typedef typename Container::const_iterator         Pair_const_iterator;
     typedef Mapped_const_iterator<Pair_const_iterator> const_iterator ;
     typedef Mapped_iterator<Pair_iterator>             iterator ;
-    typedef Key_const_iterator<Pair_const_iterator>    Id_const_iterator ;
+    typedef Key_const_iterator<Pair_const_iterator>    Tile_index_const_iterator ;
 
-    typedef typename Tile::Points             Points;
-    typedef typename Tile::Tile_triangulation Tile_triangulation;
+    typedef typename Tile::Points                      Points;
+    typedef typename Tile::Tile_triangulation          Tile_triangulation;
 
     inline constexpr int maximal_dimension() const
     {
@@ -140,22 +143,22 @@ public:
     inline std::size_t number_of_triangulations_mem_max() const { return number_of_triangulations_mem_max_; }
     inline std::size_t number_of_triangulations_mem() const { return number_of_triangulations_mem_; }
 
-    Id_const_iterator ids_begin() const { return tiles.begin(); }
-    Id_const_iterator ids_end  () const { return tiles.end  (); }
+    Tile_index_const_iterator ids_begin() const { return tiles.begin(); }
+    Tile_index_const_iterator ids_end  () const { return tiles.end  (); }
 
     bool empty() const { return tiles.empty(); }
     const_iterator cbegin  () const { return tiles.begin (); }
     const_iterator cend    () const { return tiles.end   (); }
     const_iterator begin  () const { return tiles.begin (); }
     const_iterator end    () const { return tiles.end   (); }
-    const_iterator find(Id id) const { return tiles.find(id); }
+    const_iterator find(Tile_index id) const { return tiles.find(id); }
     iterator begin  () { return tiles.begin (); }
     iterator end    () { return tiles.end   (); }
-    iterator find(Id id) { return tiles.find(id); }
+    iterator find(Tile_index id) { return tiles.find(id); }
 
-    Tile& operator[](Id id) { return tiles.emplace(id, std::move(Tile(id, traits))).first->second; }
-    const Tile& at(Id id) const { return tiles.at(id); }
-    Tile& at(Id id) { return tiles.at(id); }
+    Tile& operator[](Tile_index id) { return tiles.emplace(id, std::move(Tile(id, traits))).first->second; }
+    const Tile& at(Tile_index id) const { return tiles.at(id); }
+    Tile& at(Tile_index id) { return tiles.at(id); }
 
     const Points& extreme_points() const { return extreme_points_; }
     Points& extreme_points() { return extreme_points_; }
@@ -178,15 +181,15 @@ public:
     }
 
     /*
-     *             typename TileContainer::Tile_iterator tile = tc.find(*it);
+     *             typename TileContainer::Tile_const_iterator tile = tc.find(*it);
             if(tile == tc.end()) {
                 while(tc.number_of_triangulations_mem_ >= tc.number_of_triangulations_mem_max_) {
                     auto it = tc.begin();
-                    Id id0 = it->id();
+                    Tile_index id0 = it->id();
                     std::size_t count0 = inbox[id0].size();
                     for(++it; it != tc.end() && count0; ++it)
                     {
-                        Id id = it->id();
+                        Tile_index id = it->id();
                         std::size_t count = inbox[id].size();
                         if(count0 > count) {
                             count0 = count;
@@ -267,22 +270,22 @@ public:
         return safe_load(tile);
     }
 
-    void get_adjacency_graph(std::unordered_multimap<Id,Id>& edges) const
+    void get_adjacency_graph(std::unordered_multimap<Tile_index,Tile_index>& edges) const
     {
         for(auto tile = begin(); tile != end(); ++tile)
         {
-            std::set<Id> out_edges;
+            std::set<Tile_index> out_edges;
             tile->get_adjacency_graph_edges(out_edges);
-            Id source = tile->id();
-            for(Id target : out_edges)
+            Tile_index source = tile->id();
+            for(Tile_index target : out_edges)
                 edges.emplace(source, target);
         }
     }
 
     bool is_adjacency_graph_symmetric() const
     {
-        std::unordered_multimap<Id,Id> edges;
-        std::unordered_multimap<Id,Id> reversed;
+        std::unordered_multimap<Tile_index,Tile_index> edges;
+        std::unordered_multimap<Tile_index,Tile_index> reversed;
         get_adjacency_graph(edges);
         for(auto& edge : edges)
             reversed.emplace(edge.second, edge.first);

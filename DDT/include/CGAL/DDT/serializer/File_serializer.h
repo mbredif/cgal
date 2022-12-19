@@ -21,7 +21,7 @@ namespace DDT {
 template <class Tile>
 struct File_serializer
 {
-  typedef typename Tile::Id Id;
+  typedef typename Tile::Tile_index Tile_index;
   typedef typename Tile::Bbox Bbox;
   typedef typename Tile::Tile_triangulation Tile_triangulation;
 
@@ -40,14 +40,14 @@ struct File_serializer
   }
 #endif
 
-  bool has_tile(Id id) const
+  bool has_tile(Tile_index id) const
   {
     const std::string fname = filename(id);
     std::ifstream in(fname, std::ios::in | std::ios::binary);
     return in.is_open();
   }
 
-  bool load(Id id, Bbox& bbox) const {
+  bool load(Tile_index id, Bbox& bbox) const {
       const std::string fname = filename(id);
       std::ifstream in(fname, std::ios::in | std::ios::binary);
       in >> bbox;
@@ -82,7 +82,7 @@ struct File_serializer
   const std::string& prefix() const { return m_prefix; }
 
 private:
-  std::string filename(Id i) const
+  std::string filename(Tile_index i) const
   {
     return m_prefix+std::to_string(i)+".txt";
   }

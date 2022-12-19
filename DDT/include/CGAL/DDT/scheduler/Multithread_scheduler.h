@@ -18,11 +18,11 @@ namespace CGAL {
 namespace DDT {
 
 namespace Impl {
-template< typename TileContainer, typename Transform, typename V, typename Id >
-V transform_id(TileContainer& tc, Transform transform, V init, Id id, std::mutex& mutex)
+template< typename TileContainer, typename Transform, typename V, typename Tile_index >
+V transform_id(TileContainer& tc, Transform transform, V init, Tile_index id, std::mutex& mutex)
 {
-    typedef typename TileContainer::iterator Tile_iterator;
-    Tile_iterator tile;
+    typedef typename TileContainer::iterator Tile_const_iterator;
+    Tile_const_iterator tile;
     {
         std::unique_lock<std::mutex> lock(mutex);
         tile = tc.find(id);
@@ -46,7 +46,7 @@ template<typename T>
 struct Multithread_scheduler
 {
     typedef T Tile;
-    typedef typename Tile::Id Id;
+    typedef typename Tile::Tile_index Tile_index;
 
     /// constructor
     Multithread_scheduler(int max_concurrency = 0) : pool(max_concurrency), timeout_(1)
@@ -77,7 +77,7 @@ struct Multithread_scheduler
     {
         std::vector<std::future<V>> futures;
         for(const Tile& tile : tc)
-            futures.push_back(pool.submit([this, &tc, &transform, &init](Id id){
+            futures.push_back(pool.submit([this, &tc, &transform, &init](Tile_index id){
                 return Impl::transform_id(tc, transform, init, id, mutex);
             }, tile.id()));
         V value = init;
@@ -93,9 +93,9 @@ struct Multithread_scheduler
                                            std::invoke_result_t<Transform, Tile&> > >
     V for_each_rec(TileContainer& tc, Transform transform, Reduce reduce = {}, V init = {})
     {
-        std::map<Id, std::future<V>> futures;
+        std::map<Tile_index, std::future<V>> futures;
         for(const Tile& tile : tc)
-            futures.emplace(tile.id(), pool.submit([this, &tc, &transform, &init](Id id){
+            futures.emplace(tile.id(), pool.submit([this, &tc, &transform, &init](Tile_index id){
                 return Impl::transform_id(tc, transform, init, id, mutex);
             }, tile.id()));
 
@@ -109,7 +109,7 @@ struct Multithread_scheduler
                 } else {
                     value = reduce(value, fit->second.get());
                     futures.erase(fit++);
-                    std::vector<Id> ids;
+                    std::vector<Tile_index> ids;
                     {
                         std::unique_lock<std::mutex> lock(mutex);
                         for(const Tile& tile : tc)
@@ -118,7 +118,7 @@ struct Multithread_scheduler
                     }
                     for(auto id : ids)
                         if (futures.count(id) == 0)
-                            futures.emplace(id, pool.submit([this, &tc, &transform, &init](Id id){
+                            futures.emplace(id, pool.submit([this, &tc, &transform, &init](Tile_index id){
                                 return Impl::transform_id(tc, transform, init, id, mutex);
                             }, id));
                 }

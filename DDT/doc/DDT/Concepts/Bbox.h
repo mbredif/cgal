@@ -33,8 +33,6 @@ public:
     Bbox(int d, double range) {}
     /// Grow the bounding box to also bound another given bounding box.
     Bbox& operator+=(const Bbox& bbox) { return *this; }
-    /// Grow the bounding box to also bound a bounding box with double coordinates around the given `Traits::Point`.
-    Bbox& operator+=(const Point& p) { return *this; }
     /// The ambient dimension.
     int dimension() const  { return dim; }
 

@@ -23,7 +23,7 @@ template<typename T>
 struct Sequential_scheduler
 {
     typedef T Tile;
-    typedef typename Tile::Id Id;
+    typedef typename Tile::Tile_index Tile_index;
 
     /// constructor
     Sequential_scheduler(int max_concurrency = 0) { assert(max_concurrency==0 || max_concurrency==1); }
