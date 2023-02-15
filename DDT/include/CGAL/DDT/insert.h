@@ -97,8 +97,8 @@ typename TileContainer::Vertex_index insert(TileContainer& tc, Scheduler& sch, c
 /// Inserts the points of the provided point+id range in the tiles given by the given ids, in the Delaunay triangulation stored in the tile container.
 /// The scheduler provides the distribution environment (single thread, multithread, MPI...)
 /// @returns the number of newly inserted vertices
-template<typename TileContainer, typename Scheduler, typename PointTile_indexRange>
-std::size_t insert(TileContainer& tc, Scheduler& sch, const PointTile_indexRange& range) {
+template<typename TileContainer, typename Scheduler, typename PointIndexRange>
+std::size_t insert(TileContainer& tc, Scheduler& sch, const PointIndexRange& range) {
     for (auto& p : range)
         tc[p.first].send_point(p.first,p.first,p.second);
     return impl::insert_received(tc, sch);
@@ -109,8 +109,8 @@ std::size_t insert(TileContainer& tc, Scheduler& sch, const PointTile_indexRange
 /// The scheduler provides the distribution environment (single thread, multithread, MPI...)
 /// @returns the number of newly inserted vertices
 template<typename TileContainer, typename Scheduler, typename PointRange, typename Partitioner>
-std::size_t insert(TileContainer& tc, Scheduler& sch, PointRange points, Partitioner& part) {
-    for(auto& p : points)  {
+std::size_t insert(TileContainer& tc, Scheduler& sch, const PointRange& points, Partitioner& part) {
+    for(const auto& p : points)  {
         typename Partitioner::Tile_index id = part(p);
         tc[id].send_point(id,id,p);
     }
