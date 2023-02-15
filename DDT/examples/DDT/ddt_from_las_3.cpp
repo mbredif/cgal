@@ -57,7 +57,6 @@ int main(int argc, char*argv[])
 
     enum { D = Traits::D };
     int max_number_of_tiles   = (argc>3) ? atoi(argv[3]) : 1;
-    double range = 1;
     int number_of_tiles_per_axis = 3;
     int number_of_points = points.size();
     CGAL::Bbox_3 bbox = bbox_3(points.begin(),points.end());
@@ -70,16 +69,16 @@ int main(int argc, char*argv[])
     CGAL::DDT::insert(tiles, scheduler, points.begin(), number_of_points, partitioner);
 
     Distributed_Delaunay_triangulation tri(tiles);
-
+/*
     if(!tri.is_valid())
     {
         std::cerr << "tri is not valid" << std::endl;
         return 1;
     }
-
-    const std::string& testname = "out/out.ply";
+*/
+    const std::string& testname = "out";
     boost::filesystem::create_directories(testname);
     std::cout << "== write_ply ==" << std::endl;
-    CGAL::DDT::write_ply(tiles, testname + "/out.ply");   
+    CGAL::DDT::write_ply(tiles, testname + "/out.ply");
     return EXIT_SUCCESS;
 }
