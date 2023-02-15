@@ -15,8 +15,8 @@ endif()
 find_package(LASLIB)
 include(CGAL_LASLIB_support)
 if(TARGET CGAL::LASLIB_support)
-  create_single_source_cgal_program( "ddt_3d_from_las.cpp")
-  target_link_libraries(read_las_example PRIVATE ${CGAL_libs} Boost::filesystem CGAL::LASLIB_support)
+  create_single_source_cgal_program( "ddt_from_las_3.cpp")
+  target_link_libraries(ddt_from_las_3 PRIVATE ${CGAL_libs} Boost::filesystem CGAL::LASLIB_support)
 else()
   message(
     STATUS
