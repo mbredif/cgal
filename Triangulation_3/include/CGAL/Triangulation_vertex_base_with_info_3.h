@@ -54,6 +54,24 @@ public:
   Info&       info()       { return _info; }
 };
 
+template < typename Info_, typename GT,
+           typename Vb = Triangulation_vertex_base_3<GT> >
+std::istream& operator>> (std::istream& is,Triangulation_vertex_base_with_info_3<Info_,GT,Vb> & vb)
+{
+  is >> static_cast<Vb&>(vb);
+  is >> vb.info();
+  return is;
+}
+
+template < typename Info_, typename GT,
+           typename Vb = Triangulation_vertex_base_3<GT> >
+std::ostream& operator<< (std::ostream& os,Triangulation_vertex_base_with_info_3<Info_,GT,Vb> & vb)
+{
+  os << static_cast<Vb&>(vb);
+  os << vb.info();
+  return os;
+}
+
 } //namespace CGAL
 
 #endif // CGAL_TRIANGULATION_VERTEX_BASE_WITH_INFO_3_H
