@@ -20,8 +20,7 @@ namespace DDT {
 
 struct No_info {};
 
-/// \ingroup PkgDDTMisc
-/// A pair used to store the Tile_index and (optional) Info data of a vertex in the distributed Delaunay triangulation
+// A pair used to store the Tile_index and (optional) Info data of a vertex in the distributed Delaunay triangulation
 template<typename I, typename F>
 struct Data
 {

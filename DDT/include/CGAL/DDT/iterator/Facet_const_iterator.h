@@ -17,8 +17,6 @@
 namespace CGAL {
 namespace DDT {
 
-/// \ingroup PkgDDTIteratorClasses
-/// A const iterator to the facet of a distributed Delaunay triangulation
 template<typename TileContainer>
 class Facet_const_iterator
 {

@@ -41,10 +41,18 @@ public:
 
     typedef TileContainer                            Tile_container;
     typedef typename Traits::Point                   Point;
-
+#ifndef DOXYGEN_RUNNING
     typedef CGAL::DDT::Vertex_const_iterator<TileContainer> Vertex_const_iterator;
     typedef CGAL::DDT::Facet_const_iterator <TileContainer> Facet_const_iterator;
     typedef CGAL::DDT::Cell_const_iterator  <TileContainer> Cell_const_iterator;
+#else
+    /// A const iterator to the vertices of a distributed Delaunay triangulation
+    typedef unspecified_type Vertex_const_iterator;
+    /// A const iterator to the facets of a distributed Delaunay triangulation
+    typedef unspecified_type Facet_const_iterator;
+    /// A const iterator to the cells of a distributed Delaunay triangulation
+    typedef unspecified_type Cell_const_iterator;
+#endif
 /// @}
 
     /// contructor

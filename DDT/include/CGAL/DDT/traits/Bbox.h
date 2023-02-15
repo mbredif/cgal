@@ -80,8 +80,7 @@ protected:
 
 }
 
-/// \ingroup PkgDDTMisc
-/// A D-dimensional axis aligned box
+// A D-dimensional axis aligned box
 template<unsigned int N, typename T, typename Point>
 class Bbox : public Impl::Bbox<std::array<T, N>, Point, Bbox<N,T,Point>>
 {
@@ -92,8 +91,7 @@ public:
     Bbox(int d, double range) { assert(d==N || d==0); this->init(d, range); }
 };
 
-/// \ingroup PkgDDTMisc
-/// A D-dimensional axis aligned box
+// A D-dimensional axis aligned box
 template<typename T, typename Point>
 class Bbox<0,T,Point> : public Impl::Bbox<std::vector<T>, Point, Bbox<0,T,Point>>
 {
