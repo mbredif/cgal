@@ -15,7 +15,7 @@ typedef Traits::Random_points_in_box Random_points;
 typedef Traits::Bbox Bbox;
 typedef CGAL::DDT::Tile<Traits> Tile;
 typedef CGAL::DDT::Multithread_scheduler<Traits> Scheduler;
-typedef CGAL::DDT::File_serializer<Tile> Serializer;
+typedef CGAL::DDT::File_serializer<Traits> Serializer;
 typedef CGAL::DDT::Tile_container<Traits, Serializer> Tile_container;
 typedef CGAL::Distributed_Delaunay_triangulation<Tile_container> Distributed_Delaunay_triangulation;
 
