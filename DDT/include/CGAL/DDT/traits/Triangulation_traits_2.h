@@ -9,8 +9,8 @@
 //
 // Author(s)     : Mathieu Brédif and Laurent Caraffa
 
-#ifndef CGAL_DDT_CGAL_TRAITS_2_H
-#define CGAL_DDT_CGAL_TRAITS_2_H
+#ifndef CGAL_DDT_TRIANGULATION_TRAITS_2_H
+#define CGAL_DDT_TRIANGULATION_TRAITS_2_H
 
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
 #include <CGAL/Triangulation_vertex_base_with_info_2.h>
@@ -26,7 +26,7 @@ namespace DDT {
 /// \ingroup PkgDDTTraitsClasses
 /// \cgalModels TriangulationTraits
 template<typename I, typename F = No_info>
-struct Cgal_traits_2
+struct Triangulation_traits_2
 {
     enum { D = 2 };
     typedef I                                                        Tile_index;
@@ -44,7 +44,7 @@ struct Cgal_traits_2
     typedef CGAL::Delaunay_triangulation_2<Geom_traits, TDS>         Delaunay_triangulation;
     typedef CGAL::Random_points_in_disc_2<Point>                     Random_points_in_ball;
 
-    Cgal_traits_2(int d = 0) { assert(d==0 || d==D); }
+    Triangulation_traits_2(int d = 0) { assert(d==0 || d==D); }
     inline constexpr int dimension() const { return D; }
 
     struct Bbox : public CGAL::Bbox_2
@@ -346,4 +346,4 @@ struct Cgal_traits_2
 }
 }
 
-#endif // CGAL_DDT_CGAL_TRAITS_2_H
+#endif // CGAL_DDT_TRIANGULATION_TRAITS_2_H

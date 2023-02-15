@@ -9,8 +9,8 @@
 //
 // Author(s)     : Mathieu Brédif and Laurent Caraffa
 
-#ifndef CGAL_DDT_CGAL_TRAITS_D_H
-#define CGAL_DDT_CGAL_TRAITS_D_H
+#ifndef CGAL_DDT_TRIANGULATION_TRAITS_D_H
+#define CGAL_DDT_TRIANGULATION_TRAITS_D_H
 
 #include <CGAL/Epick_d.h>
 #include <CGAL/Triangulation_ds_vertex.h>
@@ -28,7 +28,7 @@ namespace DDT {
 namespace Impl {
 
 template<unsigned int N, typename Dim, typename I, typename F, typename Derived>
-struct Cgal_traits_d
+struct Triangulation_traits_d
 {
     typedef Dim                                                    Dim_tag;
     typedef I                                                      Tile_index;
@@ -350,17 +350,17 @@ public:
 /// D dimensional triangulation traits, where D is specified dynamically at runtime.
 /// \cgalModels TriangulationTraits
 template<typename I, typename F = No_info>
-class Cgal_traits_d : public Impl::Cgal_traits_d<0, CGAL::Dynamic_dimension_tag,I,F,Cgal_traits_d<I,F>>
+class Triangulation_traits_d : public Impl::Triangulation_traits_d<0, CGAL::Dynamic_dimension_tag,I,F,Triangulation_traits_d<I,F>>
 {
     int dim_;
-    typedef Impl::Cgal_traits_d<0,CGAL::Dynamic_dimension_tag,I,F,Cgal_traits_d<I,F>> Base;
+    typedef Impl::Triangulation_traits_d<0,CGAL::Dynamic_dimension_tag,I,F,Triangulation_traits_d<I,F>> Base;
 
 public:
     typedef typename Base::Cell_index Cell_index;
     typedef typename Base::Facet_index Facet_index;
     typedef typename Base::Delaunay_triangulation Delaunay_triangulation;
     enum { D = 0 };
-    Cgal_traits_d(int d) : dim_(d)
+    Triangulation_traits_d(int d) : dim_(d)
     {
         assert(d >= 2);
     }
@@ -380,16 +380,16 @@ public:
 /// D dimensional triangulation traits, where D is specified statically at compile-time.
 /// \cgalModels TriangulationTraits
 template<unsigned int N, typename I, typename F = No_info>
-class Cgal_traits : public Impl::Cgal_traits_d<N,CGAL::Dimension_tag<N>,I,F,Cgal_traits<N,I,F>>
+class Triangulation_traits : public Impl::Triangulation_traits_d<N,CGAL::Dimension_tag<N>,I,F,Triangulation_traits<N,I,F>>
 {
-    typedef Impl::Cgal_traits_d<N,CGAL::Dimension_tag<N>,I,F,Cgal_traits<N,I,F>> Base;
+    typedef Impl::Triangulation_traits_d<N,CGAL::Dimension_tag<N>,I,F,Triangulation_traits<N,I,F>> Base;
 
 public:
     typedef typename Base::Cell_index Cell_index;
     typedef typename Base::Facet_index Facet_index;
     typedef typename Base::Delaunay_triangulation Delaunay_triangulation;
     enum { D = N };
-    Cgal_traits(int d = 0)
+    Triangulation_traits(int d = 0)
     {
         assert(d==0 || d==D);
     }
@@ -407,4 +407,4 @@ public:
 }
 }
 
-#endif // CGAL_DDT_CGAL_TRAITS_D_H
+#endif // CGAL_DDT_TRIANGULATION_TRAITS_D_H

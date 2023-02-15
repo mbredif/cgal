@@ -14,6 +14,10 @@
 /// \defgroup PkgDDTIteratorClasses Iterator Classes
 /// \ingroup PkgDDTRef
 
+/// \defgroup PkgDDTSerializerClasses Serializer Classes
+/// \ingroup PkgDDTRef
+
+
 /// \defgroup PkgDDTInsert Insertion
 /// \ingroup PkgDDTRef
 
@@ -22,6 +26,11 @@
 
 /// \defgroup PkgDDTClasses Classes
 /// \ingroup PkgDDTRef
+
+
+/// todo sloriot : move nested concepts into traits
+/// todo sloriot : add a macro to hide unofficial schedulers and partitioners
+/// todo sloriot : hide Selector concept
 
 /*!
 \addtogroup PkgDDTRef
@@ -46,11 +55,36 @@ The Distributed Delaunay Triangulation (DDT) package, ....
 \cgalCRPSection{Concepts}
 - `TriangulationTraits`
 - `Scheduler`
+- `Partitioner`
+- `Serializer`
 
 \cgalCRPSection{Classes}
 - `CGAL::DDT::Tile<TriangulationTraits>`
 - `CGAL::DDT::Tile_container<TriangulationTraits,Serializer>`
 - `CGAL::Distributed_Delaunay_triangulation<TileContainer>`
+
+\cgalCRPSection{Traits Classes}
+- `CGAL::DDT::Triangulation_traits_2`
+- `CGAL::DDT::Triangulation_traits_3`
+- `CGAL::DDT::Triangulation_traits_d`
+- `CGAL::DDT::Triangulation_traits`
+
+\cgalCRPSection{%Scheduler Classes}
+- `CGAL::DDT::Sequential_scheduler`
+- `CGAL::DDT::TBB_scheduler`
+- `CGAL::DDT::MPI_scheduler` (wip)
+
+\cgalCRPSection{%Partitioner Classes}
+- `CGAL::DDT::Grid_partitioner`
+- `CGAL::DDT::Const_partitioner`
+
+\cgalCRPSection{%Serializer Classes}
+- `CGAL::DDT::File_points_serializer`
+- `CGAL::DDT::File_serializer`
+- `CGAL::DDT::No_serializer`
+
+\cgalCRPSection{Functions}
+- \link PkgDDTInsert `CGAL::DDT::insert()` \endlink
 
 */
 

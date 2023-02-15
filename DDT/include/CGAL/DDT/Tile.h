@@ -19,7 +19,6 @@ namespace DDT {
 
 /// \ingroup PkgDDTClasses
 /// \tparam T is a model of the TriangulationTraits concept
-/// \tparam Selector is a template for a model of the Selector concept (defaults to Median_selector)
 /// The Tile stores a local Delaunay triangulation.
 /// The main id of a simplex is defined by the selector
 template<class T>

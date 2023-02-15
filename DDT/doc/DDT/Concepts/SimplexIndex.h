@@ -5,10 +5,10 @@
 
 The concept `VertexIterator` describes the requirements of for the vertex iterator of the tile triangulations.
 
-\cgalHasModel `CGAL::DDT::Cgal_traits_2::Vertex_index`
-\cgalHasModel `CGAL::DDT::Cgal_traits_3::Vertex_index`
-\cgalHasModel `CGAL::DDT::Cgal_traits_d::Vertex_index`
-\cgalHasModel `CGAL::DDT::Cgal_traits::Vertex_index`
+\cgalHasModel `CGAL::DDT::Triangulation_traits_2::Vertex_index`
+\cgalHasModel `CGAL::DDT::Triangulation_traits_3::Vertex_index`
+\cgalHasModel `CGAL::DDT::Triangulation_traits_d::Vertex_index`
+\cgalHasModel `CGAL::DDT::Triangulation_traits::Vertex_index`
 
 */
 

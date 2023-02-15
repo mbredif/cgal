@@ -1,4 +1,4 @@
-#include <CGAL/DDT/traits/cgal_traits_2.h>
+#include <CGAL/DDT/traits/Triangulation_traits_2.h>
 #include <CGAL/DDT/partitioner/Grid_partitioner.h>
 #include <CGAL/DDT/Tile_container.h>
 #include <CGAL/DDT/scheduler/Multithread_scheduler.h>
@@ -10,7 +10,7 @@
 
 typedef int Tile_index;
 typedef unsigned char Vertex_info; // unused user data
-typedef CGAL::DDT::Cgal_traits_2<Tile_index, Vertex_info> Traits;
+typedef CGAL::DDT::Triangulation_traits_2<Tile_index, Vertex_info> Traits;
 typedef Traits::Random_points_in_box Random_points;
 typedef Traits::Bbox Bbox;
 typedef CGAL::DDT::Tile<Traits> Tile;

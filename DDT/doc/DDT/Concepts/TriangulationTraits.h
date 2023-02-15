@@ -12,10 +12,10 @@ struct CellIndex: public SimplexIndex {};
 
 The concept `TriangulationTraits` describes the requirements of a traits that adapts a Delaunay Triangulation implementation.
 
-\cgalHasModel `CGAL::DDT::Cgal_traits_2`
-\cgalHasModel `CGAL::DDT::Cgal_traits_3`
-\cgalHasModel `CGAL::DDT::Cgal_traits_d`
-\cgalHasModel `CGAL::DDT::Cgal_traits`
+\cgalHasModel `CGAL::DDT::Triangulation_traits_2`
+\cgalHasModel `CGAL::DDT::Triangulation_traits_3`
+\cgalHasModel `CGAL::DDT::Triangulation_traits_d`
+\cgalHasModel `CGAL::DDT::Triangulation_traits`
 
 */
 

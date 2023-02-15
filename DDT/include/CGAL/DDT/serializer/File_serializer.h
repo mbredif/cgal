@@ -19,6 +19,8 @@
 namespace CGAL {
 namespace DDT {
 
+/// \ingroup PkgDDTSerializerClasses
+/// \cgalModels Serializer
 template <class Traits>
 struct File_serializer
 {

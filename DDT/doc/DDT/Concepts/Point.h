@@ -5,10 +5,10 @@
 
 The concept `Point` describes the requirements of a point in D dimensions.
 
-\cgalHasModel `CGAL::DDT::Cgal_traits_2::Point`
-\cgalHasModel `CGAL::DDT::Cgal_traits_3::Point`
-\cgalHasModel `CGAL::DDT::Cgal_traits_d::Point`
-\cgalHasModel `CGAL::DDT::Cgal_traits::Point`
+\cgalHasModel `CGAL::DDT::Triangulation_traits_2::Point`
+\cgalHasModel `CGAL::DDT::Triangulation_traits_3::Point`
+\cgalHasModel `CGAL::DDT::Triangulation_traits_d::Point`
+\cgalHasModel `CGAL::DDT::Triangulation_traits::Point`
 
 @todo coord type should not be double !
 */

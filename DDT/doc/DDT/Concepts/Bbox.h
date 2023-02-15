@@ -5,10 +5,10 @@
 
 The concept `Bbox` describes the requirements for a bounding box with double coordinates.
 
-\cgalHasModel `CGAL::DDT::Cgal_traits::Bbox`   (static dimensions)
-\cgalHasModel `CGAL::DDT::Cgal_traits_2::Bbox` (static dimensions)
-\cgalHasModel `CGAL::DDT::Cgal_traits_3::Bbox` (static dimensions)
-\cgalHasModel `CGAL::DDT::Cgal_traits_d::Bbox` (dynamic dimensions)
+\cgalHasModel `CGAL::DDT::Triangulation_traits::Bbox`   (static dimensions)
+\cgalHasModel `CGAL::DDT::Triangulation_traits_2::Bbox` (static dimensions)
+\cgalHasModel `CGAL::DDT::Triangulation_traits_3::Bbox` (static dimensions)
+\cgalHasModel `CGAL::DDT::Triangulation_traits_d::Bbox` (dynamic dimensions)
 
 */
 

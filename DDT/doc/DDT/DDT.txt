@@ -120,7 +120,7 @@ In order to iterate over each main simplex of the overall DT in parallel, the lo
 
 \subsubsection SSSection_DDT_Traits  Traits*.hpp
 	The trait classes provide glue layers that hide or adapt the API discrepancies between DT implementations, so that the rest of the code is agnostic of the exact DT implementation : CGAL 2D, CGAL 3D, CGAL nD... (there used to be a geogram trait as well!)
-        See for instance the nD trait \ref CGAL::DDT::Cgal_traits_d "cgal_traits_d.hpp"
+        See for instance the nD trait `CGAL::DDT::Triangulation_traits_d`.
 
 
 \subsection SSection_DDT_Schedulers Schedulers

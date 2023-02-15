@@ -5,10 +5,10 @@
 
 The concept `RandomPointsInBall` describes the requirements of a output point iterator that generates points within a ball.
 
-\cgalHasModel `CGAL::DDT::Cgal_traits_2::Random_points_in_ball`
-\cgalHasModel `CGAL::DDT::Cgal_traits_3::Random_points_in_ball`
-\cgalHasModel `CGAL::DDT::Cgal_traits_d::Random_points_in_ball`
-\cgalHasModel `CGAL::DDT::Cgal_traits::Random_points_in_ball`
+\cgalHasModel `CGAL::DDT::Triangulation_traits_2::Random_points_in_ball`
+\cgalHasModel `CGAL::DDT::Triangulation_traits_3::Random_points_in_ball`
+\cgalHasModel `CGAL::DDT::Triangulation_traits_d::Random_points_in_ball`
+\cgalHasModel `CGAL::DDT::Triangulation_traits::Random_points_in_ball`
 
 */
 
