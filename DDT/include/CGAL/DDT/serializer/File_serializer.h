@@ -14,15 +14,17 @@
 
 #include <boost/filesystem.hpp>
 #include <iomanip>
+#include <CGAL/DDT/Tile.h>
 
 namespace CGAL {
 namespace DDT {
 
-template <class Tile>
+template <class Traits>
 struct File_serializer
 {
-  typedef typename Tile::Tile_index Tile_index;
-  typedef typename Tile::Bbox Bbox;
+  typedef CGAL::DDT::Tile<Traits>           Tile;
+  typedef typename Traits::Tile_index       Tile_index;
+  typedef typename Traits::Bbox             Bbox;
   typedef typename Tile::Tile_triangulation Tile_triangulation;
 
   File_serializer(const std::string& prefix = "") : m_prefix(prefix) {

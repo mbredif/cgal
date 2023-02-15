@@ -20,6 +20,9 @@
 /// \defgroup PkgDDTMisc Miscellaneous
 /// \ingroup PkgDDTRef
 
+/// \defgroup PkgDDTClasses Classes
+/// \ingroup PkgDDTRef
+
 /*!
 \addtogroup PkgDDTRef
 \cgalPkgDescriptionBegin{Distributed Delaunay Triangulation,PkgDDT}
@@ -43,11 +46,11 @@ The Distributed Delaunay Triangulation (DDT) package, ....
 \cgalCRPSection{Concepts}
 - `TriangulationTraits`
 - `Scheduler`
-- `TileContainer`
 
 \cgalCRPSection{Classes}
 - `CGAL::DDT::Tile<TriangulationTraits>`
 - `CGAL::Distributed_Delaunay_triangulation<TileContainer>`
+- `CGAL::DDT::Tile_container<TriangulationTraits,Serializer>`
 
 */
 

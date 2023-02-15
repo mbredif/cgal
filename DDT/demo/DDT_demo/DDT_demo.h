@@ -22,8 +22,7 @@ template<
 int DDT_demo(int argc, char **argv)
 {
   typedef typename Traits::Random_points_in_box Random_points;
-  typedef CGAL::DDT::Tile<Traits> Tile;
-  typedef CGAL::DDT::Tile_container<Traits, Tile, Serializer<Tile>> TileContainer;
+  typedef CGAL::DDT::Tile_container<Traits, Serializer<Traits>> TileContainer;
   typedef CGAL::Distributed_Delaunay_triangulation<TileContainer> Distributed_Delaunay_triangulation;
 
   int NP, loglevel, max_concurrency, max_number_of_tiles;
@@ -90,8 +89,8 @@ int DDT_demo(int argc, char **argv)
 
   typename Traits::Bbox bbox(dimension, range);
   Partitioner<Traits> partitioner(bbox, NT.begin(), NT.end());
-  Scheduler<Tile> scheduler(max_concurrency);
-  Serializer<Tile> serializer(ser);
+  Scheduler<Traits> scheduler(max_concurrency);
+  Serializer<Traits> serializer(ser);
   TileContainer tiles(dimension, max_number_of_tiles, serializer);
 
   std::cout << "- Program     : " << argv[0] << std::endl;

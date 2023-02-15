@@ -12,14 +12,17 @@
 #ifndef CGAL_DDT_NO__SERIALIZER_H
 #define CGAL_DDT_NO__SERIALIZER_H
 
+#include <CGAL/DDT/Tile.h>
+
 namespace CGAL {
 namespace DDT {
 
-template<typename Tile>
+template<typename Traits>
 struct No_serializer
 {
-  typedef typename Tile::Tile_index Tile_index;
-  typedef typename Tile::Bbox Bbox;
+  typedef typename Traits::Tile_index Tile_index;
+  typedef typename Traits::Bbox Bbox;
+  typedef CGAL::DDT::Tile<Traits>                   Tile;
   bool load(Tile_index id, Bbox& bbox) const { return false; }
   bool has_tile(Tile_index) const { return false; }
   bool load(Tile&) const { return false; }

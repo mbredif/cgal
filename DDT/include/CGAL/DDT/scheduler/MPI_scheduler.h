@@ -19,6 +19,7 @@
 #include <mpi.h>
 #include <map>
 #include <vector>
+#include <CGAL/DDT/Tile.h>
 
 namespace CGAL {
 namespace DDT {
@@ -67,10 +68,11 @@ template<typename T> char * load_point(char * buf, T& t) {
 
 /// \ingroup PkgDDTSchedulerClasses
 /// \cgalModels Scheduler
-template<typename T>
+template<typename _Traits>
 struct MPI_scheduler
 {
-    typedef T Tile;
+    typedef _Traits Traits;
+    typedef CGAL::DDT::Tile<Traits> Tile;
     typedef typename Tile::Vertex_const_handle_and_id Vertex_const_handle_and_id;
     typedef typename Tile::Vertex_const_handle Vertex_const_handle;
     typedef typename Tile::Point_id Point_id;

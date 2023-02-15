@@ -11,16 +11,19 @@
 
 #ifndef CGAL_DDT_FILE_POINTS_SERIALIZER_H
 #define CGAL_DDT_FILE_POINTS_SERIALIZER_H
+
 #include <boost/filesystem.hpp>
+#include <CGAL/DDT/Tile.h>
 
 namespace CGAL {
 namespace DDT {
 
-template <class Tile>
+template <class Traits>
 struct File_points_serializer
 {
-  typedef typename Tile::Tile_index Tile_index;
-  typedef typename Tile::Bbox Bbox;
+  typedef CGAL::DDT::Tile<Traits>           Tile;
+  typedef typename Traits::Tile_index       Tile_index;
+  typedef typename Traits::Bbox             Bbox;
 
   File_points_serializer(const std::string& prefix = "") : m_prefix(prefix) {
       boost::filesystem::path p(prefix);

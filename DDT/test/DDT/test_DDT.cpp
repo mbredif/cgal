@@ -11,13 +11,13 @@ typedef CGAL::DDT::Tile<Traits> Tile;
 typedef CGAL::DDT::Tile_container<Traits> TileContainer;
 
 //#include <CGAL/DDT/scheduler/Sequential_scheduler.h>
-//typedef CGAL::DDT::Sequential_scheduler<Tile> Scheduler;
+//typedef CGAL::DDT::Sequential_scheduler<Traits> Scheduler;
 #include <CGAL/DDT/scheduler/Multithread_scheduler.h>
-typedef CGAL::DDT::Multithread_scheduler<Tile> Scheduler;
+typedef CGAL::DDT::Multithread_scheduler<Traits> Scheduler;
 //#include <CGAL/DDT/scheduler/TBB_scheduler.h>
-//typedef CGAL::DDT::TBB_scheduler<Tile> Scheduler;
+//typedef CGAL::DDT::TBB_scheduler<Traits> Scheduler;
 //#include <CGAL/DDT/scheduler/MPI_scheduler.h>
-//typedef CGAL::DDT::MPI_scheduler<Tile> Scheduler;
+//typedef CGAL::DDT::MPI_scheduler<Traits> Scheduler;
 
 #include <CGAL/DDT/partitioner/Grid_partitioner.h>
 typedef CGAL::DDT::Grid_partitioner<Traits> Partitioner;

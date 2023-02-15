@@ -13,17 +13,18 @@
 #define CGAL_DDT_SCHEDULER_SEQUENTIAL_SCHEDULER_H
 
 #include <assert.h>
+#include <CGAL/DDT/Tile.h>
 
 namespace CGAL {
 namespace DDT {
 
 /// \ingroup PkgDDTSchedulerClasses
 /// \cgalModels Scheduler
-template<typename T>
+template<typename _Traits>
 struct Sequential_scheduler
 {
-    typedef T Tile;
-    typedef typename Tile::Tile_index Tile_index;
+    typedef _Traits Traits;
+    typedef CGAL::DDT::Tile<Traits> Tile;
 
     /// constructor
     Sequential_scheduler(int max_concurrency = 0) { assert(max_concurrency==0 || max_concurrency==1); }

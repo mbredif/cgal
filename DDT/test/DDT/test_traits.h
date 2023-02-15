@@ -54,7 +54,7 @@ int test_traits(const std::string& testname, int ND, int NP, int dim = T::D, int
 
     typedef T Traits;
     typedef CGAL::DDT::Tile<Traits> Tile;
-    typedef CGAL::DDT::Sequential_scheduler<Tile> Scheduler;
+    typedef CGAL::DDT::Sequential_scheduler<Traits> Scheduler;
     typedef CGAL::DDT::Tile_container<Traits> TileContainer;
     typedef CGAL::Distributed_Delaunay_triangulation<TileContainer> Distributed_Delaunay_triangulation;
     typedef CGAL::DDT::Grid_partitioner<Traits> Partitioner;

@@ -23,6 +23,7 @@
 #include <tbb/concurrent_vector.h>
 #include <tbb/parallel_reduce.h>
 #include <tbb/task_arena.h>
+#include <CGAL/DDT/Tile.h>
 
 namespace CGAL {
 namespace DDT {
@@ -51,10 +52,11 @@ V transform_reduce_id(TileContainer& tc, Transform transform, Reduce reduce, V v
 
 /// \ingroup PkgDDTSchedulerClasses
 /// \cgalModels Scheduler
-template<typename T>
+template<typename _Traits>
 struct TBB_scheduler
 {
-    typedef T Tile;
+    typedef _Traits Traits;
+    typedef CGAL::DDT::Tile<Traits> Tile;
     typedef typename Tile::Tile_index Tile_index;
 
     TBB_scheduler(int max_concurrency = 0) : arena(max_concurrency ? max_concurrency : tbb::task_arena::automatic) {}

@@ -18,20 +18,22 @@
 #else
 #define CGAL_DDT_SCHEDULER_STD_SCHEDULER_PAR
 #endif
+#include <CGAL/DDT/Tile.h>
 
 namespace CGAL {
 namespace DDT {
 
 /// \ingroup PkgDDTSchedulerClasses
 /// \cgalModels Scheduler
-template<typename T
+template<typename _Traits
 #if __cplusplus >= 201703L
        , typename ExecutionPolicy
 #endif
 >
 struct STD_scheduler
 {
-    typedef T Tile;
+    typedef _Traits Traits;
+    typedef CGAL::DDT::Tile<Traits> Tile;
     typedef typename Tile::Tile_index Tile_index;
 
     STD_scheduler(int max_concurrency = 0) {}

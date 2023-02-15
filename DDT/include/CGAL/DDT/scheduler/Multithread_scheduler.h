@@ -13,6 +13,7 @@
 #define CGAL_DDT_SCHEDULER_MULTITHREAD_SCHEDULER_H
 
 #include <CGAL/DDT/scheduler/multithread_scheduler/thread_pool.h>
+#include <CGAL/DDT/Tile.h>
 
 namespace CGAL {
 namespace DDT {
@@ -42,10 +43,11 @@ V transform_id(TileContainer& tc, Transform transform, V init, Tile_index id, st
 
 /// \ingroup PkgDDTSchedulerClasses
 /// \cgalModels Scheduler
-template<typename T>
+template<typename _Traits>
 struct Multithread_scheduler
 {
-    typedef T Tile;
+    typedef _Traits Traits;
+    typedef CGAL::DDT::Tile<Traits> Tile;
     typedef typename Tile::Tile_index Tile_index;
 
     /// constructor
