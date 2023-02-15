@@ -68,10 +68,10 @@ template<typename T> char * load_point(char * buf, T& t) {
 
 /// \ingroup PkgDDTSchedulerClasses
 /// \cgalModels Scheduler
-template<typename _Traits>
+template<typename TriangulationTraits>
 struct MPI_scheduler
 {
-    typedef _Traits Traits;
+    typedef TriangulationTraits Traits;
     typedef CGAL::DDT::Tile<Traits> Tile;
     typedef typename Tile::Vertex_const_handle_and_id Vertex_const_handle_and_id;
     typedef typename Tile::Vertex_const_handle Vertex_const_handle;

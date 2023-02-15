@@ -52,10 +52,10 @@ V transform_reduce_id(TileContainer& tc, Transform transform, Reduce reduce, V v
 
 /// \ingroup PkgDDTSchedulerClasses
 /// \cgalModels Scheduler
-template<typename _Traits>
+template<typename TriangulationTraits>
 struct TBB_scheduler
 {
-    typedef _Traits Traits;
+    typedef TriangulationTraits Traits;
     typedef CGAL::DDT::Tile<Traits> Tile;
     typedef typename Tile::Tile_index Tile_index;
 

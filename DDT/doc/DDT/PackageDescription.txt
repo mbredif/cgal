@@ -49,8 +49,8 @@ The Distributed Delaunay Triangulation (DDT) package, ....
 
 \cgalCRPSection{Classes}
 - `CGAL::DDT::Tile<TriangulationTraits>`
-- `CGAL::Distributed_Delaunay_triangulation<TileContainer>`
 - `CGAL::DDT::Tile_container<TriangulationTraits,Serializer>`
+- `CGAL::Distributed_Delaunay_triangulation<TileContainer>`
 
 */
 

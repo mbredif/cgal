@@ -20,10 +20,10 @@ namespace DDT {
 
 /// \ingroup PkgDDTSchedulerClasses
 /// \cgalModels Scheduler
-template<typename _Traits>
+template<typename TriangulationTraits>
 struct Sequential_scheduler
 {
-    typedef _Traits Traits;
+    typedef TriangulationTraits Traits;
     typedef CGAL::DDT::Tile<Traits> Tile;
 
     /// constructor

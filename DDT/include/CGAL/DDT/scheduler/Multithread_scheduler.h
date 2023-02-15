@@ -43,10 +43,10 @@ V transform_id(TileContainer& tc, Transform transform, V init, Tile_index id, st
 
 /// \ingroup PkgDDTSchedulerClasses
 /// \cgalModels Scheduler
-template<typename _Traits>
+template<typename TriangulationTraits>
 struct Multithread_scheduler
 {
-    typedef _Traits Traits;
+    typedef TriangulationTraits Traits;
     typedef CGAL::DDT::Tile<Traits> Tile;
     typedef typename Tile::Tile_index Tile_index;
 

@@ -98,12 +98,12 @@ private:
 
 /// \ingroup PkgDDTClasses
 /// Tile Container
-template<typename _Traits, typename Serializer = No_serializer<_Traits> >
+template<typename TriangulationTraits, typename Serializer = No_serializer<TriangulationTraits> >
 class Tile_container
 {
 public:
-    typedef _Traits                                    Traits;
-    typedef CGAL::DDT::Tile<_Traits>                   Tile;
+    typedef TriangulationTraits                                    Traits;
+    typedef CGAL::DDT::Tile<TriangulationTraits>                   Tile;
 
     typedef typename Traits::Point                     Point;
     typedef typename Traits::Tile_index                Tile_index;
