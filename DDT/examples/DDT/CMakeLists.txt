@@ -12,10 +12,16 @@ if(NOT TARGET Boost::filesystem)
   return()
 endif()
 
+INCLUDE(./FindLAS.cmake)
+include_directories(${LASTOOL_DIR}/LASlib/inc/)
+include_directories(${LASTOOL_DIR}/LASzip/src/)
+
 create_single_source_cgal_program( "ddt_mt_2.cpp" )
 create_single_source_cgal_program( "ddt_out_of_core_2.cpp" )
+create_single_source_cgal_program( "read_las_example_ddt.cpp")
 target_link_libraries(ddt_mt_2  PRIVATE Boost::filesystem Boost::program_options)
-target_link_libraries(ddt_out_of_core_2  PRIVATE Boost::filesystem Boost::program_options)
+target_link_libraries(ddt_out_of_core_2 PRIVATE Boost::filesystem Boost::program_options)
+target_link_libraries(read_las_example_ddt PRIVATE Boost::filesystem CGAL::CGAL ${LASLIB})
 
 option (USE_TBB "Use TBB " ON)
 if (USE_TBB)
