@@ -5,6 +5,7 @@
 #include <CGAL/property_map.h>
 #include <CGAL/IO/read_las_points.h>
 #include <CGAL/DDT/IO/write_ply.h>
+#include <CGAL/DDT/IO/write_pvtu.h>
 
 #include <CGAL/DDT/traits/Triangulation_traits_3.h>
 #include <CGAL/DDT/partitioner/Grid_partitioner.h>
@@ -25,7 +26,7 @@
 #include <fstream>
 
 // types
-typedef int Tile_index;
+typedef unsigned char Tile_index;
 typedef unsigned char Vertex_info; // unused user data
 typedef CGAL::DDT::Triangulation_traits_3<Tile_index, Vertex_info> Traits;
 typedef Traits::Random_points_in_box Random_points;
@@ -43,12 +44,16 @@ typedef Traits::Point Point;
 
 int main(int argc, char*argv[])
 {
-    const char* fname = (argc>1) ? argv[1] : "data/pig_points.las";
+    const char* fname            = (argc>1) ? argv[1] : "points.las";
+    int number_of_tiles_per_axis = (argc>2) ? atoi(argv[2]) : 3;
+    int max_number_of_tiles      = (argc>3) ? atoi(argv[3]) : 0;
+    const char* ser_prefix       = (argc>4) ? argv[4] : "tile_";
 
     // Reads a .las point set file with normal vectors and colors
     std::ifstream in(fname, std::ios_base::binary);
     std::vector<Point> points; // store points
-    std::cout << "reading las.." << std::endl;
+
+    std::cout << "Reading las" << std::endl;
     if(!CGAL::IO::read_LAS(in, std::back_inserter (points)))
 	{
 	    std::cerr << "Error: cannot read file " << fname << std::endl;
@@ -56,29 +61,19 @@ int main(int argc, char*argv[])
 	}
 
     enum { D = Traits::D };
-    int max_number_of_tiles   = (argc>3) ? atoi(argv[3]) : 1;
-    int number_of_tiles_per_axis = 3;
     int number_of_points = points.size();
     CGAL::Bbox_3 bbox = bbox_3(points.begin(),points.end());
     
     CGAL::DDT::Grid_partitioner<Traits> partitioner(bbox, number_of_tiles_per_axis);
-    Serializer serializer("tile_");
+    Serializer serializer(ser_prefix);
     Tile_container tiles(D, max_number_of_tiles, serializer);
     Scheduler scheduler;
-    std::cout << "start DDT" << std::endl;
+
+    std::cout << "Inserting points" << std::endl;
     CGAL::DDT::insert(tiles, scheduler, points.begin(), number_of_points, partitioner);
 
-    Distributed_Delaunay_triangulation tri(tiles);
-/*
-    if(!tri.is_valid())
-    {
-        std::cerr << "tri is not valid" << std::endl;
-        return 1;
-    }
-*/
-    const std::string& testname = "out";
-    boost::filesystem::create_directories(testname);
-    std::cout << "== write_ply ==" << std::endl;
-    CGAL::DDT::write_ply(tiles, testname + "/out.ply");
+    std::cout << "Writing PVTU" << std::endl;
+    CGAL::DDT::write_pvtu(tiles, scheduler, "out", false);
+
     return EXIT_SUCCESS;
 }
