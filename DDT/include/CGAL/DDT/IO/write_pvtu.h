@@ -21,8 +21,8 @@
 #include <fstream>
 #include <stdio.h>
 #include <stdlib.h>
-#include <set>
 #include <CGAL/IO/io.h>
+#include <CGAL/IO/VTK/VTK_writer.h>
 
 namespace CGAL {
 namespace DDT {
@@ -147,8 +147,8 @@ write_vtu_cells_tag(std::ostream& os,
         os << V[tr.vertex(c, i)] << " ";
       }
     }
+    os << "\n    </DataArray>\n";
   }
-  os << "\n    </DataArray>\n";
 
   std::size_t c;
   // Write offsets
@@ -226,6 +226,65 @@ write_vtu_points_tag(std::ostream& os,
   os << "   </PointData>\n";
 }
 
+template <class Triangulation>
+void
+write_vtu_points_binary(std::ostream& os,
+            const Triangulation & tr,
+            std::map<typename Triangulation::Vertex_index, std::size_t> & V)
+{
+  std::size_t dim = 3;
+  typedef typename Triangulation::Tile_index Tile_index;
+  typedef typename Triangulation::Vertex_index Vertex_index;
+  typedef typename Triangulation::Traits::Geom_traits Gt;
+  typedef typename Gt::FT FT;
+
+  std::size_t inum = 0;
+  std::vector<FT> coordinates;
+  std::vector<Tile_index> tiles(tr.number_of_vertices(),tr.id());
+  coordinates.reserve(tr.number_of_vertices()*3);
+  for( Vertex_index v = tr.vertices_begin(); v != tr.vertices_end(); ++v)
+    {
+      if (tr.vertex_is_infinite(v)) continue;
+      V[v] = inum++;  // binary output => the map has not been filled yet
+      coordinates.push_back(tr.point(v)[0]);
+      coordinates.push_back(tr.point(v)[1]);
+      coordinates.push_back(dim == 3 ? tr.point(v)[2] : 0.0);
+    }
+  CGAL::IO::internal::write_vector<FT>(os,coordinates);
+  CGAL::IO::internal::write_vector<Tile_index>(os,tiles);
+}
+
+template <class Triangulation>
+void
+write_vtu_cells_binary(std::ostream& os,
+            const Triangulation & tr,
+            std::map<typename Triangulation::Vertex_index, std::size_t> & V)
+{
+  typedef typename Triangulation::Cell_index Cell_index;
+  typedef typename Triangulation::Tile_index Tile_index;
+  std::vector<std::size_t> connectivity_table;
+  std::vector<std::size_t> offsets;
+  std::vector<unsigned char> cell_type(tr.number_of_main_finite_cells(),10);  // tetrahedra == 10
+  std::vector<Tile_index> tiles(tr.number_of_main_finite_cells(),tr.id());
+  connectivity_table.reserve(tr.number_of_vertices());
+  offsets.reserve(tr.number_of_vertices());
+  std::size_t off = 0;
+  for( Cell_index c = tr.cells_begin() ; c != tr.cells_end() ; ++c )
+    {
+      if(tr.cell_is_infinite(c) || !tr.cell_is_main(c)) continue;
+      off += 4;
+      offsets.push_back(off);
+      for (int i=0; i<4; i++)
+        connectivity_table.push_back(V[tr.vertex(c, i)]);
+    }
+
+  CGAL::IO::internal::write_vector<std::size_t>(os,connectivity_table);
+  CGAL::IO::internal::write_vector<std::size_t>(os,offsets);
+  CGAL::IO::internal::write_vector<unsigned char>(os,cell_type);
+  CGAL::IO::internal::write_vector<Tile_index>(os,tiles);
+}
+
+
 // VTU tile writers
 
 template <class Tile>
@@ -250,10 +309,8 @@ void write_vtu_tile(std::ostream& os,
      << " </UnstructuredGrid>\n";
   if (binary) {
     os << "<AppendedData encoding=\"raw\">\n_";
-    /* todo: binary mode
     write_vtu_points_binary(os, tr, V); // fills V if the mode is BINARY
     write_vtu_cells_binary(os, tr, V);
-    */
     os << "</AppendedData>\n";
   }
   os << "</VTKFile>\n";

@@ -4,7 +4,6 @@
 
 #include <CGAL/property_map.h>
 #include <CGAL/IO/read_las_points.h>
-#include <CGAL/DDT/IO/write_ply.h>
 #include <CGAL/DDT/IO/write_pvtu.h>
 
 #include <CGAL/DDT/traits/Triangulation_traits_3.h>
@@ -12,10 +11,6 @@
 #include <CGAL/DDT/Tile_container.h>
 #include <CGAL/DDT/scheduler/Multithread_scheduler.h>
 #include <CGAL/DDT/serializer/File_serializer.h>
-
-
-#include <CGAL/Distributed_Delaunay_triangulation.h>
-#include <CGAL/DDT/IO/write_ply.h>
 #include <CGAL/DDT/insert.h>
 
 #include <CGAL/Bbox_3.h>
@@ -35,8 +30,6 @@ typedef CGAL::DDT::Tile<Traits> Tile;
 typedef CGAL::DDT::Multithread_scheduler<Traits> Scheduler;
 typedef CGAL::DDT::File_serializer<Traits> Serializer;
 typedef CGAL::DDT::Tile_container<Traits, Serializer> Tile_container;
-typedef CGAL::Distributed_Delaunay_triangulation<Tile_container> Distributed_Delaunay_triangulation;
-
 
 typedef Traits::Point Point;
 // typedef std::array<unsigned short, 4> Color;
@@ -44,10 +37,12 @@ typedef Traits::Point Point;
 
 int main(int argc, char*argv[])
 {
-    const char* fname            = (argc>1) ? argv[1] : "points.las";
-    int number_of_tiles_per_axis = (argc>2) ? atoi(argv[2]) : 3;
-    int max_number_of_tiles      = (argc>3) ? atoi(argv[3]) : 0;
-    const char* ser_prefix       = (argc>4) ? argv[4] : "tile_";
+    const char* fname       = (argc>1) ? argv[1] : "points.las";
+    int number_of_tiles_x   = (argc>2) ? atoi(argv[2]) : 3;
+    int number_of_tiles_y   = (argc>3) ? atoi(argv[3]) : 3;
+    int number_of_tiles_z   = (argc>4) ? atoi(argv[4]) : 1;
+    int max_number_of_tiles = (argc>5) ? atoi(argv[5]) : 0;
+    const char* ser_prefix  = (argc>6) ? argv[6] : "tile_";
 
     // Reads a .las point set file with normal vectors and colors
     std::ifstream in(fname, std::ios_base::binary);
@@ -64,7 +59,8 @@ int main(int argc, char*argv[])
     int number_of_points = points.size();
     CGAL::Bbox_3 bbox = bbox_3(points.begin(),points.end());
     
-    CGAL::DDT::Grid_partitioner<Traits> partitioner(bbox, number_of_tiles_per_axis);
+    int number_of_tiles[] = { number_of_tiles_x, number_of_tiles_y, number_of_tiles_z };
+    CGAL::DDT::Grid_partitioner<Traits> partitioner(bbox, number_of_tiles, number_of_tiles+D);
     Serializer serializer(ser_prefix);
     Tile_container tiles(D, max_number_of_tiles, serializer);
     Scheduler scheduler;
@@ -73,7 +69,7 @@ int main(int argc, char*argv[])
     CGAL::DDT::insert(tiles, scheduler, points.begin(), number_of_points, partitioner);
 
     std::cout << "Writing PVTU" << std::endl;
-    CGAL::DDT::write_pvtu(tiles, scheduler, "out", false);
+    CGAL::DDT::write_pvtu(tiles, scheduler, "out");
 
     return EXIT_SUCCESS;
 }
