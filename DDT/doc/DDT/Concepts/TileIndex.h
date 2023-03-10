@@ -1,5 +1,5 @@
 
-/*!
+/*
 \ingroup PkgDDTConcepts
 \cgalConcept
 
@@ -13,23 +13,23 @@ The concept `Tile_index` describes the requirements for a Tile identifier in a d
 
 struct TileIndex {
 
-    /// Default constructible
+    // Default constructible
     TileIndex() {}
 
-    /// \name Grid_partitioner requirements
-    /// @{
+    // \name Grid_partitioner requirements
+    // @{
     TileIndex(double) {}
     TileIndex operator%(std::size_t) const { return {}; }
     TileIndex operator+(TileIndex) const { return {}; }
     TileIndex operator*(std::size_t) const { return {}; }
-    /// @}
+    // @}
 
-    /// \name Comparisons
-    /// @{
+    // \name Comparisons
+    // @{
     bool operator< (TileIndex) const { return true; }
     bool operator!=(TileIndex) const { return true; }
     bool operator==(TileIndex) const { return true; }
-    /// @}
+    // @}
 };
 
 namespace std {
