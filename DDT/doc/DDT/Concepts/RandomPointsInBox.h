@@ -1,5 +1,5 @@
 
-/*!
+/*
 \ingroup PkgDDTConcepts
 \cgalConcept
 

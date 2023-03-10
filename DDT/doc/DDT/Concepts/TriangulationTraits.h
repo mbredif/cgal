@@ -35,7 +35,7 @@ public:
 /// @{
 ///
 #ifdef DOXYGEN_RUNNING
-    /// Point embedding of a vertex, model of `Point`
+    /// point type
     typedef unspecified_type Point;
     /// Tile identifier type, model of `TileIndex`
     typedef unspecified_type Tile_index;
@@ -51,14 +51,9 @@ public:
 
     /// The adapted Delaunay Triangulation
     typedef unspecified_type Delaunay_triangulation;
-    /// Random point generator in a ball, model of `RandomPointsInBall`
-    typedef unspecified_type Random_points_in_ball;
-    /// Random point generator in a box, model of `RandomPointsInBox`
-    typedef unspecified_type Random_points_in_box;
     /// A model of the `Bbox` concept
     typedef unspecified_type Bbox;
 #else
-    typedef ::Point Point;
     typedef ::TileIndex Tile_index;
     typedef unspecified_type Info;
     typedef VertexIndex Vertex_index;
