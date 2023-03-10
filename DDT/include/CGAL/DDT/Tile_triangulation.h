@@ -345,7 +345,7 @@ public:
     inline bool cell_is_main(Cell_index c) const { return cell_id(c) == id(); }
     /// @}
 
-    /// remove a finite vertex if it is foreign and if all its adjacent vertices are foreign
+    /// removes a finite vertex if it is foreign and if all its adjacent vertices are foreign
     /// returns whether simplification occured
     bool simplify(Vertex_index v)
     {
@@ -360,7 +360,7 @@ public:
         return true;
     }
 
-    /// Collect at most 2*D vertices which points define the bounding box of the local tile vertices
+    /// collects at most 2*D vertices which points define the bounding box of the local tile vertices
     void get_axis_extreme_points(std::vector<Vertex_index>& out) const
     {
         std::vector<Vertex_index> vertices;
@@ -399,7 +399,7 @@ public:
         }
     }
 
-    /// Collect (vertex,id) pairs listing finite vertices that are possibly newly adjacent to vertices of a foreign tile (id),
+    /// collects (vertex,id) pairs listing finite vertices that are possibly newly adjacent to vertices of a foreign tile (id),
     /// after the insertion of the inserted vertices, as required by the star splaying algorithm.
     void get_finite_neighbors(const std::set<Vertex_index>& inserted, std::map<Tile_index, std::set<Vertex_index>>& out) const
     {
@@ -423,7 +423,7 @@ public:
         }
     }
 
-    /// Insert a range of received points with tile ids.
+    /// inserts a range of received points with tile ids.
     /// reports the set of all inserted points by default.
     /// If report_vertices_with_mixed_stars_only is true, then only the new vertices with mixed stars are reported.
     /// foreign vertices of the tile triangulation are automatically simplified if their star is foreign as well.

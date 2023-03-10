@@ -29,7 +29,7 @@ namespace DDT {
 template<typename I, typename F = No_info>
 struct Triangulation_traits_2
 {
-    enum { D = 2 };
+    static constexpr int D = 2;
     typedef I                                                        Tile_index;
     typedef F                                                        Info;
     typedef CGAL::DDT::Data<Tile_index, Info>                        Data;

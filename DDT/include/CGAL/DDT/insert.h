@@ -94,7 +94,7 @@ typename TileContainer::Vertex_index insert(TileContainer& tc, Scheduler& sch, c
 */
 
 /// \ingroup PkgDDTInsert
-/// Inserts the points of the provided point+id range in the tiles given by the given ids, in the Delaunay triangulation stored in the tile container.
+/// inserts the points of the provided point+id range in the tiles given by the given ids, in the Delaunay triangulation stored in the tile container.
 /// The scheduler provides the distribution environment (single thread, multithread, MPI...)
 /// @returns the number of newly inserted vertices
 template<typename TileContainer, typename Scheduler, typename PointIndexRange>
@@ -105,7 +105,7 @@ std::size_t insert(TileContainer& tc, Scheduler& sch, const PointIndexRange& ran
 }
 
 /// \ingroup PkgDDTInsert
-/// Inserts the points of the provided point range in the tiles given by the partitioning function, in the Delaunay triangulation stored in the tile container.
+/// inserts the points of the provided point range in the tiles given by the partitioning function, in the Delaunay triangulation stored in the tile container.
 /// The scheduler provides the distribution environment (single thread, multithread, MPI...)
 /// @returns the number of newly inserted vertices
 template<typename TileContainer, typename Scheduler, typename PointRange, typename Partitioner>
@@ -118,7 +118,7 @@ std::size_t insert(TileContainer& tc, Scheduler& sch, const PointRange& points, 
 }
 
 /// \ingroup PkgDDTInsert
-/// Inserts the points of the provided point range in the tiles given by the partitioning function, in the Delaunay triangulation stored in the tile container.
+/// inserts the points of the provided point range in the tiles given by the partitioning function, in the Delaunay triangulation stored in the tile container.
 /// The scheduler provides the distribution environment (single thread, multithread, MPI...)
 /// @returns the number of newly inserted vertices
 template<typename TileContainer, typename Scheduler, typename Iterator, typename Partitioner>

@@ -201,7 +201,7 @@ public:
                 }
 */
 
-    /// unload a tile from memory, automatically saving it.
+    /// unloads a tile from memory, automatically saving it.
     /// returns true after the loaded tile id is successfully saved and unloaded from memory.
     /// @todo attention à la perennité des handles (tile is possibly unloaded), ou alors lock ou shared pointer.
     void unload(Tile& tile) {

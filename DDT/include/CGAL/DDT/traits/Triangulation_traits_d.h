@@ -371,7 +371,7 @@ public:
     typedef typename Base::Cell_index Cell_index;
     typedef typename Base::Facet_index Facet_index;
     typedef typename Base::Delaunay_triangulation Delaunay_triangulation;
-    enum { D = 0 };
+    static constexpr int D = 0;
     Triangulation_traits_d(int d) : dim_(d)
     {
         assert(d >= 2);
@@ -400,7 +400,7 @@ public:
     typedef typename Base::Cell_index Cell_index;
     typedef typename Base::Facet_index Facet_index;
     typedef typename Base::Delaunay_triangulation Delaunay_triangulation;
-    enum { D = N };
+    static constexpr int D = N;
     Triangulation_traits(int d = 0)
     {
         assert(d==0 || d==D);
