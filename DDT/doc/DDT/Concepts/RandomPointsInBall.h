@@ -1,4 +1,7 @@
 
+#ifndef CGAL_DDT_CONCEPT_RANDOM_POINTS_IN_BALL
+#define CGAL_DDT_CONCEPT_RANDOM_POINTS_IN_BALL
+
 /*
 \ingroup PkgDDTConcepts
 \cgalConcept
@@ -11,14 +14,8 @@ The concept `RandomPointsInBall` describes the requirements of a output point it
 \cgalHasModel `CGAL::DDT::Triangulation_traits::Random_points_in_ball`
 
 */
-
-#ifndef CGAL_DDT_CONCEPT_RANDOM_POINTS_IN_BALL
-#define CGAL_DDT_CONCEPT_RANDOM_POINTS_IN_BALL
-
-#include "Point.h"
-
 struct RandomPointsInBall {
-    typedef ::Point Point;
+    struct Point{};
     RandomPointsInBall(int dimension, double range) {}
     RandomPointsInBall& operator++() { return *this; }
     const Point& operator*() const { return p; }

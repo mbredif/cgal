@@ -20,7 +20,6 @@ The concept `TriangulationTraits` describes the requirements of a traits that ad
 */
 
 #include "Bbox.h"
-#include "Point.h"
 #include "TileIndex.h"
 #include "RandomPointsInBox.h"
 #include "RandomPointsInBall.h"
@@ -54,6 +53,7 @@ public:
     /// A model of the `Bbox` concept
     typedef unspecified_type Bbox;
 #else
+    typedef unspecified_type Point;
     typedef ::TileIndex Tile_index;
     typedef unspecified_type Info;
     typedef VertexIndex Vertex_index;

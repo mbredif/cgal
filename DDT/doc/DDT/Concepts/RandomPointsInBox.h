@@ -1,4 +1,7 @@
 
+#ifndef CGAL_DDT_CONCEPT_RANDOM_POINTS_IN_BOX
+#define CGAL_DDT_CONCEPT_RANDOM_POINTS_IN_BOX
+
 /*
 \ingroup PkgDDTConcepts
 \cgalConcept
@@ -11,14 +14,8 @@ The concept `RandomPointsInBox` describes the requirements of a output point ite
 \cgalHasModel `CGAL::DDT::Triangulation_traits::Random_points_in_box`
 
 */
-
-#ifndef CGAL_DDT_CONCEPT_RANDOM_POINTS_IN_BOX
-#define CGAL_DDT_CONCEPT_RANDOM_POINTS_IN_BOX
-
-#include "Point.h"
-
 struct RandomPointsInBox {
-    typedef ::Point Point;
+    struct Point{};
     RandomPointsInBox(int dimension, double range) {}
     RandomPointsInBox& operator++() { return *this; }
     const Point& operator*() const { return p; }

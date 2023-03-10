@@ -15,8 +15,6 @@ The concept `Bbox` describes the requirements for a bounding box with double coo
 #ifndef CGAL_DDT_CONCEPT_BBOX
 #define CGAL_DDT_CONCEPT_BBOX
 
-#include "Point.h"
-
 #include <iostream>
 
 class Bbox {
