@@ -18,6 +18,9 @@ namespace CGAL {
 namespace DDT {
 
 /// \ingroup PkgDDTSerializerClasses
+/// This serializer is a fake serializer that fails all saving and loading requests.
+/// It should be used to disable any serialization and perform all computations in memory.
+/// That provides the fastest computation, provided enough memory is available.
 /// \cgalModels Serializer
 template<typename Traits>
 struct No_serializer

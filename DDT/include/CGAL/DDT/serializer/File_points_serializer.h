@@ -19,6 +19,11 @@ namespace CGAL {
 namespace DDT {
 
 /// \ingroup PkgDDTSerializerClasses
+/// This serializer saves and loads the bounding box and point set of each tile to the filesystem.
+/// Each tile is saved as the file "{prefix}{tile_index}.txt".
+/// It contains the iostream serialization of the bounding box and the point set of the tile triangulation.
+/// The point set of each tile is sorted spatially before saving, so that the Delaunay triangulation could be recomputed efficiently when the tile is reloaded.
+/// This trades off decreased disc usage and bandwith for increased computations.
 /// \cgalModels Serializer
 template <class Traits>
 struct File_points_serializer
