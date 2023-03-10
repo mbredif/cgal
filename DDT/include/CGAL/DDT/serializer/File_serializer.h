@@ -21,7 +21,6 @@ namespace DDT {
 
 /// \ingroup PkgDDTSerializerClasses
 /// This serializer saves and loads the bounding box and triangulation of each tile to the filesystem.
-/// Each tile is saved as the file "{prefix}{tile_index}.txt".
 /// It contains the iostream serialization of the bounding box and the tile triangulation.
 /// \cgalModels Serializer
 template <class Traits>
@@ -32,6 +31,7 @@ struct File_serializer
   typedef typename Traits::Bbox             Bbox;
   typedef typename Tile::Tile_triangulation Tile_triangulation;
 
+  /// Each tile is saved as the file "{prefix}{tile_index}.txt".
   File_serializer(const std::string& prefix = "") : m_prefix(prefix) {
       boost::filesystem::path p(prefix);
       boost::filesystem::path q(p.parent_path());
@@ -86,6 +86,7 @@ struct File_serializer
     return !out.fail();
   }
 
+  /// File system prefix
   const std::string& prefix() const { return m_prefix; }
 
 private:

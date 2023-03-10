@@ -20,7 +20,6 @@ namespace DDT {
 
 /// \ingroup PkgDDTSerializerClasses
 /// This serializer saves and loads the bounding box and point set of each tile to the filesystem.
-/// Each tile is saved as the file "{prefix}{tile_index}.txt".
 /// It contains the iostream serialization of the bounding box and the point set of the tile triangulation.
 /// The point set of each tile is sorted spatially before saving, so that the Delaunay triangulation could be recomputed efficiently when the tile is reloaded.
 /// This trades off decreased disc usage and bandwith for increased computations.
@@ -32,6 +31,7 @@ struct File_points_serializer
   typedef typename Traits::Tile_index       Tile_index;
   typedef typename Traits::Bbox             Bbox;
 
+  /// Each tile is saved as the file "{prefix}{tile_index}.txt".
   File_points_serializer(const std::string& prefix = "") : m_prefix(prefix) {
       boost::filesystem::path p(prefix);
       boost::filesystem::path q(p.parent_path());
@@ -116,6 +116,7 @@ struct File_points_serializer
     return !out.fail();
   }
 
+  /// File system prefix
   const std::string& prefix() const { return m_prefix; }
 
 private:
