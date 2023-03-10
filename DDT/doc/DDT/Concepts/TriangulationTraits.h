@@ -34,28 +34,42 @@ public:
 /// \name Types
 /// @{
 ///
-    /// Point embedding of a vertex
-    typedef ::Point Point;
-    /// Tile identifier type
-    typedef ::TileIndex Tile_index;
+#ifdef DOXYGEN_RUNNING
+    /// Point embedding of a vertex, model of `Point`
+    typedef unspecified_type Point;
+    /// Tile identifier type, model of `TileIndex`
+    typedef unspecified_type Tile_index;
     /// user Info type
     typedef unspecified_type Info;
 
     /// Handle to a vertex, model of `std::incrementable` and `LessThanComparable`.
-    typedef VertexIndex Vertex_index;
+    typedef unspecified_type Vertex_index;
     /// Handle to a facet, model of `std::incrementable` and `LessThanComparable`.
-    typedef FacetIndex  Facet_index;
+    typedef unspecified_type  Facet_index;
     /// Handle to a cell, model of `std::incrementable` and `LessThanComparable`.
-    typedef CellIndex   Cell_index;
+    typedef unspecified_type   Cell_index;
 
     /// The adapted Delaunay Triangulation
     typedef unspecified_type Delaunay_triangulation;
-    /// Random point generator, in a ball
+    /// Random point generator in a ball, model of `RandomPointsInBall`
+    typedef unspecified_type Random_points_in_ball;
+    /// Random point generator in a box, model of `RandomPointsInBox`
+    typedef unspecified_type Random_points_in_box;
+    /// A model of the `Bbox` concept
+    typedef unspecified_type Bbox;
+#else
+    typedef ::Point Point;
+    typedef ::TileIndex Tile_index;
+    typedef unspecified_type Info;
+    typedef VertexIndex Vertex_index;
+    typedef FacetIndex Facet_index;
+    typedef CellIndex Cell_index;
+    typedef unspecified_type Delaunay_triangulation;
     typedef ::RandomPointsInBall Random_points_in_ball;
-    /// Random point generator, in a box
     typedef ::RandomPointsInBox Random_points_in_box;
-    /// A model of the Bbox concept
     typedef ::Bbox Bbox;
+#endif
+
     /// the ambient dimension if it is static, 0 if it is dynamic
     enum { D };
     /// @}
