@@ -1,4 +1,4 @@
-
+#ifndef DOXYGEN_RUNNING
 /*!
 \ingroup PkgDDTConcepts
 \cgalConcept
@@ -39,3 +39,5 @@ struct Selector
     inline value_type select();
 
 }; /* end Selector */
+
+#endif
