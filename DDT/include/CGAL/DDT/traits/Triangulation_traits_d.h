@@ -340,6 +340,15 @@ public:
         return b;
     }
 
+    static inline Bbox bbox(unsigned int d, double range) {
+      return Bbox(d, range);
+    }
+
+    static inline Bbox bbox(unsigned int d) {
+      return Bbox(d);
+    }
+
+
     inline std::ostream& write(std::ostream& out, const Delaunay_triangulation& dt) const { return out << dt; }
     inline std::istream& read(std::istream& in, Delaunay_triangulation& dt) const { return in >> dt; }
 };

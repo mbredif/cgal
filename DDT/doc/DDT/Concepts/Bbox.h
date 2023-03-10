@@ -21,16 +21,8 @@ The concept `Bbox` describes the requirements for a bounding box with double coo
 
 class Bbox {
 public:
-    typedef ::Point Point;
-
     /// Constructor for an empty bounding box in unspecified dimensions.
     Bbox() {}
-    /// Constructor for an empty bounding box in d dimensions.
-    /// if the geometric traits have a static dimension, the dimensions should match.
-    Bbox(int d) {}
-    /// Constructor for a bounding box in d dimensions with intervals [-range, range] on each axis.
-    /// if the geometric traits have a static dimension, the dimensions should match
-    Bbox(int d, double range) {}
     /// Grow the bounding box to also bound another given bounding box.
     Bbox& operator+=(const Bbox& bbox) { return *this; }
     /// The ambient dimension.

@@ -63,7 +63,7 @@ int test_traits(const std::string& testname, int ND, int NP, int dim = T::D, int
 
     std::cout << "== Delaunay ==" << std::endl;
     double range = 1;
-    Bbox bbox(dim, range);
+    Bbox bbox = Traits::bbox(dim, range);
     Random_points points(dim, range);
     Partitioner partitioner(bbox, ND);
     TileContainer tiles1(dim, NT);

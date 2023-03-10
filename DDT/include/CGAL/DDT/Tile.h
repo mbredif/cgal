@@ -39,7 +39,7 @@ public:
         id_(id),
         traits(t),
         triangulation_(id, t),
-        bbox_(t.dimension()),
+        bbox_(t.bbox(t.dimension())),
         points_(),
         in_mem(false),
         locked(false)

@@ -29,7 +29,7 @@ int main(int argc, char **argv)
     int max_number_of_tiles       = (argc>4) ? atoi(argv[4]) : 0;
     double range = 1;
 
-    Bbox bbox(D, range);
+    Bbox bbox = Traits::bbox(D, range);
     CGAL::DDT::Grid_partitioner<Traits> partitioner(bbox, number_of_tiles_per_axis);
     Serializer serializer("tile_");
     Tile_container tiles(D, max_number_of_tiles, serializer);

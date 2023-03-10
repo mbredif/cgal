@@ -48,15 +48,21 @@ struct Triangulation_traits_3
     Triangulation_traits_3(int d = 0) { assert(d==0 || d==D); }
     inline constexpr int dimension() const { return D; }
 
-    struct Bbox : public CGAL::Bbox_3
-    {
-        Bbox(unsigned int d, double range) : CGAL::Bbox_3(-range, -range, -range, range, range, range) { CGAL_assertion(d==3); }
-        Bbox(unsigned int d = 3) : CGAL::Bbox_3() { CGAL_assertion(d==3); }
-        Bbox(const CGAL::Bbox_3& bbox) : CGAL::Bbox_3(bbox) {}
-    };
+    /// Bbox type
+    typedef CGAL::Bbox_3 Bbox;
 
     inline Bbox bbox(const Point& p) const {
         return CGAL::Bbox_3(p.x(), p.y(), p.z(), p.x(), p.y(), p.z());
+    }
+
+    static inline Bbox bbox(unsigned int d, double range) {
+      CGAL_assertion(d==3);
+      return Bbox_3(-range, -range, -range, range, range, range);
+    }
+
+    static inline Bbox bbox(unsigned int d) {
+      CGAL_assertion(d==3);
+      return CGAL::Bbox_3();
     }
 
     struct Random_points_in_box : CGAL::Random_points_in_cube_3<Point>

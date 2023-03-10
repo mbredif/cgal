@@ -122,8 +122,15 @@ public:
 /// @{
     /// access the point embedding of a vertex
     const Point& point(const Delaunay_triangulation& dt, Vertex_index v) const { return p; }
-    /// access a box bounding the approximation of a point
+    /// creates a box bounding the approximation of a point
     Bbox bbox(const Point& p) const { return {}; }
+    /// creates an an empty bounding box in d dimensions.
+    /// If the geometric traits have a static dimension, the dimensions should match.
+    static Bbox bbox(int d) { return {}; }
+    /// creates a bounding box in d dimensions with intervals [-range, range] on each axis.
+    /// If the geometric traits have a static dimension, the dimensions should match
+    static  Bbox bbox(int d, double range) { return {}; }
+
     /// access the identifier of the tile where this vertex is local
     Tile_index    id  (Vertex_index v) const { return {}; }
     /// access the flag of the vertex
