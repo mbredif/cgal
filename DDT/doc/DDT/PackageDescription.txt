@@ -20,9 +20,6 @@
 /// \defgroup PkgDDTClasses Classes
 /// \ingroup PkgDDTRef
 
-/// todo sloriot : move nested concepts into traits
-/// todo sloriot : add a CGAL::Bboxd class to the CGAL Kernel_d and remove our implementation (email sent)
-
 /*!
 \addtogroup PkgDDTRef
 \cgalPkgDescriptionBegin{Distributed Delaunay Triangulation,PkgDDT}
