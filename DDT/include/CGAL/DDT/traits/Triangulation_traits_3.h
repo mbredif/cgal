@@ -24,6 +24,7 @@ namespace CGAL {
 namespace DDT {
 
 /// \ingroup PkgDDTTraitsClasses
+/// 3-dimensional triangulation traits.
 /// \cgalModels TriangulationTraits
 template<typename I, typename F = No_info>
 struct Triangulation_traits_3

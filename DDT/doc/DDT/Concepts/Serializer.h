@@ -2,8 +2,8 @@
 \ingroup PkgDDTConcepts
 \cgalConcept
 
-The concept `Serializer` describes the requirements for the class that serializes and deserializes tiles to off-memory storage.
-File `Serializer`s are enabling out of core processing, by streaming points in and out of memory.
+The concept `Serializer` describes the requirements for the class that serializes and deserializes tiles to and from off-memory storage.
+File serializers are enabling out of core processing, by streaming points in and out of memory.
 \cgalHasModel `CGAL::DDT::No_serializer`
 \cgalHasModel `CGAL::DDT::File_serializer`
 \cgalHasModel `CGAL::DDT::File_points_serializer`
