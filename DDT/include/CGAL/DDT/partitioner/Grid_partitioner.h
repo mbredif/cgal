@@ -18,6 +18,8 @@ namespace CGAL {
 namespace DDT {
 
 /// \ingroup PkgDDTPartitionerClasses
+/// Partitions the domain enclosed by an axis aligned bounding box using a uniform grid.
+/// The number of grid steps in each dimension may be specified independently.
 /// \cgalModels Partitioner
 template<typename Traits>
 class Grid_partitioner
@@ -26,8 +28,10 @@ public:
     typedef typename Traits::Point Point;
     typedef typename Traits::Bbox Bbox;
     typedef typename Traits::Tile_index    Tile_index;
-    typedef typename std::vector<std::size_t>::const_iterator const_iterator;
+    typedef typename std::vector<std::size_t>::const_iterator const_size_iterator;
 
+    /// Contruction with a bbox, a range of number of grid steps in each dimension, and a base tile index
+    /// If the range ends before providing enough elements, the last element is repeatedly used.
     template<typename Iterator>
     Grid_partitioner(const Bbox& bbox, Iterator it, Iterator end, Tile_index id0 = {}) : id0(id0)
     {
@@ -47,6 +51,8 @@ public:
         }
     }
 
+    /// Contruction with a bbox, a number grid steps, and a base tile index
+    /// All dimensions have the same number of grid steps.
     Grid_partitioner(const Bbox& bbox, std::size_t n, Tile_index id0 = {}) : id0(id0)
     {
         std::size_t D = bbox.dimension();
@@ -63,7 +69,7 @@ public:
         }
     }
 
-    /// @todo : use a predicate, may be approximate (p[i] is a double approximation)
+    /// Computes the tile index of the given point using its approximate Cartesian coordinates
     Tile_index operator()(const Point& p) const
     {
         std::size_t D = N.size();
@@ -74,12 +80,14 @@ public:
             if (f <   0  ) f=0;
             if (f >= N[i]) f=N[i]-1;
             id = id*N[i] + Tile_index(f);
-            /// @todo : check compare_x/y/z/d with neighbors to check approximation validity
         }
         return id;
     }
-    const_iterator size_begin() const { return N.begin(); }
-    const_iterator size_end() const { return N.end(); }
+    /// begin iterator to the range providing the number of tile in each dimensions
+    const_size_iterator size_begin() const { return N.begin(); }
+    /// end iterator to the range providing the number of tile in each dimensions
+    const_size_iterator size_end() const { return N.end(); }
+    /// number of tile indices
     std::size_t size() const { return M; }
 
 private:

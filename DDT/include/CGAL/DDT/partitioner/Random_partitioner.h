@@ -19,8 +19,9 @@ namespace CGAL {
 namespace DDT {
 
 // \ingroup PkgDDTPartitionerClasses
-// \cgalModels Partitioner
+// Affects points randomly to the range of tile indices [a, b].
 // For testing purposes only (correct but bad performance)
+// \cgalModels Partitioner
 template<typename Traits, typename Generator = std::default_random_engine>
 class Random_partitioner
 {

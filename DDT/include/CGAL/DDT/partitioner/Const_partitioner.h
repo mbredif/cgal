@@ -16,6 +16,7 @@ namespace CGAL {
 namespace DDT {
 
 /// \ingroup PkgDDTPartitionerClasses
+/// Dummy partitioner that affects all points to a single tile.
 /// \cgalModels Partitioner
 template<typename Traits>
 class Const_partitioner
@@ -24,6 +25,7 @@ public:
     typedef typename Traits::Point Point;
     typedef typename Traits::Tile_index    Tile_index;
 
+    /// Construction with a tile index
     Const_partitioner(Tile_index id) : id_(id) {}
 
     inline Tile_index operator()(const Point& p) const { return id_;}
