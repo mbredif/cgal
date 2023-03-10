@@ -113,7 +113,7 @@ void write_ply_property_vert(const TileTriangulation& dt, std::ostream& out)
         Tile_index id = dt.vertex_id(v);
         for(int d=0; d<D; ++d)
         {
-            float coord = float(dt.coord(dt.point(v),d));
+            float coord = float(dt.approximate_cartesian_coordinate(v,d));
             out.write(reinterpret_cast<char *>(&coord), sizeof(coord));
         }
         out.write(reinterpret_cast<char *>(&tid), sizeof(tid));

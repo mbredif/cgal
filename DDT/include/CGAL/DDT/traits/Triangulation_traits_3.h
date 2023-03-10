@@ -215,7 +215,7 @@ struct Triangulation_traits_3
         return v->point();
     }
 
-    inline double coord(const Delaunay_triangulation& dt, const Point& p, int i) const
+    static inline double approximate_cartesian_coordinate(const Point& p, int i)
     {
         return CGAL::to_double(p[i]);
     }

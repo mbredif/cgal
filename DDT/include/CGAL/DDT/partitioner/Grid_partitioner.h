@@ -70,7 +70,7 @@ public:
         Tile_index id = id0;
         for(std::size_t i=0; i<D; ++i)
         {
-            double f = (p[i]-origin[i])*inv_step[i];
+            double f = (Traits::approximate_cartesian_coordinate(p,i)-origin[i])*inv_step[i];
             if (f <   0  ) f=0;
             if (f >= N[i]) f=N[i]-1;
             id = id*N[i] + Tile_index(f);

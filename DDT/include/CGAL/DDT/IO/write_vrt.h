@@ -40,7 +40,7 @@ void write_csv_vert(const std::string& filename, const TileTriangulation& triang
         if(triangulation.vertex_is_infinite(v)) continue;
         csv << "POINT( ";
         for(int d=0; d<D; ++d)
-            csv << triangulation.point(v)[d] << " ";
+            csv << triangulation.approximate_cartesian_coordinate(v,d) << " ";
         csv << ")," << std::to_string(triangulation.vertex_id(v)) << "\n";
     }
 }
@@ -68,7 +68,7 @@ void write_csv_facet(const std::string& filename, const TileTriangulation& trian
             Vertex_index v = triangulation.vertex(c,i);
             local += triangulation.vertex_is_local(v);
             for(int d=0; d<D; ++d)
-                csv << triangulation.point(v)[d] << " ";
+                csv << triangulation.approximate_cartesian_coordinate(v, d) << " ";
             if (++j < D) csv << ",";
         }
         csv << ")\"," << std::to_string(triangulation.facet_id(f)) << "," << local << "\n";
@@ -93,11 +93,11 @@ void write_csv_cell(const std::string& filename, const TileTriangulation& triang
             Vertex_index v = triangulation.vertex(c,i);
             local += triangulation.vertex_is_local(v);
             for(int d=0; d<D; ++d)
-                csv << triangulation.point(v)[d] << " ";
+                csv << triangulation.approximate_cartesian_coordinate(v, d) << " ";
             csv << ",";
         }
         for(int d=0; d<D; ++d) // repeat first to close the polygon
-            csv << triangulation.point(triangulation.vertex(c, 0))[d] << " ";
+            csv << triangulation.approximate_cartesian_coordinate(triangulation.vertex(c, 0), d) << " ";
         csv << "))\"," << std::to_string(triangulation.cell_id(c)) << "," << local << "\n";
     }
 }
@@ -140,12 +140,12 @@ void write_csv_tin(const std::string& filename, const TileTriangulation& triangu
         {
             v = triangulation.vertex(c,i);
             for(int d=0; d<D; ++d)
-                csv << triangulation.point(v)[d] << " ";
+                csv << triangulation.approximate_cartesian_coordinate(v, d) << " ";
             csv << ",";
         }
         v = triangulation.vertex(c,0);
         for(int d=0; d<D; ++d) // repeat first to close the polygon
-            csv << triangulation.point(v)[d] << " ";
+            csv << triangulation.approximate_cartesian_coordinate(v,d) << " ";
         csv << "))";
     }
     if (!first) csv << ")\"," << std::to_string(triangulation.id()) << "\n";

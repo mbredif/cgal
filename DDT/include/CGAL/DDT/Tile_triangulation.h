@@ -142,7 +142,7 @@ public:
     inline Vertex_index infinite_vertex() const { return traits.infinite_vertex(dt_); }
     inline const Point& point(Vertex_index v) const { return traits.point(dt_, v); }
     inline Bbox bbox(Vertex_index v) const { return traits.bbox(point(v)); }
-    inline double coord(const Point& p, int i) const { return traits.coord(dt_, p, i); }
+    inline double approximate_cartesian_coordinate(Vertex_index v, int i) const { return traits.approximate_cartesian_coordinate(point(v), i); }
     /// @}
 
     /// \name Facet functions

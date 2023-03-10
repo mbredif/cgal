@@ -1,6 +1,7 @@
 #ifndef CGAL_DDT_CONCEPT_TRIANGULATION_TRAITS
 #define CGAL_DDT_CONCEPT_TRIANGULATION_TRAITS
 
+#include "Point.h"
 #include "SimplexIndex.h"
 struct VertexIndex : public SimplexIndex {};
 struct FacetIndex: public SimplexIndex {};
@@ -53,7 +54,7 @@ public:
     /// A model of the `Bbox` concept
     typedef unspecified_type Bbox;
 #else
-    typedef unspecified_type Point;
+    typedef ::Point Point;
     typedef ::TileIndex Tile_index;
     typedef unspecified_type Info;
     typedef VertexIndex Vertex_index;
@@ -145,8 +146,7 @@ public:
     /// access the flag of the vertex
     const Info& info(Vertex_index v) const { return i; }
     /// get the ith coodinate of a point as a (possibly approximated) double
-    double coord(const Delaunay_triangulation& dt, const Point& p, int i) const { return {}; }
-    /// compare the ith coordinate
+    static double approximate_cartesian_coordinate(const Point& p, int i) { return {}; }
     bool less_coordinate(const Point& p, const Point& q, int i) const { return true; }
 /// @}
 
