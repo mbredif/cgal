@@ -66,10 +66,10 @@ void write_pvtu_file(const std::string& dirname, Iterator begin, Iterator end)
     typedef std::remove_cv_t<typename Iterator::value_type> Id;
     boost::filesystem::path path(dirname);
     std::string stem = path.stem().string();
-    std::string tile_attr = Impl::vtk_types<Id>::string;
-    std::string size_attr = Impl::vtk_types<std::size_t>::string;
-    std::string type_attr = Impl::vtk_types<unsigned char>::string;
-    std::string coor_attr = Impl::vtk_types<double>::string;
+    const char *tile_attr = Impl::vtk_types<Id>::string;
+    const char *size_attr = Impl::vtk_types<std::size_t>::string;
+    const char *type_attr = Impl::vtk_types<unsigned char>::string;
+    const char *coor_attr = Impl::vtk_types<double>::string;
     std::ofstream os(dirname+".pvtu");
     write_vtk_header(os, "PUnstructuredGrid", "1.0");
     os <<" <PUnstructuredGrid GhostLevel=\"1\">\n";
@@ -96,7 +96,7 @@ template<typename V>
 void write_vtu_data_array_tag(std::ostream& os, const std::string& name,
                               bool binary, std::size_t size, std::size_t& offset, const V& v)
 {
-    std::string format = binary ? "appended" : "ascii";
+    const char *format = binary ? "appended" : "ascii";
     os << "    <DataArray Name=\"" << name
        << "\" format=\"" << format
        << "\" type=\"" << Impl::vtk_types<V>::string;
@@ -114,18 +114,18 @@ void write_vtu_data_array_tag(std::ostream& os, const std::string& name,
     }
 }
 
-template <class Tr>
+template <class Tr, typename Vertex_index = typename Tr::Vertex_index>
 void
 write_vtu_cells_tag(std::ostream& os,
                 const Tr & tr,
                 std::size_t size_of_cells,
-                std::map<typename Tr::Vertex_index, std::size_t> & V,
+                std::map<Vertex_index, std::size_t> & V,
                 bool binary,
                 std::size_t& offset)
 {
   typedef typename Tr::Cell_index Cell_index;
-  std::string format = binary ? "appended" : "ascii";
-  std::string type = Impl::vtk_types<std::size_t>::string;
+  const char *format = binary ? "appended" : "ascii";
+  const char *type = Impl::vtk_types<std::size_t>::string;
 
   // Write connectivity table
   os << "   <Cells>\n"
@@ -175,23 +175,42 @@ write_vtu_cells_tag(std::ostream& os,
   os << "   </CellData>\n";
 }
 
-template<class Tr>
-write_vtu_points_tag(std::ostream& os,
+
+
+template<class Tr, typename Vertex_index = typename Tr::Vertex_index>
+void write_vtu_points_ascii(std::ostream& os,
+                      const Tr & tr,
+                      std::map<Vertex_index, std::size_t> & V)
+{
+  int dim = tr.maximal_dimension();
+  std::size_t inum = 0;
+  for( Vertex_index v = tr.vertices_begin(); v != tr.vertices_end(); ++v)
+  {
+    if (tr.vertex_is_infinite(v)) continue;
+    V[v] = inum++;
+    os << tr.point(v)[0] << " ";
+    os << tr.point(v)[1] << " ";
+    if(dim == 3)
+      os << tr.point(v)[2] << "\n";
+    else
+      os << 0.0 << "\n";
+  }
+}
+
+template<class Tr, typename Vertex_index = typename Tr::Vertex_index>
+void write_vtu_points_tag(std::ostream& os,
                       const Tr & tr,
                       std::size_t size_of_vertices,
                       std::map<typename Tr::Vertex_index, std::size_t> & V,
                       bool binary,
-                      std::size_t& offset,
-                      std::size_t dim = 3)
+                      std::size_t& offset)
 {
-  typedef typename Tr::Vertex_index Vertex_index;
   typedef typename Tr::Traits Traits;
   typedef typename Traits::Geom_traits Gt;
   typedef typename Gt::FT FT;
-
   std::size_t inum = 0;
-  std::string format = binary ? "appended" : "ascii";
-  std::string type = (sizeof(FT) == 8) ? "Float64" : "Float32";
+  const char *format = binary ? "appended" : "ascii";
+  const char *type = (sizeof(FT) == 8) ? "Float64" : "Float32";
 
   os << "   <Points>\n"
      << "    <DataArray type =\"" << type << "\" NumberOfComponents=\"3\" format=\""
@@ -201,23 +220,9 @@ write_vtu_points_tag(std::ostream& os,
     os << "\" offset=\"" << offset << "\"/>\n";
     offset += 3 * size_of_vertices * sizeof(FT) + sizeof(std::size_t);
     // dim coords per points + length of the encoded data (size_t)
-  }
-  else {
+  } else {
     os << "\">\n";
-    os << std::setprecision(17);
-    for( Vertex_index v = tr.vertices_begin();
-         v != tr.vertices_end();
-         ++v)
-    {
-      if (tr.vertex_is_infinite(v)) continue;
-      V[v] = inum++;
-      os << tr.point(v)[0] << " ";
-      os << tr.point(v)[1] << " ";
-      if(dim == 3)
-        os << tr.point(v)[2] << " ";
-      else
-        os << 0.0 << " ";
-    }
+    write_vtu_points_ascii(os, tr, V);
     os << "\n    </DataArray>\n";
   }
   os << "   </Points>\n";
@@ -226,15 +231,14 @@ write_vtu_points_tag(std::ostream& os,
   os << "   </PointData>\n";
 }
 
-template <class Triangulation>
+template <class Triangulation, typename Vertex_index = typename Triangulation::Vertex_index>
 void
 write_vtu_points_binary(std::ostream& os,
             const Triangulation & tr,
-            std::map<typename Triangulation::Vertex_index, std::size_t> & V)
+            std::map<Vertex_index, std::size_t> & V)
 {
   std::size_t dim = 3;
   typedef typename Triangulation::Tile_index Tile_index;
-  typedef typename Triangulation::Vertex_index Vertex_index;
   typedef typename Triangulation::Traits::Geom_traits Gt;
   typedef typename Gt::FT FT;
 
@@ -254,11 +258,11 @@ write_vtu_points_binary(std::ostream& os,
   CGAL::IO::internal::write_vector<Tile_index>(os,tiles);
 }
 
-template <class Triangulation>
+template <class Triangulation, typename Vertex_index = typename Triangulation::Vertex_index>
 void
 write_vtu_cells_binary(std::ostream& os,
             const Triangulation & tr,
-            std::map<typename Triangulation::Vertex_index, std::size_t> & V)
+            std::map<Vertex_index, std::size_t> & V)
 {
   typedef typename Triangulation::Cell_index Cell_index;
   typedef typename Triangulation::Tile_index Tile_index;
@@ -300,6 +304,7 @@ void write_vtu_tile(std::ostream& os,
   std::map<Vertex_index, std::size_t> V;
   std::size_t offset = 0;
 
+  if (!binary) os << std::setprecision(17);
   write_vtk_header(os, "UnstructuredGrid", "0.1");
   os << " <UnstructuredGrid>\n"
      << "  <Piece NumberOfPoints=\"" << number_of_vertices << "\" NumberOfCells=\"" << number_of_cells << "\">\n";
