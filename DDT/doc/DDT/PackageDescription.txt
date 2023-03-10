@@ -21,7 +21,6 @@
 /// \ingroup PkgDDTRef
 
 /// todo sloriot : move nested concepts into traits
-/// todo sloriot : add a macro to hide unofficial schedulers and partitioners
 /// todo sloriot : hide Selector concept
 /// todo sloriot : use CGAL::Bbox2 and CGAL::Bbox3 in Triangulation_traits
 /// todo sloriot : add a CGAL::Bboxd class to the CGAL Kernel_d and remove our implementation

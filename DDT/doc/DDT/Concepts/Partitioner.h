@@ -6,7 +6,6 @@
 The concept `Partitioner` describes the requirements for the class that assigns tile identifiers to points.
 \cgalHasModel `CGAL::DDT::Const_partitioner`
 \cgalHasModel `CGAL::DDT::Grid_partitioner`
-\cgalHasModel `CGAL::DDT::Random_partitioner`
 
 */
 

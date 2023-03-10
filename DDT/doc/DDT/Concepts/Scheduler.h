@@ -9,7 +9,6 @@ Delaunay triangulation).
 
 
 \cgalHasModel `CGAL::DDT::Sequential_scheduler`
-\cgalHasModel `CGAL::DDT::Multithread_scheduler`
 \cgalHasModel `CGAL::DDT::TBB_scheduler`
 \cgalHasModel `CGAL::DDT::MPI_scheduler` (wip)
 

@@ -23,8 +23,8 @@
 namespace CGAL {
 namespace DDT {
 
-/// \ingroup PkgDDTSchedulerClasses
-/// \cgalModels Scheduler
+// \ingroup PkgDDTSchedulerClasses
+// \cgalModels Scheduler
 template<typename TriangulationTraits
 #if __cplusplus >= 201703L
        , typename ExecutionPolicy
