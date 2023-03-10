@@ -385,8 +385,8 @@ public:
                 const Point& p = point(v);
                 for(int i=0; i<D; ++i)
                 {
-                    if(p[i] < point(vertices[i  ])[i]) vertices[i  ] = v;
-                    if(p[i] > point(vertices[i+D])[i]) vertices[i+D] = v;
+                    if(traits.less_coordinate(p, point(vertices[i  ]), i)) vertices[i  ] = v;
+                    if(traits.less_coordinate(p, point(vertices[i+D]), i)) vertices[i+D] = v;
                 }
             }
         }

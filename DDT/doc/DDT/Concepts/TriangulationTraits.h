@@ -146,6 +146,8 @@ public:
     const Info& info(Vertex_index v) const { return i; }
     /// get the ith coodinate of a point as a (possibly approximated) double
     double coord(const Delaunay_triangulation& dt, const Point& p, int i) const { return {}; }
+    /// compare the ith coordinate
+    bool less_coordinate(const Point& p, const Point& q, int i) const { return true; }
 /// @}
 
 

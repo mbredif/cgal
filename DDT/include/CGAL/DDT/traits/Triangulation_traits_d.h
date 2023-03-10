@@ -348,6 +348,9 @@ public:
       return Bbox(d);
     }
 
+    inline bool less_coordinate(const Point& p, const Point& q, int i) const {
+        return p[i] < q[i];
+    }
 
     inline std::ostream& write(std::ostream& out, const Delaunay_triangulation& dt) const { return out << dt; }
     inline std::istream& read(std::istream& in, Delaunay_triangulation& dt) const { return in >> dt; }
