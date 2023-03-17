@@ -65,7 +65,7 @@ void write_pvtu_file(const std::string& dirname, Iterator begin, Iterator end)
 {
     typedef std::remove_cv_t<typename Iterator::value_type> Id;
     boost::filesystem::path path(dirname);
-    std::string stem = path.stem().string();
+    std::string stem = path.filename().string();
     const char *tile_attr = Impl::vtk_types<Id>::string;
     const char *size_attr = Impl::vtk_types<std::size_t>::string;
     const char *type_attr = Impl::vtk_types<unsigned char>::string;

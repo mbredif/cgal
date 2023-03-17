@@ -37,22 +37,28 @@ typedef Traits::Point Point;
 
 int main(int argc, char*argv[])
 {
+    if (argc < 5) {
+        std::cerr << "usage : " << argv[0] << " [max_number_of_tiles in memory] [tmp prefix] [out prefix] [las files...]" << std::endl;
+        return -1;
+    }
     int max_number_of_tiles = atoi(argv[1]);
-    const char* ser_prefix  = argv[2];
+    const char* tmp  = argv[2];
+    const char* out  = argv[3];
 
-    Serializer serializer(ser_prefix);
+    Serializer serializer(tmp);
     Tile_container tiles(3, max_number_of_tiles, serializer);
     Scheduler scheduler;
-    for(int i = 0; i< argc - 3; ++i) {
-        std::size_t num_points = tiles[i].send_file(argv[i+3]);
-        std::cout << i << " : " << argv[i+3] << " (" << num_points << " points)" << std::endl;
+    for(int i = 0; i< argc - 4; ++i) {
+        const char *las = argv[i+4];
+        std::size_t num_points = tiles[i].send_file(las);
+        std::cout << i << " : " << las << " (" << num_points << " points)" << std::endl;
     }
 
-    std::cout << "Inserting points" << std::endl;
+    std::cout << "Inserting points using " << max_number_of_tiles << " tiles at most in memory" << std::endl;
     CGAL::DDT::impl::insert_received(tiles, scheduler);
 
-    std::cout << "Writing PVTU" << std::endl;
-    CGAL::DDT::write_pvtu(tiles, scheduler, "out");
+    std::cout << "Writing PVTU to " << out << std::endl;
+    CGAL::DDT::write_pvtu(tiles, scheduler, out);
 
     return EXIT_SUCCESS;
 }
