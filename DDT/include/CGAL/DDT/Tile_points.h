@@ -19,9 +19,9 @@ namespace DDT {
 
 /// \ingroup PkgDDTClasses
 /// \tparam T is a model of the TriangulationTraits concept
-/// The Tile_points is a proxy to a LAS file, to be read on demand
+/// The Las_tile_points is a proxy to a LAS file, to be read on demand
 template<class T>
-class Tile_points {
+class Las_tile_points {
 public:
     typedef typename T::Bbox Bbox;
     Tile_points(const std::string& fn) : filename_(fn) {
@@ -42,6 +42,7 @@ private:
     std::size_t size_;
     Bbox bbox_;
 };
+
 
 }
 }

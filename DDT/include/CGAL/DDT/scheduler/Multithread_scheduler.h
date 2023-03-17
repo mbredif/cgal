@@ -47,8 +47,7 @@ template<typename TriangulationTraits>
 struct Multithread_scheduler
 {
     typedef TriangulationTraits Traits;
-    typedef CGAL::DDT::Tile<Traits> Tile;
-    typedef typename Tile::Tile_index Tile_index;
+    typedef typename TriangulationTraits::Tile_index Tile_index;
 
     /// constructor
     Multithread_scheduler(int max_concurrency = 0) : pool(max_concurrency), timeout_(1)
@@ -72,6 +71,7 @@ struct Multithread_scheduler
     template<typename TileContainer,
          typename Transform,
          typename Reduce = std::plus<>,
+         typename Tile = typename TileContainer::Tile,
          typename V = std::invoke_result_t<Reduce,
                                            std::invoke_result_t<Transform, Tile&>,
                                            std::invoke_result_t<Transform, Tile&> > >
@@ -90,6 +90,7 @@ struct Multithread_scheduler
     template<typename TileContainer,
          typename Transform,
          typename Reduce = std::plus<>,
+         typename Tile = typename TileContainer::Tile,
          typename V = std::invoke_result_t<Reduce,
                                            std::invoke_result_t<Transform, Tile&>,
                                            std::invoke_result_t<Transform, Tile&> > >

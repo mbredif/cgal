@@ -12,6 +12,7 @@
 #include <CGAL/DDT/scheduler/Multithread_scheduler.h>
 #include <CGAL/DDT/serializer/File_serializer.h>
 #include <CGAL/DDT/insert.h>
+#include <CGAL/DDT/Tile_points.h>
 
 #include <CGAL/Bbox_3.h>
 #include <CGAL/bounding_box.h>
@@ -26,10 +27,10 @@ typedef unsigned char Vertex_info; // unused user data
 typedef CGAL::DDT::Triangulation_traits_3<Tile_index, Vertex_info> Traits;
 typedef Traits::Random_points_in_box Random_points;
 typedef Traits::Bbox Bbox;
-typedef CGAL::DDT::Tile<Traits> Tile;
 typedef CGAL::DDT::Multithread_scheduler<Traits> Scheduler;
 typedef CGAL::DDT::File_serializer<Traits> Serializer;
-typedef CGAL::DDT::Tile_container<Traits, Serializer> Tile_container;
+typedef CGAL::DDT::Tile_points<Traits> Tile_points;
+typedef CGAL::DDT::Tile_container<Traits, Tile_points, Serializer> Tile_container;
 
 typedef Traits::Point Point;
 // typedef std::array<unsigned short, 4> Color;
@@ -50,12 +51,12 @@ int main(int argc, char*argv[])
     Scheduler scheduler;
     for(int i = 0; i< argc - 4; ++i) {
         const char *las = argv[i+4];
-        std::size_t num_points = tiles[i].send_file(las);
+        std::size_t num_points = tiles[i].insert(las);
         std::cout << i << " : " << las << " (" << num_points << " points)" << std::endl;
     }
 
     std::cout << "Inserting points using " << max_number_of_tiles << " tiles at most in memory" << std::endl;
-    CGAL::DDT::impl::insert_received(tiles, scheduler);
+    CGAL::DDT::triangulate(tiles, scheduler);
 
     std::cout << "Writing PVTU to " << out << std::endl;
     CGAL::DDT::write_pvtu(tiles, scheduler, out);

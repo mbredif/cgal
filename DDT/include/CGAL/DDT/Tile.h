@@ -13,16 +13,26 @@
 #define CGAL_DDT_TILE_H
 
 #include "Tile_triangulation.h"
-#include "Tile_points.h"
 
 namespace CGAL {
 namespace DDT {
 
 /// \ingroup PkgDDTClasses
 /// \tparam T is a model of the TriangulationTraits concept
+/// The No_tile_points is the trivial empty point set.
+template<class T>
+class No_tile_points {
+public:
+    template<typename PointOutputIterator>
+    void read(PointOutputIterator out) {}
+    const std::size_t size() const { return 0; }
+};
+
+/// \ingroup PkgDDTClasses
+/// \tparam T is a model of the TriangulationTraits concept
 /// The Tile stores a local Delaunay triangulation.
 /// The main id of a simplex is defined by the selector
-template<class T>
+template<class T, class TilePoints = No_tile_points<T> >
 class Tile
 {
 public:
@@ -35,7 +45,7 @@ public:
     typedef std::vector<Point_id>                     Points;
     typedef std::map<Tile_index, Points>              Points_map;
     typedef CGAL::DDT::Tile_triangulation<T>          Tile_triangulation;
-    typedef CGAL::DDT::Tile_points<T>                 Tile_points;
+    typedef TilePoints                                Tile_points;
 
     Tile(Tile_index id, Traits t) :
         id_(id),
@@ -156,8 +166,10 @@ public:
         if (number_of_main_cells != number_of_main_cells_) { std::cerr << "incorrect number_of_cells" << std::endl; return false; }
         return true;
     }
-    std::size_t send_file(const std::string& filename) {
-        input_points_.emplace_back(filename);
+
+    template<typename... Args>
+    std::size_t insert(Args... args) {
+        input_points_.emplace_back(args...);
         return input_points_.back().size();
     }
 

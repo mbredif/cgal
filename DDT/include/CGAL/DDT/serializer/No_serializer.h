@@ -27,15 +27,14 @@ struct No_serializer
 {
   typedef typename Traits::Tile_index Tile_index;
   typedef typename Traits::Bbox Bbox;
-  typedef CGAL::DDT::Tile<Traits>                   Tile;
   bool load(Tile_index id, Bbox& bbox) const { return false; }
   bool has_tile(Tile_index) const { return false; }
-  bool load(Tile&) const { return false; }
-  bool save(const Tile& ) const { return false;}
+  template<typename Tile> bool load(Tile&) const { return false; }
+  template<typename Tile> bool save(const Tile& ) const { return false;}
 };
 
-template<typename Tile>
-std::ostream& operator<<(std::ostream& out, const No_serializer<Tile>& serializer) {
+template<typename Traits>
+std::ostream& operator<<(std::ostream& out, const No_serializer<Traits>& serializer) {
     return out << "No_serializer";
 }
 

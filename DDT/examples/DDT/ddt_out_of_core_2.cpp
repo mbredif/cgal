@@ -13,10 +13,10 @@ typedef unsigned char Vertex_info; // unused user data
 typedef CGAL::DDT::Triangulation_traits_2<Tile_index, Vertex_info> Traits;
 typedef Traits::Random_points_in_box Random_points;
 typedef Traits::Bbox Bbox;
-typedef CGAL::DDT::Tile<Traits> Tile;
 typedef CGAL::DDT::Sequential_scheduler<Traits> Scheduler;
 typedef CGAL::DDT::File_serializer<Traits> Serializer;
-typedef CGAL::DDT::Tile_container<Traits, Serializer> Tile_container;
+typedef CGAL::DDT::No_tile_points<Traits> Tile_points;
+typedef CGAL::DDT::Tile_container<Traits, Tile_points, Serializer> Tile_container;
 typedef CGAL::Distributed_Delaunay_triangulation<Tile_container> Distributed_Delaunay_triangulation;
 
 int main(int argc, char **argv)

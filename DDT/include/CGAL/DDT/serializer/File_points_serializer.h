@@ -24,10 +24,10 @@ namespace DDT {
 /// The point set of each tile is sorted spatially before saving, so that the Delaunay triangulation could be recomputed efficiently when the tile is reloaded.
 /// This trades off decreased disc usage and bandwith for increased computations.
 /// \cgalModels Serializer
-template <class Traits>
+template <typename Tile>
 struct File_points_serializer
 {
-  typedef CGAL::DDT::Tile<Traits>           Tile;
+  typedef CGAL::DDT::Tile<Traits, TilePoints>           Tile;
   typedef typename Traits::Tile_index       Tile_index;
   typedef typename Traits::Bbox             Bbox;
 
@@ -61,7 +61,7 @@ struct File_points_serializer
       return !in.fail();
   }
 
-  bool load(Tile& tile) const
+  template<typename Tile> bool load(Tile& tile) const
   {
 #ifdef CGAL_DEBUG_DDT
     ++nb_loads;
@@ -86,7 +86,7 @@ struct File_points_serializer
     return false;
   }
 
-  bool save(const Tile& tile) const {
+  template<typename Tile> bool save(const Tile& tile) const {
 #ifdef CGAL_DEBUG_DDT
     ++nb_save;
 #endif

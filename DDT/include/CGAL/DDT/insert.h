@@ -67,19 +67,21 @@ std::size_t splay_stars(TileContainer& tc, Scheduler& sch)
     return sch.for_each_rec(tc, [](Tile& tile) { return splay_tile(tile); });
 }
 
-// Inserts the recieved points, in the Delaunay triangulation stored in the tile container.
-// The scheduler provides the distribution environment (single thread, multithread, MPI...)
-// @returns the vertex const iterator to the inserted point, or the already existing point if if it was already present
+} // namespace impl
+
+/// \ingroup PkgDDTInsert
+/// Triangulate the points into the tile container, so that each of its tile triangulations contain a local view of the overall
+/// triangulation of all inserted points.
+/// The scheduler provides the distribution environment (single thread, multithread, MPI...)
+/// @returns the number of newly inserted vertices
 template<typename TileContainer, typename Scheduler>
-std::size_t insert_received(TileContainer& tc, Scheduler& sch){
+std::size_t triangulate(TileContainer& tc, Scheduler& sch){
     std::size_t n = tc.number_of_finite_vertices();
-    insert_and_send_all_axis_extreme_points(tc, sch);
-    splay_stars(tc, sch);
+    impl::insert_and_send_all_axis_extreme_points(tc, sch);
+    impl::splay_stars(tc, sch);
     tc.finalize(); /// @todo : return 0 for unloaded tiles
     return tc.number_of_finite_vertices() - n;
 }
-
-} // namespace impl
 
 /*
 /// \ingroup PkgDDTInsert
@@ -89,7 +91,7 @@ std::size_t insert_received(TileContainer& tc, Scheduler& sch){
 template<typename TileContainer, typename Scheduler, typename Point, typename Tile_index>
 typename TileContainer::Vertex_index insert(TileContainer& tc, Scheduler& sch, const Point& point, Tile_index id){
     tc.send_point_to_its_tile(id,point);
-    return impl::insert_received(tc, sch); /// @todo this returns a std::size_t, not a Vertex_index
+    return triangulate(tc, sch); /// @todo this returns a std::size_t, not a Vertex_index
 }
 */
 
@@ -101,7 +103,7 @@ template<typename TileContainer, typename Scheduler, typename PointIndexRange>
 std::size_t insert(TileContainer& tc, Scheduler& sch, const PointIndexRange& range) {
     for (auto& p : range)
         tc[p.first].send_point(p.first,p.first,p.second);
-    return impl::insert_received(tc, sch);
+    return triangulate(tc, sch);
 }
 
 /// \ingroup PkgDDTInsert
@@ -114,7 +116,7 @@ std::size_t insert(TileContainer& tc, Scheduler& sch, const PointRange& points, 
         typename Partitioner::Tile_index id = part(p);
         tc[id].send_point(id,id,p);
     }
-    return impl::insert_received(tc, sch);
+    return triangulate(tc, sch);
 }
 
 /// \ingroup PkgDDTInsert
@@ -132,7 +134,7 @@ std::size_t insert(TileContainer& tc, Scheduler& sch, Iterator it, int count, Pa
         typename Partitioner::Tile_index id = part(p);
         tc[id].send_point(id,id,p);
     }
-    return impl::insert_received(tc, sch);
+    return triangulate(tc, sch);
 #endif
 }
 
