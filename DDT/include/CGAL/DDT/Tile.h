@@ -13,6 +13,7 @@
 #define CGAL_DDT_TILE_H
 
 #include "Tile_triangulation.h"
+#include "Tile_points.h"
 
 namespace CGAL {
 namespace DDT {
@@ -34,6 +35,7 @@ public:
     typedef std::vector<Point_id>                     Points;
     typedef std::map<Tile_index, Points>              Points_map;
     typedef CGAL::DDT::Tile_triangulation<T>          Tile_triangulation;
+    typedef CGAL::DDT::Tile_points<T>                 Tile_points;
 
     Tile(Tile_index id, Traits t) :
         id_(id),
@@ -93,6 +95,12 @@ public:
 
     void receive_points(Points& received) {
         received.swap(points_[id()]);
+        std::vector<Point> points_read;
+        for(auto& ip : input_points_)
+            ip.read(std::back_inserter(points_read));
+        for(auto& p : points_read)
+            received.emplace_back(id(), p);
+        input_points_.clear();
 
         // debug
         //if(!received.empty()) std::cout << "\x1B[31m" << id() << "\t<-\t*\t:\t" << received.size()   << "\x1B[0m" << std::endl;
@@ -148,12 +156,18 @@ public:
         if (number_of_main_cells != number_of_main_cells_) { std::cerr << "incorrect number_of_cells" << std::endl; return false; }
         return true;
     }
+    std::size_t send_file(const std::string& filename) {
+        input_points_.emplace_back(filename);
+        return input_points_.back().size();
+    }
+
 private:
     Traits traits;
     Tile_index id_;
     Tile_triangulation triangulation_;
     Bbox bbox_;
     Points_map points_;
+    std::vector<Tile_points> input_points_;
     Points extreme_points_;
 
     std::size_t number_of_main_finite_vertices_;
@@ -162,10 +176,6 @@ private:
     std::size_t number_of_main_facets_;
     std::size_t number_of_main_cells_;
 };
-
-
-//if (r.first == id())
-//    bbox_ += r.second;
 
 }
 }

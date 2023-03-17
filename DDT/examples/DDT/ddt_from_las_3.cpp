@@ -3,7 +3,7 @@
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
 
 #include <CGAL/property_map.h>
-#include <CGAL/IO/read_las_points.h>
+#include <CGAL/DDT/IO/read_las.h>
 #include <CGAL/DDT/IO/write_pvtu.h>
 
 #include <CGAL/DDT/traits/Triangulation_traits_3.h>
@@ -37,36 +37,19 @@ typedef Traits::Point Point;
 
 int main(int argc, char*argv[])
 {
-    const char* fname       = (argc>1) ? argv[1] : "points.las";
-    int number_of_tiles_x   = (argc>2) ? atoi(argv[2]) : 3;
-    int number_of_tiles_y   = (argc>3) ? atoi(argv[3]) : 3;
-    int number_of_tiles_z   = (argc>4) ? atoi(argv[4]) : 1;
-    int max_number_of_tiles = (argc>5) ? atoi(argv[5]) : 0;
-    const char* ser_prefix  = (argc>6) ? argv[6] : "tile_";
+    int max_number_of_tiles = atoi(argv[1]);
+    const char* ser_prefix  = argv[2];
 
-    // Reads a .las point set file with normal vectors and colors
-    std::ifstream in(fname, std::ios_base::binary);
-    std::vector<Point> points; // store points
-
-    std::cout << "Reading las" << std::endl;
-    if(!CGAL::IO::read_LAS(in, std::back_inserter (points)))
-	{
-	    std::cerr << "Error: cannot read file " << fname << std::endl;
-	    return EXIT_FAILURE;
-	}
-
-    enum { D = Traits::D };
-    int number_of_points = points.size();
-    CGAL::Bbox_3 bbox = bbox_3(points.begin(),points.end());
-    
-    int number_of_tiles[] = { number_of_tiles_x, number_of_tiles_y, number_of_tiles_z };
-    CGAL::DDT::Grid_partitioner<Traits> partitioner(bbox, number_of_tiles, number_of_tiles+D);
     Serializer serializer(ser_prefix);
-    Tile_container tiles(D, max_number_of_tiles, serializer);
+    Tile_container tiles(3, max_number_of_tiles, serializer);
     Scheduler scheduler;
+    for(int i = 0; i< argc - 3; ++i) {
+        std::size_t num_points = tiles[i].send_file(argv[i+3]);
+        std::cout << i << " : " << argv[i+3] << " (" << num_points << " points)" << std::endl;
+    }
 
     std::cout << "Inserting points" << std::endl;
-    CGAL::DDT::insert(tiles, scheduler, points.begin(), number_of_points, partitioner);
+    CGAL::DDT::impl::insert_received(tiles, scheduler);
 
     std::cout << "Writing PVTU" << std::endl;
     CGAL::DDT::write_pvtu(tiles, scheduler, "out");
