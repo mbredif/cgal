@@ -14,6 +14,7 @@
 
 #include <CGAL/DDT/Tile.h>
 #include <CGAL/DDT/serializer/No_serializer.h>
+#include <CGAL/DDT/tile_points/No_tile_points.h>
 
 #include <map>
 #include <iomanip>
@@ -98,7 +99,9 @@ private:
 
 /// \ingroup PkgDDTClasses
 /// Tile Container
-template<typename TriangulationTraits, typename TilePoints, typename Serializer = No_serializer<TriangulationTraits> >
+template<typename TriangulationTraits,
+         typename TilePoints = No_tile_points<TriangulationTraits>,
+         typename Serializer = No_serializer<TriangulationTraits> >
 class Tile_container
 {
 public:

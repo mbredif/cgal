@@ -53,7 +53,6 @@ int test_traits(const std::string& testname, int ND, int NP, int dim = T::D, int
     int result = 0;
 
     typedef T Traits;
-    typedef CGAL::DDT::Tile<Traits> Tile;
     typedef CGAL::DDT::Sequential_scheduler<Traits> Scheduler;
     typedef CGAL::DDT::Tile_container<Traits> TileContainer;
     typedef CGAL::Distributed_Delaunay_triangulation<TileContainer> Distributed_Delaunay_triangulation;
@@ -133,13 +132,6 @@ int test_traits(const std::string& testname, int ND, int NP, int dim = T::D, int
             tri1.get_ring(finite_cell, deg, ring);
             boost::filesystem::create_directories(testname + "/ring/");
         }
-    }
-
-    std::cout << "== Tile.get_* ==" << std::endl;
-    {
-        Tile t(0, dim);
-        std::vector<typename Tile::Vertex_index> points;
-        t.triangulation().get_axis_extreme_points(points);
     }
     return result;
 }

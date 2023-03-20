@@ -12,7 +12,7 @@
 #include <CGAL/DDT/scheduler/Multithread_scheduler.h>
 #include <CGAL/DDT/serializer/File_serializer.h>
 #include <CGAL/DDT/insert.h>
-#include <CGAL/DDT/Tile_points.h>
+#include <CGAL/DDT/tile_points/LAS_tile_points.h>
 
 #include <CGAL/Bbox_3.h>
 #include <CGAL/bounding_box.h>
@@ -29,7 +29,7 @@ typedef Traits::Random_points_in_box Random_points;
 typedef Traits::Bbox Bbox;
 typedef CGAL::DDT::Multithread_scheduler<Traits> Scheduler;
 typedef CGAL::DDT::File_serializer<Traits> Serializer;
-typedef CGAL::DDT::Tile_points<Traits> Tile_points;
+typedef CGAL::DDT::LAS_tile_points<Traits> Tile_points;
 typedef CGAL::DDT::Tile_container<Traits, Tile_points, Serializer> Tile_container;
 
 typedef Traits::Point Point;

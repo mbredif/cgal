@@ -17,12 +17,13 @@ template<
         class Traits,
         template <class> class Partitioner,
         template <class> class Scheduler,
+        template <class> class TilePoints,
         template <class> class Serializer>
 
 int DDT_demo(int argc, char **argv)
 {
   typedef typename Traits::Random_points_in_box Random_points;
-  typedef CGAL::DDT::Tile_container<Traits, Serializer<Traits>> TileContainer;
+  typedef CGAL::DDT::Tile_container<Traits, TilePoints<Traits>, Serializer<Traits>> TileContainer;
   typedef CGAL::Distributed_Delaunay_triangulation<TileContainer> Distributed_Delaunay_triangulation;
 
   int NP, loglevel, max_concurrency, max_number_of_tiles;
@@ -87,7 +88,8 @@ int DDT_demo(int argc, char **argv)
       max_concurrency = max_number_of_tiles;
   }
 
-  typename Traits::Bbox bbox(dimension, range);
+  Traits traits(dimension);
+  typename Traits::Bbox bbox = traits.bbox(dimension, range);
   Partitioner<Traits> partitioner(bbox, NT.begin(), NT.end());
   Scheduler<Traits> scheduler(max_concurrency);
   Serializer<Traits> serializer(ser);

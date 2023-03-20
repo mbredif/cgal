@@ -12,26 +12,16 @@
 #ifndef CGAL_DDT_TILE_H
 #define CGAL_DDT_TILE_H
 
-#include "Tile_triangulation.h"
+#include <CGAL/DDT/Tile_triangulation.h>
+#include <CGAL/DDT/tile_points/No_tile_points.h>
 
 namespace CGAL {
 namespace DDT {
 
 /// \ingroup PkgDDTClasses
 /// \tparam T is a model of the TriangulationTraits concept
-/// The No_tile_points is the trivial empty point set.
-template<class T>
-class No_tile_points {
-public:
-    template<typename PointOutputIterator>
-    void read(PointOutputIterator out) {}
-    const std::size_t size() const { return 0; }
-};
-
-/// \ingroup PkgDDTClasses
-/// \tparam T is a model of the TriangulationTraits concept
+/// \tparam T is a model of the TilePoints concept
 /// The Tile stores a local Delaunay triangulation.
-/// The main id of a simplex is defined by the selector
 template<class T, class TilePoints = No_tile_points<T> >
 class Tile
 {

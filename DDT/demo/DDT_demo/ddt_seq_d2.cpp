@@ -11,6 +11,7 @@ int main(int argc, char **argv) {
             CGAL::DDT::Triangulation_traits<2,Tile_index>,
             CGAL::DDT::Grid_partitioner,
             CGAL::DDT::Sequential_scheduler,
+            CGAL::DDT::No_tile_points,
             CGAL::DDT::File_serializer
             >(argc, argv);
 }

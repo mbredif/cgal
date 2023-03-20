@@ -9,8 +9,8 @@
 //
 // Author(s)     : Mathieu Brédif and Laurent Caraffa
 
-#ifndef CGAL_DDT_TILE_POINTS_H
-#define CGAL_DDT_TILE_POINTS_H
+#ifndef CGAL_DDT_LAS_TILE_POINTS_H
+#define CGAL_DDT_LAS_TILE_POINTS_H
 #include <string>
 #include <CGAL/DDT/IO/read_las.h>
 
@@ -19,12 +19,12 @@ namespace DDT {
 
 /// \ingroup PkgDDTClasses
 /// \tparam T is a model of the TriangulationTraits concept
-/// The Las_tile_points is a proxy to a LAS file, to be read on demand
+/// The LAS_tile_points is a proxy to a LAS file, to be read on demand
 template<class T>
-class Las_tile_points {
+class LAS_tile_points {
 public:
     typedef typename T::Bbox Bbox;
-    Tile_points(const std::string& fn) : filename_(fn) {
+    LAS_tile_points(const std::string& fn) : filename_(fn) {
         read_LAS_header(fn, size_, bbox_);
     }
     template<typename PointOutputIterator>
@@ -47,4 +47,4 @@ private:
 }
 }
 
-#endif // CGAL_DDT_TILE_POINTS_H
+#endif // CGAL_DDT_LAS_TILE_POINTS_H
