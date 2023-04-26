@@ -20,7 +20,7 @@ namespace DDT {
 
 /// \ingroup PkgDDTClasses
 /// \tparam T is a model of the TriangulationTraits concept
-/// \tparam T is a model of the TilePoints concept
+/// \tparam TilePoints is a model of the TilePoints concept
 /// The Tile stores a local Delaunay triangulation.
 template<class T, class TilePoints = No_tile_points<T> >
 class Tile

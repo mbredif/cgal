@@ -13,7 +13,6 @@
 #define CGAL_DDT_FILE_POINTS_SERIALIZER_H
 
 #include <boost/filesystem.hpp>
-#include <CGAL/DDT/Tile.h>
 
 namespace CGAL {
 namespace DDT {
@@ -27,7 +26,6 @@ namespace DDT {
 template <typename Tile>
 struct File_points_serializer
 {
-  typedef CGAL::DDT::Tile<Traits, TilePoints>           Tile;
   typedef typename Traits::Tile_index       Tile_index;
   typedef typename Traits::Bbox             Bbox;
 
