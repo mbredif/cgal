@@ -129,7 +129,7 @@ public:
         return traits.dimension();
     }
 
-    Tile_container(int dimension, std::size_t number_of_triangulations_mem_max = 0, const Serializer& serializer = Serializer()) :
+    Tile_container(int dimension = Traits::D, std::size_t number_of_triangulations_mem_max = 0, const Serializer& serializer = Serializer()) :
         traits(dimension),
         tiles(),
         serializer_(serializer),
