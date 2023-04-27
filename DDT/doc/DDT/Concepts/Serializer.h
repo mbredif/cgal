@@ -13,8 +13,12 @@ File serializers are enabling out of core processing, by streaming points in and
 class Serializer
 {
 public:
-  /// The type of the tile identifier.
+#ifdef DOXYGEN_RUNNING
+  /// Tile identifier type, model of `TileIndex`
+  typedef unspecified_type Tile_index;
+#else
   typedef ::Tile_index Tile_index;
+#endif
   /// The type of the tile.
   typedef unspecified_type Tile;
   /// Checks if a tile id is available for deserialization

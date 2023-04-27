@@ -13,6 +13,7 @@
 #include <CGAL/DDT/Tile_container.h>
 #include <CGAL/Distributed_Delaunay_triangulation.h>
 
+
 template <typename TileContainer, typename Scheduler>
 int dump_2d_vrt(TileContainer& tiles, Scheduler& scheduler, const std::string& vrt)
 {
@@ -46,8 +47,8 @@ bool is_euler_valid(T & tri)
     return  (finite_euler == 1 && euler == 2);
 }
 
-template <typename T>
-int test_traits(const std::string& testname, int ND, int NP, int dim = T::D, int NT = -1, bool do_test_io = true)
+template <typename T, typename Partitioner = CGAL::DDT::Grid_partitioner<T>>
+int test_traits(const Partitioner& partitioner, const std::string& testname, int NP, int dim = T::D, int NT = -1, double range = 1, bool do_test_io = true)
 {
     std::cout << "Test " << testname << std::endl;
     int result = 0;
@@ -56,15 +57,10 @@ int test_traits(const std::string& testname, int ND, int NP, int dim = T::D, int
     typedef CGAL::DDT::Sequential_scheduler<Traits> Scheduler;
     typedef CGAL::DDT::Tile_container<Traits> TileContainer;
     typedef CGAL::Distributed_Delaunay_triangulation<TileContainer> Distributed_Delaunay_triangulation;
-    typedef CGAL::DDT::Grid_partitioner<Traits> Partitioner;
     typedef typename Traits::Random_points_in_box Random_points;
-    typedef typename Traits::Bbox Bbox;
 
     std::cout << "== Delaunay ==" << std::endl;
-    double range = 1;
-    Bbox bbox = Traits::bbox(dim, range);
     Random_points points(dim, range);
-    Partitioner partitioner(bbox, ND);
     TileContainer tiles1(dim, NT);
     Scheduler scheduler;
     CGAL::DDT::insert(tiles1, scheduler, points, NP, partitioner);
@@ -134,6 +130,16 @@ int test_traits(const std::string& testname, int ND, int NP, int dim = T::D, int
         }
     }
     return result;
+}
+
+template <typename T>
+int test_traits_grid(const std::string& testname, int ND, int NP, int dim = T::D, int NT = -1, double range = 1, bool do_test_io = true)
+{
+    typedef T Traits;
+    typedef typename Traits::Bbox Bbox;
+    Bbox bbox = Traits::bbox(dim, range);
+    CGAL::DDT::Grid_partitioner<T> partitioner(bbox, ND);
+    return test_traits<T>(partitioner, testname, NP, dim, NT, range, do_test_io);
 }
 
 #endif // DDT_TEST_HPP

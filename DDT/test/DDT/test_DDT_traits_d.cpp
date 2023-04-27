@@ -8,5 +8,5 @@ typedef CGAL::DDT::Triangulation_traits_d<Tile_index,Vertex_info> Traits;
 
 int main(int, char **)
 {
-    return test_traits<Traits>("test_DDT_traits_d_out", 3, 1000, 2);
+    return test_traits_grid<Traits>("test_DDT_traits_d_out", 3, 1000, 2);
 }
