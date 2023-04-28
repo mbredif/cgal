@@ -13,7 +13,7 @@ typedef CGAL::Epick_d<Dim_tag>                                    Geom_traits;
 typedef CGAL::Triangulation_vertex<Geom_traits,Tile_index>        Vb;
 typedef CGAL::Triangulation_data_structure<Dim_tag,Vb>            TDS;
 typedef CGAL::Delaunay_triangulation<Geom_traits, TDS>            Delaunay_triangulation;
-typedef CGAL::DDT::Triangulation_traits_d<Delaunay_triangulation> Traits;
+
 int main(int argc, char **argv) {
     return DDT_demo<
             CGAL::DDT::Triangulation_traits_d<Delaunay_triangulation>,
