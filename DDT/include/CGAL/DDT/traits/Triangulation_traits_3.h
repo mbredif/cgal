@@ -12,13 +12,12 @@
 #ifndef CGAL_DDT_TRIANGULATION_TRAITS_3_H
 #define CGAL_DDT_TRIANGULATION_TRAITS_3_H
 
-#include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
-#include <CGAL/Triangulation_vertex_base_with_info_3.h>
-#include <CGAL/Delaunay_triangulation_3.h>
 #include <CGAL/point_generators_3.h>
-
+#include <CGAL/Spatial_sort_traits_adapter_3.h>
+#include <CGAL/spatial_sort.h>
+#include <CGAL/Bbox_3.h>
 #include <CGAL/DDT/traits/Facet_index.h>
-#include <CGAL/DDT/traits/Data.h>
+#include <CGAL/DDT/traits/Vertex_info_property_map.h>
 
 namespace CGAL {
 namespace DDT {
@@ -26,25 +25,24 @@ namespace DDT {
 /// \ingroup PkgDDTTraitsClasses
 /// 3-dimensional triangulation traits.
 /// \cgalModels TriangulationTraits
-template<typename I, typename F = No_info>
+template<typename T, typename TileIndexPmap = Vertex_info_property_map<T>>
 struct Triangulation_traits_3
 {
     static constexpr int D = 3;
-    typedef I                                                        Tile_index;
-    typedef F                                                        Info;
-    typedef CGAL::DDT::Data<Tile_index, Info>                        Data;
-    typedef CGAL::Exact_predicates_inexact_constructions_kernel      Geom_traits;
-    typedef Triangulation_vertex_base_with_info_3<Data, Geom_traits> Vb;
-    typedef CGAL::Delaunay_triangulation_cell_base_3<Geom_traits>    Cb;
-    typedef CGAL::Triangulation_data_structure_3<Vb, Cb>             TDS;
+    typedef T                                                        Triangulation;
+    typedef typename Triangulation::Geom_traits                      Geom_traits;
     typedef typename Geom_traits::Point_3                            Point;
+    typedef TileIndexPmap                                            Tile_index_pmap;
+    typedef typename Tile_index_pmap::value_type                     Tile_index;
 
+    typedef typename Triangulation::Triangulation_data_structure     TDS;
     typedef typename TDS::Vertex_iterator                            Vertex_index;
     typedef typename TDS::Cell_iterator                              Cell_index;
     typedef CGAL::DDT::Facet_index<3, Cell_index>                    Facet_index;
 
-    typedef CGAL::Delaunay_triangulation_3<Geom_traits, TDS>         Delaunay_triangulation;
     typedef CGAL::Random_points_in_sphere_3<Point>                   Random_points_in_ball;
+
+    Tile_index_pmap tile_index_pmap;
 
     Triangulation_traits_3(int d = 0) { assert(d==0 || d==D); }
     inline constexpr int dimension() const { return D; }
@@ -75,143 +73,139 @@ struct Triangulation_traits_3
         Random_points_in_box(double g) : CGAL::Random_points_in_cube_3<Point>(g) {}
     };
 
-    inline Delaunay_triangulation triangulation() const
+    inline Triangulation triangulation() const
     {
-        return Delaunay_triangulation();
+        return Triangulation();
     }
 
-    inline Tile_index    id  (Vertex_index v) const
+    inline Tile_index vertex_id(const Triangulation& tri, Vertex_index v) const
     {
-        return v->info().id;
+        return get(tile_index_pmap, v);
     }
-    inline Info& info(Vertex_index v) const
+    inline int current_dimension(const Triangulation& tri) const
     {
-        return v->info().info;
+        return tri.dimension();
     }
-    inline int current_dimension(const Delaunay_triangulation& dt) const
-    {
-        return dt.dimension();
-    }
-    inline int maximal_dimension(const Delaunay_triangulation& dt) const
+    inline int maximal_dimension(const Triangulation& tri) const
     {
         return D;
     }
-    inline std::size_t number_of_cells(const Delaunay_triangulation& dt) const
+    inline std::size_t number_of_cells(const Triangulation& tri) const
     {
-        return dt.number_of_cells();
+        return tri.number_of_cells();
     }
-    inline std::size_t number_of_vertices(const Delaunay_triangulation& dt) const
+    inline std::size_t number_of_vertices(const Triangulation& tri) const
     {
-        return dt.number_of_vertices();
+        return tri.number_of_vertices();
     }
-    inline Vertex_index vertex(const Delaunay_triangulation& dt, Cell_index c, int i) const
+    inline Vertex_index vertex(const Triangulation& tri, Cell_index c, int i) const
     {
         return c->vertex(i);
     }
-    inline Vertex_index vertices_begin(const Delaunay_triangulation& dt) const
+    inline Vertex_index vertices_begin(const Triangulation& tri) const
     {
-        return dt.all_vertices_begin();
+        return tri.all_vertices_begin();
     }
-    inline Vertex_index vertices_end(const Delaunay_triangulation& dt) const
+    inline Vertex_index vertices_end(const Triangulation& tri) const
     {
-        return dt.all_vertices_end();
+        return tri.all_vertices_end();
     }
-    inline Facet_index facets_begin(const Delaunay_triangulation& dt) const
+    inline Facet_index facets_begin(const Triangulation& tri) const
     {
-        return facet(dt, cells_begin(dt), 0);
+        return facet(tri, cells_begin(tri), 0);
     }
-    inline Facet_index facets_end(const Delaunay_triangulation& dt) const
+    inline Facet_index facets_end(const Triangulation& tri) const
     {
-        return facet(dt, cells_end(dt), 0);
+        return facet(tri, cells_end(tri), 0);
     }
-    inline Cell_index cells_begin(const Delaunay_triangulation& dt) const
+    inline Cell_index cells_begin(const Triangulation& tri) const
     {
-        return dt.all_cells_begin();
+        return tri.all_cells_begin();
     }
-    inline Cell_index cells_end(const Delaunay_triangulation& dt) const
+    inline Cell_index cells_end(const Triangulation& tri) const
     {
-        return dt.all_cells_end();
-    }
-
-    inline Vertex_index infinite_vertex(const Delaunay_triangulation& dt) const
-    {
-        return dt.infinite_vertex();
+        return tri.all_cells_end();
     }
 
-    inline void clear(Delaunay_triangulation& dt) const
+    inline Vertex_index infinite_vertex(const Triangulation& tri) const
     {
-        return dt.clear();
+        return tri.infinite_vertex();
     }
 
-    void spatial_sort(const Delaunay_triangulation& dt, std::vector<std::size_t>& indices, const std::vector<Point>& points) const
+    inline void clear(Triangulation& tri) const
+    {
+        return tri.clear();
+    }
+
+    void spatial_sort(const Triangulation& tri, std::vector<std::size_t>& indices, const std::vector<Point>& points) const
     {
         typedef typename Pointer_property_map<Point>::const_type Pmap;
         typedef Spatial_sort_traits_adapter_3<Geom_traits,Pmap> Search_traits;
-        CGAL::spatial_sort(indices.begin(), indices.end(), Search_traits(make_property_map(points), dt.geom_traits()));
+        CGAL::spatial_sort(indices.begin(), indices.end(), Search_traits(make_property_map(points), tri.geom_traits()));
     }
 
     template<typename OutputIterator>
-    inline OutputIterator incident_cells(const Delaunay_triangulation& dt, Vertex_index v, OutputIterator out) const
+    inline OutputIterator incident_cells(const Triangulation& tri, Vertex_index v, OutputIterator out) const
     {
-        return dt.incident_cells(v, out);
+        return tri.incident_cells(v, out);
     }
 
     template<typename OutputIterator>
-    inline OutputIterator adjacent_vertices(const Delaunay_triangulation& dt, Vertex_index v, OutputIterator out) const
+    inline OutputIterator adjacent_vertices(const Triangulation& tri, Vertex_index v, OutputIterator out) const
     {
-        return dt.adjacent_vertices(v, out);
+        return tri.adjacent_vertices(v, out);
     }
 
-    Vertex_index locate_vertex(const Delaunay_triangulation& dt, const Point& p, Vertex_index hint = Vertex_index()) const
+    Vertex_index locate_vertex(const Triangulation& tri, const Point& p, Vertex_index hint = Vertex_index()) const
     {
-        typename Delaunay_triangulation::Locate_type  lt;
+        typename Triangulation::Locate_type  lt;
         int li, lj;
-        Cell_index c = dt.locate(p, lt, li, lj, hint);
-        return (lt==Delaunay_triangulation::VERTEX) ? vertex(dt, c, li) : vertices_end(dt);
+        Cell_index c = tri.locate(p, lt, li, lj, hint);
+        return (lt==Triangulation::VERTEX) ? vertex(tri, c, li) : vertices_end(tri);
     }
 
-    std::pair<Vertex_index, bool> insert(Delaunay_triangulation& dt, const Point& p, Tile_index id, Vertex_index hint = Vertex_index()) const
+    std::pair<Vertex_index, bool> insert(Triangulation& tri, const Point& p, Tile_index id, Vertex_index hint = Vertex_index()) const
     {
-        typename Delaunay_triangulation::Locate_type lt;
+        typename Triangulation::Locate_type lt;
         int li, lj;
-        Cell_index c = dt.locate(p, lt, li, lj, hint);
-        if(lt == Delaunay_triangulation::VERTEX) {
+        Cell_index c = tri.locate(p, lt, li, lj, hint);
+        if(lt == Triangulation::VERTEX) {
             Vertex_index v = c->vertex(li);
-            assert(id == v->info().id);
+            assert(id == vertex_id(tri, v));
             return std::make_pair(v, false);
         }
-        Vertex_index v = dt.insert(p, lt, c, li, lj);
-        v->info().id = id;
+        Vertex_index v = tri.insert(p, lt, c, li, lj);
+        put(tile_index_pmap, v, id);
         return std::make_pair(v, true);
     }
 
-    inline void remove(Delaunay_triangulation& dt, Vertex_index v) const
+    inline void remove(Triangulation& tri, Vertex_index v) const
     {
-        dt.remove(v);
+        tri.remove(v);
     }
 
-    inline bool vertex_is_infinite(const Delaunay_triangulation& dt, Vertex_index v) const
+    inline bool vertex_is_infinite(const Triangulation& tri, Vertex_index v) const
     {
-        return dt.is_infinite(v);
+        return tri.is_infinite(v);
     }
 
-    inline bool facet_is_infinite(const Delaunay_triangulation& dt, Facet_index f) const
+    inline bool facet_is_infinite(const Triangulation& tri, Facet_index f) const
     {
         for(int i = 0; i<=D; ++i)
-            if(i!=f.index_of_covertex() && dt.is_infinite(f.cell()->vertex(i)))
+            if(i!=f.index_of_covertex() && tri.is_infinite(f.cell()->vertex(i)))
                 return true;
         return false;
     }
 
-    inline bool cell_is_infinite(const Delaunay_triangulation& dt, Cell_index c) const
+    inline bool cell_is_infinite(const Triangulation& tri, Cell_index c) const
     {
         for(int i = 0; i<=D; ++i)
-            if(dt.is_infinite(c->vertex(i)))
+            if(tri.is_infinite(c->vertex(i)))
                 return true;
         return false;
     }
 
-    inline const Point& point(const Delaunay_triangulation& dt, Vertex_index v) const
+    inline const Point& point(const Triangulation& tri, Vertex_index v) const
     {
         return v->point();
     }
@@ -221,14 +215,14 @@ struct Triangulation_traits_3
         return CGAL::to_double(p[i]);
     }
 
-    bool are_vertices_equal(const Delaunay_triangulation& t1, Vertex_index v1, const Delaunay_triangulation& t2, Vertex_index v2) const
+    bool are_vertices_equal(const Triangulation& t1, Vertex_index v1, const Triangulation& t2, Vertex_index v2) const
     {
         bool inf1 = vertex_is_infinite(t1, v1);
         bool inf2 = vertex_is_infinite(t2, v2);
         return (inf1 || inf2) ? (inf1 == inf2) : v1->point() == v2->point();
     }
 
-    bool are_facets_equal(const Delaunay_triangulation& t1, Facet_index f1, const Delaunay_triangulation& t2, Facet_index f2) const
+    bool are_facets_equal(const Triangulation& t1, Facet_index f1, const Triangulation& t2, Facet_index f2) const
     {
         Cell_index c1 = f1.cell();
         Cell_index c2 = f2.cell();
@@ -255,7 +249,7 @@ struct Triangulation_traits_3
         return true;
     }
 
-    bool are_cells_equal(const Delaunay_triangulation& t1, Cell_index c1, const Delaunay_triangulation& t2, Cell_index c2) const
+    bool are_cells_equal(const Triangulation& t1, Cell_index c1, const Triangulation& t2, Cell_index c2) const
     {
         for(int i1=0; i1<=D; ++i1)
         {
@@ -276,71 +270,71 @@ struct Triangulation_traits_3
         return true;
     }
 
-    inline int index_of_covertex(const Delaunay_triangulation& dt, Facet_index f) const
+    inline int index_of_covertex(const Triangulation& tri, Facet_index f) const
     {
         return f.index_of_covertex();
     }
 
-    inline Vertex_index covertex(const Delaunay_triangulation& dt, Facet_index f) const
+    inline Vertex_index covertex(const Triangulation& tri, Facet_index f) const
     {
-        return vertex(dt, f.cell(), f.index_of_covertex());
+        return vertex(tri, f.cell(), f.index_of_covertex());
     }
 
-    inline Vertex_index mirror_vertex(const Delaunay_triangulation& dt, Facet_index f) const
+    inline Vertex_index mirror_vertex(const Triangulation& tri, Facet_index f) const
     {
         Cell_index c = f.cell();
         Cell_index n = c->neighbor(f.index_of_covertex());
-        return vertex(dt, n, mirror_index(dt, c, f.index_of_covertex()));
+        return vertex(tri, n, mirror_index(tri, c, f.index_of_covertex()));
     }
 
-    inline Cell_index cell(const Delaunay_triangulation& dt, Facet_index f) const
+    inline Cell_index cell(const Triangulation& tri, Facet_index f) const
     {
         return f.cell();
     }
 
-    inline Cell_index cell(const Delaunay_triangulation& dt, Vertex_index v) const
+    inline Cell_index cell(const Triangulation& tri, Vertex_index v) const
     {
         return v->cell();
     }
 
-    Facet_index mirror_facet(const Delaunay_triangulation& dt, Facet_index f) const
+    Facet_index mirror_facet(const Triangulation& tri, Facet_index f) const
     {
         Cell_index c = f.cell();
         Cell_index n = c->neighbor(f.index_of_covertex());
-        return facet(dt, n, dt.mirror_index(c, f.index_of_covertex()));
+        return facet(tri, n, tri.mirror_index(c, f.index_of_covertex()));
     }
 
-    inline int mirror_index(const Delaunay_triangulation& dt, Facet_index f) const
+    inline int mirror_index(const Triangulation& tri, Facet_index f) const
     {
         return mirror_index(f.cell(), f.index_of_covertex());
     }
 
-    inline int mirror_index(const Delaunay_triangulation& dt, Cell_index c, int i) const
+    inline int mirror_index(const Triangulation& tri, Cell_index c, int i) const
     {
-        return dt.mirror_index(c, i);
+        return tri.mirror_index(c, i);
     }
 
-    inline Cell_index neighbor(const Delaunay_triangulation& dt, Cell_index c, int i) const
+    inline Cell_index neighbor(const Triangulation& tri, Cell_index c, int i) const
     {
         return c->neighbor(i);
     }
 
-    inline Facet_index facet(const Delaunay_triangulation& dt, Cell_index c, int i) const
+    inline Facet_index facet(const Triangulation& tri, Cell_index c, int i) const
     {
-        return Facet_index(c, cells_end(dt), i);
+        return Facet_index(c, cells_end(tri), i);
     }
 
-    inline bool is_valid(const Delaunay_triangulation& dt, bool verbose = false, int level = 0) const
+    inline bool is_valid(const Triangulation& tri, bool verbose = false, int level = 0) const
     {
-        return dt.is_valid(verbose, level);
+        return tri.is_valid(verbose, level);
     }
 
     inline bool less_coordinate(const Point& p, const Point& q, int i) const {
         return p[i] < q[i];
     }
 
-    inline std::ostream& write(std::ostream& out, const Delaunay_triangulation& dt) const { return out << dt; }
-    inline std::istream& read(std::istream& in, Delaunay_triangulation& dt) const { return in >> dt; }
+    inline std::ostream& write(std::ostream& out, const Triangulation& tri) const { return out << tri; }
+    inline std::istream& read(std::istream& in, Triangulation& tri) const { return in >> tri; }
 };
 
 }

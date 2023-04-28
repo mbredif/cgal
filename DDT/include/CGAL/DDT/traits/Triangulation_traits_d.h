@@ -21,13 +21,14 @@
 #include <CGAL/DDT/traits/Facet_index.h>
 #include <CGAL/DDT/traits/Data.h>
 #include <CGAL/DDT/traits/Bbox.h>
+#include <CGAL/DDT/traits/Vertex_info_property_map.h>
 
 namespace CGAL {
 namespace DDT {
 
 namespace Impl {
 
-template<unsigned int N, typename Dim, typename I, typename F, typename Derived>
+template<unsigned int N, typename Dim, typename typename T, typename TileIndexPmap, typename Derived>
 struct Triangulation_traits_d
 {
     typedef Dim                                                    Dim_tag;
@@ -57,7 +58,7 @@ private:
     }
 
 public:
-    inline Tile_index    id  (Vertex_index v) const
+    inline Tile_index vertex_id(const Delaunay_triangulation& dt, Vertex_index v) const
     {
         return v->data().id;
     }
@@ -361,7 +362,7 @@ public:
 /// \ingroup PkgDDTTraitsClasses
 /// D dimensional triangulation traits, where D is specified dynamically at runtime.
 /// \cgalModels TriangulationTraits
-template<typename I, typename F = No_info>
+template<typename T, typename TileIndexPmap = Vertex_info_property_map<T>>
 class Triangulation_traits_d : public Impl::Triangulation_traits_d<0, CGAL::Dynamic_dimension_tag,I,F,Triangulation_traits_d<I,F>>
 {
     int dim_;
@@ -391,7 +392,7 @@ public:
 /// \ingroup PkgDDTTraitsClasses
 /// D dimensional triangulation traits, where D is specified statically at compile-time.
 /// \cgalModels TriangulationTraits
-template<unsigned int N, typename I, typename F = No_info>
+template<unsigned int N, typename T, typename TileIndexPmap = Vertex_info_property_map<T>>
 class Triangulation_traits : public Impl::Triangulation_traits_d<N,CGAL::Dimension_tag<N>,I,F,Triangulation_traits<N,I,F>>
 {
     typedef Impl::Triangulation_traits_d<N,CGAL::Dimension_tag<N>,I,F,Triangulation_traits<N,I,F>> Base;

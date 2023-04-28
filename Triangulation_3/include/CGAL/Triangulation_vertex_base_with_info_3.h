@@ -68,7 +68,11 @@ template < typename Info_, typename GT,
 std::ostream& operator<< (std::ostream& os,Triangulation_vertex_base_with_info_3<Info_,GT,Vb> & vb)
 {
   os << static_cast<Vb&>(vb);
-  os << vb.info();
+  if(IO::get_mode(os) == IO::BINARY) {
+      write(os, vb.info());
+  } else {
+      os << ' ' << vb.info();
+  }
   return os;
 }
 

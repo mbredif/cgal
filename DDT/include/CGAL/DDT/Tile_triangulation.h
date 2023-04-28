@@ -34,10 +34,9 @@ class Tile_triangulation
 public:
     typedef T                                        Traits;
     typedef typename Traits::Tile_index              Tile_index;
-    typedef typename Traits::Info                    Info;
     typedef typename Traits::Point                   Point;
     typedef typename Traits::Bbox                    Bbox;
-    typedef typename Traits::Delaunay_triangulation  Delaunay_triangulation;
+    typedef typename Traits::Triangulation           Delaunay_triangulation;
     typedef typename Traits::Vertex_index            Vertex_index;
     typedef typename Traits::Facet_index             Facet_index;
     typedef typename Traits::Cell_index              Cell_index;
@@ -80,8 +79,7 @@ public:
     inline std::size_t number_of_main_finite_facets  () const { return number_of_main_finite_facets_;   }
     inline std::size_t number_of_main_finite_cells   () const { return number_of_main_finite_cells_;    }
 
-    inline Info& info(Vertex_index v) const { assert(!vertex_is_infinite(v)); return traits.info(v); }
-    inline Tile_index vertex_id(Vertex_index v) const { assert(!vertex_is_infinite(v)); return traits.id(v); }
+    inline Tile_index vertex_id(Vertex_index v) const { assert(!vertex_is_infinite(v)); return traits.vertex_id(dt_, v); }
 
     Tile_index cell_id(Cell_index c) const
     {
@@ -448,7 +446,7 @@ public:
         // sort spatially the points
         spatial_sort(indices, points);
 
-        // insert the point with infos in the sorted order
+        // insert the points in the sorted order
         // check immediately for simplification
         Vertex_index v;
         int local_inserted_size = 0;
