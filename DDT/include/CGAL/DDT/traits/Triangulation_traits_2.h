@@ -334,7 +334,7 @@ struct Triangulation_traits_2
 
     inline Facet_index facet(const Triangulation& tri, Cell_index c, int i) const
     {
-        return Facet_index(c, cells_end(tri), i);
+        return Facet_index(c, i);
     }
 
     inline bool is_valid(const Triangulation& tri, bool verbose = false, int level = 0) const

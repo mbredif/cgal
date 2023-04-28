@@ -22,9 +22,8 @@ template<typename Cell_index, typename Derived>
 class Facet_index
 {
 public:
-    Facet_index(                                      ) : cell_(    ), end_(   ), index_of_covertex_(0) {}
-    Facet_index(Cell_index end                        ) : cell_(end ), end_(end), index_of_covertex_(0) {}
-    Facet_index(Cell_index cell, Cell_index end, int i) : cell_(cell), end_(end), index_of_covertex_(i) {}
+    Facet_index(                      ) : cell_(    ), index_of_covertex_(0) {}
+    Facet_index(Cell_index cell, int i) : cell_(cell), index_of_covertex_(i) {}
 
     Facet_index& operator++()
     {
@@ -41,7 +40,7 @@ public:
 
     inline bool operator==(const Facet_index & f) const
     {
-        return (cell_ == f.cell_) && (index_of_covertex_ == f.index_of_covertex_) && (end_ == f.end_);
+        return (cell_ == f.cell_) && (index_of_covertex_ == f.index_of_covertex_);
     }
 
     inline bool operator!=(const Facet_index & f) const
@@ -55,13 +54,12 @@ public:
         if (f.cell_ < cell_) return false;
         if (index_of_covertex_ < f.index_of_covertex_) return true;
         if (f.index_of_covertex_ < index_of_covertex_) return false;
-        return (end_ < f.end_);
+        return false;
     }
 
     Facet_index& operator=(const Facet_index & f)
     {
         cell_ = f.cell_;
-        end_ = f.end_;
         index_of_covertex_ = f.index_of_covertex_;
         return (*this);
     }
@@ -81,7 +79,7 @@ private:
     }
 
 private:
-    Cell_index cell_, end_;
+    Cell_index cell_;
     int index_of_covertex_;
 };
 
@@ -91,9 +89,8 @@ template<unsigned int N, typename Cell_index>
 class Facet_index : public Impl::Facet_index<Cell_index, Facet_index<N, Cell_index>> {
     using Base = Impl::Facet_index<Cell_index, Facet_index<N, Cell_index>>;
 public:
-    Facet_index(                                      ) : Base(            ) {}
-    Facet_index(Cell_index end                        ) : Base(end         ) {}
-    Facet_index(Cell_index cell, Cell_index end, int i) : Base(cell, end, i) {}
+    Facet_index(                      ) : Base(       ) {}
+    Facet_index(Cell_index cell, int i) : Base(cell, i) {}
     constexpr int dimension() const { return N; }
 };
 
@@ -102,9 +99,8 @@ class Facet_index<0, Cell_index> : public Impl::Facet_index<Cell_index, Facet_in
     using Base = Impl::Facet_index<Cell_index, Facet_index<0, Cell_index>>;
     int dim_;
 public:
-    Facet_index(int dim=0                                      ) : Base(            ), dim_(dim) {}
-    Facet_index(int dim, Cell_index end                        ) : Base(end         ), dim_(dim) {}
-    Facet_index(int dim, Cell_index cell, Cell_index end, int i) : Base(cell, end, i), dim_(dim) {}
+    Facet_index(int dim=0                      ) : Base(       ), dim_(dim) {}
+    Facet_index(int dim, Cell_index cell, int i) : Base(cell, i), dim_(dim) {}
     inline int dimension() const { return dim_; }
 };
 

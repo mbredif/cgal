@@ -316,8 +316,12 @@ public:
         return tri.is_valid(verbose, level);
     }
 
+    inline int dimension() const {
+        return static_cast<const Derived*>(this)->dimension();
+    }
+
     Bbox bbox(const Point& p) const {
-        int d = static_cast<const Derived*>(this)->dimension();
+        int d = dimension();
         assert(p.dimension() == d);
         Bbox b(d);
         int i = 0;
@@ -343,6 +347,10 @@ public:
 
     inline std::ostream& write(std::ostream& out, const Triangulation& tri) const { return out << tri; }
     inline std::istream& read(std::istream& in, Triangulation& tri) const { return in >> tri; }
+    inline Triangulation triangulation() const
+    {
+        return Triangulation(dimension());
+    }
 };
 
 }
@@ -365,15 +373,12 @@ public:
     {
         assert(d >= 2);
     }
-    inline constexpr int dimension() const {
+    inline int dimension() const {
         return dim_;
-    }
-    inline Triangulation triangulation() const {
-        return Triangulation(dimension());
     }
     inline Facet_index facet(const Triangulation& tri, Cell_index c, int i) const
     {
-        return Facet_index(dimension(), c, Base::cells_end(tri), i);
+        return Facet_index(dimension(), c, i);
     }
 };
 
@@ -395,13 +400,9 @@ public:
         assert(d==0 || d==D);
     }
     inline constexpr int dimension() const { return D; }
-    inline Triangulation triangulation() const
-    {
-        return Triangulation(dimension());
-    }
     inline Facet_index facet(const Triangulation& tri, Cell_index c, int i) const
     {
-        return Facet_index(c, Base::cells_end(tri), i);
+        return Facet_index(c, i);
     }
 };
 
