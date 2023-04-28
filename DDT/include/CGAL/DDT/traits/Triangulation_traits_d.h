@@ -21,22 +21,46 @@
 namespace CGAL {
 namespace DDT {
 
-namespace Impl {
 
-template<unsigned int N, typename T, typename TileIndexPmap, typename Derived>
+namespace Impl {
+    template < typename D >
+    struct Dim_value {
+      static const int value = D::value;
+      Dim_value(int d) { assert(d==value); }
+      inline constexpr int dimension() const { return value; }
+    };
+
+    template <>
+    struct Dim_value <Dynamic_dimension_tag> {
+        static const int value = 0;
+        int dimension_;
+        Dim_value(int d) : dimension_(d) { assert(d >= 2); }
+        inline int dimension() const { return dimension_; }
+    };
+}
+
+/// \ingroup PkgDDTTraitsClasses
+/// D dimensional triangulation traits
+/// \cgalModels TriangulationTraits
+template<typename T, typename TileIndexPmap = Vertex_data_property_map<T>>
 struct Triangulation_traits_d
 {
+private:
+    typedef Impl::Dim_value<typename T::Maximal_dimension> Dim_value;
+
+public:
+    static const int D = Dim_value::value;
     typedef T                                                      Triangulation;
     typedef typename Triangulation::Geom_traits                    Geom_traits;
     typedef typename Geom_traits::Point_d                          Point;
     typedef TileIndexPmap                                          Tile_index_pmap;
     typedef typename Tile_index_pmap::value_type                   Tile_index;
     typedef typename Triangulation::Triangulation_ds               TDS;
-    typedef CGAL::DDT::Bbox<N, double, Point>                      Bbox;
+    typedef CGAL::DDT::Bbox<D, double, Point>                      Bbox;
 
     typedef typename TDS::Vertex_const_iterator                    Vertex_index;
     typedef typename TDS::Full_cell_const_iterator                 Cell_index;
-    typedef CGAL::DDT::Facet_index<N, Cell_index>                  Facet_index;
+    typedef CGAL::DDT::Facet_index<D, Cell_index>                  Facet_index;
     typedef CGAL::Random_points_in_cube_d<Point>                   Random_points_in_box;
 
     Tile_index_pmap tile_index_pmap;
@@ -308,16 +332,12 @@ public:
 
     inline Facet_index facet(const Triangulation& tri, Cell_index c, int i) const
     {
-        return static_cast<const Derived*>(this)->facet(tri, c, i);
+        return Facet_index(c, i, dimension());
     }
 
     inline bool is_valid(const Triangulation& tri, bool verbose = false, int level = 0) const
     {
         return tri.is_valid(verbose, level);
-    }
-
-    inline int dimension() const {
-        return static_cast<const Derived*>(this)->dimension();
     }
 
     Bbox bbox(const Point& p) const {
@@ -347,63 +367,17 @@ public:
 
     inline std::ostream& write(std::ostream& out, const Triangulation& tri) const { return out << tri; }
     inline std::istream& read(std::istream& in, Triangulation& tri) const { return in >> tri; }
+
     inline Triangulation triangulation() const
     {
         return Triangulation(dimension());
     }
-};
 
-}
+    Triangulation_traits_d(int d = 0) : dim_(d) {}
+    inline int dimension() const { return dim_.dimension(); }
 
-/// \ingroup PkgDDTTraitsClasses
-/// D dimensional triangulation traits, where D is specified dynamically at runtime.
-/// \cgalModels TriangulationTraits
-template<typename T, typename TileIndexPmap = Vertex_data_property_map<T>, unsigned int N = 0>
-class Triangulation_traits_d : public Impl::Triangulation_traits_d<0,T,TileIndexPmap,Triangulation_traits_d<T,TileIndexPmap>>
-{
-    int dim_;
-    typedef Impl::Triangulation_traits_d<0,T,TileIndexPmap,Triangulation_traits_d<T,TileIndexPmap>> Base;
-
-public:
-    typedef typename Base::Cell_index Cell_index;
-    typedef typename Base::Facet_index Facet_index;
-    typedef typename Base::Triangulation Triangulation;
-    static constexpr int D = 0;
-    Triangulation_traits_d(int d) : dim_(d)
-    {
-        assert(d >= 2);
-    }
-    inline int dimension() const {
-        return dim_;
-    }
-    inline Facet_index facet(const Triangulation& tri, Cell_index c, int i) const
-    {
-        return Facet_index(dimension(), c, i);
-    }
-};
-
-/// \ingroup PkgDDTTraitsClasses
-/// D dimensional triangulation traits, where D is specified statically at compile-time.
-/// \cgalModels TriangulationTraits
-template<typename T, typename TileIndexPmap = Vertex_data_property_map<T>>
-class Triangulation_traits : public Impl::Triangulation_traits_d<T::Maximal_dimension::value,T,TileIndexPmap,Triangulation_traits<T,TileIndexPmap>>
-{
-    typedef Impl::Triangulation_traits_d<T::Maximal_dimension::value,T,TileIndexPmap,Triangulation_traits<T,TileIndexPmap>> Base;
-
-public:
-    typedef typename Base::Cell_index Cell_index;
-    typedef typename Base::Facet_index Facet_index;
-    typedef typename Base::Triangulation Triangulation;
-    static constexpr int D = T::Maximal_dimension::value;
-    Triangulation_traits(int d = 0)
-    {
-        assert(d==0 || d==D);
-    }
-    inline constexpr int dimension() const { return D; }
-    inline Facet_index facet(const Triangulation& tri, Cell_index c, int i) const
-    {
-        return Facet_index(c, i);
-    }
+private:
+    Dim_value dim_;
 };
 
 }

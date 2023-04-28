@@ -11,7 +11,7 @@ typedef int Flag;
 //
 
 #include <CGAL/DDT/traits/Triangulation_traits_d.h>
-typedef CGAL::DDT::Triangulation_traits<2,Id,Flag> Traits;
+typedef CGAL::DDT::Triangulation_traits_d<2,Id,Flag> Traits;
 typedef Traits::Random_points_in_box Random_points;
 
 

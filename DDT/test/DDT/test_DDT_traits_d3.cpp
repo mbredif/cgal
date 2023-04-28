@@ -10,7 +10,7 @@ typedef CGAL::Triangulation_full_cell<Geom_traits>                Cb;
 typedef CGAL::Triangulation_vertex<Geom_traits,Tile_index>        Vb;
 typedef CGAL::Triangulation_data_structure<Dim_tag,Vb,Cb>         TDS;
 typedef CGAL::Delaunay_triangulation<Geom_traits, TDS>            Delaunay_triangulation;
-typedef CGAL::DDT::Triangulation_traits<Delaunay_triangulation>   Traits;
+typedef CGAL::DDT::Triangulation_traits_d<Delaunay_triangulation> Traits;
 
 #include "test_traits.h"
 
