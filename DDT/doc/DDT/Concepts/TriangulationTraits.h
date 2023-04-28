@@ -49,8 +49,8 @@ public:
     /// Handle to a cell, model of `std::incrementable` and `LessThanComparable`.
     typedef unspecified_type   Cell_index;
 
-    /// The adapted Delaunay Triangulation
-    typedef unspecified_type Delaunay_triangulation;
+    /// The adapted Triangulation
+    typedef unspecified_type Triangulation;
     /// A model of the `Bbox` concept
     typedef unspecified_type Bbox;
     /// the ambient dimension if it is static, 0 if it is dynamic
@@ -62,7 +62,7 @@ public:
     typedef VertexIndex Vertex_index;
     typedef FacetIndex Facet_index;
     typedef CellIndex Cell_index;
-    typedef unspecified_type Delaunay_triangulation;
+    typedef unspecified_type Triangulation;
     typedef ::RandomPointsInBall Random_points_in_ball;
     typedef ::RandomPointsInBox Random_points_in_box;
     typedef ::Bbox Bbox;
@@ -75,65 +75,65 @@ public:
     /// default constructor
     TriangulationTraits(int dimension) {}
     /// constructs an empty triangulation of the given dimension
-    Delaunay_triangulation triangulation() const { return {}; }
+    Triangulation triangulation() const { return {}; }
     /// returns the dimension of the traits
     int dimension() const { return 0; }
     /// returns the current dimension of a Delaunay triangulation
-    int current_dimension(const Delaunay_triangulation& dt) const { return 0; }
+    int current_dimension(const Triangulation& tri) const { return 0; }
     /// returns the maximal dimension of a Delaunay triangulation
-    int maximal_dimension(const Delaunay_triangulation& dt) const { return 0; }
+    int maximal_dimension(const Triangulation& tri) const { return 0; }
     /// returns the number of cells, including infinite cells
-    std::size_t number_of_cells(const Delaunay_triangulation& dt) const { return 0; }
+    std::size_t number_of_cells(const Triangulation& tri) const { return 0; }
     /// returns the number of vertices, including the infinite vertex
-    std::size_t number_of_vertices(const Delaunay_triangulation& dt) const { return 0; }
+    std::size_t number_of_vertices(const Triangulation& tri) const { return 0; }
     /// checks the validity of a Delaunay triangulation
-    bool is_valid(const Delaunay_triangulation& dt, bool verbose = false, int level = 0) const { return true; }
+    bool is_valid(const Triangulation& tri, bool verbose = false, int level = 0) const { return true; }
     /// locates a vertex in a Delaunay triangulation, given a query point `p`, and a `hint`, otherwise returns the infinite vertex
-    Vertex_index locate_vertex(const Delaunay_triangulation& dt, const Point& p, Vertex_index hint = Vertex_index()) const { return v; }
-    /// collects in the output iterator `out` all cells incident to the query vertex `v` in the triangulation `dt`
+    Vertex_index locate_vertex(const Triangulation& tri, const Point& p, Vertex_index hint = Vertex_index()) const { return v; }
+    /// collects in the output iterator `out` all cells incident to the query vertex `v` in the triangulation `tri`
     template<typename OutputIterator>
-    OutputIterator incident_cells(const Delaunay_triangulation& dt, Vertex_index v, OutputIterator out) const { return out; }
-    /// collects in the output iterator `out` all vertices adjacent to the query vertex `v` in the triangulation `dt`
+    OutputIterator incident_cells(const Triangulation& tri, Vertex_index v, OutputIterator out) const { return out; }
+    /// collects in the output iterator `out` all vertices adjacent to the query vertex `v` in the triangulation `tri`
     template<typename OutputIterator>
-    OutputIterator adjacent_vertices(const Delaunay_triangulation& dt, Vertex_index v, OutputIterator out) const { return out; }
-    /// computes a permutation in `indices` of `points`, using the geometric traits of `dt`
-    void spatial_sort(const Delaunay_triangulation& dt, std::vector<std::size_t>& indices, const std::vector<Point>& points) const {}
+    OutputIterator adjacent_vertices(const Triangulation& tri, Vertex_index v, OutputIterator out) const { return out; }
+    /// computes a permutation in `indices` of `points`, using the geometric traits of `tri`
+    void spatial_sort(const Triangulation& tri, std::vector<std::size_t>& indices, const std::vector<Point>& points) const {}
 
 /// \name Iterators
 /// @{
     /// returns begin const iterator on the set of vertices
-    Vertex_index vertices_begin(const Delaunay_triangulation& dt) const { return v; }
+    Vertex_index vertices_begin(const Triangulation& tri) const { return v; }
     /// returns begin const iterator on the set of vertices
-    Vertex_index vertices_end(const Delaunay_triangulation& dt) const { return v; }
+    Vertex_index vertices_end(const Triangulation& tri) const { return v; }
     /// returns begin iterator on the set of facets
-    Facet_index facets_begin(const Delaunay_triangulation& dt) const { return f; }
+    Facet_index facets_begin(const Triangulation& tri) const { return f; }
     /// returns end iterator on the set of facets
-    Facet_index facets_end(const Delaunay_triangulation& dt) const { return f; }
+    Facet_index facets_end(const Triangulation& tri) const { return f; }
     /// returns begin iterator on the set of cells
-    Cell_index cells_begin(const Delaunay_triangulation& dt) const { return c; }
+    Cell_index cells_begin(const Triangulation& tri) const { return c; }
     /// returns end iterator on the set of cells
-    Cell_index cells_end(const Delaunay_triangulation& dt) const { return c; }
+    Cell_index cells_end(const Triangulation& tri) const { return c; }
     /// returns the infinite vertex of a triangulation
-    Vertex_index infinite_vertex(const Delaunay_triangulation& dt) const { return v; }
+    Vertex_index infinite_vertex(const Triangulation& tri) const { return v; }
 /// @}
 
 
 /// \name Triangulation Modification
 /// @{
     /// clears the triangulation
-    void clear(Delaunay_triangulation& dt) const {}
+    void clear(Triangulation& tri) const {}
     /// inserts a vertex located at `point` in tile `id` into the triangulation, using the `hint` if available.
     /// @return a pair of the vertex index located at `point` and a boolean that reports if a vertex has been created.
-    std::pair<Vertex_index, bool> insert(Delaunay_triangulation& dt, const Point& p, Tile_index id, Vertex_index hint = Vertex_index()) const { return {v,false}; }
+    std::pair<Vertex_index, bool> insert(Triangulation& tri, const Point& p, Tile_index id, Vertex_index hint = Vertex_index()) const { return {v,false}; }
     /// removes a vertex from the triangulation
-    void remove(Delaunay_triangulation& dt, Vertex_index v) const {}
+    void remove(Triangulation& tri, Vertex_index v) const {}
 /// @}
 
 
 /// \name Accessors
 /// @{
     /// returns the point embedding of a vertex
-    const Point& point(const Delaunay_triangulation& dt, Vertex_index v) const { return p; }
+    const Point& point(const Triangulation& tri, Vertex_index v) const { return p; }
     /// creates a box bounding the approximation of a point
     Bbox bbox(const Point& p) const { return {}; }
     /// creates an an empty bounding box in d dimensions.
@@ -144,7 +144,7 @@ public:
     static  Bbox bbox(int d, double range) { return {}; }
 
     /// returns the identifier of the tile where this vertex is local
-    Tile_index    id  (Vertex_index v) const { return {}; }
+    Tile_index  vertex_id  (const Triangulation& tri, Vertex_index v) const { return {}; }
     /// returns the flag of the vertex
     const Info& info(Vertex_index v) const { return i; }
     /// returns the ith coodinate of a point as a (possibly approximated) double
@@ -157,50 +157,50 @@ public:
 /// \name Tests
 /// @{
     /// tests if a vertex is the infinite vertex
-    bool vertex_is_infinite(const Delaunay_triangulation& dt, Vertex_index v) const { return {}; }
+    bool vertex_is_infinite(const Triangulation& tri, Vertex_index v) const { return {}; }
     /// tests if a facet is infinite (incident to the infinite vertex)
-    bool facet_is_infinite(const Delaunay_triangulation& dt, Facet_index f) const { return {}; }
+    bool facet_is_infinite(const Triangulation& tri, Facet_index f) const { return {}; }
     /// tests if a cell is infinite (incident to the infinite vertex)
-    bool cell_is_infinite(const Delaunay_triangulation& dt, Cell_index c) const { return {}; }
+    bool cell_is_infinite(const Triangulation& tri, Cell_index c) const { return {}; }
     /// tests if two vertices from possibly different triangulations have the same point embedding
-    bool are_vertices_equal(const Delaunay_triangulation& t1, Vertex_index v1, const Delaunay_triangulation& t2, Vertex_index v2) const { return {}; }
+    bool are_vertices_equal(const Triangulation& t1, Vertex_index v1, const Triangulation& t2, Vertex_index v2) const { return {}; }
     /// tests if two facets from possibly different triangulations have the same point embeddings
-    bool are_facets_equal(const Delaunay_triangulation& t1, Facet_index f1, const Delaunay_triangulation& t2, Facet_index f2) const { return {}; }
+    bool are_facets_equal(const Triangulation& t1, Facet_index f1, const Triangulation& t2, Facet_index f2) const { return {}; }
     /// tests if two cells from possibly different triangulations have the same point embeddings
-    bool are_cells_equal(const Delaunay_triangulation& t1, Cell_index c1, const Delaunay_triangulation& t2, Cell_index c2) const { return {}; }
+    bool are_cells_equal(const Triangulation& t1, Cell_index c1, const Triangulation& t2, Cell_index c2) const { return {}; }
 /// @}
 
 
 /// \name Triangulation Data Structure traversal
 /// @{
     /// returns the ith vertex of a cell
-    Vertex_index vertex(const Delaunay_triangulation& dt, Cell_index c, int i) const { return {}; }
+    Vertex_index vertex(const Triangulation& tri, Cell_index c, int i) const { return {}; }
     /// returns the facet incident to a cell, which covertex is the ith vertex of the cell
-    Facet_index facet(const Delaunay_triangulation& dt, Cell_index c, int i) const { return {}; }
+    Facet_index facet(const Triangulation& tri, Cell_index c, int i) const { return {}; }
     /// returns the index of the covertex of a facet
-    int index_of_covertex(const Delaunay_triangulation& dt, Facet_index f) const { return {}; }
+    int index_of_covertex(const Triangulation& tri, Facet_index f) const { return {}; }
     /// returns the covertex of a facet, which is the only vertex of cell containing the facet that is not incident to the facet
-    Vertex_index covertex(const Delaunay_triangulation& dt, Facet_index f) const { return {}; }
+    Vertex_index covertex(const Triangulation& tri, Facet_index f) const { return {}; }
     /// returns the covertex of the mirror of a facet
-    Vertex_index mirror_vertex(const Delaunay_triangulation& dt, Facet_index f) const { return {}; }
+    Vertex_index mirror_vertex(const Triangulation& tri, Facet_index f) const { return {}; }
     /// returns the cell incident to a facet
-    Cell_index cell(const Delaunay_triangulation& dt, Facet_index f) const { return {}; }
+    Cell_index cell(const Triangulation& tri, Facet_index f) const { return {}; }
     /// returns one of the cells incident to a vertex
-    Cell_index cell(const Delaunay_triangulation& dt, Vertex_index f) const { return {}; }
+    Cell_index cell(const Triangulation& tri, Vertex_index f) const { return {}; }
     /// returns the mirror facet of a facet
-    Facet_index mirror_facet(const Delaunay_triangulation& dt, Facet_index f) const { return {}; }
+    Facet_index mirror_facet(const Triangulation& tri, Facet_index f) const { return {}; }
     /// returns the mirror index of a facet, which is the index of the covertex of its mirror facet
-    int mirror_index(const Delaunay_triangulation& dt, Facet_index f) const { return {}; }
+    int mirror_index(const Triangulation& tri, Facet_index f) const { return {}; }
     /// returns the index of a cell in its ith neighbor
-    int mirror_index(const Delaunay_triangulation& dt, Cell_index c, int i) const { return {}; }
+    int mirror_index(const Triangulation& tri, Cell_index c, int i) const { return {}; }
     /// returns the neighboring cell of a cell, opposite to its itg vertex
-    Cell_index neighbor(const Delaunay_triangulation& dt, Cell_index c, int i) const { return {}; }
+    Cell_index neighbor(const Triangulation& tri, Cell_index c, int i) const { return {}; }
 /// @}
 
 /// \name Streaming
 /// @{
-    std::ostream& write(std::ostream& out, const Delaunay_triangulation& dt) const { return out; }
-    std::istream& read(std::istream& in, Delaunay_triangulation& dt) const { return in; }
+    std::ostream& write(std::ostream& out, const Triangulation& tri) const { return out; }
+    std::istream& read(std::istream& in, Triangulation& tri) const { return in; }
 /// @}
 
 
