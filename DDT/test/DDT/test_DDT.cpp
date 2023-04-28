@@ -1,8 +1,14 @@
-typedef int Tile_index;
-typedef int Vertex_Info;
+#include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
+#include <CGAL/Triangulation_vertex_base_with_info_2.h>
+#include <CGAL/Delaunay_triangulation_2.h>
+#include <CGAL/DDT/traits/Triangulation_traits_2.h>
 
-#include <CGAL/DDT/traits/Triangulation_traits_d.h>
-typedef CGAL::DDT::Triangulation_traits<2,Tile_index,Vertex_Info> Traits;
+typedef int                                                                  Tile_index;
+typedef CGAL::Exact_predicates_inexact_constructions_kernel                  Geom_traits;
+typedef CGAL::Triangulation_vertex_base_with_info_2<Tile_index, Geom_traits> Vb;
+typedef CGAL::Triangulation_data_structure_2<Vb>                             TDS;
+typedef CGAL::Delaunay_triangulation_2<Geom_traits, TDS>                     Delaunay_triangulation;
+typedef CGAL::DDT::Triangulation_traits_2<Delaunay_triangulation>            Traits;
 typedef Traits::Point Point;
 typedef Traits::Bbox Bbox;
 
@@ -50,7 +56,7 @@ int main(int, char **)
     points.emplace_back(1, 1);
 
     double range = 3;
-    Bbox bbox(Traits::D, range);
+    Bbox bbox(-range, -range, range, range);
 
     Partitioner partitioner(bbox, ND, ND+Traits::D);
     TileContainer tiles(Traits::D);

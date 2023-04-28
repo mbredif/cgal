@@ -1,3 +1,5 @@
+#include <CGAL/Epick_d.h>
+#include <CGAL/Delaunay_triangulation.h>
 #include <CGAL/DDT/traits/Triangulation_traits_d.h>
 #include <CGAL/DDT/partitioner/Grid_partitioner.h>
 #include <CGAL/DDT/scheduler/Multithread_scheduler.h>
@@ -6,9 +8,15 @@
 #include "DDT_demo.h"
 
 typedef int Tile_index;
+typedef CGAL::Dimension_tag<2>                                    Dim_tag;
+typedef CGAL::Epick_d<Dim_tag>                                    Geom_traits;
+typedef CGAL::Triangulation_vertex<Geom_traits,Tile_index>        Vb;
+typedef CGAL::Triangulation_data_structure<Dim_tag,Vb>            TDS;
+typedef CGAL::Delaunay_triangulation<Geom_traits, TDS>            Delaunay_triangulation;
+typedef CGAL::DDT::Triangulation_traits<Delaunay_triangulation>   Traits;
 int main(int argc, char **argv) {
     return DDT_demo<
-            CGAL::DDT::Triangulation_traits<2,Tile_index>,
+            CGAL::DDT::Triangulation_traits<Delaunay_triangulation>,
             CGAL::DDT::Grid_partitioner,
             CGAL::DDT::Multithread_scheduler,
             CGAL::DDT::No_tile_points,

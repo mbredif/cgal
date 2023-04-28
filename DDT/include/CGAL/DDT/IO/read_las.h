@@ -13,6 +13,7 @@
 #define CGAL_DDT_READ_LAS_H
 
 #include <CGAL/IO/read_las_points.h>
+#include <CGAL/Bbox_3.h>
 
 namespace CGAL {
 namespace DDT {

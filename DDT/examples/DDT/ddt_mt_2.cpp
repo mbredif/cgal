@@ -7,17 +7,24 @@
 #include <CGAL/DDT/IO/write_ply.h>
 #include <CGAL/DDT/IO/write_vrt.h>
 #include <CGAL/DDT/insert.h>
+#include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
+#include <CGAL/Triangulation_vertex_base_with_info_2.h>
+#include <CGAL/Delaunay_triangulation_2.h>
 
 typedef int Tile_index;
-typedef unsigned char Vertex_info; // unused user data
-typedef CGAL::DDT::Triangulation_traits_2<Tile_index, Vertex_info> Traits;
-typedef Traits::Random_points_in_box Random_points;
-typedef Traits::Bbox Bbox;
-typedef CGAL::DDT::Multithread_scheduler<Traits> Scheduler;
-typedef CGAL::DDT::File_serializer<Traits> Serializer;
-typedef CGAL::DDT::No_tile_points<Traits> Tile_points;
-typedef CGAL::DDT::Tile_container<Traits, Tile_points, Serializer> Tile_container;
-typedef CGAL::Distributed_Delaunay_triangulation<Tile_container> Distributed_Delaunay_triangulation;
+typedef CGAL::Exact_predicates_inexact_constructions_kernel                  Geom_traits;
+typedef CGAL::Triangulation_vertex_base_with_info_2<Tile_index, Geom_traits> Vb;
+typedef CGAL::Triangulation_data_structure_2<Vb>                             TDS;
+typedef CGAL::Delaunay_triangulation_2<Geom_traits, TDS>                     Delaunay_triangulation;
+typedef CGAL::DDT::Triangulation_traits_2<Delaunay_triangulation>            Traits;
+
+typedef Traits::Random_points_in_box                                         Random_points;
+typedef Traits::Bbox                                                         Bbox;
+typedef CGAL::DDT::Multithread_scheduler<Traits>                             Scheduler;
+typedef CGAL::DDT::File_serializer<Traits>                                   Serializer;
+typedef CGAL::DDT::No_tile_points<Traits>                                    Tile_points;
+typedef CGAL::DDT::Tile_container<Traits, Tile_points, Serializer>           Tile_container;
+typedef CGAL::Distributed_Delaunay_triangulation<Tile_container>             Distributed_Delaunay_triangulation;
 
 int main(int argc, char **argv)
 {

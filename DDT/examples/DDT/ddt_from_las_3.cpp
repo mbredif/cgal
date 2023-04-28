@@ -1,7 +1,5 @@
 #include <boost/filesystem.hpp>
 
-#include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
-
 #include <CGAL/property_map.h>
 #include <CGAL/DDT/IO/read_las.h>
 #include <CGAL/DDT/IO/write_pvtu.h>
@@ -14,8 +12,9 @@
 #include <CGAL/DDT/insert.h>
 #include <CGAL/DDT/tile_points/LAS_tile_points.h>
 
-#include <CGAL/Bbox_3.h>
-#include <CGAL/bounding_box.h>
+#include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
+#include <CGAL/Triangulation_vertex_base_with_info_3.h>
+#include <CGAL/Delaunay_triangulation_3.h>
 
 #include <utility>
 #include <vector>
@@ -23,18 +22,17 @@
 
 // types
 typedef unsigned char Tile_index;
-typedef unsigned char Vertex_info; // unused user data
-typedef CGAL::DDT::Triangulation_traits_3<Tile_index, Vertex_info> Traits;
-typedef Traits::Random_points_in_box Random_points;
-typedef Traits::Bbox Bbox;
-typedef CGAL::DDT::Multithread_scheduler<Traits> Scheduler;
-typedef CGAL::DDT::File_serializer<Traits> Serializer;
-typedef CGAL::DDT::LAS_tile_points<Traits> Tile_points;
-typedef CGAL::DDT::Tile_container<Traits, Tile_points, Serializer> Tile_container;
+typedef CGAL::Exact_predicates_inexact_constructions_kernel                  Geom_traits;
+typedef CGAL::Triangulation_vertex_base_with_info_3<Tile_index, Geom_traits> Vb;
+typedef CGAL::Triangulation_data_structure_3<Vb>                             TDS;
+typedef CGAL::Delaunay_triangulation_3<Geom_traits, TDS>                     Delaunay_triangulation;
+typedef CGAL::DDT::Triangulation_traits_3<Delaunay_triangulation>            Traits;
 
-typedef Traits::Point Point;
-// typedef std::array<unsigned short, 4> Color;
-// typedef std::pair<Point, Color> PointWithColor;
+typedef Traits::Bbox                                                         Bbox;
+typedef CGAL::DDT::Multithread_scheduler<Traits>                             Scheduler;
+typedef CGAL::DDT::File_serializer<Traits>                                   Serializer;
+typedef CGAL::DDT::LAS_tile_points<Traits>                                   Tile_points;
+typedef CGAL::DDT::Tile_container<Traits, Tile_points, Serializer>           Tile_container;
 
 int main(int argc, char*argv[])
 {

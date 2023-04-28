@@ -117,7 +117,11 @@ std::ostream &
 operator<<(std::ostream & os, const Triangulation_vertex<A, Data, B> & v)
 {
     os << v.point();
-    os << v.data();
+    if(IO::get_mode(os) == IO::BINARY) {
+        write(os, v.data());
+    } else {
+        os << ' ' << v.data();
+    }
     return os;
 }
 
