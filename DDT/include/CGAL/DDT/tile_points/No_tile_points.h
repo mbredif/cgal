@@ -18,7 +18,6 @@ namespace DDT {
 /// \ingroup PkgDDTClasses
 /// \tparam T is a model of the TriangulationTraits concept
 /// The No_tile_points is the trivial empty point set.
-template<class T>
 class No_tile_points {
 public:
     template<typename PointOutputIterator>

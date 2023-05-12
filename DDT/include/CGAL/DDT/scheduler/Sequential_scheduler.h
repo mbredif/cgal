@@ -20,12 +20,8 @@ namespace DDT {
 
 /// \ingroup PkgDDTSchedulerClasses
 /// \cgalModels Scheduler
-template<typename TriangulationTraits>
 struct Sequential_scheduler
 {
-    typedef TriangulationTraits Traits;
-    typedef CGAL::DDT::Tile<Traits> Tile;
-
     /// constructor
     Sequential_scheduler(int max_concurrency = 0) { assert(max_concurrency==0 || max_concurrency==1); }
 
@@ -34,6 +30,7 @@ struct Sequential_scheduler
     template<typename TileContainer,
              typename Transform,
              typename Reduce = std::plus<>,
+             typename Tile = typename TileContainer::Tile,
              typename V = std::invoke_result_t<Reduce,
                                                std::invoke_result_t<Transform, Tile&>,
                                                std::invoke_result_t<Transform, Tile&> > >
@@ -52,6 +49,7 @@ struct Sequential_scheduler
     template<typename TileContainer,
          typename Transform,
          typename Reduce = std::plus<>,
+         typename Tile = typename TileContainer::Tile,
          typename V = std::invoke_result_t<Reduce,
                                            std::invoke_result_t<Transform, Tile&>,
                                            std::invoke_result_t<Transform, Tile&> > >

@@ -14,16 +14,18 @@
 namespace po = boost::program_options;
 
 template<
-        class Traits,
-        template <class> class Partitioner,
-        template <class> class Scheduler,
-        template <class> class TilePoints,
-        template <class> class Serializer>
+        class Triangulation,
+        class TileIndexProperty,
+        class Partitioner,
+        class Scheduler,
+        class TilePoints,
+        class Serializer>
 
 int DDT_demo(int argc, char **argv)
 {
+  typedef CGAL::DDT::Triangulation_traits<Triangulation> Traits;
   typedef typename Traits::Random_points_in_box Random_points;
-  typedef CGAL::DDT::Tile_container<Traits, TilePoints<Traits>, Serializer<Traits>> TileContainer;
+  typedef CGAL::DDT::Tile_container<Triangulation, TileIndexProperty, TilePoints, Serializer> TileContainer;
   typedef CGAL::Distributed_Delaunay_triangulation<TileContainer> Distributed_Delaunay_triangulation;
 
   int NP, loglevel, max_concurrency, max_number_of_tiles;
@@ -88,11 +90,10 @@ int DDT_demo(int argc, char **argv)
       max_concurrency = max_number_of_tiles;
   }
 
-  Traits traits(dimension);
-  typename Traits::Bbox bbox = traits.bbox(dimension, range);
-  Partitioner<Traits> partitioner(bbox, NT.begin(), NT.end());
-  Scheduler<Traits> scheduler(max_concurrency);
-  Serializer<Traits> serializer(ser);
+  typename Traits::Bbox bbox = Traits::bbox(dimension, range);
+  Partitioner partitioner(bbox, NT.begin(), NT.end());
+  Scheduler scheduler(max_concurrency);
+  Serializer serializer(ser);
   TileContainer tiles(dimension, max_number_of_tiles, serializer);
 
   std::cout << "- Program     : " << argv[0] << std::endl;

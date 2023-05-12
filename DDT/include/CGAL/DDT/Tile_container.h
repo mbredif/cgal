@@ -99,17 +99,18 @@ private:
 
 /// \ingroup PkgDDTClasses
 /// Tile Container
-template<typename TriangulationTraits,
-         typename TilePoints = No_tile_points<TriangulationTraits>,
-         typename Serializer = No_serializer<TriangulationTraits> >
+template<typename Triangulation,
+         typename TileIndexProperty,
+         typename TilePoints = No_tile_points,
+         typename Serializer = No_serializer<Triangulation, TileIndexProperty> >
 class Tile_container
 {
 public:
-    typedef TriangulationTraits                                    Traits;
-    typedef CGAL::DDT::Tile<TriangulationTraits, TilePoints>       Tile;
+    typedef CGAL::DDT::Triangulation_traits<Triangulation>         Traits;
+    typedef CGAL::DDT::Tile<Triangulation, TileIndexProperty, TilePoints>       Tile;
 
+    typedef typename TileIndexProperty::value_type     Tile_index;
     typedef typename Traits::Point                     Point;
-    typedef typename Traits::Tile_index                Tile_index;
     typedef typename Traits::Vertex_index              Tile_vertex_index;
     typedef typename Traits::Cell_index                Tile_cell_index;
     typedef typename Traits::Facet_index               Tile_facet_index;
@@ -126,11 +127,11 @@ public:
 
     inline constexpr int maximal_dimension() const
     {
-        return traits.dimension();
+        return dimension_;
     }
 
     Tile_container(int dimension = Traits::D, std::size_t number_of_triangulations_mem_max = 0, const Serializer& serializer = Serializer()) :
-        traits(dimension),
+        dimension_(dimension),
         tiles(),
         serializer_(serializer),
         number_of_finite_vertices_(0),
@@ -160,7 +161,7 @@ public:
     iterator end    () { return tiles.end   (); }
     iterator find(Tile_index id) { return tiles.find(id); }
 
-    Tile& operator[](Tile_index id) { return tiles.emplace(id, std::move(Tile(id, traits))).first->second; }
+    Tile& operator[](Tile_index id) { return tiles.emplace(id, std::move(Tile(id, dimension_))).first->second; }
     const Tile& at(Tile_index id) const { return tiles.at(id); }
     Tile& at(Tile_index id) { return tiles.at(id); }
 
@@ -359,7 +360,7 @@ private:
     Container tiles;
     Points extreme_points_;
     Serializer serializer_;
-    Traits traits;
+    int dimension_;
 
     std::size_t number_of_finite_vertices_;
     std::size_t number_of_finite_facets_;

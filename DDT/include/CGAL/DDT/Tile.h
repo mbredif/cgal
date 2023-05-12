@@ -22,26 +22,25 @@ namespace DDT {
 /// \tparam T is a model of the TriangulationTraits concept
 /// \tparam TilePoints is a model of the TilePoints concept
 /// The Tile stores a local Delaunay triangulation.
-template<class T, class TilePoints = No_tile_points<T> >
+template<class Triangulation, class TileIndexProperty, class TilePoints = No_tile_points >
 class Tile
 {
 public:
-    typedef T                                         Traits;
-    typedef typename Traits::Tile_index               Tile_index;
+    typedef Triangulation_traits<Triangulation>       Traits;
+    typedef typename TileIndexProperty::value_type    Tile_index;
     typedef typename Traits::Bbox                     Bbox;
     typedef typename Traits::Point                    Point;
     typedef typename Traits::Vertex_index             Vertex_index;
     typedef std::pair<Tile_index,Point>               Point_id;
     typedef std::vector<Point_id>                     Points;
     typedef std::map<Tile_index, Points>              Points_map;
-    typedef CGAL::DDT::Tile_triangulation<T>          Tile_triangulation;
+    typedef CGAL::DDT::Tile_triangulation<Triangulation, TileIndexProperty>          Tile_triangulation;
     typedef TilePoints                                Tile_points;
 
-    Tile(Tile_index id, Traits t) :
+    Tile(Tile_index id, int dimension) :
         id_(id),
-        traits(t),
-        triangulation_(id, t),
-        bbox_(t.bbox(t.dimension())),
+        triangulation_(id, dimension),
+       // bbox_(t.bbox(dimension)),
         points_(),
         in_mem(false),
         locked(false)
@@ -164,7 +163,6 @@ public:
     }
 
 private:
-    Traits traits;
     Tile_index id_;
     Tile_triangulation triangulation_;
     Bbox bbox_;

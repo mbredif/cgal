@@ -23,11 +23,11 @@ namespace DDT {
 /// This serializer saves and loads the bounding box and triangulation of each tile to the filesystem.
 /// It contains the iostream serialization of the bounding box and the tile triangulation.
 /// \cgalModels Serializer
-template <typename Traits>
+template <typename Triangulation, typename TileIndexProperty>
 struct File_serializer
 {
-  typedef typename Traits::Tile_index       Tile_index;
-  typedef typename Traits::Bbox             Bbox;
+  typedef typename TileIndexProperty::value_type       Tile_index;
+  typedef typename Triangulation_traits<Triangulation>::Bbox             Bbox;
 
   /// Each tile is saved as the file "{prefix}{tile_index}.txt".
   File_serializer(const std::string& prefix = "") : m_prefix(prefix) {
@@ -100,8 +100,8 @@ private:
 #endif
 };
 
-template<typename Tile>
-std::ostream& operator<<(std::ostream& out, const File_serializer<Tile>& serializer) {
+template<typename Triangulation, typename TileIndexProperty>
+std::ostream& operator<<(std::ostream& out, const File_serializer<Triangulation, TileIndexProperty>& serializer) {
     return out << "File_serializer(prefix=" << serializer.prefix() << ")";
 }
 

@@ -43,12 +43,8 @@ V transform_id(TileContainer& tc, Transform transform, V init, Tile_index id, st
 
 // \ingroup PkgDDTSchedulerClasses
 // \cgalModels Scheduler
-template<typename TriangulationTraits>
 struct Multithread_scheduler
 {
-    typedef TriangulationTraits Traits;
-    typedef typename TriangulationTraits::Tile_index Tile_index;
-
     /// constructor
     Multithread_scheduler(int max_concurrency = 0) : pool(max_concurrency), timeout_(1)
     {
@@ -77,6 +73,7 @@ struct Multithread_scheduler
                                            std::invoke_result_t<Transform, Tile&> > >
     V for_each(TileContainer& tc, Transform transform, Reduce reduce = {}, V init = {})
     {
+        typedef typename Tile::Tile_index Tile_index;
         std::vector<std::future<V>> futures;
         for(const Tile& tile : tc)
             futures.push_back(pool.submit([this, &tc, &transform, &init](Tile_index id){
@@ -96,6 +93,7 @@ struct Multithread_scheduler
                                            std::invoke_result_t<Transform, Tile&> > >
     V for_each_rec(TileContainer& tc, Transform transform, Reduce reduce = {}, V init = {})
     {
+        typedef typename Tile::Tile_index Tile_index;
         std::map<Tile_index, std::future<V>> futures;
         for(const Tile& tile : tc)
             futures.emplace(tile.id(), pool.submit([this, &tc, &transform, &init](Tile_index id){

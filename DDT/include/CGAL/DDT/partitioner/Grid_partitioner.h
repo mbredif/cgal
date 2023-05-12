@@ -21,13 +21,14 @@ namespace DDT {
 /// Partitions the domain enclosed by an axis aligned bounding box using a uniform grid.
 /// The number of grid steps in each dimension may be specified independently.
 /// \cgalModels Partitioner
-template<typename Traits>
+template<typename Triangulation, typename TileIndexProperty>
 class Grid_partitioner
 {
+    typedef Triangulation_traits<Triangulation> Traits;
 public:
+    typedef typename TileIndexProperty::value_type Tile_index;
     typedef typename Traits::Point Point;
     typedef typename Traits::Bbox Bbox;
-    typedef typename Traits::Tile_index    Tile_index;
     typedef typename std::vector<std::size_t>::const_iterator const_size_iterator;
 
     /// Construction with a bbox, a range of number of grid steps in each dimension, and a base tile index.
@@ -98,8 +99,8 @@ private:
     Tile_index id0;
 };
 
-template<typename Traits>
-std::ostream& operator<<(std::ostream& out, const Grid_partitioner<Traits>& partitioner) {
+template<typename Traits, typename TileIndex>
+std::ostream& operator<<(std::ostream& out, const Grid_partitioner<Traits, TileIndex>& partitioner) {
     out << "Grid_partitioner( ";
     std::copy(partitioner.size_begin(), partitioner.size_end(), std::ostream_iterator<std::size_t>(out, " "));
     return out << ")";

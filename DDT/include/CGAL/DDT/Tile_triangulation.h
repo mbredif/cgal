@@ -28,24 +28,29 @@ namespace DDT {
 /// \tparam Selector is a template for a model of the Selector concept (defaults to Median_selector)
 /// The Tile_triangulation stores a local Delaunay triangulation.
 /// The main id of a simplex is defined by the selector
-template<class T, template <class> class Selector = Median_selector>
+template<
+    class T,
+    class TileIndexPmap,
+    template <class> class Selector = Median_selector>
 class Tile_triangulation
 {
 public:
-    typedef T                                        Traits;
-    typedef typename Traits::Tile_index              Tile_index;
+    typedef T           Triangulation;
+    typedef Triangulation_traits<T>                                  Traits;
+    typedef TileIndexPmap                                            Tile_index_pmap;
+    typedef typename Tile_index_pmap::value_type                     Tile_index;
     typedef typename Traits::Point                   Point;
     typedef typename Traits::Bbox                    Bbox;
-    typedef typename Traits::Triangulation           Delaunay_triangulation;
     typedef typename Traits::Vertex_index            Vertex_index;
     typedef typename Traits::Facet_index             Facet_index;
     typedef typename Traits::Cell_index              Cell_index;
 
+    static Tile_index_pmap tile_index_pmap;
+
     /// constructor
-    Tile_triangulation(Tile_index id, Traits t)
-        : traits(t),
-          id_(id),
-          dt_(traits.triangulation()),
+    Tile_triangulation(Tile_index id, int dimension)
+        : id_(id),
+          tri_(Traits::triangulation(dimension)),
           number_of_main_finite_vertices_(0),
           number_of_main_finite_facets_(0),
           number_of_main_finite_cells_(0),
@@ -53,25 +58,25 @@ public:
           number_of_main_cells_(0)
     {}
 
-    inline Delaunay_triangulation& triangulation() { return dt_; }
-    inline const Delaunay_triangulation& triangulation() const { return dt_; }
+    inline Triangulation& triangulation() { return tri_; }
+    inline const Triangulation& triangulation() const { return tri_; }
 
     inline Tile_index id() const { return id_; }
 
-    inline int maximal_dimension() const { return traits.maximal_dimension(dt_); }
-    inline int current_dimension() const { return traits.current_dimension(dt_); }
+    inline int maximal_dimension() const { return Traits::maximal_dimension(tri_); }
+    inline int current_dimension() const { return Traits::current_dimension(tri_); }
 
-    inline Cell_index cells_begin() const { return traits.cells_begin(dt_); }
-    inline Cell_index cells_end  () const { return traits.cells_end  (dt_); }
+    inline Cell_index cells_begin() const { return Traits::cells_begin(tri_); }
+    inline Cell_index cells_end  () const { return Traits::cells_end  (tri_); }
 
-    inline Vertex_index vertices_begin() const { return traits.vertices_begin(dt_); }
-    inline Vertex_index vertices_end  () const { return traits.vertices_end  (dt_); }
+    inline Vertex_index vertices_begin() const { return Traits::vertices_begin(tri_); }
+    inline Vertex_index vertices_end  () const { return Traits::vertices_end  (tri_); }
 
-    inline Facet_index  facets_begin()  const { return traits.facets_begin(dt_); }
-    inline Facet_index  facets_end  ()  const { return traits.facets_end  (dt_); }
+    inline Facet_index  facets_begin()  const { return Traits::facets_begin(tri_); }
+    inline Facet_index  facets_end  ()  const { return Traits::facets_end  (tri_); }
 
-    inline std::size_t number_of_vertices() const { return traits.number_of_vertices(dt_); }
-    inline std::size_t number_of_cells   () const { return traits.number_of_cells   (dt_); }
+    inline std::size_t number_of_vertices() const { return Traits::number_of_vertices(tri_); }
+    inline std::size_t number_of_cells   () const { return Traits::number_of_cells   (tri_); }
 
     inline std::size_t number_of_main_facets  () const { return number_of_main_facets_;   }
     inline std::size_t number_of_main_cells   () const { return number_of_main_cells_;    }
@@ -79,7 +84,7 @@ public:
     inline std::size_t number_of_main_finite_facets  () const { return number_of_main_finite_facets_;   }
     inline std::size_t number_of_main_finite_cells   () const { return number_of_main_finite_cells_;    }
 
-    inline Tile_index vertex_id(Vertex_index v) const { assert(!vertex_is_infinite(v)); return traits.vertex_id(dt_, v); }
+    inline Tile_index vertex_id(Vertex_index v) const { assert(!vertex_is_infinite(v)); return get(tile_index_pmap, v); }
 
     Tile_index cell_id(Cell_index c) const
     {
@@ -106,17 +111,22 @@ public:
         return selector.select();
     }
 
-    inline void clear() { traits.clear(dt_); }
-    inline std::pair<Vertex_index, bool> insert(const Point& p, Tile_index id, Vertex_index v = Vertex_index()) { return traits.insert(dt_, p, id, v); }
-    inline void remove(Vertex_index v) { traits.remove(dt_, v); }
+    inline void clear() { Traits::clear(tri_); }
+    inline std::pair<Vertex_index, bool> insert(const Point& p, Tile_index id, Vertex_index v = Vertex_index()) {
+        std::pair<Vertex_index, bool> inserted = Traits::insert(tri_, p, v);
+        if (inserted.second) put(tile_index_pmap, inserted.first, id);
+        return inserted;
+    }
 
-    inline void spatial_sort(std::vector<std::size_t>& indices, const std::vector<Point>& points) const { traits.spatial_sort(dt_, indices, points); }
+    inline void remove(Vertex_index v) { Traits::remove(tri_, v); }
+
+    inline void spatial_sort(std::vector<std::size_t>& indices, const std::vector<Point>& points) const { Traits::spatial_sort(tri_, indices, points); }
 
     /// \name Infinity tests
     /// @{
-    inline bool vertex_is_infinite(Vertex_index v) const { return traits.vertex_is_infinite(dt_, v); }
-    inline bool facet_is_infinite (Facet_index  f) const { return traits.facet_is_infinite (dt_, f); }
-    inline bool cell_is_infinite  (Cell_index   c) const { return traits.cell_is_infinite  (dt_, c); }
+    inline bool vertex_is_infinite(Vertex_index v) const { return Traits::vertex_is_infinite(tri_, v); }
+    inline bool facet_is_infinite (Facet_index  f) const { return Traits::facet_is_infinite (tri_, f); }
+    inline bool cell_is_infinite  (Cell_index   c) const { return Traits::cell_is_infinite  (tri_, c); }
     /// @}
 
     /// \name Validity tests
@@ -134,32 +144,32 @@ public:
     /// \name Vertex functions
     /// @{
     template<typename OutputIterator>
-    inline OutputIterator adjacent_vertices(Vertex_index v, OutputIterator out) const { return traits.adjacent_vertices(dt_, v, out); }
+    inline OutputIterator adjacent_vertices(Vertex_index v, OutputIterator out) const { return Traits::adjacent_vertices(tri_, v, out); }
     template<typename OutputIterator>
-    inline OutputIterator incident_cells(Vertex_index v, OutputIterator out) const { return traits.incident_cells(dt_, v, out); }
-    inline Vertex_index infinite_vertex() const { return traits.infinite_vertex(dt_); }
-    inline const Point& point(Vertex_index v) const { return traits.point(dt_, v); }
-    inline Bbox bbox(Vertex_index v) const { return traits.bbox(point(v)); }
-    inline double approximate_cartesian_coordinate(Vertex_index v, int i) const { return traits.approximate_cartesian_coordinate(point(v), i); }
+    inline OutputIterator incident_cells(Vertex_index v, OutputIterator out) const { return Traits::incident_cells(tri_, v, out); }
+    inline Vertex_index infinite_vertex() const { return Traits::infinite_vertex(tri_); }
+    inline const Point& point(Vertex_index v) const { return Traits::point(tri_, v); }
+    inline Bbox bbox(Vertex_index v) const { return Traits::bbox(point(v)); }
+    inline double approximate_cartesian_coordinate(Vertex_index v, int i) const { return Traits::approximate_cartesian_coordinate(point(v), i); }
     /// @}
 
     /// \name Facet functions
     /// @{
-    inline int index_of_covertex(Facet_index f) const { return traits.index_of_covertex(dt_, f); }
-    inline Vertex_index covertex(Facet_index f) const { return traits.covertex(dt_, f); }
-    inline Vertex_index mirror_vertex(Facet_index f) const { return traits.mirror_vertex(dt_, f); }
-    inline Cell_index cell(Facet_index f) const { return traits.cell(dt_, f); }
-    inline Cell_index cell(Vertex_index v) const { return traits.cell(dt_, v); }
-    inline Facet_index mirror_facet(Facet_index f) const { return traits.mirror_facet(dt_, f); }
-    inline int mirror_index(Facet_index f) const { return traits.mirror_index(dt_, f); }
+    inline int index_of_covertex(Facet_index f) const { return Traits::index_of_covertex(tri_, f); }
+    inline Vertex_index covertex(Facet_index f) const { return Traits::covertex(tri_, f); }
+    inline Vertex_index mirror_vertex(Facet_index f) const { return Traits::mirror_vertex(tri_, f); }
+    inline Cell_index cell(Facet_index f) const { return Traits::cell(tri_, f); }
+    inline Cell_index cell(Vertex_index v) const { return Traits::cell(tri_, v); }
+    inline Facet_index mirror_facet(Facet_index f) const { return Traits::mirror_facet(tri_, f); }
+    inline int mirror_index(Facet_index f) const { return Traits::mirror_index(tri_, f); }
     /// @}
 
     /// \name Cell functions
     /// @{
-    inline Vertex_index vertex(Cell_index c, int i) const { return traits.vertex(dt_, c, i); }
-    inline Facet_index facet(Cell_index c, int i) const { return traits.facet(dt_, c, i); }
-    inline int mirror_index(Cell_index c, int i) const { return traits.mirror_index(dt_, c, i); }
-    inline Cell_index neighbor(Cell_index c, int i) const { return traits.neighbor(dt_, c, i); }
+    inline Vertex_index vertex(Cell_index c, int i) const { return Traits::vertex(tri_, c, i); }
+    inline Facet_index facet(Cell_index c, int i) const { return Traits::facet(tri_, c, i); }
+    inline int mirror_index(Cell_index c, int i) const { return Traits::mirror_index(tri_, c, i); }
+    inline Cell_index neighbor(Cell_index c, int i) const { return Traits::neighbor(tri_, c, i); }
     /// @}
 
     /// \name Tile_triangulation locality tests
@@ -362,7 +372,7 @@ public:
     void get_axis_extreme_points(std::vector<Vertex_index>& out) const
     {
         std::vector<Vertex_index> vertices;
-        int D = traits.dimension();
+        int D = Traits::maximal_dimension(tri_);
         vertices.reserve(2*D);
         Vertex_index v = vertices_begin();
         // first local point
@@ -383,8 +393,8 @@ public:
                 const Point& p = point(v);
                 for(int i=0; i<D; ++i)
                 {
-                    if(traits.less_coordinate(p, point(vertices[i  ]), i)) vertices[i  ] = v;
-                    if(traits.less_coordinate(p, point(vertices[i+D]), i)) vertices[i+D] = v;
+                    if(Traits::less_coordinate(p, point(vertices[i  ]), i)) vertices[i  ] = v;
+                    if(Traits::less_coordinate(p, point(vertices[i+D]), i)) vertices[i+D] = v;
                 }
             }
         }
@@ -426,8 +436,8 @@ public:
     /// If report_vertices_with_mixed_stars_only is true, then only the new vertices with mixed stars are reported.
     /// foreign vertices of the tile triangulation are automatically simplified if their star is foreign as well.
     /// @returns the number of inserted points (not counting the number of simplified points and the insertion of already inserted points)
-    template <class PointTile_indexContainer>
-    int insert(const PointTile_indexContainer& received, std::set<Vertex_index>& inserted, bool report_vertices_with_mixed_stars_only=false)
+    template <class PointIdContainer>
+    int insert(const PointIdContainer& received, std::set<Vertex_index>& inserted, bool report_vertices_with_mixed_stars_only=false)
     {
         // retrieve the input points and ids in separate vectors
         // compute the axis-extreme points on the way
@@ -492,23 +502,23 @@ public:
 
     bool are_vertices_equal(Vertex_index v, const Tile_triangulation& t, Vertex_index tv) const
     {
-        return traits.are_vertices_equal(dt_, v, t.dt_, tv);
+        return Traits::are_vertices_equal(tri_, v, t.tri_, tv);
     }
 
     bool are_facets_equal(Facet_index f, const Tile_triangulation& t, Facet_index tf) const
     {
-        return traits.are_facets_equal(dt_, f, t.dt_, tf);
+        return Traits::are_facets_equal(tri_, f, t.tri_, tf);
     }
 
     bool are_cells_equal(Cell_index c, const Tile_triangulation& t, Cell_index tc) const
     {
-        return traits.are_cells_equal(dt_, c, t.dt_, tc);
+        return Traits::are_cells_equal(tri_, c, t.tri_, tc);
     }
 
 
     Vertex_index locate_vertex(const Point& p, Vertex_index hint = Vertex_index()) const
     {
-        return traits.locate_vertex(dt_, p, hint);
+        return Traits::locate_vertex(tri_, p, hint);
     }
 
     Vertex_index relocate_vertex(const Tile_triangulation& t, Vertex_index v, Vertex_index hint = Vertex_index()) const
@@ -528,7 +538,7 @@ public:
         Vertex_index v = t.vertex(c, t.index_of_covertex(f));
         for(int i=0; i<=current_dimension(); ++i)
         {
-            if(traits.are_vertices_equal(t.dt_, v, dt_, vertex(d, i)))
+            if(Traits::are_vertices_equal(t.tri_, v, tri_, vertex(d, i)))
                 return facet(d, i);
         }
         return facets_end();
@@ -584,15 +594,13 @@ public:
 
     inline bool is_valid(bool verbose = false, int level = 0) const
     {
-      return traits.is_valid(dt_, verbose, level);
+      return Traits::is_valid(tri_, verbose, level);
     }
-
-    const Traits& geom_traits() const { return traits; }
 
 private:
     Traits traits;
     Tile_index id_;
-    Delaunay_triangulation dt_;
+    Triangulation tri_;
     mutable Selector<Tile_index> selector;
 
     std::size_t number_of_main_finite_vertices_;
@@ -602,16 +610,16 @@ private:
     std::size_t number_of_main_cells_;
 };
 
-template<class T, template <class> class Selector>
-std::ostream& operator<<(std::ostream& out, const Tile_triangulation<T, Selector>& tt)
+template<class T, class Pmap, template <class> class Selector>
+std::ostream& operator<<(std::ostream& out, const Tile_triangulation<T, Pmap, Selector>& tt)
 {
-    return tt.geom_traits().write(out, tt.triangulation());
+    return CGAL::DDT::Triangulation_traits<T>::write(out, tt.triangulation());
 }
 
-template<class T, template <class> class Selector>
-std::istream& operator>>(std::istream& in, Tile_triangulation<T, Selector>& tt)
+template<class T, class Pmap, template <class> class Selector>
+std::istream& operator>>(std::istream& in, Tile_triangulation<T, Pmap, Selector>& tt)
 {
-    return tt.geom_traits().read(in, tt.triangulation());
+    return CGAL::DDT::Triangulation_traits<T>::read(in, tt.triangulation());
 }
 
 }
