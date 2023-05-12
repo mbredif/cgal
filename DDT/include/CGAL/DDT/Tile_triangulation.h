@@ -113,7 +113,7 @@ public:
 
     inline void clear() { Traits::clear(tri_); }
     inline std::pair<Vertex_index, bool> insert(const Point& p, Tile_index id, Vertex_index v = Vertex_index()) {
-        std::pair<Vertex_index, bool> inserted = Traits::insert(tri_, p, v);
+        auto inserted = Traits::insert(tri_, p, v);
         if (inserted.second) put(tile_index_pmap, inserted.first, id);
         return inserted;
     }

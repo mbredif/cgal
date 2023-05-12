@@ -29,16 +29,18 @@ namespace DDT {
 template<typename GT, typename TDS>
 struct Triangulation_traits<CGAL::Delaunay_triangulation_2<GT, TDS>>
 {
-    static constexpr int D = 2;
     using Triangulation = CGAL::Delaunay_triangulation_2<GT, TDS>;
     typedef typename GT::Point_2                            Point;
 
     typedef typename TDS::Vertex_iterator                            Vertex_index;
     typedef typename TDS::Face_iterator                              Cell_index;
-    typedef CGAL::DDT::Facet_index<2, Cell_index>                    Facet_index;
 
-    static inline Triangulation triangulation(int /*unused*/)
+    static const int D = 2;
+    typedef CGAL::DDT::Facet_index<D, Cell_index>                    Facet_index;
+
+    static inline Triangulation triangulation(int dim)
     {
+        CGAL_assertion(dim==D);
         return Triangulation();
     }
 
@@ -313,13 +315,13 @@ struct Triangulation_traits<CGAL::Delaunay_triangulation_2<GT, TDS>>
         return Bbox(p.x(), p.y(), p.x(), p.y());
     }
 
-    static inline Bbox bbox(unsigned int d, double range) {
-      CGAL_assertion(d==2);
+    static inline Bbox bbox(int dim, double range) {
+      CGAL_assertion(dim==D);
       return Bbox(-range, -range, range, range);
     }
 
-    static inline Bbox bbox(unsigned int d) {
-      CGAL_assertion(d==2);
+    static inline Bbox bbox(int dim) {
+      CGAL_assertion(dim==D);
       return Bbox();
     }
 
@@ -327,9 +329,9 @@ struct Triangulation_traits<CGAL::Delaunay_triangulation_2<GT, TDS>>
 
     struct Random_points_in_box : CGAL::Random_points_in_square_2<Point>
     {
-        Random_points_in_box(int d, double g) : CGAL::Random_points_in_square_2<Point>(g)
+        Random_points_in_box(int dim, double g) : CGAL::Random_points_in_square_2<Point>(g)
         {
-            CGAL_assertion(d==2);
+            CGAL_assertion(dim==D);
         }
         Random_points_in_box(double g) : CGAL::Random_points_in_square_2<Point>(g) {}
     };

@@ -46,10 +46,10 @@ struct Vertex_info_property_map
 ///
 /// \cgalModels `LvaluePropertyMap`
 template <typename T>
-struct Vertex_data_info_property_map
+struct Vertex_info_id_property_map
 {
 /// \cond SKIP_IN_MANUAL
-  typedef Vertex_data_info_property_map<T> Self;
+  typedef Vertex_info_id_property_map<T> Self;
   typedef typename T::Vertex_handle key_type;
   typedef typename T::Vertex::Info::Info value_type;
   typedef value_type& reference;

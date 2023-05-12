@@ -29,19 +29,20 @@ namespace DDT {
 template<typename GT, typename TDS>
 struct Triangulation_traits<CGAL::Delaunay_triangulation_3<GT, TDS>>
 {
-    static constexpr int D = 3;
     using Triangulation = CGAL::Delaunay_triangulation_3<GT, TDS>;
     typedef typename GT::Point_3                            Point;
 
     typedef typename TDS::Vertex_iterator                            Vertex_index;
     typedef typename TDS::Cell_iterator                              Cell_index;
-    typedef CGAL::DDT::Facet_index<3, Cell_index>                    Facet_index;
 
-    static inline Triangulation triangulation(int /*unused*/)
+    static const int D = 3;
+    typedef CGAL::DDT::Facet_index<D, Cell_index>                    Facet_index;
+
+    static inline Triangulation triangulation(int dim)
     {
+        CGAL_assertion(dim==D);
         return Triangulation();
     }
-
     static inline int current_dimension(const Triangulation& tri)
     {
         return tri.dimension();
@@ -301,13 +302,13 @@ struct Triangulation_traits<CGAL::Delaunay_triangulation_3<GT, TDS>>
         return Bbox(p.x(), p.y(), p.z(), p.x(), p.y(), p.z());
     }
 
-    static inline Bbox bbox(unsigned int d, double range) {
-      CGAL_assertion(d==3);
+    static inline Bbox bbox(int dim, double range) {
+      CGAL_assertion(dim==D);
       return Bbox(-range, -range, -range, range, range, range);
     }
 
-    static inline Bbox bbox(unsigned int d) {
-      CGAL_assertion(d==3);
+    static inline Bbox bbox(int dim) {
+      CGAL_assertion(dim==D);
       return Bbox();
     }
 
@@ -315,9 +316,9 @@ struct Triangulation_traits<CGAL::Delaunay_triangulation_3<GT, TDS>>
 
     struct Random_points_in_box : CGAL::Random_points_in_cube_3<Point>
     {
-        Random_points_in_box(int d, double g) : CGAL::Random_points_in_cube_3<Point>(g)
+        Random_points_in_box(int dim, double g) : CGAL::Random_points_in_cube_3<Point>(g)
         {
-            CGAL_assertion(d==3);
+            CGAL_assertion(dim==D);
         }
         Random_points_in_box(double g) : CGAL::Random_points_in_cube_3<Point>(g) {}
     };

@@ -27,6 +27,7 @@ struct Vertex_data_property_map
 {
 /// \cond SKIP_IN_MANUAL
   typedef Vertex_data_property_map<T> Self;
+  typedef typename T::Vertex_const_handle const_key_type;
   typedef typename T::Vertex_handle key_type;
   typedef typename T::Vertex::Data value_type;
   typedef value_type& reference;
@@ -35,7 +36,7 @@ struct Vertex_data_property_map
   value_type& operator[](key_type& k) const { return k->data(); }
 
   friend value_type& get(const Self&, key_type& k) { return k->data(); }
-  friend const value_type& get(const Self&, const key_type& k) { return k->data(); }
+  friend const value_type& get(const Self&, const const_key_type& k) { return k->data(); }
   friend void put(const Self&, key_type& k, const value_type& v) { k->data() = v; }
 /// \endcond
 };
@@ -50,6 +51,7 @@ struct Vertex_data_id_property_map
 {
 /// \cond SKIP_IN_MANUAL
   typedef Vertex_data_id_property_map<T> Self;
+  typedef typename T::Vertex_const_handle const_key_type;
   typedef typename T::Vertex_handle key_type;
   typedef typename T::Vertex::Data::Info value_type;
   typedef value_type& reference;
@@ -58,7 +60,7 @@ struct Vertex_data_id_property_map
   value_type& operator[](key_type& k) const { return k->data().id; }
 
   friend value_type& get(const Self&, key_type& k) { return k->data().id; }
-  friend const value_type& get(const Self&, const key_type& k) { return k->data().id; }
+  friend const value_type& get(const Self&, const const_key_type& k) { return k->data().id; }
   friend void put(const Self&, key_type& k, const value_type& v) { k->data().id = v; }
 /// \endcond
 };

@@ -47,17 +47,16 @@ bool is_euler_valid(T & tri)
     return  (finite_euler == 1 && euler == 2);
 }
 
-template <typename T, typename Partitioner = CGAL::DDT::Grid_partitioner<T>>
-int test_traits(const Partitioner& partitioner, const std::string& testname, int NP, int dim = T::D, int NT = -1, double range = 1, bool do_test_io = true)
+template <typename Triangulation, typename TileIndexProperty, typename Partitioner = CGAL::DDT::Grid_partitioner<Triangulation, TileIndexProperty>>
+int test_traits(const Partitioner& partitioner, const std::string& testname, int NP, int dim = CGAL::DDT::Triangulation_traits<Triangulation>::D, int NT = -1, double range = 1, bool do_test_io = true)
 {
     std::cout << "Test " << testname << std::endl;
     int result = 0;
 
-    typedef T Traits;
-    typedef CGAL::DDT::Sequential_scheduler<Traits> Scheduler;
-    typedef CGAL::DDT::Tile_container<Traits> TileContainer;
+    typedef CGAL::DDT::Sequential_scheduler Scheduler;
+    typedef CGAL::DDT::Tile_container<Triangulation, TileIndexProperty> TileContainer;
     typedef CGAL::Distributed_Delaunay_triangulation<TileContainer> Distributed_Delaunay_triangulation;
-    typedef typename Traits::Random_points_in_box Random_points;
+    typedef typename CGAL::DDT::Triangulation_traits<Triangulation>::Random_points_in_box Random_points;
 
     std::cout << "== Delaunay ==" << std::endl;
     Random_points points(dim, range);
@@ -132,14 +131,14 @@ int test_traits(const Partitioner& partitioner, const std::string& testname, int
     return result;
 }
 
-template <typename T>
-int test_traits_grid(const std::string& testname, int ND, int NP, int dim = T::D, int NT = -1, double range = 1, bool do_test_io = true)
+template <typename Triangulation, typename TileIndexProperty>
+int test_traits_grid(const std::string& testname, int ND, int NP, int dim = CGAL::DDT::Triangulation_traits<Triangulation>::D, int NT = -1, double range = 1, bool do_test_io = true)
 {
-    typedef T Traits;
+    typedef CGAL::DDT::Triangulation_traits<Triangulation> Traits;
     typedef typename Traits::Bbox Bbox;
     Bbox bbox = Traits::bbox(dim, range);
-    CGAL::DDT::Grid_partitioner<T> partitioner(bbox, ND);
-    return test_traits<T>(partitioner, testname, NP, dim, NT, range, do_test_io);
+    CGAL::DDT::Grid_partitioner<Triangulation, TileIndexProperty> partitioner(bbox, ND);
+    return test_traits<Triangulation, TileIndexProperty>(partitioner, testname, NP, dim, NT, range, do_test_io);
 }
 
 #endif // DDT_TEST_HPP
