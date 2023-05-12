@@ -14,6 +14,7 @@
 
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
 #include <CGAL/Triangulation_vertex_base_with_info_3.h>
+#include <CGAL/DDT/traits/Vertex_info_property_map.h>
 #include <CGAL/Delaunay_triangulation_3.h>
 
 #include <utility>
@@ -25,14 +26,13 @@ typedef unsigned char Tile_index;
 typedef CGAL::Exact_predicates_inexact_constructions_kernel                  Geom_traits;
 typedef CGAL::Triangulation_vertex_base_with_info_3<Tile_index, Geom_traits> Vb;
 typedef CGAL::Triangulation_data_structure_3<Vb>                             TDS;
-typedef CGAL::Delaunay_triangulation_3<Geom_traits, TDS>                     Delaunay_triangulation;
-typedef CGAL::DDT::Triangulation_traits_3<Delaunay_triangulation>            Traits;
+typedef CGAL::Delaunay_triangulation_3<Geom_traits, TDS>                     Triangulation;
+typedef CGAL::DDT::Vertex_info_property_map<Triangulation>                   TileIndexProperty;
 
-typedef Traits::Bbox                                                         Bbox;
-typedef CGAL::DDT::Multithread_scheduler<Traits>                             Scheduler;
-typedef CGAL::DDT::File_serializer<Traits>                                   Serializer;
-typedef CGAL::DDT::LAS_tile_points<Traits>                                   Tile_points;
-typedef CGAL::DDT::Tile_container<Traits, Tile_points, Serializer>           Tile_container;
+typedef CGAL::DDT::Multithread_scheduler                                     Scheduler;
+typedef CGAL::DDT::File_serializer<Triangulation, TileIndexProperty>         Serializer;
+typedef CGAL::DDT::LAS_tile_points<Triangulation>                            Tile_points;
+typedef CGAL::DDT::Tile_container<Triangulation, TileIndexProperty, Tile_points, Serializer>           Tile_container;
 
 int main(int argc, char*argv[])
 {

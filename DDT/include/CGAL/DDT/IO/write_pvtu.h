@@ -188,10 +188,10 @@ void write_vtu_points_ascii(std::ostream& os,
   {
     if (tr.vertex_is_infinite(v)) continue;
     V[v] = inum++;
-    os << tr.point(v)[0] << " ";
-    os << tr.point(v)[1] << " ";
+    os << tr.approximate_cartesian_coordinate(v,0) << " ";
+    os << tr.approximate_cartesian_coordinate(v,1) << " ";
     if(dim == 3)
-      os << tr.point(v)[2] << "\n";
+      os << tr.approximate_cartesian_coordinate(v,2) << "\n";
     else
       os << 0.0 << "\n";
   }
@@ -205,9 +205,7 @@ void write_vtu_points_tag(std::ostream& os,
                       bool binary,
                       std::size_t& offset)
 {
-  typedef typename Tr::Traits Traits;
-  typedef typename Traits::Geom_traits Gt;
-  typedef typename Gt::FT FT;
+  typedef double FT;
   std::size_t inum = 0;
   const char *format = binary ? "appended" : "ascii";
   const char *type = (sizeof(FT) == 8) ? "Float64" : "Float32";
@@ -239,8 +237,7 @@ write_vtu_points_binary(std::ostream& os,
 {
   std::size_t dim = 3;
   typedef typename Triangulation::Tile_index Tile_index;
-  typedef typename Triangulation::Traits::Geom_traits Gt;
-  typedef typename Gt::FT FT;
+  typedef double FT;
 
   std::size_t inum = 0;
   std::vector<FT> coordinates;
@@ -250,9 +247,9 @@ write_vtu_points_binary(std::ostream& os,
     {
       if (tr.vertex_is_infinite(v)) continue;
       V[v] = inum++;  // binary output => the map has not been filled yet
-      coordinates.push_back(tr.point(v)[0]);
-      coordinates.push_back(tr.point(v)[1]);
-      coordinates.push_back(dim == 3 ? tr.point(v)[2] : 0.0);
+      coordinates.push_back(tr.approximate_cartesian_coordinate(v,0));
+      coordinates.push_back(tr.approximate_cartesian_coordinate(v,1));
+      coordinates.push_back(dim == 3 ? tr.approximate_cartesian_coordinate(v,2) : 0.0);
     }
   CGAL::IO::internal::write_vector<FT>(os,coordinates);
   CGAL::IO::internal::write_vector<Tile_index>(os,tiles);

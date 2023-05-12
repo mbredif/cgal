@@ -12,12 +12,13 @@
 #ifndef CGAL_DDT_TRIANGULATION_TRAITS_3_H
 #define CGAL_DDT_TRIANGULATION_TRAITS_3_H
 
+#include <CGAL/DDT/traits/Triangulation_traits.h>
+#include <CGAL/Delaunay_triangulation_3.h>
 #include <CGAL/point_generators_3.h>
 #include <CGAL/Spatial_sort_traits_adapter_3.h>
 #include <CGAL/spatial_sort.h>
 #include <CGAL/Bbox_3.h>
 #include <CGAL/DDT/traits/Facet_index.h>
-#include <CGAL/DDT/traits/Vertex_info_property_map.h>
 
 namespace CGAL {
 namespace DDT {
@@ -25,138 +26,97 @@ namespace DDT {
 /// \ingroup PkgDDTTraitsClasses
 /// 3-dimensional triangulation traits.
 /// \cgalModels TriangulationTraits
-template<typename T, typename TileIndexPmap = Vertex_info_property_map<T>>
-struct Triangulation_traits_3
+template<typename GT, typename TDS>
+struct Triangulation_traits<CGAL::Delaunay_triangulation_3<GT, TDS>>
 {
     static constexpr int D = 3;
-    typedef T                                                        Triangulation;
-    typedef typename Triangulation::Geom_traits                      Geom_traits;
-    typedef typename Geom_traits::Point_3                            Point;
-    typedef TileIndexPmap                                            Tile_index_pmap;
-    typedef typename Tile_index_pmap::value_type                     Tile_index;
+    using Triangulation = CGAL::Delaunay_triangulation_3<GT, TDS>;
+    typedef typename GT::Point_3                            Point;
 
-    typedef typename Triangulation::Triangulation_data_structure     TDS;
     typedef typename TDS::Vertex_iterator                            Vertex_index;
     typedef typename TDS::Cell_iterator                              Cell_index;
     typedef CGAL::DDT::Facet_index<3, Cell_index>                    Facet_index;
 
-    typedef CGAL::Random_points_in_sphere_3<Point>                   Random_points_in_ball;
-
-    Tile_index_pmap tile_index_pmap;
-
-    Triangulation_traits_3(int d = 0) { assert(d==0 || d==D); }
-    inline constexpr int dimension() const { return D; }
-
-    /// Bbox type
-    typedef CGAL::Bbox_3 Bbox;
-
-    inline Bbox bbox(const Point& p) const {
-        return CGAL::Bbox_3(p.x(), p.y(), p.z(), p.x(), p.y(), p.z());
-    }
-
-    static inline Bbox bbox(unsigned int d, double range) {
-      CGAL_assertion(d==3);
-      return Bbox_3(-range, -range, -range, range, range, range);
-    }
-
-    static inline Bbox bbox(unsigned int d) {
-      CGAL_assertion(d==3);
-      return CGAL::Bbox_3();
-    }
-
-    struct Random_points_in_box : CGAL::Random_points_in_cube_3<Point>
-    {
-        Random_points_in_box(int d, double g) : CGAL::Random_points_in_cube_3<Point>(g)
-        {
-            CGAL_assertion(d==D);
-        }
-        Random_points_in_box(double g) : CGAL::Random_points_in_cube_3<Point>(g) {}
-    };
-
-    inline Triangulation triangulation() const
+    static inline Triangulation triangulation(int /*unused*/)
     {
         return Triangulation();
     }
 
-    inline Tile_index vertex_id(const Triangulation& tri, Vertex_index v) const
-    {
-        return get(tile_index_pmap, v);
-    }
-    inline int current_dimension(const Triangulation& tri) const
+    static inline int current_dimension(const Triangulation& tri)
     {
         return tri.dimension();
     }
-    inline int maximal_dimension(const Triangulation& tri) const
+    static inline int maximal_dimension(const Triangulation& tri)
     {
         return D;
     }
-    inline std::size_t number_of_cells(const Triangulation& tri) const
+    static inline std::size_t number_of_cells(const Triangulation& tri)
     {
         return tri.number_of_cells();
     }
-    inline std::size_t number_of_vertices(const Triangulation& tri) const
+    static inline std::size_t number_of_vertices(const Triangulation& tri)
     {
         return tri.number_of_vertices();
     }
-    inline Vertex_index vertex(const Triangulation& tri, Cell_index c, int i) const
+    static inline Vertex_index vertex(const Triangulation& tri, Cell_index c, int i)
     {
         return c->vertex(i);
     }
-    inline Vertex_index vertices_begin(const Triangulation& tri) const
+    static inline Vertex_index vertices_begin(const Triangulation& tri)
     {
         return tri.all_vertices_begin();
     }
-    inline Vertex_index vertices_end(const Triangulation& tri) const
+    static inline Vertex_index vertices_end(const Triangulation& tri)
     {
         return tri.all_vertices_end();
     }
-    inline Facet_index facets_begin(const Triangulation& tri) const
+    static inline Facet_index facets_begin(const Triangulation& tri)
     {
         return facet(tri, cells_begin(tri), 0);
     }
-    inline Facet_index facets_end(const Triangulation& tri) const
+    static inline Facet_index facets_end(const Triangulation& tri)
     {
         return facet(tri, cells_end(tri), 0);
     }
-    inline Cell_index cells_begin(const Triangulation& tri) const
+    static inline Cell_index cells_begin(const Triangulation& tri)
     {
         return tri.all_cells_begin();
     }
-    inline Cell_index cells_end(const Triangulation& tri) const
+    static inline Cell_index cells_end(const Triangulation& tri)
     {
         return tri.all_cells_end();
     }
 
-    inline Vertex_index infinite_vertex(const Triangulation& tri) const
+    static inline Vertex_index infinite_vertex(const Triangulation& tri)
     {
         return tri.infinite_vertex();
     }
 
-    inline void clear(Triangulation& tri) const
+    static inline void clear(Triangulation& tri)
     {
         return tri.clear();
     }
 
-    void spatial_sort(const Triangulation& tri, std::vector<std::size_t>& indices, const std::vector<Point>& points) const
+    static void spatial_sort(const Triangulation& tri, std::vector<std::size_t>& indices, const std::vector<Point>& points)
     {
         typedef typename Pointer_property_map<Point>::const_type Pmap;
-        typedef Spatial_sort_traits_adapter_3<Geom_traits,Pmap> Search_traits;
+        typedef Spatial_sort_traits_adapter_3<GT,Pmap> Search_traits;
         CGAL::spatial_sort(indices.begin(), indices.end(), Search_traits(make_property_map(points), tri.geom_traits()));
     }
 
     template<typename OutputIterator>
-    inline OutputIterator incident_cells(const Triangulation& tri, Vertex_index v, OutputIterator out) const
+    static OutputIterator incident_cells(const Triangulation& tri, Vertex_index v, OutputIterator out)
     {
         return tri.incident_cells(v, out);
     }
 
     template<typename OutputIterator>
-    inline OutputIterator adjacent_vertices(const Triangulation& tri, Vertex_index v, OutputIterator out) const
+    static OutputIterator adjacent_vertices(const Triangulation& tri, Vertex_index v, OutputIterator out)
     {
         return tri.adjacent_vertices(v, out);
     }
 
-    Vertex_index locate_vertex(const Triangulation& tri, const Point& p, Vertex_index hint = Vertex_index()) const
+    static Vertex_index locate_vertex(const Triangulation& tri, const Point& p, Vertex_index hint = Vertex_index())
     {
         typename Triangulation::Locate_type  lt;
         int li, lj;
@@ -164,32 +124,30 @@ struct Triangulation_traits_3
         return (lt==Triangulation::VERTEX) ? vertex(tri, c, li) : vertices_end(tri);
     }
 
-    std::pair<Vertex_index, bool> insert(Triangulation& tri, const Point& p, Tile_index id, Vertex_index hint = Vertex_index()) const
+    static std::pair<Vertex_index, bool> insert(Triangulation& tri, const Point& p, Vertex_index hint = Vertex_index())
     {
         typename Triangulation::Locate_type lt;
         int li, lj;
         Cell_index c = tri.locate(p, lt, li, lj, hint);
         if(lt == Triangulation::VERTEX) {
             Vertex_index v = c->vertex(li);
-            assert(id == vertex_id(tri, v));
             return std::make_pair(v, false);
         }
         Vertex_index v = tri.insert(p, lt, c, li, lj);
-        put(tile_index_pmap, v, id);
         return std::make_pair(v, true);
     }
 
-    inline void remove(Triangulation& tri, Vertex_index v) const
+    static inline void remove(Triangulation& tri, Vertex_index v)
     {
         tri.remove(v);
     }
 
-    inline bool vertex_is_infinite(const Triangulation& tri, Vertex_index v) const
+    static inline bool vertex_is_infinite(const Triangulation& tri, Vertex_index v)
     {
         return tri.is_infinite(v);
     }
 
-    inline bool facet_is_infinite(const Triangulation& tri, Facet_index f) const
+    static inline bool facet_is_infinite(const Triangulation& tri, Facet_index f)
     {
         for(int i = 0; i<=D; ++i)
             if(i!=f.index_of_covertex() && tri.is_infinite(f.cell()->vertex(i)))
@@ -197,7 +155,7 @@ struct Triangulation_traits_3
         return false;
     }
 
-    inline bool cell_is_infinite(const Triangulation& tri, Cell_index c) const
+    static inline bool cell_is_infinite(const Triangulation& tri, Cell_index c)
     {
         for(int i = 0; i<=D; ++i)
             if(tri.is_infinite(c->vertex(i)))
@@ -205,7 +163,7 @@ struct Triangulation_traits_3
         return false;
     }
 
-    inline const Point& point(const Triangulation& tri, Vertex_index v) const
+    static inline const Point& point(const Triangulation& tri, Vertex_index v)
     {
         return v->point();
     }
@@ -215,14 +173,14 @@ struct Triangulation_traits_3
         return CGAL::to_double(p[i]);
     }
 
-    bool are_vertices_equal(const Triangulation& t1, Vertex_index v1, const Triangulation& t2, Vertex_index v2) const
+    static bool are_vertices_equal(const Triangulation& t1, Vertex_index v1, const Triangulation& t2, Vertex_index v2)
     {
         bool inf1 = vertex_is_infinite(t1, v1);
         bool inf2 = vertex_is_infinite(t2, v2);
         return (inf1 || inf2) ? (inf1 == inf2) : v1->point() == v2->point();
     }
 
-    bool are_facets_equal(const Triangulation& t1, Facet_index f1, const Triangulation& t2, Facet_index f2) const
+    static bool are_facets_equal(const Triangulation& t1, Facet_index f1, const Triangulation& t2, Facet_index f2)
     {
         Cell_index c1 = f1.cell();
         Cell_index c2 = f2.cell();
@@ -249,7 +207,7 @@ struct Triangulation_traits_3
         return true;
     }
 
-    bool are_cells_equal(const Triangulation& t1, Cell_index c1, const Triangulation& t2, Cell_index c2) const
+    static bool are_cells_equal(const Triangulation& t1, Cell_index c1, const Triangulation& t2, Cell_index c2)
     {
         for(int i1=0; i1<=D; ++i1)
         {
@@ -270,71 +228,100 @@ struct Triangulation_traits_3
         return true;
     }
 
-    inline int index_of_covertex(const Triangulation& tri, Facet_index f) const
+    static inline int index_of_covertex(const Triangulation& tri, Facet_index f)
     {
         return f.index_of_covertex();
     }
 
-    inline Vertex_index covertex(const Triangulation& tri, Facet_index f) const
+    static inline Vertex_index covertex(const Triangulation& tri, Facet_index f)
     {
         return vertex(tri, f.cell(), f.index_of_covertex());
     }
 
-    inline Vertex_index mirror_vertex(const Triangulation& tri, Facet_index f) const
+    static inline Vertex_index mirror_vertex(const Triangulation& tri, Facet_index f)
     {
         Cell_index c = f.cell();
         Cell_index n = c->neighbor(f.index_of_covertex());
         return vertex(tri, n, mirror_index(tri, c, f.index_of_covertex()));
     }
 
-    inline Cell_index cell(const Triangulation& tri, Facet_index f) const
+    static inline Cell_index cell(const Triangulation& tri, Facet_index f)
     {
         return f.cell();
     }
 
-    inline Cell_index cell(const Triangulation& tri, Vertex_index v) const
+    static inline Cell_index cell(const Triangulation& tri, Vertex_index v)
     {
         return v->cell();
     }
 
-    Facet_index mirror_facet(const Triangulation& tri, Facet_index f) const
+    static Facet_index mirror_facet(const Triangulation& tri, Facet_index f)
     {
         Cell_index c = f.cell();
         Cell_index n = c->neighbor(f.index_of_covertex());
         return facet(tri, n, tri.mirror_index(c, f.index_of_covertex()));
     }
 
-    inline int mirror_index(const Triangulation& tri, Facet_index f) const
+    static inline int mirror_index(const Triangulation& tri, Facet_index f)
     {
         return mirror_index(f.cell(), f.index_of_covertex());
     }
 
-    inline int mirror_index(const Triangulation& tri, Cell_index c, int i) const
+    static inline int mirror_index(const Triangulation& tri, Cell_index c, int i)
     {
         return tri.mirror_index(c, i);
     }
 
-    inline Cell_index neighbor(const Triangulation& tri, Cell_index c, int i) const
+    static inline Cell_index neighbor(const Triangulation& tri, Cell_index c, int i)
     {
         return c->neighbor(i);
     }
 
-    inline Facet_index facet(const Triangulation& tri, Cell_index c, int i) const
+    static inline Facet_index facet(const Triangulation& tri, Cell_index c, int i)
     {
         return Facet_index(c, i);
     }
 
-    inline bool is_valid(const Triangulation& tri, bool verbose = false, int level = 0) const
+    static inline bool is_valid(const Triangulation& tri, bool verbose = false, int level = 0)
     {
         return tri.is_valid(verbose, level);
     }
 
-    inline bool less_coordinate(const Point& p, const Point& q, int i) const {
+    static inline bool less_coordinate(const Point& p, const Point& q, int i) {
         return p[i] < q[i];
     }
 
-    inline std::ostream& write(std::ostream& out, const Triangulation& tri) const { return out << tri; }
-    inline std::istream& read(std::istream& in, Triangulation& tri) const { return in >> tri; }
+    static inline std::ostream& write(std::ostream& out, const Triangulation& tri) { return out << tri; }
+    static inline std::istream& read(std::istream& in, Triangulation& tri) { return in >> tri; }
+
+    /// Bbox type
+    typedef CGAL::Bbox_3 Bbox;
+
+    static inline Bbox bbox(const Point& p) {
+        return Bbox(p.x(), p.y(), p.z(), p.x(), p.y(), p.z());
+    }
+
+    static inline Bbox bbox(unsigned int d, double range) {
+      CGAL_assertion(d==3);
+      return Bbox(-range, -range, -range, range, range, range);
+    }
+
+    static inline Bbox bbox(unsigned int d) {
+      CGAL_assertion(d==3);
+      return Bbox();
+    }
+
+    typedef CGAL::Random_points_in_sphere_3<Point>                   Random_points_in_ball;
+
+    struct Random_points_in_box : CGAL::Random_points_in_cube_3<Point>
+    {
+        Random_points_in_box(int d, double g) : CGAL::Random_points_in_cube_3<Point>(g)
+        {
+            CGAL_assertion(d==3);
+        }
+        Random_points_in_box(double g) : CGAL::Random_points_in_cube_3<Point>(g) {}
+    };
+
 };
 
 }

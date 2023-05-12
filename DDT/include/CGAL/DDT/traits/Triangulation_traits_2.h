@@ -42,7 +42,6 @@ struct Triangulation_traits<CGAL::Delaunay_triangulation_2<GT, TDS>>
         return Triangulation();
     }
 
-
     static inline int current_dimension(const Triangulation& tri)
     {
         return tri.dimension();
@@ -311,17 +310,17 @@ struct Triangulation_traits<CGAL::Delaunay_triangulation_2<GT, TDS>>
     typedef CGAL::Bbox_2 Bbox;
 
     static inline Bbox bbox(const Point& p) {
-        return CGAL::Bbox_2(p.x(), p.y(), p.x(), p.y());
+        return Bbox(p.x(), p.y(), p.x(), p.y());
     }
 
     static inline Bbox bbox(unsigned int d, double range) {
       CGAL_assertion(d==2);
-      return Bbox_2(-range, -range, range, range);
+      return Bbox(-range, -range, range, range);
     }
 
     static inline Bbox bbox(unsigned int d) {
       CGAL_assertion(d==2);
-      return CGAL::Bbox_2();
+      return Bbox();
     }
 
     typedef CGAL::Random_points_in_disc_2<Point>                     Random_points_in_ball;
@@ -334,7 +333,6 @@ struct Triangulation_traits<CGAL::Delaunay_triangulation_2<GT, TDS>>
         }
         Random_points_in_box(double g) : CGAL::Random_points_in_square_2<Point>(g) {}
     };
-
 
 };
 
