@@ -40,7 +40,7 @@ public:
     Tile(Tile_index id, int dimension) :
         id_(id),
         triangulation_(id, dimension),
-       // bbox_(t.bbox(dimension)),
+        bbox_(Traits::bbox(dimension)),
         points_(),
         in_mem(false),
         locked(false)

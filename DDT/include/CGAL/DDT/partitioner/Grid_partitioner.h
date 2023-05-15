@@ -12,6 +12,7 @@
 #ifndef CGAL_DDT_PARITIONER_GRID_PARTITIONER_H
 #define CGAL_DDT_PARITIONER_GRID_PARTITIONER_H
 
+#include <CGAL/DDT/traits/Triangulation_traits.h>
 #include <iterator>
 
 namespace CGAL {
@@ -24,7 +25,7 @@ namespace DDT {
 template<typename Triangulation, typename TileIndexProperty>
 class Grid_partitioner
 {
-    typedef Triangulation_traits<Triangulation> Traits;
+    typedef CGAL::DDT::Triangulation_traits<Triangulation> Traits;
 public:
     typedef typename TileIndexProperty::value_type Tile_index;
     typedef typename Traits::Point Point;

@@ -33,9 +33,9 @@ protected:
 public:
     Bbox& operator+=(const Bbox& bbox)
     {
-        assert(min_values.size() == bbox.min_values.size());
-        int D = min_values.size();
-        for(int i=0; i<D; ++i)
+        assert(min_values.size() == 0 || min_values.size() == bbox.min_values.size());
+        int dim = bbox.min_values.size();
+        for(int i=0; i<dim; ++i)
         {
             if(min_values[i] > bbox.min_values[i]) min_values[i] = bbox.min_values[i];
             if(max_values[i] < bbox.max_values[i]) max_values[i] = bbox.max_values[i];

@@ -25,16 +25,12 @@ namespace DDT {
 
 // \ingroup PkgDDTSchedulerClasses
 // \cgalModels Scheduler
-template<typename TriangulationTraits
 #if __cplusplus >= 201703L
-       , typename ExecutionPolicy
-#endif
+template<typename ExecutionPolicy
 >
+#endif
 struct STD_scheduler
 {
-    typedef TriangulationTraits Traits;
-    typedef CGAL::DDT::Tile<Traits> Tile;
-    typedef typename Tile::Tile_index Tile_index;
 
     STD_scheduler(int max_concurrency = 0) {}
 
@@ -43,6 +39,7 @@ struct STD_scheduler
     template<typename TileContainer,
          typename Transform,
          typename Reduce = std::plus<>,
+         typename Tile = typename TileContainer::Tile,
          typename V = std::invoke_result_t<Reduce,
                                            std::invoke_result_t<Transform, Tile&>,
                                            std::invoke_result_t<Transform, Tile&> > >
@@ -62,6 +59,7 @@ struct STD_scheduler
     template<typename TileContainer,
          typename Transform,
          typename Reduce = std::plus<>,
+         typename Tile = typename TileContainer::Tile,
          typename V = std::invoke_result_t<Reduce,
                                            std::invoke_result_t<Transform, Tile&>,
                                            std::invoke_result_t<Transform, Tile&> > >
@@ -80,11 +78,11 @@ struct STD_scheduler
 };
 
 #if __cplusplus >= 201703L
-template <typename T> using STD_scheduler_par = CGAL::DDT::STD_scheduler<T, std::execution::parallel_policy>;
-template <typename T> using STD_scheduler_seq = CGAL::DDT::STD_scheduler<T, std::execution::sequenced_policy>;
+using STD_scheduler_par = CGAL::DDT::STD_scheduler<std::execution::parallel_policy>;
+using STD_scheduler_seq = CGAL::DDT::STD_scheduler<std::execution::sequenced_policy>;
 #else
-template <typename T> using STD_scheduler_par = CGAL::DDT::STD_scheduler<T>;
-template <typename T> using STD_scheduler_seq = CGAL::DDT::STD_scheduler<T>;
+using STD_scheduler_par = CGAL::DDT::STD_scheduler;
+using STD_scheduler_seq = CGAL::DDT::STD_scheduler;
 #endif
 
 }

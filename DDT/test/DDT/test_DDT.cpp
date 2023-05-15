@@ -2,31 +2,32 @@
 #include <CGAL/Triangulation_vertex_base_with_info_2.h>
 #include <CGAL/Delaunay_triangulation_2.h>
 #include <CGAL/DDT/traits/Triangulation_traits_2.h>
+#include <CGAL/DDT/traits/Vertex_info_property_map.h>
 
 typedef int                                                                  Tile_index;
 typedef CGAL::Exact_predicates_inexact_constructions_kernel                  Geom_traits;
 typedef CGAL::Triangulation_vertex_base_with_info_2<Tile_index, Geom_traits> Vb;
 typedef CGAL::Triangulation_data_structure_2<Vb>                             TDS;
-typedef CGAL::Delaunay_triangulation_2<Geom_traits, TDS>                     Delaunay_triangulation;
-typedef CGAL::DDT::Triangulation_traits_2<Delaunay_triangulation>            Traits;
-typedef Traits::Point Point;
-typedef Traits::Bbox Bbox;
+typedef CGAL::Delaunay_triangulation_2<Geom_traits, TDS>                     Triangulation;
+typedef CGAL::DDT::Vertex_info_property_map<Triangulation>                   TileIndexProperty;
+typedef Triangulation::Point Point;
+typedef CGAL::Bbox_2 Bbox;
 
 #include <CGAL/DDT/Tile_container.h>
-typedef CGAL::DDT::Tile<Traits> Tile;
-typedef CGAL::DDT::Tile_container<Traits> TileContainer;
+typedef CGAL::DDT::Tile_container<Triangulation, TileIndexProperty> TileContainer;
+typedef TileContainer::Tile Tile;
 
 //#include <CGAL/DDT/scheduler/Sequential_scheduler.h>
-//typedef CGAL::DDT::Sequential_scheduler<Traits> Scheduler;
+//typedef CGAL::DDT::Sequential_scheduler Scheduler;
 #include <CGAL/DDT/scheduler/Multithread_scheduler.h>
-typedef CGAL::DDT::Multithread_scheduler<Traits> Scheduler;
+typedef CGAL::DDT::Multithread_scheduler Scheduler;
 //#include <CGAL/DDT/scheduler/TBB_scheduler.h>
-//typedef CGAL::DDT::TBB_scheduler<Traits> Scheduler;
+//typedef CGAL::DDT::TBB_scheduler Scheduler;
 //#include <CGAL/DDT/scheduler/MPI_scheduler.h>
-//typedef CGAL::DDT::MPI_scheduler<Traits> Scheduler;
+//typedef CGAL::DDT::MPI_scheduler Scheduler;
 
 #include <CGAL/DDT/partitioner/Grid_partitioner.h>
-typedef CGAL::DDT::Grid_partitioner<Traits> Partitioner;
+typedef CGAL::DDT::Grid_partitioner<Triangulation, TileIndexProperty> Partitioner;
 
 
 #include <CGAL/Distributed_Delaunay_triangulation.h>
@@ -58,8 +59,8 @@ int main(int, char **)
     double range = 3;
     Bbox bbox(-range, -range, range, range);
 
-    Partitioner partitioner(bbox, ND, ND+Traits::D);
-    TileContainer tiles(Traits::D);
+    TileContainer tiles;
+    Partitioner partitioner(bbox, ND, ND+tiles.maximal_dimension());
     Scheduler scheduler;
     CGAL::DDT::insert(tiles, scheduler, points.begin(), points.size(), partitioner);
     Distributed_Delaunay_triangulation tri(tiles);
@@ -104,7 +105,7 @@ int main(int, char **)
         ddt_assert(tri.is_valid(cell));
         ddt_assert(tri.is_main(cell));
         ddt_assert(!tri.is_foreign(cell));
-        for(int d = 0; d <= Traits::D; ++d)
+        for(int d = 0; d <= tiles.maximal_dimension(); ++d)
         {
             auto vd = tri.vertex(cell, d);
             auto fd = tri.facet(cell, d);

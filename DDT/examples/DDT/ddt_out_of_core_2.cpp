@@ -9,38 +9,36 @@
 #include <CGAL/DDT/insert.h>
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
 #include <CGAL/Triangulation_vertex_base_with_info_2.h>
+#include <CGAL/DDT/traits/Vertex_info_property_map.h>
 #include <CGAL/Delaunay_triangulation_2.h>
 
 typedef int Tile_index;
 typedef CGAL::Exact_predicates_inexact_constructions_kernel                  Geom_traits;
 typedef CGAL::Triangulation_vertex_base_with_info_2<Tile_index, Geom_traits> Vb;
 typedef CGAL::Triangulation_data_structure_2<Vb>                             TDS;
-typedef CGAL::Delaunay_triangulation_2<Geom_traits, TDS>                     Delaunay_triangulation;
-typedef CGAL::DDT::Triangulation_traits_2<Delaunay_triangulation>            Traits;
+typedef CGAL::Delaunay_triangulation_2<Geom_traits, TDS>                     Triangulation;
+typedef CGAL::DDT::Vertex_info_property_map<Triangulation>                   TileIndexProperty;
 
-typedef Traits::Random_points_in_box                                         Random_points;
-typedef Traits::Bbox                                                         Bbox;
-typedef CGAL::DDT::Sequential_scheduler<Traits>                              Scheduler;
-typedef CGAL::DDT::File_serializer<Traits>                                   Serializer;
-typedef CGAL::DDT::No_tile_points<Traits>                                    Tile_points;
-typedef CGAL::DDT::Tile_container<Traits, Tile_points, Serializer>           Tile_container;
+typedef CGAL::Random_points_in_square_2<typename Triangulation::Point>       Random_points;
+typedef CGAL::DDT::Sequential_scheduler                                      Scheduler;
+typedef CGAL::DDT::File_serializer<Triangulation, TileIndexProperty>         Serializer;
+typedef CGAL::DDT::No_tile_points                                            Tile_points;
+typedef CGAL::DDT::Tile_container<Triangulation, TileIndexProperty, Tile_points, Serializer>           Tile_container;
 typedef CGAL::Distributed_Delaunay_triangulation<Tile_container>             Distributed_Delaunay_triangulation;
 
 int main(int argc, char **argv)
 {
-    enum { D = Traits::D };
-
     int number_of_points          = (argc>1) ? atoi(argv[1]) : 1000;
     int number_of_tiles_per_axis  = (argc>2) ? atoi(argv[2]) : 3;
     int max_number_of_tiles       = (argc>3) ? atoi(argv[3]) : 1;
     double range = 1;
 
-    Bbox bbox = Traits::bbox(D, range);
-    CGAL::DDT::Grid_partitioner<Traits> partitioner(bbox, number_of_tiles_per_axis);
+    CGAL::Bbox_2 bbox(-range, -range, range, range);
+    CGAL::DDT::Grid_partitioner<Triangulation, TileIndexProperty> partitioner(bbox, number_of_tiles_per_axis);
     Serializer serializer("tile_");
-    Tile_container tiles(D, max_number_of_tiles, serializer);
+    Tile_container tiles(2, max_number_of_tiles, serializer);
     Scheduler scheduler;
-    Random_points points(D, range);
+    Random_points points(range);
     CGAL::DDT::insert(tiles, scheduler, points, number_of_points, partitioner);
     Distributed_Delaunay_triangulation tri(tiles);
 

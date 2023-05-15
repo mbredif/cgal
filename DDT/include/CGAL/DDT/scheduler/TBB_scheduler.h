@@ -52,13 +52,8 @@ V transform_reduce_id(TileContainer& tc, Transform transform, Reduce reduce, V v
 
 /// \ingroup PkgDDTSchedulerClasses
 /// \cgalModels Scheduler
-template<typename TriangulationTraits>
 struct TBB_scheduler
 {
-    typedef TriangulationTraits Traits;
-    typedef CGAL::DDT::Tile<Traits> Tile;
-    typedef typename Tile::Tile_index Tile_index;
-
     TBB_scheduler(int max_concurrency = 0) : arena(max_concurrency ? max_concurrency : tbb::task_arena::automatic) {}
 
     inline int max_concurrency() const { return arena.max_concurrency(); }
@@ -66,11 +61,13 @@ struct TBB_scheduler
     template<typename TileContainer,
          typename Transform,
          typename Reduce = std::plus<>,
+         typename Tile = typename TileContainer::Tile,
          typename V = std::invoke_result_t<Reduce,
                                            std::invoke_result_t<Transform, Tile&>,
                                            std::invoke_result_t<Transform, Tile&> > >
     V for_each(TileContainer& tc, Transform transform, Reduce reduce = {}, V init = {})
     {
+        typedef typename TileContainer::Tile_index Tile_index;
         std::vector<Tile_index> ids(tc.ids_begin(), tc.ids_end());
         return arena.execute([&]{
             return tbb::parallel_reduce(
@@ -88,6 +85,7 @@ struct TBB_scheduler
     template<typename TileContainer,
          typename Transform,
          typename Reduce = std::plus<>,
+         typename Tile = typename TileContainer::Tile,
          typename V = std::invoke_result_t<Reduce,
                                            std::invoke_result_t<Transform, Tile&>,
                                            std::invoke_result_t<Transform, Tile&> > >

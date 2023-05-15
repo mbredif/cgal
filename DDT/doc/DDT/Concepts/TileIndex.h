@@ -6,8 +6,8 @@
 The concept `Tile_index` describes the requirements for a Tile identifier in a distributed Delaunay triangulation.
 
 */
-#ifndef CGAL_DDT_CONCEPT_ID
-#define CGAL_DDT_CONCEPT_ID
+#ifndef CGAL_DDT_CONCEPT_TILE_INDEX
+#define CGAL_DDT_CONCEPT_TILE_INDEX
 
 #include <string>
 
@@ -37,4 +37,4 @@ std::string to_string(TileIndex) { return ""; }
 }
 
 std::istream& operator>>(std::istream& in, TileIndex id) { return in; }
-#endif // CGAL_DDT_CONCEPT_ID
+#endif // CGAL_DDT_CONCEPT_TILE_INDEX

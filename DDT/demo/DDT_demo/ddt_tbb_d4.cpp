@@ -1,5 +1,6 @@
 #include <CGAL/Epick_d.h>
 #include <CGAL/Delaunay_triangulation.h>
+#include <CGAL/DDT/traits/Vertex_data_property_map.h>
 #include <CGAL/DDT/traits/Triangulation_traits_d.h>
 #include <CGAL/DDT/partitioner/Grid_partitioner.h>
 #include <CGAL/DDT/scheduler/TBB_scheduler.h>
@@ -12,14 +13,15 @@ typedef CGAL::Dimension_tag<4>                                    Dim_tag;
 typedef CGAL::Epick_d<Dim_tag>                                    Geom_traits;
 typedef CGAL::Triangulation_vertex<Geom_traits,Tile_index>        Vb;
 typedef CGAL::Triangulation_data_structure<Dim_tag,Vb>            TDS;
-typedef CGAL::Delaunay_triangulation<Geom_traits, TDS>            Delaunay_triangulation;
-
+typedef CGAL::Delaunay_triangulation<Geom_traits, TDS>            Triangulation;
+typedef CGAL::DDT::Vertex_data_property_map<Triangulation>        TileIndexProperty;
 int main(int argc, char **argv) {
     return DDT_demo<
-            CGAL::DDT::Triangulation_traits_d<Delaunay_triangulation>,
-            CGAL::DDT::Grid_partitioner,
+            Triangulation,
+            TileIndexProperty,
+            CGAL::DDT::Grid_partitioner<Triangulation, TileIndexProperty>,
             CGAL::DDT::TBB_scheduler,
             CGAL::DDT::No_tile_points,
-            CGAL::DDT::File_serializer
+            CGAL::DDT::File_serializer<Triangulation, TileIndexProperty>
             >(argc, argv);
 }

@@ -30,22 +30,20 @@ namespace DDT {
 /// The main id of a simplex is defined by the selector
 template<
     class T,
-    class TileIndexPmap,
+    class TileIndexProperty,
     template <class> class Selector = Median_selector>
 class Tile_triangulation
 {
 public:
     typedef T           Triangulation;
     typedef Triangulation_traits<T>                                  Traits;
-    typedef TileIndexPmap                                            Tile_index_pmap;
-    typedef typename Tile_index_pmap::value_type                     Tile_index;
+    typedef TileIndexProperty                                        Tile_index_property;
+    typedef typename Tile_index_property::value_type                 Tile_index;
     typedef typename Traits::Point                   Point;
     typedef typename Traits::Bbox                    Bbox;
     typedef typename Traits::Vertex_index            Vertex_index;
     typedef typename Traits::Facet_index             Facet_index;
     typedef typename Traits::Cell_index              Cell_index;
-
-    static Tile_index_pmap tile_index_pmap;
 
     /// constructor
     Tile_triangulation(Tile_index id, int dimension)
@@ -84,7 +82,7 @@ public:
     inline std::size_t number_of_main_finite_facets  () const { return number_of_main_finite_facets_;   }
     inline std::size_t number_of_main_finite_cells   () const { return number_of_main_finite_cells_;    }
 
-    inline Tile_index vertex_id(Vertex_index v) const { assert(!vertex_is_infinite(v)); return get(tile_index_pmap, v); }
+    inline Tile_index vertex_id(Vertex_index v) const { assert(!vertex_is_infinite(v)); return get(tile_indices, v); }
 
     Tile_index cell_id(Cell_index c) const
     {
@@ -114,7 +112,7 @@ public:
     inline void clear() { Traits::clear(tri_); }
     inline std::pair<Vertex_index, bool> insert(const Point& p, Tile_index id, Vertex_index v = Vertex_index()) {
         auto inserted = Traits::insert(tri_, p, v);
-        if (inserted.second) put(tile_index_pmap, inserted.first, id);
+        if (inserted.second) put(tile_indices, inserted.first, id);
         return inserted;
     }
 
@@ -601,6 +599,7 @@ private:
     Traits traits;
     Tile_index id_;
     Triangulation tri_;
+    Tile_index_property tile_indices;
     mutable Selector<Tile_index> selector;
 
     std::size_t number_of_main_finite_vertices_;
