@@ -9,8 +9,8 @@
 //
 // Author(s)     : Mathieu Brédif and Laurent Caraffa
 
-#ifndef CGAL_DDT_DISTRIBUTED_DELAUNAY_TRIANGULATION_H
-#define CGAL_DDT_DISTRIBUTED_DELAUNAY_TRIANGULATION_H
+#ifndef CGAL_DDT_DISTRIBUTED_TRIANGULATION_H
+#define CGAL_DDT_DISTRIBUTED_TRIANGULATION_H
 
 #include <vector>
 
@@ -141,4 +141,4 @@ std::size_t insert(TileContainer& tc, Scheduler& sch, Iterator it, int count, Pa
 }
 }
 
-#endif // CGAL_DDT_DISTRIBUTED_DELAUNAY_TRIANGULATION_H
+#endif // CGAL_DDT_DISTRIBUTED_TRIANGULATION_H

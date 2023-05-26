@@ -30,8 +30,8 @@ typedef CGAL::DDT::Multithread_scheduler Scheduler;
 typedef CGAL::DDT::Grid_partitioner<Triangulation, TileIndexProperty> Partitioner;
 
 
-#include <CGAL/Distributed_Delaunay_triangulation.h>
-typedef CGAL::Distributed_Delaunay_triangulation<TileContainer> Distributed_Delaunay_triangulation;
+#include <CGAL/Distributed_triangulation.h>
+typedef CGAL::Distributed_triangulation<TileContainer> Distributed_triangulation;
 
 #include <CGAL/DDT/insert.h>
 
@@ -63,7 +63,7 @@ int main(int, char **)
     Partitioner partitioner(bbox, ND, ND+tiles.maximal_dimension());
     Scheduler scheduler;
     CGAL::DDT::insert(tiles, scheduler, points.begin(), points.size(), partitioner);
-    Distributed_Delaunay_triangulation tri(tiles);
+    Distributed_triangulation tri(tiles);
     ddt_assert(tri.is_valid());
 
     for(auto vertex = tri.vertices_begin(); vertex != tri.vertices_end(); ++vertex)
@@ -124,7 +124,7 @@ int main(int, char **)
             ddt_assert(tri.covertex(fd) == tri.vertex(cell, tri.mirror_index(tri.mirror_facet(fd))));
             ddt_assert(tri.has_vertex(tri.cell(vd), vd));
         }
-        std::set<typename Distributed_Delaunay_triangulation::Cell_const_iterator> ring;
+        std::set<typename Distributed_triangulation::Cell_const_iterator> ring;
         tri.get_ring(cell, 1, ring);
     }
 

@@ -11,7 +11,7 @@
 #include <CGAL/DDT/scheduler/Sequential_scheduler.h>
 #include <CGAL/DDT/insert.h>
 #include <CGAL/DDT/Tile_container.h>
-#include <CGAL/Distributed_Delaunay_triangulation.h>
+#include <CGAL/Distributed_triangulation.h>
 
 
 template <typename TileContainer, typename Scheduler>
@@ -55,7 +55,7 @@ int test_traits(const Partitioner& partitioner, const std::string& testname, int
 
     typedef CGAL::DDT::Sequential_scheduler Scheduler;
     typedef CGAL::DDT::Tile_container<Triangulation, TileIndexProperty> TileContainer;
-    typedef CGAL::Distributed_Delaunay_triangulation<TileContainer> Distributed_Delaunay_triangulation;
+    typedef CGAL::Distributed_triangulation<TileContainer> Distributed_triangulation;
     typedef typename CGAL::DDT::Triangulation_traits<Triangulation>::Random_points_in_box Random_points;
 
     std::cout << "== Delaunay ==" << std::endl;
@@ -63,7 +63,7 @@ int test_traits(const Partitioner& partitioner, const std::string& testname, int
     TileContainer tiles1(dim, NT);
     Scheduler scheduler;
     CGAL::DDT::insert(tiles1, scheduler, points, NP, partitioner);
-    Distributed_Delaunay_triangulation tri1(tiles1);
+    Distributed_triangulation tri1(tiles1);
     if(!tri1.is_valid())
     {
         std::cerr << "tri is not valid" << std::endl;
@@ -92,7 +92,7 @@ int test_traits(const Partitioner& partitioner, const std::string& testname, int
         CGAL::DDT::write_cgal(tiles1, testname + "/cgal");
 
         TileContainer tiles2(dim);
-        Distributed_Delaunay_triangulation tri2(tiles2);
+        Distributed_triangulation tri2(tiles2);
         std::cout << "read..." << std::endl;
         CGAL::DDT::read_cgal(tiles2, testname + "/cgal");
         std::cout << "write again..." << std::endl;
@@ -114,7 +114,7 @@ int test_traits(const Partitioner& partitioner, const std::string& testname, int
         for(auto cell = tri1.cells_begin(); cell != tri1.cells_end(); ++cell)
         {
             if (tri1.is_infinite(cell)) continue;
-            std::set<typename Distributed_Delaunay_triangulation::Cell_const_iterator> ring;
+            std::set<typename Distributed_triangulation::Cell_const_iterator> ring;
             tri1.get_ring(cell, 1, ring);
             finite_cell = cell;
             break;
@@ -123,7 +123,7 @@ int test_traits(const Partitioner& partitioner, const std::string& testname, int
 
         for(int deg = 1; deg < 30; deg += 5)
         {
-            std::set<typename Distributed_Delaunay_triangulation::Cell_const_iterator> ring;
+            std::set<typename Distributed_triangulation::Cell_const_iterator> ring;
             tri1.get_ring(finite_cell, deg, ring);
             boost::filesystem::create_directories(testname + "/ring/");
         }

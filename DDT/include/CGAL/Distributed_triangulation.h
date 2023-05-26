@@ -9,8 +9,8 @@
 //
 // Author(s)     : Mathieu Brédif and Laurent Caraffa
 
-#ifndef CGAL_DISTRIBUTED_DELAUNAY_TRIANGULATION_H
-#define CGAL_DISTRIBUTED_DELAUNAY_TRIANGULATION_H
+#ifndef CGAL_DISTRIBUTED_TRIANGULATION_H
+#define CGAL_DISTRIBUTED_TRIANGULATION_H
 
 #include <CGAL/DDT/iterator/Vertex_const_iterator.h>
 #include <CGAL/DDT/iterator/Facet_const_iterator.h>
@@ -20,9 +20,9 @@ namespace CGAL {
 
 /// \ingroup PkgDDTRef
 /// \tparam TileContainer is a instantiation of `CGAL::DDT::Tile_container` that manages the storage of the triangulation tiles.
-/// The Distributed_Delaunay_triangulation class wraps a TileContainer to expose a triangulation interface.
+/// The Distributed_triangulation class wraps a TileContainer to expose a triangulation interface.
 template<typename TileContainer>
-class Distributed_Delaunay_triangulation
+class Distributed_triangulation
 {
 private:
     typedef typename TileContainer::Traits              Traits;
@@ -56,7 +56,7 @@ public:
 /// @}
 
     /// contructor
-    Distributed_Delaunay_triangulation(TileContainer& tc) : tiles(tc) {}
+    Distributed_triangulation(TileContainer& tc) : tiles(tc) {}
     /// returns the dimension of the triangulation
     inline int maximal_dimension() const { return tiles.maximal_dimension(); }
     /// returns the number of finite cells in the triangulation, including cells incident to the vertex at infinity.
@@ -142,7 +142,7 @@ public:
     }
 
 
-    /// checks the validity of the Distributed_Delaunay_triangulation
+    /// checks the validity of the Distributed_triangulation
     bool is_valid(bool verbose = false, int level = 0) const
     {
         if (!tiles.is_valid(verbose, level)) return false;
@@ -549,4 +549,4 @@ private:
 
 }
 
-#endif // CGAL_DISTRIBUTED_DELAUNAY_TRIANGULATION_H
+#endif // CGAL_DISTRIBUTED_TRIANGULATION_H

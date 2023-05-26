@@ -4,7 +4,7 @@
 #define CGAL_DEBUG_DDT
 
 #include <CGAL/DDT/Tile_container.h>
-#include <CGAL/Distributed_Delaunay_triangulation.h>
+#include <CGAL/Distributed_triangulation.h>
 #include <CGAL/DDT/IO/write_ply.h>
 #include <CGAL/DDT/IO/write_vrt.h>
 #include <CGAL/DDT/IO/logging.h>
@@ -26,7 +26,7 @@ int DDT_demo(int argc, char **argv)
   typedef CGAL::DDT::Triangulation_traits<Triangulation> Traits;
   typedef typename Traits::Random_points_in_box Random_points;
   typedef CGAL::DDT::Tile_container<Triangulation, TileIndexProperty, TilePoints, Serializer> TileContainer;
-  typedef CGAL::Distributed_Delaunay_triangulation<TileContainer> Distributed_Delaunay_triangulation;
+  typedef CGAL::Distributed_triangulation<TileContainer> Distributed_triangulation;
 
   int NP, loglevel, max_concurrency, max_number_of_tiles;
   std::vector<int> NT;
@@ -113,7 +113,7 @@ int DDT_demo(int argc, char **argv)
   log.step("insertion       ");
   std::size_t count = CGAL::DDT::insert(tiles, scheduler, points, NP, partitioner);
   log.step("DDT view        ");
-  Distributed_Delaunay_triangulation tri(tiles);
+  Distributed_triangulation tri(tiles);
 
   if ( vm.count("vrt")  )
   {

@@ -17,11 +17,11 @@ int main(int argc, char **)
     test_traits<Triangulation, TileIndexProperty, Partitioner>(partitioner, "test_DDT_traits_concept", 0);
 
   typedef CGAL::DDT::Tile_container<::Triangulation, TileIndexProperty> TileContainer;
-  typedef CGAL::Distributed_Delaunay_triangulation<TileContainer> Distributed_Delaunay_triangulation;
+  typedef CGAL::Distributed_triangulation<TileContainer> Distributed_triangulation;
 
 
   TileContainer tiles;
-  Distributed_Delaunay_triangulation ddt(tiles);
+  Distributed_triangulation ddt(tiles);
 
   return 0;
 }

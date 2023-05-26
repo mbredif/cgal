@@ -3,7 +3,7 @@
 #include <CGAL/DDT/Tile_container.h>
 #include <CGAL/DDT/scheduler/Multithread_scheduler.h>
 #include <CGAL/DDT/serializer/File_serializer.h>
-#include <CGAL/Distributed_Delaunay_triangulation.h>
+#include <CGAL/Distributed_triangulation.h>
 #include <CGAL/DDT/IO/write_ply.h>
 #include <CGAL/DDT/IO/write_vrt.h>
 #include <CGAL/DDT/insert.h>
@@ -24,7 +24,7 @@ typedef CGAL::DDT::Multithread_scheduler                                     Sch
 typedef CGAL::DDT::File_serializer<Triangulation, TileIndexProperty>         Serializer;
 typedef CGAL::DDT::No_tile_points                                            Tile_points;
 typedef CGAL::DDT::Tile_container<Triangulation, TileIndexProperty, Tile_points, Serializer>           Tile_container;
-typedef CGAL::Distributed_Delaunay_triangulation<Tile_container>             Distributed_Delaunay_triangulation;
+typedef CGAL::Distributed_triangulation<Tile_container>             Distributed_triangulation;
 
 int main(int argc, char **argv)
 {
@@ -41,7 +41,7 @@ int main(int argc, char **argv)
     Scheduler scheduler(threads);
     Random_points points(range);
     CGAL::DDT::insert(tiles, scheduler, points, number_of_points, partitioner);
-    Distributed_Delaunay_triangulation tri(tiles);
+    Distributed_triangulation tri(tiles);
 
     CGAL::DDT::write_vrt_verts(tiles, scheduler, "out_v");
     CGAL::DDT::write_vrt_facets(tiles, scheduler, "out_f");
