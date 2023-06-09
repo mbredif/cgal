@@ -49,7 +49,7 @@ int main(int argc, char*argv[])
     Scheduler scheduler;
     for(int i = 0; i< argc - 4; ++i) {
         const char *las = argv[i+4];
-        std::size_t num_points = tiles[i].insert(las);
+        std::size_t num_points = tiles[i].messaging.insert(las);
         std::cout << i << " : " << las << " (" << num_points << " points)" << std::endl;
     }
 

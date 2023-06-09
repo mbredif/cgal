@@ -122,7 +122,7 @@ public:
     typedef Mapped_iterator<Pair_iterator>             iterator ;
     typedef Key_const_iterator<Pair_const_iterator>    Tile_index_const_iterator ;
 
-    typedef typename Tile::Points                      Points;
+    typedef typename Tile::Messaging::Points                      Points;
     typedef typename Tile::Tile_triangulation          Tile_triangulation;
 
     inline constexpr int maximal_dimension() const
@@ -170,19 +170,19 @@ public:
 
 
     void send_points(Tile& tile) {
-        for(auto& p : tile.points()) {
+        for(auto& p : tile.messaging.points()) {
             if(p.first != tile.id()) {
-                auto& points = operator[](p.first).points()[p.first];
+                auto& points = operator[](p.first).messaging.points()[p.first];
                 points.insert(points.end(), p.second.begin(), p.second.end());
                 p.second.clear();
             }
         }
         for(Tile& t : *this) {
-            Points& p = t.points()[t.id()];
-            p.insert(p.end(), tile.extreme_points().begin(), tile.extreme_points().end());
+            Points& p = t.messaging.points()[t.id()];
+            p.insert(p.end(), tile.messaging.extreme_points().begin(), tile.messaging.extreme_points().end());
         }
-        extreme_points_.insert(extreme_points_.end(), tile.extreme_points().begin(), tile.extreme_points().end());
-        tile.extreme_points().clear();
+        extreme_points_.insert(extreme_points_.end(), tile.messaging.extreme_points().begin(), tile.messaging.extreme_points().end());
+        tile.messaging.extreme_points().clear();
     }
 
     /*

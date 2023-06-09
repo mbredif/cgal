@@ -114,7 +114,7 @@ struct Multithread_scheduler
                     {
                         std::unique_lock<std::mutex> lock(mutex);
                         for(const Tile& tile : tc)
-                            if (!tile.points().at(tile.id()).empty())
+                            if (!tile.messaging.points().at(tile.id()).empty())
                                 ids.push_back(tile.id());
                     }
                     for(auto id : ids)

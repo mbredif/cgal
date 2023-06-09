@@ -18,6 +18,88 @@
 namespace CGAL {
 namespace DDT {
 
+namespace Impl {
+template<class Triangulation, class TileIndexProperty, class TilePoints = No_tile_points>
+struct Messaging {
+    typedef Triangulation_traits<Triangulation>       Traits;
+    typedef typename TileIndexProperty::value_type    Tile_index;
+    typedef CGAL::DDT::Tile_triangulation<Triangulation, TileIndexProperty>          Tile_triangulation;
+    typedef typename Traits::Vertex_index             Vertex_index;
+    typedef typename Traits::Point             Point;
+    typedef std::pair<Tile_index,Point>               Point_id;
+    typedef std::vector<Point_id>                     Points;
+    typedef TilePoints                                Tile_points;
+    typedef std::map<Tile_index, Points>              Points_map;
+
+
+    Messaging() : points_() {}
+
+    const Points_map& points() const { return points_; }
+    Points_map& points() { return points_; }
+
+    const Points& extreme_points() const { return extreme_points_; }
+    Points& extreme_points() { return extreme_points_; }
+
+    Points_map points_;
+    std::vector<Tile_points> input_points_;
+    Points extreme_points_;
+
+    void send_point(Tile_index id, Tile_index i, const Point& p) {
+        points_[id].push_back({i,p});
+    }
+
+    void send_vertex(Tile_index id, const Tile_triangulation& t, Vertex_index v) {
+        points_[id].emplace_back(t.vertex_id(v), t.point(v));
+    }
+
+    std::size_t send_vertices(Tile_index id, const Tile_triangulation& t, const std::set<Vertex_index>& vertices) {
+        Points& p = points_[id];
+        for(Vertex_index v : vertices)
+            p.emplace_back(t.vertex_id(v), t.point(v));
+        // debug
+        //if(!vertices.empty()) std::cout << "\x1B[32m" << id() << "\t->\t" << std::to_string(id) << "\t:\t" << vertices.size()   << "\x1B[0m"<< std::endl;
+        return vertices.size();
+    }
+
+    std::size_t send_vertices_to_one_tile(const Tile_triangulation& t, const std::map<Tile_index, std::set<Vertex_index>>& vertices) {
+        std::size_t count = 0;
+        for(auto& vi : vertices)
+            count += send_vertices(vi.first, t, vi.second);
+        return count;
+    }
+
+    void send_vertices_to_all_tiles(const Tile_triangulation& t, const std::vector<Vertex_index>& vertices) {
+        for(Vertex_index v : vertices)
+            if (!t.vertex_is_infinite(v))
+                extreme_points_.emplace_back(t.vertex_id(v), t.point(v));
+        // debug
+        //if(!vertices.empty()) std::cout << "\x1B[33m" << id() << "\t->\t*\t:\t" << vertices.size()   << "\x1B[0m" << std::endl;
+    }
+
+    void receive_points(Tile_index i, Points& received) {
+        received.swap(points_[i]);
+        std::vector<Point> points_read;
+        for(auto& ip : input_points_)
+            ip.read(std::back_inserter(points_read));
+        for(auto& p : points_read)
+            received.emplace_back(i, p);
+        input_points_.clear();
+
+        // debug
+        //if(!received.empty()) std::cout << "\x1B[31m" << id() << "\t<-\t*\t:\t" << received.size()   << "\x1B[0m" << std::endl;
+
+    }
+
+
+    template<typename... Args>
+    std::size_t insert(Args... args) {
+        input_points_.emplace_back(args...);
+        return input_points_.back().size();
+    }
+
+};
+}
+
 /// \ingroup PkgDDTClasses
 /// \tparam T is a model of the TriangulationTraits concept
 /// \tparam TilePoints is a model of the TilePoints concept
@@ -30,81 +112,26 @@ public:
     typedef typename TileIndexProperty::value_type    Tile_index;
     typedef typename Traits::Bbox                     Bbox;
     typedef typename Traits::Point                    Point;
-    typedef typename Traits::Vertex_index             Vertex_index;
-    typedef std::pair<Tile_index,Point>               Point_id;
-    typedef std::vector<Point_id>                     Points;
-    typedef std::map<Tile_index, Points>              Points_map;
     typedef CGAL::DDT::Tile_triangulation<Triangulation, TileIndexProperty>          Tile_triangulation;
-    typedef TilePoints                                Tile_points;
+    typedef Impl::Messaging<Triangulation, TileIndexProperty, TilePoints> Messaging;
 
     Tile(Tile_index id, int dimension) :
         id_(id),
         triangulation_(id, dimension),
         bbox_(Traits::bbox(dimension)),
-        points_(),
         in_mem(false),
-        locked(false)
-    {}
+        locked(false),
+        messaging()
+    {
+    }
 
     inline Tile_index id() const { return id_; }
     const Bbox& bbox() const { return bbox_; }
     Bbox& bbox() { return bbox_; }
 
-    const Points_map& points() const { return points_; }
-    Points_map& points() { return points_; }
-
-    const Points& extreme_points() const { return extreme_points_; }
-    Points& extreme_points() { return extreme_points_; }
-
     const Tile_triangulation& triangulation() const { return triangulation_; }
     Tile_triangulation& triangulation() { return triangulation_; }
 
-
-    void send_point(Tile_index id, Tile_index i, const Point& p) {
-        points_[id].push_back({i,p});
-    }
-
-    void send_vertex(Tile_index id, Vertex_index v) {
-        points_[id].emplace_back(triangulation_.vertex_id(v), triangulation_.point(v));
-    }
-
-    std::size_t send_vertices(Tile_index id, const std::set<Vertex_index>& vertices) {
-        Points& p = points_[id];
-        for(Vertex_index v : vertices)
-            p.emplace_back(triangulation_.vertex_id(v), triangulation_.point(v));
-        // debug
-        //if(!vertices.empty()) std::cout << "\x1B[32m" << id() << "\t->\t" << std::to_string(id) << "\t:\t" << vertices.size()   << "\x1B[0m"<< std::endl;
-        return vertices.size();
-    }
-
-    std::size_t send_vertices_to_one_tile(const std::map<Tile_index, std::set<Vertex_index>>& vertices) {
-        std::size_t count = 0;
-        for(auto& vi : vertices)
-            count += send_vertices(vi.first, vi.second);
-        return count;
-    }
-
-    void send_vertices_to_all_tiles(const std::vector<Vertex_index>& vertices) {
-        for(Vertex_index v : vertices)
-            if (!triangulation_.vertex_is_infinite(v))
-                extreme_points_.emplace_back(triangulation_.vertex_id(v), triangulation_.point(v));
-        // debug
-        //if(!vertices.empty()) std::cout << "\x1B[33m" << id() << "\t->\t*\t:\t" << vertices.size()   << "\x1B[0m" << std::endl;
-    }
-
-    void receive_points(Points& received) {
-        received.swap(points_[id()]);
-        std::vector<Point> points_read;
-        for(auto& ip : input_points_)
-            ip.read(std::back_inserter(points_read));
-        for(auto& p : points_read)
-            received.emplace_back(id(), p);
-        input_points_.clear();
-
-        // debug
-        //if(!received.empty()) std::cout << "\x1B[31m" << id() << "\t<-\t*\t:\t" << received.size()   << "\x1B[0m" << std::endl;
-
-    }
 
     /// lock the tile for exclusive use (no unloading, no concurrent processing)
     bool locked;
@@ -155,26 +182,19 @@ public:
         if (number_of_main_cells != number_of_main_cells_) { std::cerr << "incorrect number_of_cells" << std::endl; return false; }
         return true;
     }
-
-    template<typename... Args>
-    std::size_t insert(Args... args) {
-        input_points_.emplace_back(args...);
-        return input_points_.back().size();
-    }
-
 private:
     Tile_index id_;
     Tile_triangulation triangulation_;
     Bbox bbox_;
-    Points_map points_;
-    std::vector<Tile_points> input_points_;
-    Points extreme_points_;
 
     std::size_t number_of_main_finite_vertices_;
     std::size_t number_of_main_finite_facets_;
     std::size_t number_of_main_finite_cells_;
     std::size_t number_of_main_facets_;
     std::size_t number_of_main_cells_;
+
+public:
+    Messaging messaging;
 };
 
 }
