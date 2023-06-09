@@ -111,37 +111,6 @@ public:
     }
     /// @}
 
-    /// fills the cell set `cset` with the cells of the `k`-ring of the input cell `c`.
-    void get_ring(Cell_const_iterator c, int k, std::set<Cell_const_iterator>& cset) const
-    {
-        std::set<Cell_const_iterator> seeds;
-        c = main(c);
-        cset.insert(c);
-        seeds.insert(c);
-        for(int i=0; i<k; ++i)
-        {
-            std::set<Cell_const_iterator> next;
-            next_ring(seeds, next);
-            cset.insert(next.begin(), next.end());
-            seeds.swap(next);
-        }
-    }
-
-    /// fills the cell set `next` with the cells that are adjacent to the cells in the input set `seeds`.
-    void next_ring(const std::set<Cell_const_iterator>& seeds, std::set<Cell_const_iterator>& next) const
-    {
-        for(auto seed : seeds)
-        {
-            for(int d = 0; d <= maximal_dimension(); d++)
-            {
-                auto c = main(neighbor(seed, d));
-                if(seeds.find(c) == seeds.end())
-                    next.insert(c);
-            }
-        }
-    }
-
-
     /// checks the validity of the Distributed_triangulation
     bool is_valid(bool verbose = false, int level = 0) const
     {
