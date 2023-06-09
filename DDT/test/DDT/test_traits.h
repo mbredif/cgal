@@ -106,28 +106,6 @@ int test_traits(const Partitioner& partitioner, const std::string& testname, int
                 result += 1;
         }
     }
-
-    if (dim == 2)
-    {
-        std::cout << "== get_ring ==" << std::endl;
-        auto finite_cell = tri1.cells_begin();
-        for(auto cell = tri1.cells_begin(); cell != tri1.cells_end(); ++cell)
-        {
-            if (tri1.is_infinite(cell)) continue;
-            std::set<typename Distributed_triangulation::Cell_const_iterator> ring;
-            tri1.get_ring(cell, 1, ring);
-            finite_cell = cell;
-            break;
-        }
-
-
-        for(int deg = 1; deg < 30; deg += 5)
-        {
-            std::set<typename Distributed_triangulation::Cell_const_iterator> ring;
-            tri1.get_ring(finite_cell, deg, ring);
-            boost::filesystem::create_directories(testname + "/ring/");
-        }
-    }
     return result;
 }
 

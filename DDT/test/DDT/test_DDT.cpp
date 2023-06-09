@@ -124,8 +124,8 @@ int main(int, char **)
             ddt_assert(tri.covertex(fd) == tri.vertex(cell, tri.mirror_index(tri.mirror_facet(fd))));
             ddt_assert(tri.has_vertex(tri.cell(vd), vd));
         }
-        std::set<typename Distributed_triangulation::Cell_const_iterator> ring;
-        tri.get_ring(cell, 1, ring);
+
+
     }
 
     CGAL::DDT::write_vrt_verts(tiles, scheduler, "test_DDT_out_v");
