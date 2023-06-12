@@ -37,17 +37,16 @@ int main(int argc, char **argv)
     CGAL::Bbox_2 bbox(-range, -range, range, range);
     CGAL::DDT::Grid_partitioner<Triangulation, TileIndexProperty> partitioner(bbox, number_of_tiles_per_axis);
     Serializer serializer("tile_");
-    Tile_container tiles(2, max_number_of_tiles, serializer);
+    Distributed_triangulation tri(2, max_number_of_tiles, serializer);
     Scheduler scheduler(threads);
     Random_points points(range);
-    CGAL::DDT::insert(tiles, scheduler, points, number_of_points, partitioner);
-    Distributed_triangulation tri(tiles);
+    tri.insert(scheduler, points, number_of_points, partitioner);
 
-    CGAL::DDT::write_vrt_verts(tiles, scheduler, "out_v");
-    CGAL::DDT::write_vrt_facets(tiles, scheduler, "out_f");
-    CGAL::DDT::write_vrt_cells(tiles, scheduler, "out_c");
-    CGAL::DDT::write_vrt_bboxes(tiles, "out_b");
-    CGAL::DDT::write_vrt_tins(tiles, scheduler, "out_t");
+    CGAL::DDT::write_vrt_verts(tri.tiles, scheduler, "out_v");
+    CGAL::DDT::write_vrt_facets(tri.tiles, scheduler, "out_f");
+    CGAL::DDT::write_vrt_cells(tri.tiles, scheduler, "out_c");
+    CGAL::DDT::write_vrt_bboxes(tri.tiles, "out_b");
+    CGAL::DDT::write_vrt_tins(tri.tiles, scheduler, "out_t");
 
     return 0;
 }

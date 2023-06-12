@@ -59,11 +59,10 @@ int main(int, char **)
     double range = 3;
     Bbox bbox(-range, -range, range, range);
 
-    TileContainer tiles;
-    Partitioner partitioner(bbox, ND, ND+tiles.maximal_dimension());
+    Distributed_triangulation tri;
+    Partitioner partitioner(bbox, ND, ND+tri.maximal_dimension());
     Scheduler scheduler;
-    CGAL::DDT::insert(tiles, scheduler, points.begin(), points.size(), partitioner);
-    Distributed_triangulation tri(tiles);
+    tri.insert(scheduler, points.begin(), points.size(), partitioner);
     ddt_assert(tri.is_valid());
 
     for(auto vertex = tri.vertices_begin(); vertex != tri.vertices_end(); ++vertex)
@@ -105,7 +104,7 @@ int main(int, char **)
         ddt_assert(tri.is_valid(cell));
         ddt_assert(tri.is_main(cell));
         ddt_assert(!tri.is_foreign(cell));
-        for(int d = 0; d <= tiles.maximal_dimension(); ++d)
+        for(int d = 0; d <= tri.maximal_dimension(); ++d)
         {
             auto vd = tri.vertex(cell, d);
             auto fd = tri.facet(cell, d);
@@ -128,9 +127,9 @@ int main(int, char **)
 
     }
 
-    CGAL::DDT::write_vrt_verts(tiles, scheduler, "test_DDT_out_v");
-    CGAL::DDT::write_vrt_facets(tiles, scheduler, "test_DDT_out_f");
-    CGAL::DDT::write_vrt_cells(tiles, scheduler, "test_DDT_out_c");
+    CGAL::DDT::write_vrt_verts(tri.tiles, scheduler, "test_DDT_out_v");
+    CGAL::DDT::write_vrt_facets(tri.tiles, scheduler, "test_DDT_out_f");
+    CGAL::DDT::write_vrt_cells(tri.tiles, scheduler, "test_DDT_out_c");
 
     return -errors;
 }

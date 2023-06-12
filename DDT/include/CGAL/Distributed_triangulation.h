@@ -15,6 +15,9 @@
 #include <CGAL/DDT/iterator/Vertex_const_iterator.h>
 #include <CGAL/DDT/iterator/Facet_const_iterator.h>
 #include <CGAL/DDT/iterator/Cell_const_iterator.h>
+#include <CGAL/DDT/insert.h>
+#include <CGAL/DDT/Messaging.h>
+#include <CGAL/DDT/Messaging_container.h>
 
 namespace CGAL {
 
@@ -31,16 +34,18 @@ private:
     typedef typename TileContainer::iterator            Tile_iterator;
     typedef typename TileContainer::const_iterator      Tile_const_iterator;
     typedef typename TileContainer::Tile_triangulation  Tile_triangulation;
+    typedef typename TileContainer::Serializer          Serializer;
     typedef typename Traits::Vertex_index               Tile_vertex_index;
     typedef typename Traits::Cell_index                 Tile_cell_index;
     typedef typename Traits::Facet_index                Tile_facet_index;
+    typedef typename Traits::Point                      Point;
+    typedef CGAL::DDT::Messaging_container<CGAL::DDT::Messaging<Tile_index, Point>> Messaging_container;
 
 public:
 /// \name Types
 /// @{
 
     typedef TileContainer                            Tile_container;
-    typedef typename Traits::Point                   Point;
 #ifndef DOXYGEN_RUNNING
     typedef CGAL::DDT::Vertex_const_iterator<TileContainer> Vertex_const_iterator;
     typedef CGAL::DDT::Facet_const_iterator <TileContainer> Facet_const_iterator;
@@ -56,7 +61,9 @@ public:
 /// @}
 
     /// contructor
-    Distributed_triangulation(TileContainer& tc) : tiles(tc) {}
+    Distributed_triangulation(int dimension = Traits::D, std::size_t number_of_triangulations_mem_max = 0, const Serializer& serializer = Serializer())
+    : tiles(dimension, number_of_triangulations_mem_max, serializer) {}
+
     /// returns the dimension of the triangulation
     inline int maximal_dimension() const { return tiles.maximal_dimension(); }
     /// returns the number of finite cells in the triangulation, including cells incident to the vertex at infinity.
@@ -512,8 +519,81 @@ public:
     }
     /// @}
 
-private:
-    Tile_container& tiles; /// loaded tiles
+
+    /// \ingroup PkgDDTInsert
+    /// Triangulate the points into the tile container, so that each of its tile triangulations contain a local view of the overall
+    /// triangulation of all inserted points.
+    /// The scheduler provides the distribution environment (single thread, multithread, MPI...)
+    /// @returns the number of newly inserted vertices
+    template<typename Scheduler, typename Messaging>
+    std::size_t insert(Scheduler& sch, CGAL::DDT::Messaging_container<Messaging>& messagings){
+        std::size_t n = tiles.number_of_finite_vertices();
+        CGAL::DDT::impl::insert_and_send_all_axis_extreme_points(tiles, messagings, sch);
+        CGAL::DDT::impl::splay_stars(tiles, messagings, sch);
+        tiles.finalize(); /// @todo : return 0 for unloaded tiles
+        return tiles.number_of_finite_vertices() - n;
+    }
+
+
+    /// \ingroup PkgDDTInsert
+    /// Inserts the given point in the tile given by the given id, in the Delaunay triangulation stored in the tile container.
+    /// The scheduler provides the distribution environment (single thread, multithread, MPI...)
+    /// @returns 1 if a new vertex has been inserted, 0 if it was already in the inserted.
+    /// @todo returns a descritor to the inserted vertex and a bool ?
+    template<typename Scheduler, typename Point, typename Tile_index>
+    typename std::size_t insert(Scheduler& sch, const Point& point, Tile_index id){
+        Messaging_container messaging;
+        messaging[id].send_point(id,id,point);
+        return insert(sch, messaging);
+    }
+
+    /// \ingroup PkgDDTInsert
+    /// inserts the points of the provided point+id range in the tiles given by the given ids, in the Delaunay triangulation stored in the tile container.
+    /// The scheduler provides the distribution environment (single thread, multithread, MPI...)
+    /// @returns the number of newly inserted vertices
+    template<typename Scheduler, typename PointIndexRange>
+    std::size_t insert(Scheduler& sch, const PointIndexRange& range) {
+        Messaging_container messaging;
+        for (auto& p : range)
+            messaging[p.first].send_point(p.first,p.first,p.second);
+        return insert(sch, messaging);
+    }
+
+    /// \ingroup PkgDDTInsert
+    /// inserts the points of the provided point range in the tiles given by the partitioning function, in the Delaunay triangulation stored in the tile container.
+    /// The scheduler provides the distribution environment (single thread, multithread, MPI...)
+    /// @returns the number of newly inserted vertices
+    template<typename Scheduler, typename PointRange, typename Partitioner>
+    std::size_t insert(Scheduler& sch, const PointRange& points, Partitioner& part) {
+        Messaging_container messaging;
+        for(const auto& p : points)  {
+            typename Partitioner::Tile_index id = part(p);
+            messaging[id].send_point(id,id,p);
+        }
+        return insert(sch, messaging);
+    }
+
+    /// \ingroup PkgDDTInsert
+    /// inserts the points of the provided point range in the tiles given by the partitioning function, in the Delaunay triangulation stored in the tile container.
+    /// The scheduler provides the distribution environment (single thread, multithread, MPI...)
+    /// @returns the number of newly inserted vertices
+    template<typename Scheduler, typename Iterator, typename Partitioner>
+    std::size_t insert(Scheduler& sch, Iterator it, int count, Partitioner& part) {
+    #if __cplusplus >= 202002L
+        // using c++20 and #include <ranges>
+        return insert(sch, std::views::counted(it, count), part);
+    #else
+        Messaging_container messaging;
+        for(; count; --count, ++it) {
+            auto p(*it);
+            Tile_index id = part(p);
+            messaging[id].send_point(id,id,p);
+        }
+        return insert(sch, messaging);
+    #endif
+    }
+
+    Tile_container tiles; /// underlying tile container
 };
 
 }

@@ -14,21 +14,21 @@
 #include <CGAL/Distributed_triangulation.h>
 
 
-template <typename TileContainer, typename Scheduler>
-int dump_2d_vrt(TileContainer& tiles, Scheduler& scheduler, const std::string& vrt)
+template <typename T, typename Scheduler>
+int dump_2d_vrt(T& tri, Scheduler& scheduler, const std::string& vrt)
 {
     std::cout << "== write_vrt == " << vrt << "_*.vrt" << std::endl;
-    CGAL::DDT::write_vrt_verts(tiles, scheduler, vrt+"_v");
-    CGAL::DDT::write_vrt_facets(tiles, scheduler, vrt+"_f");
-    CGAL::DDT::write_vrt_cells(tiles, scheduler, vrt+"_c");
-    CGAL::DDT::write_vrt_bboxes(tiles, vrt+"_b");
-    CGAL::DDT::write_vrt_tins(tiles, scheduler, vrt+"_t");
+    CGAL::DDT::write_vrt_verts(tri.tiles, scheduler, vrt+"_v");
+    CGAL::DDT::write_vrt_facets(tri.tiles, scheduler, vrt+"_f");
+    CGAL::DDT::write_vrt_cells(tri.tiles, scheduler, vrt+"_c");
+    CGAL::DDT::write_vrt_bboxes(tri.tiles, vrt+"_b");
+    CGAL::DDT::write_vrt_tins(tri.tiles, scheduler, vrt+"_t");
     return 0;
 
 }
 
 template <typename T>
-bool is_euler_valid(T & tri)
+bool is_euler_valid(const T& tri)
 {
     std::cout << "== Euler ==" << std::endl;
 
@@ -60,10 +60,9 @@ int test_traits(const Partitioner& partitioner, const std::string& testname, int
 
     std::cout << "== Delaunay ==" << std::endl;
     Random_points points(dim, range);
-    TileContainer tiles1(dim, NT);
     Scheduler scheduler;
-    CGAL::DDT::insert(tiles1, scheduler, points, NP, partitioner);
-    Distributed_triangulation tri1(tiles1);
+    Distributed_triangulation tri1(dim, NT);
+    tri1.insert(scheduler, points, NP, partitioner);
     if(!tri1.is_valid())
     {
         std::cerr << "tri is not valid" << std::endl;
@@ -74,11 +73,11 @@ int test_traits(const Partitioner& partitioner, const std::string& testname, int
     if (dim <= 3)
     {
         std::cout << "== write_ply ==" << std::endl;
-        CGAL::DDT::write_ply(tiles1, testname + "/out.ply");
+        CGAL::DDT::write_ply(tri1.tiles, testname + "/out.ply");
     }
     if (dim == 2)
     {
-        result += dump_2d_vrt(tiles1, scheduler, testname + "/tri1");
+        result += dump_2d_vrt(tri1, scheduler, testname + "/tri1");
         if(!is_euler_valid(tri1))
             return 1;
     }
@@ -89,19 +88,18 @@ int test_traits(const Partitioner& partitioner, const std::string& testname, int
         boost::filesystem::create_directories(testname + "/cgal");
         boost::filesystem::create_directories(testname + "/cgal2");
         std::cout << "write..." << std::endl;
-        CGAL::DDT::write_cgal(tiles1, testname + "/cgal");
+        CGAL::DDT::write_cgal(tri1.tiles, testname + "/cgal");
 
-        TileContainer tiles2(dim);
-        Distributed_triangulation tri2(tiles2);
+        Distributed_triangulation tri2(dim);
         std::cout << "read..." << std::endl;
-        CGAL::DDT::read_cgal(tiles2, testname + "/cgal");
+        CGAL::DDT::read_cgal(tri2.tiles, testname + "/cgal");
         std::cout << "write again..." << std::endl;
-        CGAL::DDT::write_cgal(tiles2, testname + "/cgal2");
+        CGAL::DDT::write_cgal(tri2.tiles, testname + "/cgal2");
 
-        result += dump_2d_vrt(tiles2, scheduler, testname + "/tri2");
+        result += dump_2d_vrt(tri2, scheduler, testname + "/tri2");
         if (dim == 2)
         {
-            result += dump_2d_vrt(tiles1, scheduler, testname + "/tri1");
+            result += dump_2d_vrt(tri1, scheduler, testname + "/tri1");
             if(!is_euler_valid(tri2))
                 result += 1;
         }

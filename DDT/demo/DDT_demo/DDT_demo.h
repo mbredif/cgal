@@ -93,7 +93,7 @@ int DDT_demo(int argc, char **argv)
   Partitioner partitioner(bbox, NT.begin(), NT.end());
   Scheduler scheduler(max_concurrency);
   Serializer serializer(ser);
-  TileContainer tiles(dimension, max_number_of_tiles, serializer);
+  Distributed_triangulation tri(dimension, max_number_of_tiles, serializer);
 
   std::cout << "- Program     : " << argv[0] << std::endl;
   std::cout << "- Loglevel    : " << loglevel << std::endl;
@@ -110,28 +110,26 @@ int DDT_demo(int argc, char **argv)
   log.step("Random_points   ");
   Random_points points(dimension, range);
   log.step("insertion       ");
-  std::size_t count = CGAL::DDT::insert(tiles, scheduler, points, NP, partitioner);
-  log.step("DDT view        ");
-  Distributed_triangulation tri(tiles);
+  std::size_t count = tri.insert(scheduler, points, NP, partitioner);
 
   if ( vm.count("vrt")  )
   {
       log.step("write_vrt_verts ");
-      CGAL::DDT::write_vrt_verts(tiles, scheduler, vrt+"_v");
+      CGAL::DDT::write_vrt_verts(tri.tiles, scheduler, vrt+"_v");
       log.step("write_vrt_facets");
-      CGAL::DDT::write_vrt_facets(tiles, scheduler, vrt+"_f");
+      CGAL::DDT::write_vrt_facets(tri.tiles, scheduler, vrt+"_f");
       log.step("write_vrt_cells ");
-      CGAL::DDT::write_vrt_cells(tiles, scheduler, vrt+"_c");
+      CGAL::DDT::write_vrt_cells(tri.tiles, scheduler, vrt+"_c");
       log.step("write_vrt_bboxes");
-      CGAL::DDT::write_vrt_bboxes(tiles, vrt+"_b");
+      CGAL::DDT::write_vrt_bboxes(tri.tiles, vrt+"_b");
       log.step("write_vrt_tins  ");
-      CGAL::DDT::write_vrt_tins(tiles, scheduler, vrt+"_t");
+      CGAL::DDT::write_vrt_tins(tri.tiles, scheduler, vrt+"_t");
   }
 
   if ( vm.count("ply")  )
   {
       log.step("write_ply       ");
-      CGAL::DDT::write_ply(tiles, ply+".ply");
+      CGAL::DDT::write_ply(tri.tiles, ply+".ply");
   }
 
   if ( vm.count("check")  )

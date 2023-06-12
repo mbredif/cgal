@@ -19,9 +19,7 @@ int main(int argc, char **)
   typedef CGAL::DDT::Tile_container<::Triangulation, TileIndexProperty> TileContainer;
   typedef CGAL::Distributed_triangulation<TileContainer> Distributed_triangulation;
 
-
-  TileContainer tiles;
-  Distributed_triangulation ddt(tiles);
+  Distributed_triangulation tri;
 
   return 0;
 }

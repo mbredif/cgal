@@ -101,14 +101,15 @@ private:
 /// Tile Container
 template<typename Triangulation_,
          typename TileIndexProperty_,
-         typename Serializer = No_serializer<Triangulation_, TileIndexProperty_> >
+         typename Serializer_ = No_serializer<Triangulation_, TileIndexProperty_> >
 class Tile_container
 {
 public:
-    typedef Triangulation_         Triangulation;
-    typedef TileIndexProperty_         TileIndexProperty;
-    typedef CGAL::DDT::Triangulation_traits<Triangulation>         Traits;
-    typedef CGAL::DDT::Tile<Triangulation, TileIndexProperty>       Tile;
+    typedef Triangulation_                                    Triangulation;
+    typedef TileIndexProperty_                                TileIndexProperty;
+    typedef Serializer_                                       Serializer;
+    typedef CGAL::DDT::Triangulation_traits<Triangulation>    Traits;
+    typedef CGAL::DDT::Tile<Triangulation, TileIndexProperty> Tile;
 
     typedef typename TileIndexProperty::value_type     Tile_index;
     typedef typename Traits::Point                     Point;

@@ -24,6 +24,7 @@ template<class Triangulation>
 class LAS_tile_points {
 public:
     typedef typename Triangulation_traits<Triangulation>::Bbox Bbox;
+    typedef typename Triangulation_traits<Triangulation>::Point Point;
     LAS_tile_points(const std::string& fn) : filename_(fn) {
         read_LAS_header(fn, size_, bbox_);
     }

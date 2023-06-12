@@ -16,6 +16,7 @@
 #include <CGAL/Triangulation_vertex_base_with_info_3.h>
 #include <CGAL/DDT/traits/Vertex_info_property_map.h>
 #include <CGAL/Delaunay_triangulation_3.h>
+#include <CGAL/Distributed_triangulation.h>
 
 #include <utility>
 #include <vector>
@@ -32,9 +33,11 @@ typedef CGAL::DDT::Vertex_info_property_map<Triangulation>                   Til
 typedef CGAL::DDT::Multithread_scheduler                                     Scheduler;
 typedef CGAL::DDT::File_serializer<Triangulation, TileIndexProperty>         Serializer;
 typedef CGAL::DDT::LAS_tile_points<Triangulation>                            Tile_points;
-typedef CGAL::DDT::Messaging<Triangulation, TileIndexProperty, Tile_points> Messaging;
-typedef CGAL::DDT::Messaging_container<Tile_index, Messaging> Messaging_container;
+typedef CGAL::DDT::Messaging<Tile_index, Tile_points::Point, Tile_points> Messaging;
+typedef CGAL::DDT::Messaging_container<Messaging> Messaging_container;
 typedef CGAL::DDT::Tile_container<Triangulation, TileIndexProperty, Serializer>           Tile_container;
+typedef CGAL::Distributed_triangulation<Tile_container>             Distributed_triangulation;
+
 
 int main(int argc, char*argv[])
 {
@@ -47,20 +50,20 @@ int main(int argc, char*argv[])
     const char* out  = argv[3];
 
     Serializer serializer(tmp);
-    Tile_container tiles(3, max_number_of_tiles, serializer);
+    Distributed_triangulation tri(3, max_number_of_tiles, serializer);
     Scheduler scheduler;
     Messaging_container messagings;
-    for(int i = 0; i< argc - 4; ++i) {
+    for(Tile_index i = 0; i< argc - 4; ++i) {
         const char *las = argv[i+4];
         std::size_t num_points = messagings[i].insert(las);
-        std::cout << i << " : " << las << " (" << num_points << " points)" << std::endl;
+        std::cout << std::to_string(i) << " : " << las << " (" << num_points << " points)" << std::endl;
     }
 
     std::cout << "Inserting points using " << max_number_of_tiles << " tiles at most in memory" << std::endl;
-    CGAL::DDT::triangulate(tiles, messagings, scheduler);
+    tri.insert(scheduler, messagings);
 
     std::cout << "Writing PVTU to " << out << std::endl;
-    CGAL::DDT::write_pvtu(tiles, scheduler, out);
+    CGAL::DDT::write_pvtu(tri.tiles, scheduler, out);
 
     return EXIT_SUCCESS;
 }
