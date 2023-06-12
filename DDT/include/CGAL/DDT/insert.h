@@ -26,7 +26,7 @@ template<typename Tile, typename Messaging>
 std::size_t splay_tile(Tile& tile, Messaging& messaging)
 {
     typedef typename Tile::Tile_index   Tile_index;
-    typedef typename Messaging::Vertex_index Vertex_index;
+    typedef typename Tile::Tile_triangulation::Vertex_index Vertex_index;
     typedef typename Messaging::Points       Points;
     Points received;
     messaging.receive_points(tile.id(), received);
@@ -45,8 +45,8 @@ template<typename TileContainer, typename MessagingContainer, typename Scheduler
 std::size_t insert_and_send_all_axis_extreme_points(TileContainer& tc, MessagingContainer& messagings, Scheduler& sch)
 {
     typedef typename TileContainer::Tile Tile;
+    typedef typename Tile::Tile_triangulation::Vertex_index Vertex_index;
     typedef typename MessagingContainer::mapped_type Messaging;
-    typedef typename Messaging::Vertex_index Vertex_index;
     return sch.for_each_zip(tc, messagings, [](Tile& tile, Messaging& messaging)
     {
         std::size_t count = splay_tile(tile, messaging);
@@ -85,17 +85,18 @@ std::size_t triangulate(TileContainer& tc, MessagingContainer& messagings, Sched
     return tc.number_of_finite_vertices() - n;
 }
 
-/*
+
 /// \ingroup PkgDDTInsert
 /// Inserts the given point in the tile given by the given id, in the Delaunay triangulation stored in the tile container.
 /// The scheduler provides the distribution environment (single thread, multithread, MPI...)
-/// @returns the vertex const iterator to the inserted point, or the already existing point if if it was already present
+/// @returns 1 if a new vertex has been inserted, 0 if it was already in the inserted.
+/// @todo returns a descritor to the inserted vertex and a bool ?
 template<typename TileContainer, typename Scheduler, typename Point, typename Tile_index>
 typename TileContainer::Vertex_index insert(TileContainer& tc, Scheduler& sch, const Point& point, Tile_index id){
-    tc.send_point_to_its_tile(id,point);
-    return triangulate(tc, sch); /// @todo this returns a std::size_t, not a Vertex_index
+    Messaging_container<Messaging<typename TileContainer::Tile_index, typename TileContainer::Point>> messaging;
+    messaging[id].send_point(id,id,point);
+    return triangulate(tc, messaging, sch);
 }
-*/
 
 /// \ingroup PkgDDTInsert
 /// inserts the points of the provided point+id range in the tiles given by the given ids, in the Delaunay triangulation stored in the tile container.
@@ -103,8 +104,7 @@ typename TileContainer::Vertex_index insert(TileContainer& tc, Scheduler& sch, c
 /// @returns the number of newly inserted vertices
 template<typename TileContainer, typename Scheduler, typename PointIndexRange>
 std::size_t insert(TileContainer& tc, Scheduler& sch, const PointIndexRange& range) {
-    typedef Messaging<typename TileContainer::Triangulation, typename TileContainer::TileIndexProperty> Messaging;
-    Messaging_container<typename TileContainer::Tile_index, Messaging> messaging;
+    Messaging_container<Messaging<typename TileContainer::Tile_index, typename TileContainer::Point>> messaging;
     for (auto& p : range)
         messaging[p.first].send_point(p.first,p.first,p.second);
     return triangulate(tc, messaging, sch);
@@ -116,8 +116,7 @@ std::size_t insert(TileContainer& tc, Scheduler& sch, const PointIndexRange& ran
 /// @returns the number of newly inserted vertices
 template<typename TileContainer, typename Scheduler, typename PointRange, typename Partitioner>
 std::size_t insert(TileContainer& tc, Scheduler& sch, const PointRange& points, Partitioner& part) {
-    typedef Messaging<typename TileContainer::Triangulation, typename TileContainer::TileIndexProperty> Messaging;
-    Messaging_container<typename TileContainer::Tile_index, Messaging> messaging;
+    Messaging_container<Messaging<typename TileContainer::Tile_index, typename TileContainer::Point>> messaging;
     for(const auto& p : points)  {
         typename Partitioner::Tile_index id = part(p);
         messaging[id].send_point(id,id,p);
@@ -135,8 +134,7 @@ std::size_t insert(TileContainer& tc, Scheduler& sch, Iterator it, int count, Pa
     // using c++20 and #include <ranges>
     return impl::insert(tc, sch, std::views::counted(it, count), part);
 #else
-    typedef Messaging<typename TileContainer::Triangulation, typename TileContainer::TileIndexProperty> Messaging;
-    Messaging_container<typename TileContainer::Tile_index, Messaging> messaging;
+    Messaging_container<Messaging<typename TileContainer::Tile_index, typename TileContainer::Point>> messaging;
     for(; count; --count, ++it) {
         auto p(*it);
         typename Partitioner::Tile_index id = part(p);

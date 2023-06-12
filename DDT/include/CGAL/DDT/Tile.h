@@ -18,18 +18,12 @@
 namespace CGAL {
 namespace DDT {
 
-template<class Triangulation, class TileIndexProperty, class TilePoints = No_tile_points>
+template<class TileIndex, class Point, class TilePoints = No_tile_points>
 struct Messaging {
-    typedef Triangulation_traits<Triangulation>       Traits;
-    typedef typename TileIndexProperty::value_type    Tile_index;
-    typedef CGAL::DDT::Tile_triangulation<Triangulation, TileIndexProperty>          Tile_triangulation;
-    typedef typename Traits::Vertex_index             Vertex_index;
-    typedef typename Traits::Point             Point;
-    typedef std::pair<Tile_index,Point>               Point_id;
-    typedef std::vector<Point_id>                     Points;
-    typedef TilePoints                                Tile_points;
-    typedef std::map<Tile_index, Points>              Points_map;
-
+    typedef TileIndex                    Tile_index;
+    typedef std::vector<std::pair<Tile_index, Point>>  Points;
+    typedef std::map<Tile_index, Points> Points_map;
+    typedef TilePoints                   Tile_points;
 
     Messaging() : points_() {}
 
@@ -43,28 +37,32 @@ struct Messaging {
         points_[id].push_back({i,p});
     }
 
-    void send_vertex(Tile_index id, const Tile_triangulation& t, Vertex_index v) {
+    template<typename TileTriangulation, typename VertexIndex>
+    void send_vertex(Tile_index id, const TileTriangulation& t, VertexIndex v) {
         points_[id].emplace_back(t.vertex_id(v), t.point(v));
     }
 
-    std::size_t send_vertices(Tile_index id, const Tile_triangulation& t, const std::set<Vertex_index>& vertices) {
+    template<typename TileTriangulation, typename VertexIndex>
+    std::size_t send_vertices(Tile_index id, const TileTriangulation& t, const std::set<VertexIndex>& vertices) {
         Points& p = points_[id];
-        for(Vertex_index v : vertices)
+        for(VertexIndex v : vertices)
             p.emplace_back(t.vertex_id(v), t.point(v));
         // debug
         //if(!vertices.empty()) std::cout << "\x1B[32m" << id() << "\t->\t" << std::to_string(id) << "\t:\t" << vertices.size()   << "\x1B[0m"<< std::endl;
         return vertices.size();
     }
 
-    std::size_t send_vertices_to_one_tile(const Tile_triangulation& t, const std::map<Tile_index, std::set<Vertex_index>>& vertices) {
+    template<typename TileTriangulation, typename VertexIndex>
+    std::size_t send_vertices_to_one_tile(const TileTriangulation& t, const std::map<Tile_index, std::set<VertexIndex>>& vertices) {
         std::size_t count = 0;
         for(auto& vi : vertices)
             count += send_vertices(vi.first, t, vi.second);
         return count;
     }
 
-    void send_vertices_to_all_tiles(const Tile_triangulation& t, const std::vector<Vertex_index>& vertices) {
-        for(Vertex_index v : vertices)
+    template<typename TileTriangulation, typename VertexIndex>
+    void send_vertices_to_all_tiles(const TileTriangulation& t, const std::vector<VertexIndex>& vertices) {
+        for(VertexIndex v : vertices)
             if (!t.vertex_is_infinite(v))
                 extreme_points_.emplace_back(t.vertex_id(v), t.point(v));
         // debug
@@ -97,8 +95,9 @@ private:
     Points extreme_points_;
 };
 
-template<class Tile_index, typename Messaging>
+template<typename Messaging>
 struct Messaging_container {
+    typedef typename Messaging::Tile_index Tile_index;
     typedef std::map<Tile_index, Messaging> Container;
     typedef typename Container::iterator iterator;
     typedef typename Container::value_type value_type;
@@ -134,8 +133,8 @@ struct Messaging_container {
 
 
 /// \ingroup PkgDDTClasses
-/// \tparam T is a model of the TriangulationTraits concept
-/// The Tile stores a local Delaunay triangulation.
+/// \tparam T is a model of the Triangulation concept
+/// The Tile stores a local triangulation.
 template<class Triangulation, class TileIndexProperty>
 class Tile
 {
