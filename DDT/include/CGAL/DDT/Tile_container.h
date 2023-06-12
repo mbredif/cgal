@@ -99,15 +99,16 @@ private:
 
 /// \ingroup PkgDDTClasses
 /// Tile Container
-template<typename Triangulation,
-         typename TileIndexProperty,
-         typename TilePoints = No_tile_points,
-         typename Serializer = No_serializer<Triangulation, TileIndexProperty> >
+template<typename Triangulation_,
+         typename TileIndexProperty_,
+         typename Serializer = No_serializer<Triangulation_, TileIndexProperty_> >
 class Tile_container
 {
 public:
+    typedef Triangulation_         Triangulation;
+    typedef TileIndexProperty_         TileIndexProperty;
     typedef CGAL::DDT::Triangulation_traits<Triangulation>         Traits;
-    typedef CGAL::DDT::Tile<Triangulation, TileIndexProperty, TilePoints>       Tile;
+    typedef CGAL::DDT::Tile<Triangulation, TileIndexProperty>       Tile;
 
     typedef typename TileIndexProperty::value_type     Tile_index;
     typedef typename Traits::Point                     Point;
@@ -122,7 +123,6 @@ public:
     typedef Mapped_iterator<Pair_iterator>             iterator ;
     typedef Key_const_iterator<Pair_const_iterator>    Tile_index_const_iterator ;
 
-    typedef typename Tile::Messaging::Points                      Points;
     typedef typename Tile::Tile_triangulation          Tile_triangulation;
 
     inline constexpr int maximal_dimension() const
@@ -161,29 +161,10 @@ public:
     iterator end    () { return tiles.end   (); }
     iterator find(Tile_index id) { return tiles.find(id); }
 
-    Tile& operator[](Tile_index id) { return tiles.emplace(id, std::move(Tile(id, dimension_))).first->second; }
+    std::pair<Pair_iterator,bool> emplace(Tile_index id) { return tiles.emplace(id, std::move(Tile(id, dimension_))); }
+    Tile& operator[](Tile_index id) { return emplace(id).first->second; }
     const Tile& at(Tile_index id) const { return tiles.at(id); }
     Tile& at(Tile_index id) { return tiles.at(id); }
-
-    const Points& extreme_points() const { return extreme_points_; }
-    Points& extreme_points() { return extreme_points_; }
-
-
-    void send_points(Tile& tile) {
-        for(auto& p : tile.messaging.points()) {
-            if(p.first != tile.id()) {
-                auto& points = operator[](p.first).messaging.points()[p.first];
-                points.insert(points.end(), p.second.begin(), p.second.end());
-                p.second.clear();
-            }
-        }
-        for(Tile& t : *this) {
-            Points& p = t.messaging.points()[t.id()];
-            p.insert(p.end(), tile.messaging.extreme_points().begin(), tile.messaging.extreme_points().end());
-        }
-        extreme_points_.insert(extreme_points_.end(), tile.messaging.extreme_points().begin(), tile.messaging.extreme_points().end());
-        tile.messaging.extreme_points().clear();
-    }
 
     /*
      *             typename TileContainer::Tile_const_iterator tile = tc.find(*it);
@@ -307,11 +288,11 @@ public:
         for(Tile& tile : *this)
         {
             tile.finalize();
-            number_of_finite_vertices_ += tile.number_of_main_finite_vertices();
-            number_of_finite_facets_ += tile.number_of_main_finite_facets();
-            number_of_finite_cells_ += tile.number_of_main_finite_cells();
-            number_of_facets_ += tile.number_of_main_facets();
-            number_of_cells_ += tile.number_of_main_cells();
+            number_of_finite_vertices_ += tile.triangulation().number_of_main_finite_vertices();
+            number_of_finite_facets_ += tile.triangulation().number_of_main_finite_facets();
+            number_of_finite_cells_ += tile.triangulation().number_of_main_finite_cells();
+            number_of_facets_ += tile.triangulation().number_of_main_facets();
+            number_of_cells_ += tile.triangulation().number_of_main_cells();
         }
     }
 
@@ -340,11 +321,11 @@ public:
                 //assert(! "CGAL tile not valid" );
                 return false;
             }
-            number_of_finite_vertices += tile.number_of_main_finite_vertices();
-            number_of_finite_facets += tile.number_of_main_finite_facets();
-            number_of_finite_cells += tile.number_of_main_finite_cells();
-            number_of_facets += tile.number_of_main_facets();
-            number_of_cells += tile.number_of_main_cells();
+            number_of_finite_vertices += tile.triangulation().number_of_main_finite_vertices();
+            number_of_finite_facets += tile.triangulation().number_of_main_finite_facets();
+            number_of_finite_cells += tile.triangulation().number_of_main_finite_cells();
+            number_of_facets += tile.triangulation().number_of_main_facets();
+            number_of_cells += tile.triangulation().number_of_main_cells();
         }
         if (number_of_finite_vertices != number_of_finite_vertices_) { std::cerr << "incorrect number_of_finite_vertices" << std::endl; return false; }
         if (number_of_finite_facets != number_of_finite_facets_) { std::cerr << "incorrect number_of_finite_facets" << std::endl; return false; }
@@ -358,7 +339,6 @@ public:
 
 private:
     Container tiles;
-    Points extreme_points_;
     Serializer serializer_;
     int dimension_;
 

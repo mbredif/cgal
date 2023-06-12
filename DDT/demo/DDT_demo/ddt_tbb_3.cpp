@@ -20,7 +20,6 @@ int main(int argc, char **argv) {
             TileIndexProperty,
             CGAL::DDT::Grid_partitioner<Triangulation, TileIndexProperty>,
             CGAL::DDT::TBB_scheduler,
-            CGAL::DDT::No_tile_points,
             CGAL::DDT::File_serializer<Triangulation, TileIndexProperty>
             >(argc, argv);
 }

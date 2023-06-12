@@ -18,14 +18,13 @@ template<
         class TileIndexProperty,
         class Partitioner,
         class Scheduler,
-        class TilePoints,
         class Serializer>
 
 int DDT_demo(int argc, char **argv)
 {
   typedef CGAL::DDT::Triangulation_traits<Triangulation> Traits;
   typedef typename Traits::Random_points_in_box Random_points;
-  typedef CGAL::DDT::Tile_container<Triangulation, TileIndexProperty, TilePoints, Serializer> TileContainer;
+  typedef CGAL::DDT::Tile_container<Triangulation, TileIndexProperty, Serializer> TileContainer;
   typedef CGAL::Distributed_triangulation<TileContainer> Distributed_triangulation;
 
   int NP, loglevel, max_concurrency, max_number_of_tiles;

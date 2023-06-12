@@ -32,7 +32,9 @@ typedef CGAL::DDT::Vertex_info_property_map<Triangulation>                   Til
 typedef CGAL::DDT::Multithread_scheduler                                     Scheduler;
 typedef CGAL::DDT::File_serializer<Triangulation, TileIndexProperty>         Serializer;
 typedef CGAL::DDT::LAS_tile_points<Triangulation>                            Tile_points;
-typedef CGAL::DDT::Tile_container<Triangulation, TileIndexProperty, Tile_points, Serializer>           Tile_container;
+typedef CGAL::DDT::Messaging<Triangulation, TileIndexProperty, Tile_points> Messaging;
+typedef CGAL::DDT::Messaging_container<Tile_index, Messaging> Messaging_container;
+typedef CGAL::DDT::Tile_container<Triangulation, TileIndexProperty, Serializer>           Tile_container;
 
 int main(int argc, char*argv[])
 {
@@ -47,14 +49,15 @@ int main(int argc, char*argv[])
     Serializer serializer(tmp);
     Tile_container tiles(3, max_number_of_tiles, serializer);
     Scheduler scheduler;
+    Messaging_container messagings;
     for(int i = 0; i< argc - 4; ++i) {
         const char *las = argv[i+4];
-        std::size_t num_points = tiles[i].messaging.insert(las);
+        std::size_t num_points = messagings[i].insert(las);
         std::cout << i << " : " << las << " (" << num_points << " points)" << std::endl;
     }
 
     std::cout << "Inserting points using " << max_number_of_tiles << " tiles at most in memory" << std::endl;
-    CGAL::DDT::triangulate(tiles, scheduler);
+    CGAL::DDT::triangulate(tiles, messagings, scheduler);
 
     std::cout << "Writing PVTU to " << out << std::endl;
     CGAL::DDT::write_pvtu(tiles, scheduler, out);

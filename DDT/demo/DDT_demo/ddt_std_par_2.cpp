@@ -1,3 +1,5 @@
+#if __cplusplus >= 201703L
+
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
 #include <CGAL/Triangulation_vertex_base_with_info_2.h>
 #include <CGAL/DDT/traits/Triangulation_traits_2.h>
@@ -20,7 +22,15 @@ int main(int argc, char **argv) {
             TileIndexProperty,
             CGAL::DDT::Grid_partitioner<Triangulation, TileIndexProperty>,
             CGAL::DDT::STD_scheduler_par,
-            CGAL::DDT::No_tile_points,
             CGAL::DDT::File_serializer<Triangulation, TileIndexProperty>
             >(argc, argv);
 }
+
+#else
+
+int main(int argc, char **argv) {
+    std::cout << "CGAL::DDT::STD_scheduler_par support requires C++17" << std::endl;
+    return 0;
+}
+
+#endif

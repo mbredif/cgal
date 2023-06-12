@@ -18,7 +18,6 @@
 namespace CGAL {
 namespace DDT {
 
-namespace Impl {
 template<class Triangulation, class TileIndexProperty, class TilePoints = No_tile_points>
 struct Messaging {
     typedef Triangulation_traits<Triangulation>       Traits;
@@ -39,10 +38,6 @@ struct Messaging {
 
     const Points& extreme_points() const { return extreme_points_; }
     Points& extreme_points() { return extreme_points_; }
-
-    Points_map points_;
-    std::vector<Tile_points> input_points_;
-    Points extreme_points_;
 
     void send_point(Tile_index id, Tile_index i, const Point& p) {
         points_[id].push_back({i,p});
@@ -90,38 +85,72 @@ struct Messaging {
 
     }
 
-
     template<typename... Args>
     std::size_t insert(Args... args) {
         input_points_.emplace_back(args...);
         return input_points_.back().size();
     }
 
+private:
+    Points_map points_;
+    std::vector<Tile_points> input_points_;
+    Points extreme_points_;
 };
-}
+
+template<class Tile_index, typename Messaging>
+struct Messaging_container {
+    typedef std::map<Tile_index, Messaging> Container;
+    typedef typename Container::iterator iterator;
+    typedef typename Container::value_type value_type;
+    typedef typename Container::mapped_type mapped_type;
+    typedef typename Container::key_type key_type;
+    typedef typename Messaging::Points Points;
+
+    mapped_type& operator[](key_type key) { return messagings[key]; }
+    iterator begin  () { return messagings.begin (); }
+    iterator end    () { return messagings.end   (); }
+
+    void send_points(Tile_index id) {
+        Messaging& msg = messagings[id];
+        for(auto& p : msg.points()) {
+            if(p.first != id) {
+                auto& points = messagings[p.first].points()[p.first];
+                points.insert(points.end(), p.second.begin(), p.second.end());
+                p.second.clear();
+            }
+        }
+        for(auto& messaging : messagings) {
+            Points& p = messaging.second.points()[messaging.first];
+            p.insert(p.end(), msg.extreme_points().begin(), msg.extreme_points().end());
+        }
+        extreme_points_.insert(extreme_points_.end(), msg.extreme_points().begin(), msg.extreme_points().end());
+        msg.extreme_points().clear();
+    }
+
+    private:
+    std::map<Tile_index, Messaging> messagings;
+    Points extreme_points_;
+};
+
 
 /// \ingroup PkgDDTClasses
 /// \tparam T is a model of the TriangulationTraits concept
-/// \tparam TilePoints is a model of the TilePoints concept
 /// The Tile stores a local Delaunay triangulation.
-template<class Triangulation, class TileIndexProperty, class TilePoints = No_tile_points >
+template<class Triangulation, class TileIndexProperty>
 class Tile
 {
 public:
     typedef Triangulation_traits<Triangulation>       Traits;
     typedef typename TileIndexProperty::value_type    Tile_index;
     typedef typename Traits::Bbox                     Bbox;
-    typedef typename Traits::Point                    Point;
     typedef CGAL::DDT::Tile_triangulation<Triangulation, TileIndexProperty>          Tile_triangulation;
-    typedef Impl::Messaging<Triangulation, TileIndexProperty, TilePoints> Messaging;
 
     Tile(Tile_index id, int dimension) :
         id_(id),
         triangulation_(id, dimension),
         bbox_(Traits::bbox(dimension)),
         in_mem(false),
-        locked(false),
-        messaging()
+        locked(false)
     {
     }
 
@@ -192,9 +221,6 @@ private:
     std::size_t number_of_main_finite_cells_;
     std::size_t number_of_main_facets_;
     std::size_t number_of_main_cells_;
-
-public:
-    Messaging messaging;
 };
 
 }

@@ -50,24 +50,49 @@ struct STD_scheduler
             tile.locked = true;
             V value = init;
             if (tc.load(tile)) value = transform(tile);
-            tc.send_points(tile);
             tile.locked = false;
             return value;
         } );
     }
 
     template<typename TileContainer,
-         typename Transform,
-         typename Reduce = std::plus<>,
-         typename Tile = typename TileContainer::Tile,
-         typename V = std::invoke_result_t<Reduce,
-                                           std::invoke_result_t<Transform, Tile&>,
-                                           std::invoke_result_t<Transform, Tile&> > >
-    V for_each_rec(TileContainer& tc, Transform transform, Reduce reduce = {}, V init = {})
+             typename MessagingContainer,
+             typename Transform,
+             typename Reduce = std::plus<>,
+             typename Tile = typename TileContainer::Tile,
+             typename Messaging = typename MessagingContainer::mapped_type,
+             typename V = std::invoke_result_t<Reduce,
+                                               std::invoke_result_t<Transform, Tile&, Messaging&>,
+                                               std::invoke_result_t<Transform, Tile&, Messaging&> > >
+    V for_each_zip(TileContainer& tc, MessagingContainer& messagings, Transform transform, Reduce reduce = {}, V init = {})
+    {
+        typedef typename MessagingContainer::value_type value_type;
+        return std::transform_reduce(CGAL_DDT_SCHEDULER_STD_SCHEDULER_PAR
+                                     messagings.begin(), messagings.end(), init, reduce, [&tc, &messagings, &transform, &init](value_type& messaging){
+            Tile& tile = tc[messaging.first];
+            tile.locked = true;
+            V value = init;
+            if (tc.load(tile)) value = transform(tile, messaging.second);
+            messagings.send_points(messaging.first);
+            tile.locked = false;
+            return value;
+        } );
+    }
+
+    template<typename TileContainer,
+             typename MessagingContainer,
+             typename Transform,
+             typename Reduce = std::plus<>,
+             typename Tile = typename TileContainer::Tile,
+             typename Messaging = typename MessagingContainer::mapped_type,
+             typename V = std::invoke_result_t<Reduce,
+                                               std::invoke_result_t<Transform, Tile&, Messaging&>,
+                                               std::invoke_result_t<Transform, Tile&, Messaging&> > >
+    V for_each_rec(TileContainer& tc, MessagingContainer& messagings, Transform transform, Reduce reduce = {}, V init = {})
     {
         V value = init, v;
         do {
-            v = for_each(tc, transform, reduce, init);
+            v = for_each_zip(tc, messagings, transform, reduce, init);
             value = reduce(value, v);
         } while (v != init);
         return value;
@@ -81,7 +106,6 @@ struct STD_scheduler
 using STD_scheduler_par = CGAL::DDT::STD_scheduler<std::execution::parallel_policy>;
 using STD_scheduler_seq = CGAL::DDT::STD_scheduler<std::execution::sequenced_policy>;
 #else
-using STD_scheduler_par = CGAL::DDT::STD_scheduler;
 using STD_scheduler_seq = CGAL::DDT::STD_scheduler;
 #endif
 

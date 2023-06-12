@@ -22,18 +22,38 @@ namespace Impl {
 template< typename TileContainer, typename Transform, typename V, typename Tile_index >
 V transform_id(TileContainer& tc, Transform transform, V init, Tile_index id, std::mutex& mutex)
 {
-    typedef typename TileContainer::iterator Tile_const_iterator;
-    Tile_const_iterator tile;
+    typedef typename TileContainer::iterator Tile_iterator;
+    Tile_iterator tile;
     {
         std::unique_lock<std::mutex> lock(mutex);
-        tile = tc.find(id);
+        tile = tc.emplace(id).first;
         tile->locked = true;
         tc.prepare_load(*tile);
     }
     V value = (tc.safe_load(*tile)) ? transform(*tile) : init;
     {
         std::unique_lock<std::mutex> lock(mutex);
-        tc.send_points(*tile);
+        tile->locked = false;
+    }
+    return value;
+}
+
+
+template< typename TileContainer, typename MessagingContainer, typename Transform, typename V, typename Tile_index >
+V transform_zip_id(TileContainer& tc, MessagingContainer& messagings, Transform transform, V init, Tile_index id, std::mutex& mutex)
+{
+    typedef typename TileContainer::iterator Tile_iterator;
+    Tile_iterator tile;
+    {
+        std::unique_lock<std::mutex> lock(mutex);
+        tile = tc.emplace(id).first;
+        tile->locked = true;
+        tc.prepare_load(*tile);
+    }
+    V value = (tc.safe_load(*tile)) ? transform(*tile, messagings[id]) : init;
+    {
+        std::unique_lock<std::mutex> lock(mutex);
+        messagings.send_points(id);
         tile->locked = false;
     }
     return value;
@@ -85,20 +105,50 @@ struct Multithread_scheduler
     }
 
     template<typename TileContainer,
-         typename Transform,
-         typename Reduce = std::plus<>,
-         typename Tile = typename TileContainer::Tile,
-         typename V = std::invoke_result_t<Reduce,
-                                           std::invoke_result_t<Transform, Tile&>,
-                                           std::invoke_result_t<Transform, Tile&> > >
-    V for_each_rec(TileContainer& tc, Transform transform, Reduce reduce = {}, V init = {})
+             typename MessagingContainer,
+             typename Transform,
+             typename Reduce = std::plus<>,
+             typename Tile = typename TileContainer::Tile,
+             typename Messaging = typename MessagingContainer::mapped_type,
+             typename V = std::invoke_result_t<Reduce,
+                                               std::invoke_result_t<Transform, Tile&, Messaging&>,
+                                               std::invoke_result_t<Transform, Tile&, Messaging&> > >
+    V for_each_zip(TileContainer& tc, MessagingContainer& messagings, Transform transform, Reduce reduce = {}, V init = {})
+    {
+        typedef typename Tile::Tile_index Tile_index;
+        std::vector<std::future<V>> futures;
+        {
+            std::unique_lock<std::mutex> lock(mutex);
+            for(const auto& messaging : messagings)
+                futures.push_back(pool.submit([this, &tc, &messagings, &transform, &init](Tile_index id){
+                    return Impl::transform_zip_id(tc, messagings, transform, init, id, mutex);
+                }, messaging.first));
+        }
+        V value = init;
+        for(auto& f: futures) value = reduce(value, f.get());
+        return value;
+    }
+
+    template<typename TileContainer,
+             typename MessagingContainer,
+             typename Transform,
+             typename Reduce = std::plus<>,
+             typename Tile = typename TileContainer::Tile,
+             typename Messaging = typename MessagingContainer::mapped_type,
+             typename V = std::invoke_result_t<Reduce,
+                                               std::invoke_result_t<Transform, Tile&, Messaging&>,
+                                               std::invoke_result_t<Transform, Tile&, Messaging&> > >
+    V for_each_rec(TileContainer& tc, MessagingContainer& messagings, Transform transform, Reduce reduce = {}, V init = {})
     {
         typedef typename Tile::Tile_index Tile_index;
         std::map<Tile_index, std::future<V>> futures;
-        for(const Tile& tile : tc)
-            futures.emplace(tile.id(), pool.submit([this, &tc, &transform, &init](Tile_index id){
-                return Impl::transform_id(tc, transform, init, id, mutex);
-            }, tile.id()));
+        {
+            std::unique_lock<std::mutex> lock(mutex);
+            for(const auto& messaging : messagings)
+                futures.emplace(messaging.first, pool.submit([this, &tc, &messagings, &transform, &init](Tile_index id){
+                    return Impl::transform_zip_id(tc, messagings, transform, init, id, mutex);
+                }, messaging.first));
+        }
 
         V value = init;
         while (!futures.empty()) {
@@ -108,19 +158,17 @@ struct Multithread_scheduler
                 if (fit->second.wait_for(timeout_) != std::future_status::ready) {
                     ++fit;
                 } else {
+                    std::unique_lock<std::mutex> lock(mutex);
                     value = reduce(value, fit->second.get());
                     futures.erase(fit++);
                     std::vector<Tile_index> ids;
-                    {
-                        std::unique_lock<std::mutex> lock(mutex);
-                        for(const Tile& tile : tc)
-                            if (!tile.messaging.points().at(tile.id()).empty())
-                                ids.push_back(tile.id());
-                    }
+                    for(const auto& messaging : messagings)
+                        if (!messaging.second.points().at(messaging.first).empty())
+                            ids.push_back(messaging.first);
                     for(auto id : ids)
                         if (futures.count(id) == 0)
-                            futures.emplace(id, pool.submit([this, &tc, &transform, &init](Tile_index id){
-                                return Impl::transform_id(tc, transform, init, id, mutex);
+                            futures.emplace(id, pool.submit([this, &tc, &messagings, &transform, &init](Tile_index id){
+                                return Impl::transform_zip_id(tc, messagings, transform, init, id, mutex);
                             }, id));
                 }
             }

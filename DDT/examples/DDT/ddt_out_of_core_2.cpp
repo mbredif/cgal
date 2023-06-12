@@ -23,7 +23,7 @@ typedef CGAL::Random_points_in_square_2<typename Triangulation::Point>       Ran
 typedef CGAL::DDT::Sequential_scheduler                                      Scheduler;
 typedef CGAL::DDT::File_serializer<Triangulation, TileIndexProperty>         Serializer;
 typedef CGAL::DDT::No_tile_points                                            Tile_points;
-typedef CGAL::DDT::Tile_container<Triangulation, TileIndexProperty, Tile_points, Serializer>           Tile_container;
+typedef CGAL::DDT::Tile_container<Triangulation, TileIndexProperty, Serializer>           Tile_container;
 typedef CGAL::Distributed_triangulation<Tile_container>             Distributed_triangulation;
 
 int main(int argc, char **argv)
