@@ -44,13 +44,11 @@ struct Messaging_container {
             Points& p = messaging.second.points()[messaging.first];
             p.insert(p.end(), msg.extreme_points().begin(), msg.extreme_points().end());
         }
-        extreme_points_.insert(extreme_points_.end(), msg.extreme_points().begin(), msg.extreme_points().end());
         msg.extreme_points().clear();
     }
 
     private:
     std::map<Tile_index, Messaging> messagings;
-    Points extreme_points_;
 };
 
 }
