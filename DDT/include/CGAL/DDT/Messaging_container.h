@@ -25,13 +25,17 @@ struct Messaging_container {
     typedef typename Container::value_type value_type;
     typedef typename Container::mapped_type mapped_type;
     typedef typename Container::key_type key_type;
-    typedef typename Messaging::Points Points;
 
     mapped_type& operator[](key_type key) { return messagings[key]; }
     iterator begin  () { return messagings.begin (); }
     iterator end    () { return messagings.end   (); }
 
+    // Global communication between tiles, outgoing from Tile "id".
+    // messagings[i][j] is a set of points sent from Tile i to Tile j.
+    // upon completion, messagings[i][j] is empty if i!=j (all points are sent)
+    // and messagings[i][i] is the union of all the points received by Tile i
     void send_points(Tile_index id) {
+        typedef typename Messaging::Points Points;
         Messaging& msg = messagings[id];
         for(auto& p : msg.points()) {
             if(p.first != id) {
@@ -47,8 +51,8 @@ struct Messaging_container {
         msg.extreme_points().clear();
     }
 
-    private:
-    std::map<Tile_index, Messaging> messagings;
+  private:
+    Container messagings;
 };
 
 }
