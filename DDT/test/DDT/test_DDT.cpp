@@ -13,10 +13,6 @@ typedef CGAL::DDT::Vertex_info_property_map<Triangulation>                   Til
 typedef Triangulation::Point Point;
 typedef CGAL::Bbox_2 Bbox;
 
-#include <CGAL/DDT/Tile_container.h>
-typedef CGAL::DDT::Tile_container<Triangulation, TileIndexProperty> TileContainer;
-typedef TileContainer::Tile Tile;
-
 //#include <CGAL/DDT/scheduler/Sequential_scheduler.h>
 //typedef CGAL::DDT::Sequential_scheduler Scheduler;
 #include <CGAL/DDT/scheduler/Multithread_scheduler.h>
@@ -29,11 +25,8 @@ typedef CGAL::DDT::Multithread_scheduler Scheduler;
 #include <CGAL/DDT/partitioner/Grid_partitioner.h>
 typedef CGAL::DDT::Grid_partitioner<Triangulation, TileIndexProperty> Partitioner;
 
-
 #include <CGAL/Distributed_triangulation.h>
-typedef CGAL::Distributed_triangulation<TileContainer> Distributed_triangulation;
-
-#include <CGAL/DDT/insert.h>
+typedef CGAL::Distributed_triangulation<Triangulation, TileIndexProperty> Distributed_triangulation;
 
 #include <CGAL/DDT/IO/write_vrt.h>
 

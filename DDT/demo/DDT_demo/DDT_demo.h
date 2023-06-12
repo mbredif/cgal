@@ -3,12 +3,10 @@
 
 #define CGAL_DEBUG_DDT
 
-#include <CGAL/DDT/Tile_container.h>
 #include <CGAL/Distributed_triangulation.h>
 #include <CGAL/DDT/IO/write_ply.h>
 #include <CGAL/DDT/IO/write_vrt.h>
 #include <CGAL/DDT/IO/logging.h>
-#include <CGAL/DDT/insert.h>
 #include <boost/program_options.hpp>
 
 namespace po = boost::program_options;
@@ -24,8 +22,7 @@ int DDT_demo(int argc, char **argv)
 {
   typedef CGAL::DDT::Triangulation_traits<Triangulation> Traits;
   typedef typename Traits::Random_points_in_box Random_points;
-  typedef CGAL::DDT::Tile_container<Triangulation, TileIndexProperty, Serializer> TileContainer;
-  typedef CGAL::Distributed_triangulation<TileContainer> Distributed_triangulation;
+  typedef CGAL::Distributed_triangulation<Triangulation, TileIndexProperty, Serializer> Distributed_triangulation;
 
   int NP, loglevel, max_concurrency, max_number_of_tiles;
   std::vector<int> NT;

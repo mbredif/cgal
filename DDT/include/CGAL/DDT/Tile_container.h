@@ -14,7 +14,6 @@
 
 #include <CGAL/DDT/Tile.h>
 #include <CGAL/DDT/serializer/No_serializer.h>
-#include <CGAL/DDT/tile_points/No_tile_points.h>
 
 #include <map>
 #include <iomanip>

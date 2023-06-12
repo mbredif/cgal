@@ -1,12 +1,10 @@
 #include <CGAL/DDT/traits/Triangulation_traits_2.h>
 #include <CGAL/DDT/partitioner/Grid_partitioner.h>
-#include <CGAL/DDT/Tile_container.h>
 #include <CGAL/DDT/scheduler/Multithread_scheduler.h>
 #include <CGAL/DDT/serializer/File_serializer.h>
 #include <CGAL/Distributed_triangulation.h>
 #include <CGAL/DDT/IO/write_ply.h>
 #include <CGAL/DDT/IO/write_vrt.h>
-#include <CGAL/DDT/insert.h>
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
 #include <CGAL/Triangulation_vertex_base_with_info_2.h>
 #include <CGAL/DDT/traits/Vertex_info_property_map.h>
@@ -22,9 +20,7 @@ typedef CGAL::DDT::Vertex_info_property_map<Triangulation>                   Til
 typedef CGAL::Random_points_in_square_2<typename Triangulation::Point>       Random_points;
 typedef CGAL::DDT::Multithread_scheduler                                     Scheduler;
 typedef CGAL::DDT::File_serializer<Triangulation, TileIndexProperty>         Serializer;
-typedef CGAL::DDT::No_tile_points                                            Tile_points;
-typedef CGAL::DDT::Tile_container<Triangulation, TileIndexProperty, Serializer>  Tile_container;
-typedef CGAL::Distributed_triangulation<Tile_container>             Distributed_triangulation;
+typedef CGAL::Distributed_triangulation<Triangulation, TileIndexProperty, Serializer>             Distributed_triangulation;
 
 int main(int argc, char **argv)
 {

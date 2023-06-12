@@ -6,10 +6,8 @@
 
 #include <CGAL/DDT/traits/Triangulation_traits_3.h>
 #include <CGAL/DDT/partitioner/Grid_partitioner.h>
-#include <CGAL/DDT/Tile_container.h>
 #include <CGAL/DDT/scheduler/Multithread_scheduler.h>
 #include <CGAL/DDT/serializer/File_serializer.h>
-#include <CGAL/DDT/insert.h>
 #include <CGAL/DDT/tile_points/LAS_tile_points.h>
 
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
@@ -35,8 +33,7 @@ typedef CGAL::DDT::File_serializer<Triangulation, TileIndexProperty>         Ser
 typedef CGAL::DDT::LAS_tile_points<Triangulation>                            Tile_points;
 typedef CGAL::DDT::Messaging<Tile_index, Tile_points::Point, Tile_points> Messaging;
 typedef CGAL::DDT::Messaging_container<Messaging> Messaging_container;
-typedef CGAL::DDT::Tile_container<Triangulation, TileIndexProperty, Serializer>           Tile_container;
-typedef CGAL::Distributed_triangulation<Tile_container>             Distributed_triangulation;
+typedef CGAL::Distributed_triangulation<Triangulation, TileIndexProperty, Serializer>             Distributed_triangulation;
 
 
 int main(int argc, char*argv[])

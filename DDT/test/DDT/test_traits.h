@@ -9,8 +9,6 @@
 #include <CGAL/DDT/IO/read_cgal.h>
 #include <CGAL/DDT/partitioner/Grid_partitioner.h>
 #include <CGAL/DDT/scheduler/Sequential_scheduler.h>
-#include <CGAL/DDT/insert.h>
-#include <CGAL/DDT/Tile_container.h>
 #include <CGAL/Distributed_triangulation.h>
 
 
@@ -54,8 +52,7 @@ int test_traits(const Partitioner& partitioner, const std::string& testname, int
     int result = 0;
 
     typedef CGAL::DDT::Sequential_scheduler Scheduler;
-    typedef CGAL::DDT::Tile_container<Triangulation, TileIndexProperty> TileContainer;
-    typedef CGAL::Distributed_triangulation<TileContainer> Distributed_triangulation;
+    typedef CGAL::Distributed_triangulation<Triangulation, TileIndexProperty> Distributed_triangulation;
     typedef typename CGAL::DDT::Triangulation_traits<Triangulation>::Random_points_in_box Random_points;
 
     std::cout << "== Delaunay ==" << std::endl;

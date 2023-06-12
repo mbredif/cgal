@@ -18,34 +18,43 @@
 #include <CGAL/DDT/insert.h>
 #include <CGAL/DDT/Messaging.h>
 #include <CGAL/DDT/Messaging_container.h>
+#include <CGAL/DDT/Tile_container.h>
 
 namespace CGAL {
 
 /// \ingroup PkgDDTRef
-/// \tparam TileContainer is a instantiation of `CGAL::DDT::Tile_container` that manages the storage of the triangulation tiles.
+/// \tparam template params to instantiate a `CGAL::DDT::Tile_container` that manages the storage of the triangulation tiles.
 /// The Distributed_triangulation class wraps a TileContainer to expose a triangulation interface.
-template<typename TileContainer>
+template<typename Triangulation_,
+         typename TileIndexProperty_,
+         typename Serializer_ = CGAL::DDT::No_serializer<Triangulation_, TileIndexProperty_> >
 class Distributed_triangulation
 {
+public:
+    typedef Triangulation_                                    Triangulation;
+    typedef TileIndexProperty_                                TileIndexProperty;
+    typedef Serializer_                                       Serializer;
+    typedef CGAL::DDT::Tile_container<Triangulation_, TileIndexProperty_, Serializer_> TileContainer;
+
 private:
-    typedef typename TileContainer::Traits              Traits;
     typedef typename TileContainer::Tile                Tile;
     typedef typename TileContainer::Tile_index          Tile_index;
     typedef typename TileContainer::iterator            Tile_iterator;
     typedef typename TileContainer::const_iterator      Tile_const_iterator;
     typedef typename TileContainer::Tile_triangulation  Tile_triangulation;
-    typedef typename TileContainer::Serializer          Serializer;
+
+    typedef CGAL::DDT::Triangulation_traits<Triangulation>    Traits;
     typedef typename Traits::Vertex_index               Tile_vertex_index;
     typedef typename Traits::Cell_index                 Tile_cell_index;
     typedef typename Traits::Facet_index                Tile_facet_index;
     typedef typename Traits::Point                      Point;
+
     typedef CGAL::DDT::Messaging_container<CGAL::DDT::Messaging<Tile_index, Point>> Messaging_container;
 
 public:
 /// \name Types
 /// @{
 
-    typedef TileContainer                            Tile_container;
 #ifndef DOXYGEN_RUNNING
     typedef CGAL::DDT::Vertex_const_iterator<TileContainer> Vertex_const_iterator;
     typedef CGAL::DDT::Facet_const_iterator <TileContainer> Facet_const_iterator;
@@ -593,7 +602,7 @@ public:
     #endif
     }
 
-    Tile_container tiles; /// underlying tile container
+    TileContainer tiles; /// underlying tile container
 };
 
 }
