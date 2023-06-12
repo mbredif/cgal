@@ -201,7 +201,7 @@ public:
         std::cout << std::setfill(' ') << " (" << number_of_triangulations_mem_ << " in mem)" << std::endl;
 
         if (!tile.locked && tile.in_mem && serializer_.save(tile)) {
-            tile.finalize();
+            tile.triangulation().finalize();
             tile.triangulation().clear();
             tile.in_mem = false;
             --number_of_triangulations_mem_;
@@ -287,7 +287,7 @@ public:
         number_of_cells_ = 0;
         for(Tile& tile : *this)
         {
-            tile.finalize();
+            if (tile.in_mem) tile.triangulation().finalize();
             number_of_finite_vertices_ += tile.triangulation().number_of_main_finite_vertices();
             number_of_finite_facets_ += tile.triangulation().number_of_main_finite_facets();
             number_of_finite_cells_ += tile.triangulation().number_of_main_finite_cells();

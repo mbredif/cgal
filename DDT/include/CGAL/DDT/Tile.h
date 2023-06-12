@@ -161,66 +161,20 @@ public:
     const Tile_triangulation& triangulation() const { return triangulation_; }
     Tile_triangulation& triangulation() { return triangulation_; }
 
-
     /// lock the tile for exclusive use (no unloading, no concurrent processing)
     bool locked;
     /// is the triangulation in memory ?
     bool in_mem;
 
-    inline std::size_t number_of_main_facets  () const { return number_of_main_facets_;   }
-    inline std::size_t number_of_main_cells   () const { return number_of_main_cells_;    }
-    inline std::size_t number_of_main_finite_vertices() const { return number_of_main_finite_vertices_; }
-    inline std::size_t number_of_main_finite_facets  () const { return number_of_main_finite_facets_;   }
-    inline std::size_t number_of_main_finite_cells   () const { return number_of_main_finite_cells_;    }
-
-    void finalize()
-    {
-        if (in_mem) {
-            triangulation_.finalize();
-            number_of_main_finite_vertices_ = triangulation_.number_of_main_finite_vertices();
-            number_of_main_finite_facets_ = triangulation_.number_of_main_finite_facets();
-            number_of_main_finite_cells_ = triangulation_.number_of_main_finite_cells();
-            number_of_main_facets_ = triangulation_.number_of_main_facets();
-            number_of_main_cells_ = triangulation_.number_of_main_cells();
-        }
-    }
     bool is_valid(bool verbose = false, int level = 0) const
     {
-        std::size_t number_of_main_finite_vertices = 0;
-        std::size_t number_of_main_finite_facets = 0;
-        std::size_t number_of_main_finite_cells = 0;
-        std::size_t number_of_main_facets = 0;
-        std::size_t number_of_main_cells = 0;
-        if (in_mem) {
-            if(!triangulation_.is_valid(verbose, level))
-            {
-                std::cerr << "DT Tile " << std::to_string(id()) << " is invalid" << std::endl;
-                //assert(! "CGAL tile not valid" );
-                return false;
-            }
-            number_of_main_finite_vertices += triangulation_.number_of_main_finite_vertices();
-            number_of_main_finite_facets += triangulation_.number_of_main_finite_facets();
-            number_of_main_finite_cells += triangulation_.number_of_main_finite_cells();
-            number_of_main_facets += triangulation_.number_of_main_facets();
-            number_of_main_cells += triangulation_.number_of_main_cells();
-        }
-        if (number_of_main_finite_vertices != number_of_main_finite_vertices_) { std::cerr << "incorrect number_of_finite_vertices" << std::endl; return false; }
-        if (number_of_main_finite_facets != number_of_main_finite_facets_) { std::cerr << "incorrect number_of_finite_facets" << std::endl; return false; }
-        if (number_of_main_finite_cells != number_of_main_finite_cells_) { std::cerr << "incorrect number_of_finite_cells" << std::endl; return false; }
-        if (number_of_main_facets != number_of_main_facets_) { std::cerr << "incorrect number_of_facets" << std::endl; return false; }
-        if (number_of_main_cells != number_of_main_cells_) { std::cerr << "incorrect number_of_cells" << std::endl; return false; }
-        return true;
+        return triangulation_.is_valid(verbose, level);
     }
+
 private:
     Tile_index id_;
     Tile_triangulation triangulation_;
     Bbox bbox_;
-
-    std::size_t number_of_main_finite_vertices_;
-    std::size_t number_of_main_finite_facets_;
-    std::size_t number_of_main_finite_cells_;
-    std::size_t number_of_main_facets_;
-    std::size_t number_of_main_cells_;
 };
 
 }
