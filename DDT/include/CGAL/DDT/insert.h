@@ -13,6 +13,8 @@
 #define CGAL_DDT_DISTRIBUTED_TRIANGULATION_H
 
 #include <vector>
+#include <CGAL/DDT/Messaging.h>
+#include <CGAL/DDT/Messaging_container.h>
 
 #if __cplusplus >= 202002L
 # include <ranges> // c++20 for std::views::counted
