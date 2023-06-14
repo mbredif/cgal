@@ -20,6 +20,7 @@ namespace DDT {
 template<typename Messaging>
 struct Messaging_container {
     typedef typename Messaging::Tile_index Tile_index;
+    typedef typename Messaging::Points Points;
     typedef std::map<Tile_index, Messaging> Container;
     typedef typename Container::iterator iterator;
     typedef typename Container::value_type value_type;
@@ -27,15 +28,18 @@ struct Messaging_container {
     typedef typename Container::key_type key_type;
 
     mapped_type& operator[](key_type key) { return messagings[key]; }
+    iterator erase(iterator pos) { return messagings.erase(pos); }
     iterator begin  () { return messagings.begin (); }
     iterator end    () { return messagings.end   (); }
+
+    const Points& extreme_points() const { return extreme_points_; }
+    Points& extreme_points() { return extreme_points_; }
 
     // Global communication between tiles, outgoing from Tile "id".
     // messagings[i][j] is a set of points sent from Tile i to Tile j.
     // upon completion, messagings[i][j] is empty if i!=j (all points are sent)
     // and messagings[i][i] is the union of all the points received by Tile i
     void send_points(Tile_index id) {
-        typedef typename Messaging::Points Points;
         Messaging& msg = messagings[id];
         for(auto& p : msg.points()) {
             if(p.first != id) {
@@ -44,15 +48,23 @@ struct Messaging_container {
                 p.second.clear();
             }
         }
-        for(auto& messaging : messagings) {
-            Points& p = messaging.second.points()[messaging.first];
-            p.insert(p.end(), msg.extreme_points().begin(), msg.extreme_points().end());
+        send_extreme_points(id);
+    }
+
+    void send_extreme_points(Tile_index id) {
+        Points& points = messagings[id].extreme_points();
+        for(auto& [i, msg] : messagings) {
+            if (i==id) continue;
+            Points& p = msg.points()[i];
+            p.insert(p.end(), points.begin(), points.end());
         }
-        msg.extreme_points().clear();
+        extreme_points_.insert(extreme_points_.end(), points.begin(), points.end());
+        points.clear();
     }
 
   private:
     Container messagings;
+    Points extreme_points_;
 };
 
 }

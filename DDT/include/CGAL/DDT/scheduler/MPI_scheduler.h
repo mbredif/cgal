@@ -68,18 +68,10 @@ template<typename T> char * load_point(char * buf, T& t) {
 
 /// \ingroup PkgDDTSchedulerClasses
 /// \cgalModels Scheduler
-template<typename TriangulationTraits>
 struct MPI_scheduler
 {
-    typedef TriangulationTraits Traits;
-    typedef CGAL::DDT::Tile<Traits> Tile;
-    typedef typename Tile::Vertex_const_handle_and_id Vertex_const_handle_and_id;
-    typedef typename Tile::Vertex_const_handle Vertex_const_handle;
-    typedef typename Tile::Point_id Point_id;
-    typedef typename Tile::Point Point;
-    typedef typename Tile::Tile_index Tile_index;
-    typedef std::vector<Point_id> Point_id_container;
 
+    /// constructor
     MPI_scheduler(int max_concurrency = 0) {
         // Initialize the MPI environment
         MPI_Init(NULL, NULL);
@@ -94,8 +86,10 @@ struct MPI_scheduler
         int name_len;
         MPI_Get_processor_name(processor_name, &name_len);
 
+        pid = getpid();
+
         // Print off a hello world message
-        printf("Processor %s [ %d / %d ]\n", processor_name, world_rank, world_size);
+        printf("Processor %s:%d [ %d / %d ]\n", processor_name, pid, world_rank+1, world_size);
     }
 
     ~MPI_scheduler() {
@@ -108,174 +102,258 @@ struct MPI_scheduler
         return world_size;
     }
 
-    inline void receive(Tile_index id, Point_id_container& received) { inbox[id].swap(received); }
-
-    void send(const Point& p, Tile_index id, Tile_index target)
-    {
-        inbox[target].emplace_back(id,p);
-    }
-
-    bool send_vertex(const Tile& tile, Vertex_const_handle v, Tile_index target)
-    {
-        assert(!tile.vertex_is_infinite(v));
-        Tile_index source = tile.id();
-        Tile_index vid = tile.vertex_id(v);
-        if(target==vid || target == source || !sent_[target].insert(v).second)
-            return false;
-        send(tile.point(v), vid, target);
-        return true;
-    }
-
-    int send_one(const Tile& tile, std::vector<Vertex_const_handle_and_id>& outbox)
-    {
-        Tile_index source = tile.id();
-        int count = 0;
-        for(auto& vi : outbox)
-            count += send_vertex(tile, vi.second, vi.first);
-        return count;
-    }
-
-    template<typename Tile_index_index>
-    int send_all(const Tile& tile, std::vector<Vertex_const_handle>& outbox, Tile_index_index begin, Tile_index_index end)
-    {
-        Tile_index source = tile.id();
-        int count = 0;
-        for(Vertex_const_handle v : outbox)
-            for(Tile_index_index target = begin; target != end; ++target)
-                count += send_vertex(tile, v, *target);
-        return count;
-    }
-
-    inline int rank(Tile_index id) const
+    template<typename Tile_index> inline int rank(Tile_index id) const
     {
         // Surely not the most optimal repartition of tile ids across processing elements
-        assert(id>=0);
+        //assert(id>=0);
         return id % world_size;
     }
 
-    inline bool is_local(Tile_index id) const
+    template<typename Tile_index> inline bool is_local(Tile_index id) const
     {
         return rank(id) == world_rank;
     }
 
-    template<typename TileContainer, typename Tile_index_index>
-    int for_each(TileContainer& tc, Tile_index_index begin, Tile_index_index end, const std::function<int(Tile&)>& func, bool sync = true)
+    template<typename TileContainer,
+             typename Transform,
+             typename Reduce = std::plus<>,
+             typename Tile = typename TileContainer::Tile,
+             typename V = std::invoke_result_t<Reduce,
+                                               std::invoke_result_t<Transform, Tile&>,
+                                               std::invoke_result_t<Transform, Tile&> > >
+    V for_each(TileContainer& tc, Transform transform, Reduce reduce = {}, V init = {})
     {
-        if (sync) send_all_to_all();
-        int count = 0;
-        for(Tile_index_index it = begin; it != end; ++it)
-            count += func(*(tc.find(*it)));
-        return count;
-    }
-
-    template<typename TileContainer>
-    int for_each(TileContainer& tc, const std::function<int(Tile&)>& func, bool sync = true)
-    {
-        if (sync) send_all_to_all();
-        std::vector<Tile_index> ids;
-        for(auto& it : inbox) {
-            if (it.second.empty()) continue;
-            Tile_index id = it.first;
-            ids.push_back(id);
+        V value = init;
+        for(Tile& tile : tc) {
+            tile.locked = true;
+            if (tc.load(tile)) value = reduce(value, transform(tile));
+            tile.locked = false;
         }
-        return for_each(tc, ids.begin(), ids.end(), func, false);
+        return value;
     }
 
-    // cycles indefinitely, and stops when the last N tiles reported a count of 0
-    template<typename TileContainer>
-    int for_each_rec(TileContainer& tc, const std::function<int(Tile&)>& func)
+    template<typename TileContainer,
+             typename MessagingContainer,
+             typename Transform,
+             typename Reduce = std::plus<>,
+             typename Tile = typename TileContainer::Tile,
+             typename Messaging = typename MessagingContainer::mapped_type,
+             typename V = std::invoke_result_t<Reduce,
+                                               std::invoke_result_t<Transform, Tile&, Messaging&>,
+                                               std::invoke_result_t<Transform, Tile&, Messaging&> > >
+    V for_each_zip(TileContainer& tc, MessagingContainer& messagings, Transform transform, Reduce reduce = {}, V init = {})
     {
-        int count = 0;
+        V value = init;
+        for(auto& [id, messaging] : messagings) {
+            if (!is_local(id)) continue;
+            Tile& tile = tc[id];
+            tile.locked = true;
+            if (tc.load(tile)) value = reduce(value, transform(tile, messaging));
+            messagings.send_points(id);
+            tile.locked = false;
+        }
+        return value;
+    }
+
+    template<typename TileContainer,
+         typename MessagingContainer,
+         typename Transform,
+         typename Reduce = std::plus<>,
+         typename Tile = typename TileContainer::Tile,
+         typename Messaging = typename MessagingContainer::mapped_type,
+         typename V = std::invoke_result_t<Reduce,
+                                           std::invoke_result_t<Transform, Tile&, Messaging&>,
+                                           std::invoke_result_t<Transform, Tile&, Messaging&> > >
+    V for_each_rec(TileContainer& tc, MessagingContainer& messagings, Transform transform, Reduce reduce = {}, V init = {})
+    {
+        // workaround : drop non local point insertions :
+        // they are performed on all processes but
+        // are only relevant in the local process
+        for( auto it = messagings.begin(); it != messagings.end(); ) {
+            if(!is_local(it->first)) it = messagings.erase(it);
+            else ++it;
+        }
+        V value = init, v;
         do {
-            int c = 0;
             do {
-                c = 0;
-                for(const auto& it : inbox) {
-                    Tile_index id = it.first;
-                    if (!it.second.empty() && rank(id) == world_rank)
-                        c += func(*(tc.find(id)));
-                }
-                count += c;
-            } while (c != 0);
-        } while (send_all_to_all() != 0);
-        return count;
+                v = for_each_zip(tc, messagings, transform, reduce, init);
+                value = reduce(value, v);
+            } while (v != init);
+        } while (send_all_to_all(messagings));
+        return value;
     }
 
-    char *load_points(char *bytes)
+    template<typename Point_id>
+    char *load_points(char *bytes, std::vector<Point_id>& points) const
     {
-        Tile_index id;
         int count;
-        bytes = load_value_4(bytes, id);
         bytes = load_value_4(bytes, count);
-        std::vector<Point_id>& box = inbox[id];
         for(int i = 0; i< count; ++i) {
             Point_id p;
-            bytes = load_point(bytes, p.first);
-            bytes = load_value_4(bytes, p.second); // Tile_index point id
-            box.push_back(p);
+            bytes = load_point(bytes, p.second);
+            bytes = load_value_4(bytes, p.first);
+            points.push_back(p);
         }
-        // std::cout << processor_name << "[" << world_rank << "] " << count  << " points recieved by " << int(id) << std::endl;
         return bytes;
     }
 
-    char *save_points(char *bytes, Tile_index id, const std::vector<Point_id>& msg) const
+    template<typename Point_id>
+    char *save_points(char *bytes, const std::vector<Point_id>& points) const
     {
-        int count = msg.size();
-        bytes = save_value_4(bytes, id);
+        int count = points.size();
         bytes = save_value_4(bytes, count);
-        for(auto p : msg) {
-            bytes = save_point(bytes, p.first);
-            bytes = save_value_4(bytes, p.second); // Tile_index point id
+        for(const auto& [id, p] : points) {
+            bytes = save_point(bytes, p);
+            bytes = save_value_4(bytes, id);
         }
-        //std::cout << processor_name << "[" << world_rank << "] " << count  << " points sent to " << int(id) << std::endl;
         return bytes;
     }
 
-    /// send the content of each non-local inbox to the relevant processing element.
-    /// @return maximum number of points sent from any one of the processing elements.
-    int send_all_to_all() 
+    /// send/recv broadcast points to the tiles of other ranks/processes.
+    /// send/recv points to the tiles that are local in other ranks/processes.
+    /// @return whether any points were communicated.
+    template<typename MessagingContainer>
+    bool send_all_to_all(MessagingContainer& messagings)
     {
-        std::cout << processor_name << "[" << world_rank << "] ";
-        for(const auto& it:inbox) {
-            std::cout << int(it.first) << ":" << it.second.size() << " ";
-        }
-        std::cout << "-> " << std::flush;
-        std::cout << std::endl;
+        typedef typename MessagingContainer::key_type Tile_index;
+        typedef typename MessagingContainer::mapped_type Messaging;
+        typedef typename MessagingContainer::Points Points;
+
         int id_size = 4; /// @todo serialized size of tile id
         int count_size = 4; /// @todo serialized size of point count
         int point_size = 16; /// @todo serialized size of a Point
         int data_size = point_size + id_size; /// @todo serialized size of a Point_id
 
-        // compute sendcounts
-        std::vector<int> sendcounts(world_size, 0);
-        int max_count = 0;
-        for(const auto& it : inbox)
+        int broadcast_recv_size = 0;
+
+        // one to all
         {
-            int r = rank(it.first);
-            if(r == world_rank) continue; // local, no need to communicate !
-            sendcounts[r] += id_size + count_size + it.second.size() * data_size;
-            if (max_count < it.second.size()) max_count = it.second.size();
+            int broadcast_send_size = 0;
+            if (!messagings.extreme_points().empty())
+                broadcast_send_size = count_size + messagings.extreme_points().size() * data_size;
+            std::vector<char> sendbuf(broadcast_send_size, 0);
+            if (broadcast_send_size>0) save_points(sendbuf.data(), messagings.extreme_points());
+            messagings.extreme_points().clear();
+            std::vector<int> recvcounts(world_size, 0);
+            MPI_Allgather(
+                &broadcast_send_size, 1, MPI_INT,
+                recvcounts.data(), 1, MPI_INT,
+                MPI_COMM_WORLD
+            );
+
+            std::vector<int> displs(world_size+1, 0);
+            for(int i=0; i<world_size; ++i) displs[i+1] = displs[i] + recvcounts[i];
+            broadcast_recv_size = displs[world_size];
+
+            std::cout << processor_name <<":"<< pid << ":" << world_rank << " broadcast_send_size " << broadcast_send_size << std::endl;
+            std::cout << processor_name <<":"<< pid << ":" << world_rank << " broadcast_recv_size " << broadcast_recv_size << std::endl;
+            if(broadcast_recv_size > 0) // if any broadcast is occuring
+            {
+                std::vector<char> recvbuf(displs[world_size], 0);
+                MPI_Allgatherv(
+                    sendbuf.data(), broadcast_send_size, MPI_CHAR,
+                    recvbuf.data(), recvcounts.data(), displs.data(), MPI_CHAR, MPI_COMM_WORLD);
+
+                // load all points except the one sent by this process
+                Points received_points;
+
+                // ranks < world_rank
+                char *bytes = recvbuf.data();
+                char *end   = bytes + displs[world_rank];
+                while( bytes < end ) bytes = load_points(bytes, received_points);
+
+                // ranks > world_rank
+                bytes = recvbuf.data() + displs[world_rank+1];
+                end   = recvbuf.data() + displs[world_size];
+                while( bytes < end ) bytes = load_points(bytes, received_points);
+
+                for(auto& [id, messaging] : messagings) {
+                    if (!is_local(id) || received_points.empty()) continue;
+                    Points& p = messaging.points()[id];
+                    p.insert(p.end(), received_points.begin(), received_points.end());
+                }
+            }
         }
 
-        // compute sdispls
-        std::vector<int> sdispls(world_size+1, 0);
-        for(int i=0; i<world_size; ++i) sdispls[i+1] = sdispls[i] + sendcounts[i];
-
-        MPI_Allreduce(&max_count, &max_count, 1, MPI_INT, MPI_MAX, MPI_COMM_WORLD);
-        if(max_count == 0) return 0;
-
-
-        // serialize inbox to sendbuf and empty inbox
-        std::vector<char> sendbuf(sdispls[world_size], 0);
-        std::vector<int> offset(world_size, 0);
-        for(auto it : inbox)
+        int max_alltoall_send_size = 0;
+        // one to one
         {
-            Tile_index id = it.first;
-            int r = rank(id);
-            if(r == world_rank) continue; // local, no need to communicate !
-            char *bytes = save_points(&sendbuf[offset[r]], id, it.second);
-            offset[r] = bytes - &sendbuf[0];
-            it.second.clear();
+            std::vector<int> sendcounts(world_size, 0);
+            for(const auto& [source, msg] : messagings)
+            {
+                for(const auto& [target, points] : msg.points())
+                {
+                    int r = rank(target);
+                    if(r == world_rank || points.empty()) continue; // local, no need to communicate !
+                    sendcounts[r] += id_size + count_size + points.size() * data_size;
+                }
+            }
+
+            // compute sdispls
+            std::vector<int> sdispls(world_size+1, 0);
+            std::vector<int> offset(world_size, 0);
+            for(int i=0; i<world_size; ++i) {
+                sdispls[i+1] = sdispls[i] + sendcounts[i];
+                offset[i] = sdispls[i];
+            }
+
+            int alltoall_send_size = sdispls[world_size];
+            std::cout << processor_name <<":"<< pid << ":" << world_rank << " alltoall_send_size " << alltoall_send_size << std::endl;
+
+            int max_alltoall_send_size = 0;
+            MPI_Allreduce(&alltoall_send_size, &max_alltoall_send_size,
+                1, MPI_INT, MPI_MAX, MPI_COMM_WORLD);
+
+            if (max_alltoall_send_size > 0)
+            {
+
+                // serialize to sendbuf and empty inbox
+                std::vector<char> sendbuf(alltoall_send_size, 0);
+                for(auto& [source, msg] : messagings)
+                {
+                    for(auto& [target, points] : msg.points())
+                    {
+                        int r = rank(target);
+                        if(r == world_rank || points.empty()) continue; // empty or local, no need to communicate !
+                        char *bytes = sendbuf.data() + offset[r];
+                        bytes = save_value_4(bytes, target);
+                        bytes = save_points(bytes, points);
+                        offset[r] = bytes - sendbuf.data();
+                        points.clear();
+                    }
+                }
+
+                // communicate sendcounts to know recvcounts
+                std::vector<int> recvcounts(world_size, 0);
+                MPI_Alltoall(
+                    sendcounts.data(), 1, MPI_INT,
+                    recvcounts.data(), 1, MPI_INT,
+                    MPI_COMM_WORLD);
+
+                // compute rdispls
+                std::vector<int> rdispls(world_size+1, 0);
+                for(int i=0; i<world_size; ++i) rdispls[i+1] = rdispls[i] + recvcounts[i];
+
+            std::cout << processor_name <<":"<< pid << ":" << world_rank << " alltoall_recv_size " << rdispls[world_size] << std::endl;
+
+                // send sendbuf to recvbuf
+                std::vector<char> recvbuf(rdispls[world_size], 0);
+                MPI_Alltoallv(
+                    sendbuf.data(), sendcounts.data(), sdispls.data(), MPI_CHAR,
+                    recvbuf.data(), recvcounts.data(), rdispls.data(), MPI_CHAR,
+                    MPI_COMM_WORLD);
+
+                // deserialize recvbuf to messagings
+                char *bytes = recvbuf.data();
+                char *end = bytes + recvbuf.size();
+                while( bytes < end) {
+                    Tile_index target;
+                    bytes = load_value_4(bytes, target);
+                    Points& points = messagings[target].points()[target];
+                    std::size_t s = points.size();
+                    bytes = load_points(bytes, points);
+                }
+            }
         }
 
         // communicate sendcounts to know recvcounts
@@ -329,10 +407,9 @@ struct MPI_scheduler
     }
 
 private:
-    std::map<Tile_index, Point_id_container> inbox;
-    std::map<Tile_index, std::set<Vertex_const_handle>> sent_;
     int world_size;
     int world_rank;
+    int pid;
     char processor_name[MPI_MAX_PROCESSOR_NAME];
 };
 
