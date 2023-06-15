@@ -596,7 +596,6 @@ public:
     }
 
 private:
-    Traits traits;
     Tile_index id_;
     Triangulation tri_;
     Tile_index_property tile_indices;
