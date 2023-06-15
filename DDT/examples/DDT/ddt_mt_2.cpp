@@ -38,11 +38,11 @@ int main(int argc, char **argv)
     Random_points points(range);
     tri.insert(scheduler, points, number_of_points, partitioner);
 
-    CGAL::DDT::write_vrt_verts(tri.tiles, scheduler, "out_v");
-    CGAL::DDT::write_vrt_facets(tri.tiles, scheduler, "out_f");
-    CGAL::DDT::write_vrt_cells(tri.tiles, scheduler, "out_c");
-    CGAL::DDT::write_vrt_bboxes(tri.tiles, "out_b");
-    CGAL::DDT::write_vrt_tins(tri.tiles, scheduler, "out_t");
+    CGAL::DDT::write_vrt_verts(tri, scheduler, "out_v");
+    CGAL::DDT::write_vrt_facets(tri, scheduler, "out_f");
+    CGAL::DDT::write_vrt_cells(tri, scheduler, "out_c");
+    CGAL::DDT::write_vrt_bboxes(tri, "out_b");
+    CGAL::DDT::write_vrt_tins(tri, scheduler, "out_t");
 
     return 0;
 }

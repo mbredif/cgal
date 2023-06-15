@@ -21,10 +21,9 @@ template<typename TileContainer>
 class Facet_const_iterator
 {
 public:
-    typedef typename TileContainer::Traits             Traits;
-    typedef typename TileContainer::Tile_facet_index   Tile_facet_index;
     typedef typename TileContainer::const_iterator     Tile_const_iterator;
     typedef typename TileContainer::Tile_triangulation Tile_triangulation;
+    typedef typename Tile_triangulation::Facet_index   Tile_facet_index;
 
     using iterator_category = std::forward_iterator_tag;
     using value_type = Tile_facet_index;

@@ -63,10 +63,10 @@ int read_cgal_tile(Tile& tile, const std::string& dirname)
     return 0;
 }
 
-template<typename TileContainer>
-int read_cgal(TileContainer& tc, const std::string& dirname)
+template<typename DistributedTriangulation>
+int read_cgal(DistributedTriangulation& tri, const std::string& dirname)
 {
-    typedef typename TileContainer::Tile_index Tile_index;
+    typedef typename DistributedTriangulation::Tile_index Tile_index;
     boost::property_tree::ptree root_node;
     boost::property_tree::ptree tiles_node;
     boost::property_tree::ptree bboxes_node;
@@ -79,14 +79,14 @@ int read_cgal(TileContainer& tc, const std::string& dirname)
     for (auto its : tiles_node)
     {
         Tile_index tid = std::stoi(its.first);
-        auto& tile = tc[tid];
-        tc.load(tile);
+        auto& tile = tri.tiles[tid];
+        tri.tiles.load(tile);
         std::istringstream iss(bboxes_node.find(its.first)->second.data());
         iss >> tile.bbox();
         read_cgal_tile(tile,dirname);
     }
-    tc.finalize();
-    std::cout << tc.is_valid() << std::endl;
+    tri.finalize();
+    //std::cout << tri.is_valid() << std::endl;
     return 0;
 }
 

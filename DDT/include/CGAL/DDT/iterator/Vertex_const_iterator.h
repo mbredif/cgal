@@ -21,10 +21,9 @@ template<typename TileContainer>
 class Vertex_const_iterator
 {
 public:
-    typedef typename TileContainer::Traits             Traits;
-    typedef typename TileContainer::Tile_vertex_index  Tile_vertex_index;
     typedef typename TileContainer::const_iterator     Tile_const_iterator;
     typedef typename TileContainer::Tile_triangulation Tile_triangulation;
+    typedef typename Tile_triangulation::Vertex_index  Tile_vertex_index;
 
     using iterator_category = std::forward_iterator_tag;
     using value_type = Tile_vertex_index;

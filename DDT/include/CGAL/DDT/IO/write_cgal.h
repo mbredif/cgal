@@ -56,15 +56,15 @@ bool write_cgal_tile(const Tile& tile, std::string dirname)
     return true;
 }
 
-template<typename TileContainer>
-int write_cgal(const TileContainer& tc, const std::string& dirname)
+template<typename DistributedTriangulation>
+int write_cgal(const DistributedTriangulation& tri, const std::string& dirname)
 {
     boost::property_tree::ptree root_node;
     boost::property_tree::ptree tiles_node;
     boost::property_tree::ptree bboxes_node;
 
     int i = 0;
-    for(auto& tile : tc)
+    for(auto& tile : tri.tiles)
     {
         std::string id = std::to_string(tile.id());
         std::string fpath = id + ".bin";

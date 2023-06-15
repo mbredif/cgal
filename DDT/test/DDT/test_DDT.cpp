@@ -120,9 +120,9 @@ int main(int, char **)
 
     }
 
-    CGAL::DDT::write_vrt_verts(tri.tiles, scheduler, "test_DDT_out_v");
-    CGAL::DDT::write_vrt_facets(tri.tiles, scheduler, "test_DDT_out_f");
-    CGAL::DDT::write_vrt_cells(tri.tiles, scheduler, "test_DDT_out_c");
+    CGAL::DDT::write_vrt_verts(tri, scheduler, "test_DDT_out_v");
+    CGAL::DDT::write_vrt_facets(tri, scheduler, "test_DDT_out_f");
+    CGAL::DDT::write_vrt_cells(tri, scheduler, "test_DDT_out_c");
 
     return -errors;
 }

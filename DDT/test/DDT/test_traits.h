@@ -16,11 +16,11 @@ template <typename T, typename Scheduler>
 int dump_2d_vrt(T& tri, Scheduler& scheduler, const std::string& vrt)
 {
     std::cout << "== write_vrt == " << vrt << "_*.vrt" << std::endl;
-    CGAL::DDT::write_vrt_verts(tri.tiles, scheduler, vrt+"_v");
-    CGAL::DDT::write_vrt_facets(tri.tiles, scheduler, vrt+"_f");
-    CGAL::DDT::write_vrt_cells(tri.tiles, scheduler, vrt+"_c");
-    CGAL::DDT::write_vrt_bboxes(tri.tiles, vrt+"_b");
-    CGAL::DDT::write_vrt_tins(tri.tiles, scheduler, vrt+"_t");
+    CGAL::DDT::write_vrt_verts(tri, scheduler, vrt+"_v");
+    CGAL::DDT::write_vrt_facets(tri, scheduler, vrt+"_f");
+    CGAL::DDT::write_vrt_cells(tri, scheduler, vrt+"_c");
+    CGAL::DDT::write_vrt_bboxes(tri, vrt+"_b");
+    CGAL::DDT::write_vrt_tins(tri, scheduler, vrt+"_t");
     return 0;
 
 }
@@ -70,7 +70,7 @@ int test_traits(const Partitioner& partitioner, const std::string& testname, int
     if (dim <= 3)
     {
         std::cout << "== write_ply ==" << std::endl;
-        CGAL::DDT::write_ply(tri1.tiles, testname + "/out.ply");
+        CGAL::DDT::write_ply(tri1, testname + "/out.ply");
     }
     if (dim == 2)
     {
@@ -85,13 +85,13 @@ int test_traits(const Partitioner& partitioner, const std::string& testname, int
         boost::filesystem::create_directories(testname + "/cgal");
         boost::filesystem::create_directories(testname + "/cgal2");
         std::cout << "write..." << std::endl;
-        CGAL::DDT::write_cgal(tri1.tiles, testname + "/cgal");
+        CGAL::DDT::write_cgal(tri1, testname + "/cgal");
 
         Distributed_triangulation tri2(dim);
         std::cout << "read..." << std::endl;
-        CGAL::DDT::read_cgal(tri2.tiles, testname + "/cgal");
+        CGAL::DDT::read_cgal(tri2, testname + "/cgal");
         std::cout << "write again..." << std::endl;
-        CGAL::DDT::write_cgal(tri2.tiles, testname + "/cgal2");
+        CGAL::DDT::write_cgal(tri2, testname + "/cgal2");
 
         result += dump_2d_vrt(tri2, scheduler, testname + "/tri2");
         if (dim == 2)

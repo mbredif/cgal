@@ -318,19 +318,19 @@ void write_vtu_tile(std::ostream& os,
   os << "</VTKFile>\n";
 }
 
-template<typename TileContainer, typename Scheduler>
-void write_pvtu(TileContainer& tc, Scheduler& sch, const std::string& dirname,
+template<typename DistributedTriangulation, typename Scheduler>
+void write_pvtu(DistributedTriangulation& tri, Scheduler& sch, const std::string& dirname,
                 bool binary = true)
 {
     boost::filesystem::path p(dirname);
     boost::filesystem::create_directories(p);
-    sch.for_each(tc, [&dirname,&binary](typename TileContainer::Tile& tile) {
+    sch.for_each(tri.tiles, [&dirname,&binary](typename DistributedTriangulation::Tile& tile) {
         std::string filename(dirname + "/" + std::to_string(tile.id()));
         std::ofstream os(filename+".vtu");
         write_vtu_tile(os, tile, binary);
         return 1;
     });
-    write_pvtu_file(dirname, tc.ids_begin(), tc.ids_end());
+    write_pvtu_file(dirname, tri.tiles.ids_begin(), tri.tiles.ids_end());
 }
 
 }

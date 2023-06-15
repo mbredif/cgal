@@ -112,21 +112,21 @@ int DDT_demo(int argc, char **argv)
   if ( vm.count("vrt")  )
   {
       log.step("write_vrt_verts ");
-      CGAL::DDT::write_vrt_verts(tri.tiles, scheduler, vrt+"_v");
+      CGAL::DDT::write_vrt_verts(tri, scheduler, vrt+"_v");
       log.step("write_vrt_facets");
-      CGAL::DDT::write_vrt_facets(tri.tiles, scheduler, vrt+"_f");
+      CGAL::DDT::write_vrt_facets(tri, scheduler, vrt+"_f");
       log.step("write_vrt_cells ");
-      CGAL::DDT::write_vrt_cells(tri.tiles, scheduler, vrt+"_c");
+      CGAL::DDT::write_vrt_cells(tri, scheduler, vrt+"_c");
       log.step("write_vrt_bboxes");
-      CGAL::DDT::write_vrt_bboxes(tri.tiles, vrt+"_b");
+      CGAL::DDT::write_vrt_bboxes(tri, vrt+"_b");
       log.step("write_vrt_tins  ");
-      CGAL::DDT::write_vrt_tins(tri.tiles, scheduler, vrt+"_t");
+      CGAL::DDT::write_vrt_tins(tri, scheduler, vrt+"_t");
   }
 
   if ( vm.count("ply")  )
   {
       log.step("write_ply       ");
-      CGAL::DDT::write_ply(tri.tiles, ply+".ply");
+      CGAL::DDT::write_ply(tri, ply+".ply");
   }
 
   if ( vm.count("check")  )

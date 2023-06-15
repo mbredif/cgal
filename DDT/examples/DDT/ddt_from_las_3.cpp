@@ -60,7 +60,7 @@ int main(int argc, char*argv[])
     tri.insert(scheduler, messagings);
 
     std::cout << "Writing PVTU to " << out << std::endl;
-    CGAL::DDT::write_pvtu(tri.tiles, scheduler, out);
+    CGAL::DDT::write_pvtu(tri, scheduler, out);
 
     return EXIT_SUCCESS;
 }

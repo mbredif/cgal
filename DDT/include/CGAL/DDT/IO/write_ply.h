@@ -43,23 +43,23 @@ inline void write_ply_header_end(std::ostream& out)
     out << "end_header" << std::endl;
 }
 
-template<typename TileContainer>
-void write_ply_element_cell(const TileContainer& tc, std::ostream& out)
+template<typename DistributedTriangulation>
+void write_ply_element_cell(const DistributedTriangulation& tri, std::ostream& out)
 {
-    const char *id_string = Impl::ply_types<typename TileContainer::Tile_index>::string;
-    int nc = tc.number_of_cells();
+    const char *id_string = Impl::ply_types<typename DistributedTriangulation::Tile_index>::string;
+    int nc = tri.number_of_cells();
     out << "element face " << nc << std::endl;
     out << "property list uint8 int vertex_indices" << std::endl;
     out << "property " << id_string << " tile" << std::endl;
     out << "property uint8 local" << std::endl;
 }
 
-template<typename TileContainer>
-void write_ply_element_vert(const TileContainer& tc, std::ostream& out)
+template<typename DistributedTriangulation>
+void write_ply_element_vert(const DistributedTriangulation& tri, std::ostream& out)
 {
-    const char *id_string = Impl::ply_types<typename TileContainer::Tile_index>::string;
-    int D = tc.maximal_dimension();
-    int nv = tc.number_of_vertices();
+    const char *id_string = Impl::ply_types<typename DistributedTriangulation::Tile_index>::string;
+    int D = tri.maximal_dimension();
+    int nv = tri.number_of_vertices();
     out << "element vertex " << nv << std::endl;
     out << "property float32 x" << std::endl;
     out << "property float32 y" << std::endl;
@@ -121,41 +121,41 @@ void write_ply_property_vert(const TileTriangulation& dt, std::ostream& out)
     }
 }
 
-template<typename TileContainer>
-void write_ply_cell(const TileContainer& tc, const std::string& filename)
+template<typename DistributedTriangulation>
+void write_ply_cell(const DistributedTriangulation& tri, const std::string& filename)
 {
     std::ofstream out(filename, std::ios::binary);
     write_ply_header_begin(out);
-    write_ply_element_cell(tc, out);
+    write_ply_element_cell(tri, out);
     write_ply_header_end(out);
-    for(const auto& tile : tc)
+    for(const auto& tile : tri.tiles)
         write_ply_property_cell(tile.triangulation(), out);
     out.close();
 }
 
-template<typename TileContainer>
-void write_ply_vert(const TileContainer& tc, const std::string& filename)
+template<typename DistributedTriangulation>
+void write_ply_vert(const DistributedTriangulation& tri, const std::string& filename)
 {
     std::ofstream out(filename, std::ios::binary);
     write_ply_header_begin(out);
-    write_ply_element_vert(tc, out);
+    write_ply_element_vert(tri, out);
     write_ply_header_end(out);
-    for(const auto& tile : tc)
+    for(const auto& tile : tri.tiles)
         write_ply_property_vert(tile.triangulation(), out);
     out.close();
 }
 
-template<typename TileContainer>
-void write_ply(const TileContainer& tc, const std::string& filename)
+template<typename DistributedTriangulation>
+void write_ply(const DistributedTriangulation& tri, const std::string& filename)
 {
     std::ofstream out(filename, std::ios::binary);
     write_ply_header_begin(out);
-    write_ply_element_vert(tc, out);
-    write_ply_element_cell(tc, out);
+    write_ply_element_vert(tri, out);
+    write_ply_element_cell(tri, out);
     write_ply_header_end(out);
-    for(const auto& tile : tc)
+    for(const auto& tile : tri.tiles)
         write_ply_property_vert(tile.triangulation(), out);
-    for(const auto& tile : tc)
+    for(const auto& tile : tri.tiles)
         write_ply_property_cell(tile.triangulation(), out);
     out.close();
 }

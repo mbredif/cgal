@@ -22,19 +22,15 @@ namespace DDT {
 /// It should be used to disable any serialization and perform all computations in memory.
 /// That provides the fastest computation, provided enough memory is available.
 /// \cgalModels Serializer
-template<typename Triangulation, typename TileIndexProperty>
 struct No_serializer
 {
-  typedef typename TileIndexProperty::value_type Tile_index;
-  typedef typename Triangulation_traits<Triangulation>::Bbox Bbox;
-  bool load(Tile_index id, Bbox& bbox) const { return false; }
-  bool has_tile(Tile_index) const { return false; }
+  template<typename Tile_index, typename Bbox> bool load(Tile_index id, Bbox& bbox) const { return false; }
+  template<typename Tile_index> bool has_tile(Tile_index) const { return false; }
   template<typename Tile> bool load(Tile&) const { return false; }
   template<typename Tile> bool save(const Tile& ) const { return false;}
 };
 
-template<typename Triangulation, typename TileIndexProperty>
-std::ostream& operator<<(std::ostream& out, const No_serializer<Triangulation, TileIndexProperty>& serializer) {
+std::ostream& operator<<(std::ostream& out, const No_serializer& serializer) {
     return out << "No_serializer";
 }
 
