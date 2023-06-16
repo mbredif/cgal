@@ -24,13 +24,13 @@ namespace CGAL {
 namespace DDT {
 namespace impl {
 
-template<typename Tile, typename Point_set>
-std::size_t splay_tile(Tile& tile, Point_set& point_set)
+template<typename Tile, typename PointSet>
+std::size_t splay_tile(Tile& tile, PointSet& point_set)
 {
     typedef typename Tile::Tile_triangulation         Tile_triangulation;
     typedef typename Tile_triangulation::Tile_index   Tile_index;
     typedef typename Tile_triangulation::Vertex_index Vertex_index;
-    typedef typename Point_set::Points                Points;
+    typedef typename PointSet::Points                Points;
     Points received;
     Tile_triangulation& tri = tile.triangulation();
     point_set.receive_points(tri.id(), received);
@@ -45,14 +45,14 @@ std::size_t splay_tile(Tile& tile, Point_set& point_set)
     return point_set.send_vertices_to_one_tile(tri, vertices);
 }
 
-template<typename TileContainer, typename Point_SetContainer, typename Scheduler>
-std::size_t insert_and_send_all_axis_extreme_points(TileContainer& tiles, Point_SetContainer& point_sets, Scheduler& sch)
+template<typename TileContainer, typename PointSetContainer, typename Scheduler>
+std::size_t insert_and_send_all_axis_extreme_points(TileContainer& tiles, PointSetContainer& point_sets, Scheduler& sch)
 {
     typedef typename TileContainer::Tile              Tile;
     typedef typename Tile::Tile_triangulation         Tile_triangulation;
     typedef typename Tile_triangulation::Vertex_index Vertex_index;
-    typedef typename Point_SetContainer::mapped_type  Point_set;
-    return sch.for_each_zip(tiles, point_sets, [](Tile& tile, Point_set& point_set)
+    typedef typename PointSetContainer::mapped_type  PointSet;
+    return sch.for_each_zip(tiles, point_sets, [](Tile& tile, PointSet& point_set)
     {
         std::size_t count = splay_tile(tile, point_set);
         Tile_triangulation& tri = tile.triangulation();
@@ -66,12 +66,12 @@ std::size_t insert_and_send_all_axis_extreme_points(TileContainer& tiles, Point_
     });
 }
 
-template<typename TileContainer, typename Point_SetContainer, typename Scheduler>
-std::size_t splay_stars(TileContainer& tiles, Point_SetContainer& point_sets, Scheduler& sch)
+template<typename TileContainer, typename PointSetContainer, typename Scheduler>
+std::size_t splay_stars(TileContainer& tiles, PointSetContainer& point_sets, Scheduler& sch)
 {
     typedef typename TileContainer::Tile Tile;
-    typedef typename Point_SetContainer::mapped_type Point_set;
-    return sch.for_each_rec(tiles, point_sets, [](Tile& tile, Point_set& point_set) { return splay_tile(tile, point_set); });
+    typedef typename PointSetContainer::mapped_type PointSet;
+    return sch.for_each_rec(tiles, point_sets, [](Tile& tile, PointSet& point_set) { return splay_tile(tile, point_set); });
 }
 
 } // namespace impl

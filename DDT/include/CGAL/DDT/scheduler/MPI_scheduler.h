@@ -133,15 +133,15 @@ struct MPI_scheduler
     }
 
     template<typename TileContainer,
-             typename Point_SetContainer,
+             typename PointSetContainer,
              typename Transform,
              typename Reduce = std::plus<>,
              typename Tile = typename TileContainer::Tile,
-             typename Point_set = typename Point_SetContainer::mapped_type,
+             typename PointSet = typename PointSetContainer::mapped_type,
              typename V = std::invoke_result_t<Reduce,
-                                               std::invoke_result_t<Transform, Tile&, Point_set&>,
-                                               std::invoke_result_t<Transform, Tile&, Point_set&> > >
-    V for_each_zip(TileContainer& tiles, Point_SetContainer& point_sets, Transform transform, Reduce reduce = {}, V init = {})
+                                               std::invoke_result_t<Transform, Tile&, PointSet&>,
+                                               std::invoke_result_t<Transform, Tile&, PointSet&> > >
+    V for_each_zip(TileContainer& tiles, PointSetContainer& point_sets, Transform transform, Reduce reduce = {}, V init = {})
     {
         V value = init;
         for(auto& [id, point_set] : point_sets) {
@@ -156,15 +156,15 @@ struct MPI_scheduler
     }
 
     template<typename TileContainer,
-         typename Point_SetContainer,
+         typename PointSetContainer,
          typename Transform,
          typename Reduce = std::plus<>,
          typename Tile = typename TileContainer::Tile,
-         typename Point_set = typename Point_SetContainer::mapped_type,
+         typename PointSet = typename PointSetContainer::mapped_type,
          typename V = std::invoke_result_t<Reduce,
-                                           std::invoke_result_t<Transform, Tile&, Point_set&>,
-                                           std::invoke_result_t<Transform, Tile&, Point_set&> > >
-    V for_each_rec(TileContainer& tiles, Point_SetContainer& point_sets, Transform transform, Reduce reduce = {}, V init = {})
+                                           std::invoke_result_t<Transform, Tile&, PointSet&>,
+                                           std::invoke_result_t<Transform, Tile&, PointSet&> > >
+    V for_each_rec(TileContainer& tiles, PointSetContainer& point_sets, Transform transform, Reduce reduce = {}, V init = {})
     {
         // workaround : drop non local point insertions :
         // they are performed on all processes but
@@ -212,14 +212,11 @@ struct MPI_scheduler
     /// send/recv broadcast points to the tiles of other ranks/processes.
     /// send/recv points to the tiles that are local in other ranks/processes.
     /// @return whether any points were communicated.
-    template<typename Point_SetContainer>
-    bool send_all_to_all(Point_SetContainer& point_sets)
+    template<typename PointSetContainer>
+    bool send_all_to_all(PointSetContainer& point_sets)
     {
-        typedef typename Point_SetContainer::key_type Tile_index;
-        typedef typename Point_SetContainer::mapped_type Point_set;
-        typedef typename Point_SetContainer::Points Points;
-
-        int id_size = 4; /// @todo serialized size of tile id
+        typedef typename PointSetContainer::key_type Tile_index;
+        typedef typename PointSetContainer::Points PointPointSet   int id_size = 4; /// @todo serialized size of tile id
         int count_size = 4; /// @todo serialized size of point count
         int point_size = 16; /// @todo serialized size of a Point
         int data_size = point_size + id_size; /// @todo serialized size of a Point_id

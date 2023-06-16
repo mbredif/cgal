@@ -46,15 +46,15 @@ struct Sequential_scheduler
     }
 
     template<typename TileContainer,
-             typename Point_SetContainer,
+             typename PointSetContainer,
              typename Transform,
              typename Reduce = std::plus<>,
              typename Tile = typename TileContainer::Tile,
-             typename Point_set = typename Point_SetContainer::mapped_type,
+             typename PointSet = typename PointSetContainer::mapped_type,
              typename V = std::invoke_result_t<Reduce,
-                                               std::invoke_result_t<Transform, Tile&, Point_set&>,
-                                               std::invoke_result_t<Transform, Tile&, Point_set&> > >
-    V for_each_zip(TileContainer& tiles, Point_SetContainer& point_sets, Transform transform, Reduce reduce = {}, V init = {})
+                                               std::invoke_result_t<Transform, Tile&, PointSet&>,
+                                               std::invoke_result_t<Transform, Tile&, PointSet&> > >
+    V for_each_zip(TileContainer& tiles, PointSetContainer& point_sets, Transform transform, Reduce reduce = {}, V init = {})
     {
         V value = init;
         for(auto& [id, point_set] : point_sets) {
@@ -68,15 +68,15 @@ struct Sequential_scheduler
     }
 
     template<typename TileContainer,
-         typename Point_SetContainer,
+         typename PointSetContainer,
          typename Transform,
          typename Reduce = std::plus<>,
          typename Tile = typename TileContainer::Tile,
-         typename Point_set = typename Point_SetContainer::mapped_type,
+         typename PointSet = typename PointSetContainer::mapped_type,
          typename V = std::invoke_result_t<Reduce,
-                                           std::invoke_result_t<Transform, Tile&, Point_set&>,
-                                           std::invoke_result_t<Transform, Tile&, Point_set&> > >
-    V for_each_rec(TileContainer& tiles, Point_SetContainer& point_sets, Transform transform, Reduce reduce = {}, V init = {})
+                                           std::invoke_result_t<Transform, Tile&, PointSet&>,
+                                           std::invoke_result_t<Transform, Tile&, PointSet&> > >
+    V for_each_rec(TileContainer& tiles, PointSetContainer& point_sets, Transform transform, Reduce reduce = {}, V init = {})
     {
         V value = init, v;
         do {

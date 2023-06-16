@@ -46,8 +46,8 @@ V transform_reduce_id(TileContainer& tiles, Transform transform, Reduce reduce, 
     return value;
 }
 
-template<typename TileContainer, typename Point_SetContainer, typename Transform, typename Reduce, typename V, typename Tile_index>
-V transform_reduce_id(TileContainer& tiles, Point_SetContainer& point_sets, Transform transform, Reduce reduce, V value, Tile_index id, std::mutex& mutex)
+template<typename TileContainer, typename PointSetContainer, typename Transform, typename Reduce, typename V, typename Tile_index>
+V transform_reduce_id(TileContainer& tiles, PointSetContainer& point_sets, Transform transform, Reduce reduce, V value, Tile_index id, std::mutex& mutex)
 {
     typedef typename TileContainer::Tile Tile;
     std::unique_lock<std::mutex> lock(mutex);
@@ -98,15 +98,15 @@ struct TBB_scheduler
     }
 
     template<typename TileContainer,
-             typename Point_SetContainer,
+             typename PointSetContainer,
              typename Transform,
              typename Reduce = std::plus<>,
              typename Tile = typename TileContainer::Tile,
-             typename Point_set = typename Point_SetContainer::mapped_type,
+             typename PointSet = typename PointSetContainer::mapped_type,
              typename V = std::invoke_result_t<Reduce,
-                                               std::invoke_result_t<Transform, Tile&, Point_set&>,
-                                               std::invoke_result_t<Transform, Tile&, Point_set&> > >
-    V for_each_zip(TileContainer& tiles, Point_SetContainer& point_sets, Transform transform, Reduce reduce = {}, V init = {})
+                                               std::invoke_result_t<Transform, Tile&, PointSet&>,
+                                               std::invoke_result_t<Transform, Tile&, PointSet&> > >
+    V for_each_zip(TileContainer& tiles, PointSetContainer& point_sets, Transform transform, Reduce reduce = {}, V init = {})
     {
         typedef typename TileContainer::Tile_index Tile_index;
         std::vector<Tile_index> ids;
@@ -125,15 +125,15 @@ struct TBB_scheduler
     }
 
     template<typename TileContainer,
-             typename Point_SetContainer,
+             typename PointSetContainer,
              typename Transform,
              typename Reduce = std::plus<>,
              typename Tile = typename TileContainer::Tile,
-             typename Point_set = typename Point_SetContainer::mapped_type,
+             typename PointSet = typename PointSetContainer::mapped_type,
              typename V = std::invoke_result_t<Reduce,
-                                               std::invoke_result_t<Transform, Tile&, Point_set&>,
-                                               std::invoke_result_t<Transform, Tile&, Point_set&> > >
-    V for_each_rec(TileContainer& tiles, Point_SetContainer& point_sets, Transform transform, Reduce reduce = {}, V init = {})
+                                               std::invoke_result_t<Transform, Tile&, PointSet&>,
+                                               std::invoke_result_t<Transform, Tile&, PointSet&> > >
+    V for_each_rec(TileContainer& tiles, PointSetContainer& point_sets, Transform transform, Reduce reduce = {}, V init = {})
     {
         V value = init, v;
         do {
