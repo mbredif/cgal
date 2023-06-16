@@ -121,12 +121,12 @@ struct MPI_scheduler
              typename V = std::invoke_result_t<Reduce,
                                                std::invoke_result_t<Transform, Tile&>,
                                                std::invoke_result_t<Transform, Tile&> > >
-    V for_each(TileContainer& tc, Transform transform, Reduce reduce = {}, V init = {})
+    V for_each(TileContainer& tiles, Transform transform, Reduce reduce = {}, V init = {})
     {
         V value = init;
-        for(Tile& tile : tc) {
+        for(auto& [id, tile] : tiles) {
             tile.locked = true;
-            if (tc.load(tile)) value = reduce(value, transform(tile));
+            if (tiles.load(id, tile)) value = reduce(value, transform(tile));
             tile.locked = false;
         }
         return value;
@@ -141,14 +141,14 @@ struct MPI_scheduler
              typename V = std::invoke_result_t<Reduce,
                                                std::invoke_result_t<Transform, Tile&, Messaging&>,
                                                std::invoke_result_t<Transform, Tile&, Messaging&> > >
-    V for_each_zip(TileContainer& tc, MessagingContainer& messagings, Transform transform, Reduce reduce = {}, V init = {})
+    V for_each_zip(TileContainer& tiles, MessagingContainer& messagings, Transform transform, Reduce reduce = {}, V init = {})
     {
         V value = init;
         for(auto& [id, messaging] : messagings) {
             if (!is_local(id)) continue;
-            Tile& tile = tc[id];
+            Tile& tile = tiles.emplace(id).first->second;
             tile.locked = true;
-            if (tc.load(tile)) value = reduce(value, transform(tile, messaging));
+            if (tiles.load(id, tile)) value = reduce(value, transform(tile, messaging));
             messagings.send_points(id);
             tile.locked = false;
         }
@@ -164,7 +164,7 @@ struct MPI_scheduler
          typename V = std::invoke_result_t<Reduce,
                                            std::invoke_result_t<Transform, Tile&, Messaging&>,
                                            std::invoke_result_t<Transform, Tile&, Messaging&> > >
-    V for_each_rec(TileContainer& tc, MessagingContainer& messagings, Transform transform, Reduce reduce = {}, V init = {})
+    V for_each_rec(TileContainer& tiles, MessagingContainer& messagings, Transform transform, Reduce reduce = {}, V init = {})
     {
         // workaround : drop non local point insertions :
         // they are performed on all processes but
@@ -176,7 +176,7 @@ struct MPI_scheduler
         V value = init, v;
         do {
             do {
-                v = for_each_zip(tc, messagings, transform, reduce, init);
+                v = for_each_zip(tiles, messagings, transform, reduce, init);
                 value = reduce(value, v);
             } while (v != init);
         } while (send_all_to_all(messagings));

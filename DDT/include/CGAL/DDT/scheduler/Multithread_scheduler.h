@@ -20,42 +20,38 @@ namespace DDT {
 
 namespace Impl {
 template< typename TileContainer, typename Transform, typename V, typename Tile_index >
-V transform_id(TileContainer& tc, Transform transform, V init, Tile_index id, std::mutex& mutex)
+V transform_id(TileContainer& tiles, Transform transform, V init, Tile_index id, std::mutex& mutex)
 {
-    typedef typename TileContainer::iterator Tile_iterator;
-    Tile_iterator tile;
-    {
-        std::unique_lock<std::mutex> lock(mutex);
-        tile = tc.emplace(id).first;
-        tile->locked = true;
-        tc.prepare_load(*tile);
-    }
-    V value = (tc.safe_load(*tile)) ? transform(*tile) : init;
-    {
-        std::unique_lock<std::mutex> lock(mutex);
-        tile->locked = false;
-    }
+    typedef typename TileContainer::Tile Tile;
+    std::unique_lock<std::mutex> lock(mutex);
+    Tile& tile = tiles.emplace(id).first->second;
+    tile.locked = true;
+    tiles.prepare_load(id, tile);
+
+    lock.unlock();
+    V value = (tiles.safe_load(id, tile)) ? transform(tile) : init;
+
+    lock.lock();
+    tile.locked = false;
     return value;
 }
 
 
 template< typename TileContainer, typename MessagingContainer, typename Transform, typename V, typename Tile_index >
-V transform_zip_id(TileContainer& tc, MessagingContainer& messagings, Transform transform, V init, Tile_index id, std::mutex& mutex)
+V transform_zip_id(TileContainer& tiles, MessagingContainer& messagings, Transform transform, V init, Tile_index id, std::mutex& mutex)
 {
-    typedef typename TileContainer::iterator Tile_iterator;
-    Tile_iterator tile;
-    {
-        std::unique_lock<std::mutex> lock(mutex);
-        tile = tc.emplace(id).first;
-        tile->locked = true;
-        tc.prepare_load(*tile);
-    }
-    V value = (tc.safe_load(*tile)) ? transform(*tile, messagings[id]) : init;
-    {
-        std::unique_lock<std::mutex> lock(mutex);
-        messagings.send_points(id);
-        tile->locked = false;
-    }
+    typedef typename TileContainer::Tile Tile;
+    std::unique_lock<std::mutex> lock(mutex);
+    Tile& tile = tiles.emplace(id).first->second;
+    tile.locked = true;
+    tiles.prepare_load(id, tile);
+
+    lock.unlock();
+    V value = (tiles.safe_load(id, tile)) ? transform(tile, messagings[id]) : init;
+
+    lock.lock();
+    messagings.send_points(id);
+    tile.locked = false;
     return value;
 }
 
@@ -91,14 +87,14 @@ struct Multithread_scheduler
          typename V = std::invoke_result_t<Reduce,
                                            std::invoke_result_t<Transform, Tile&>,
                                            std::invoke_result_t<Transform, Tile&> > >
-    V for_each(TileContainer& tc, Transform transform, Reduce reduce = {}, V init = {})
+    V for_each(TileContainer& tiles, Transform transform, Reduce reduce = {}, V init = {})
     {
         typedef typename Tile::Tile_index Tile_index;
         std::vector<std::future<V>> futures;
-        for(const Tile& tile : tc)
-            futures.push_back(pool.submit([this, &tc, &transform, &init](Tile_index id){
-                return Impl::transform_id(tc, transform, init, id, mutex);
-            }, tile.id()));
+        for(const auto& [tid, tile] : tiles)
+            futures.push_back(pool.submit([this, &tiles, &transform, &init](Tile_index id){
+                return Impl::transform_id(tiles, transform, init, id, mutex);
+            }, tid));
         V value = init;
         for(auto& f: futures) value = reduce(value, f.get());
         return value;
@@ -113,15 +109,15 @@ struct Multithread_scheduler
              typename V = std::invoke_result_t<Reduce,
                                                std::invoke_result_t<Transform, Tile&, Messaging&>,
                                                std::invoke_result_t<Transform, Tile&, Messaging&> > >
-    V for_each_zip(TileContainer& tc, MessagingContainer& messagings, Transform transform, Reduce reduce = {}, V init = {})
+    V for_each_zip(TileContainer& tiles, MessagingContainer& messagings, Transform transform, Reduce reduce = {}, V init = {})
     {
         typedef typename Tile::Tile_index Tile_index;
         std::vector<std::future<V>> futures;
         {
             std::unique_lock<std::mutex> lock(mutex);
             for(const auto& messaging : messagings)
-                futures.push_back(pool.submit([this, &tc, &messagings, &transform, &init](Tile_index id){
-                    return Impl::transform_zip_id(tc, messagings, transform, init, id, mutex);
+                futures.push_back(pool.submit([this, &tiles, &messagings, &transform, &init](Tile_index id){
+                    return Impl::transform_zip_id(tiles, messagings, transform, init, id, mutex);
                 }, messaging.first));
         }
         V value = init;
@@ -138,15 +134,15 @@ struct Multithread_scheduler
              typename V = std::invoke_result_t<Reduce,
                                                std::invoke_result_t<Transform, Tile&, Messaging&>,
                                                std::invoke_result_t<Transform, Tile&, Messaging&> > >
-    V for_each_rec(TileContainer& tc, MessagingContainer& messagings, Transform transform, Reduce reduce = {}, V init = {})
+    V for_each_rec(TileContainer& tiles, MessagingContainer& messagings, Transform transform, Reduce reduce = {}, V init = {})
     {
         typedef typename Tile::Tile_index Tile_index;
         std::map<Tile_index, std::future<V>> futures;
         {
             std::unique_lock<std::mutex> lock(mutex);
             for(const auto& messaging : messagings)
-                futures.emplace(messaging.first, pool.submit([this, &tc, &messagings, &transform, &init](Tile_index id){
-                    return Impl::transform_zip_id(tc, messagings, transform, init, id, mutex);
+                futures.emplace(messaging.first, pool.submit([this, &tiles, &messagings, &transform, &init](Tile_index id){
+                    return Impl::transform_zip_id(tiles, messagings, transform, init, id, mutex);
                 }, messaging.first));
         }
 
@@ -167,8 +163,8 @@ struct Multithread_scheduler
                             ids.push_back(messaging.first);
                     for(auto id : ids)
                         if (futures.count(id) == 0)
-                            futures.emplace(id, pool.submit([this, &tc, &messagings, &transform, &init](Tile_index id){
-                                return Impl::transform_zip_id(tc, messagings, transform, init, id, mutex);
+                            futures.emplace(id, pool.submit([this, &tiles, &messagings, &transform, &init](Tile_index id){
+                                return Impl::transform_zip_id(tiles, messagings, transform, init, id, mutex);
                             }, id));
                 }
             }

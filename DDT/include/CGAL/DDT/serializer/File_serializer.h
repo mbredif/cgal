@@ -64,7 +64,7 @@ struct File_serializer
 #ifdef CGAL_DEBUG_DDT
     ++nb_loads;
 #endif
-    const std::string fname = filename(tile.id());
+    const std::string fname = filename(tile.triangulation().id());
     std::ifstream in(fname, std::ios::in | std::ios::binary);
     tile.triangulation().clear();
     in >> tile.bbox();
@@ -78,7 +78,7 @@ struct File_serializer
 #ifdef CGAL_DEBUG_DDT
     ++nb_save;
 #endif
-    const std::string fname = filename(tile.id());
+    const std::string fname = filename(tile.triangulation().id());
     std::ofstream out(fname, std::ios::out | std::ios::binary);
     out << std::setprecision(17) << tile.bbox() << "\n" << tile.triangulation();
     return !out.fail();

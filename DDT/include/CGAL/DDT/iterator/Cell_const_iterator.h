@@ -22,6 +22,7 @@ class Cell_const_iterator
 {
 public:
     typedef typename TileContainer::const_iterator     Tile_const_iterator;
+    typedef typename TileContainer::Tile_index         Tile_index;
     typedef typename TileContainer::Tile_triangulation Tile_triangulation;
     typedef typename Tile_triangulation::Cell_index    Tile_cell_index;
 
@@ -42,7 +43,7 @@ public:
     {
         if(tile_ != tiles_->cend())
         {
-            cell_ = tile_->triangulation().cells_begin();
+            cell_ = triangulation().cells_begin();
             advance_to_main();
         }
         assert(is_valid());
@@ -66,12 +67,12 @@ public:
     {
         while(tile_ != tiles_->cend())
         {
-            if(cell_ == tile_->triangulation().cells_end())
+            if(cell_ == triangulation().cells_end())
             {
                 if (++tile_ != tiles_->cend())
-                    cell_ = tile_->triangulation().cells_begin();
+                    cell_ = triangulation().cells_begin();
             }
-            else if(tile_->triangulation().cell_is_main(cell_))
+            else if(triangulation().cell_is_main(cell_))
             {
                 break;
             }
@@ -108,8 +109,8 @@ public:
     Cell_const_iterator& operator+=(int n)
     {
         assert(tile_ != tiles_->cend());
-        for(Tile_cell_index c = tile_->triangulation().cells_begin(); c != cell_; ++c)
-            if(tile_->triangulation().cell_is_main(c))
+        for(Tile_cell_index c = triangulation().cells_begin(); c != cell_; ++c)
+            if(triangulation().cell_is_main(c))
                 ++n;
         int num_main_cells = tile_->number_of_main_cells();
         while(n >= num_main_cells)
@@ -118,7 +119,7 @@ public:
             ++tile_;
             num_main_cells = tile_->number_of_main_cells();
         }
-        cell_ = tile_->triangulation().cells_begin();
+        cell_ = triangulation().cells_begin();
         advance_to_main();
         for(; n>0 ; --n)
             ++(*this);
@@ -131,18 +132,19 @@ public:
         if (tiles_ != c.tiles_) return false;
         if (tile_ == tiles_->cend() || c.tile_ == tiles_->cend()) return tile_ == c.tile_;
         if (tile_ == c.tile_) return cell_==c.cell_;
-        return tile_->triangulation().are_cells_equal(cell_, c.triangulation(), c.cell_);
+        return triangulation().are_cells_equal(cell_, c.triangulation(), c.cell_);
     }
 
     bool operator!=(const Cell_const_iterator& rhs) const { return !(*this == rhs); }
 
     const Tile_const_iterator&    tile() const { return tile_; }
     const value_type& operator*() const { return cell_; }
-    const Tile_triangulation&    triangulation() const { return tile_->triangulation(); }
+    const Tile_triangulation&    triangulation() const { return tile_->second.triangulation(); }
+    const Tile_index&            id()            const { return tile_->first; }
 
     bool is_valid()    const
     {
-        return tile_ == tiles_->cend() || cell_ != tile_->triangulation().cells_end();
+        return tile_ == tiles_->cend() || cell_ != triangulation().cells_end();
     }
 };
 

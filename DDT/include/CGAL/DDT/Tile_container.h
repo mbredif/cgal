@@ -44,74 +44,22 @@ private:
     Map_const_iterator it;
 };
 
-template<typename Map_iterator>
-class Mapped_iterator
-{
-public:
-    using iterator_category = std::forward_iterator_tag;
-    using value_type = typename Map_iterator::value_type::second_type&;
-    using difference_type = std::ptrdiff_t;
-    using pointer = typename Map_iterator::value_type::second_type*;
-    using reference = typename Map_iterator::value_type::second_type&;
-
-    Mapped_iterator ( ) : it ( ) { }
-    Mapped_iterator ( Map_iterator it_ ) : it ( it_ ) { }
-    template<typename Map_const_iterator> friend class Mapped_const_iterator;
-
-    pointer operator -> ( ) const { return &(it->second); }
-    reference operator * ( ) const { return it->second; }
-    bool operator==(const Mapped_iterator& rhs) const { return it == rhs.it; }
-    bool operator!=(const Mapped_iterator& rhs) const { return it != rhs.it; }
-    Mapped_iterator& operator++() { ++it; return *this; }
-    Mapped_iterator operator++(int) { Mapped_iterator it(*this); ++it; return it; }
-
-private:
-    Map_iterator it;
-};
-
-template<typename Map_const_iterator>
-class Mapped_const_iterator
-{
-public:
-    using iterator_category = std::forward_iterator_tag;
-    using value_type = typename Map_const_iterator::value_type::second_type const&;
-    using difference_type = std::ptrdiff_t;
-    using pointer =  typename Map_const_iterator::value_type::second_type const*;
-    using reference =  typename Map_const_iterator::value_type::second_type const&;
-
-    Mapped_const_iterator ( ) : it ( ) { }
-    Mapped_const_iterator ( Map_const_iterator it_ ) : it ( it_ ) { }
-    template<typename Map_iterator>
-    Mapped_const_iterator ( Mapped_iterator<Map_iterator> it_ ) : it ( it_.it ) { }
-
-    pointer operator -> ( ) const { return &(it->second); }
-    reference operator * ( ) const { return it->second; }
-    bool operator==(const Mapped_const_iterator& rhs) const { return it == rhs.it; }
-    bool operator!=(const Mapped_const_iterator& rhs) const { return it != rhs.it; }
-    Mapped_const_iterator& operator++() { ++it; return *this; }
-    Mapped_const_iterator operator++(int) { Mapped_const_iterator it(*this); ++it; return it; }
-
-private:
-    Map_const_iterator it;
-};
-
 /// \ingroup PkgDDTClasses
 /// Tile Container
-template<typename Tile_,
+template<typename TileIndex,
+         typename Tile_,
          typename Serializer_ = No_serializer >
 class Tile_container
 {
 public:
+    typedef TileIndex                                  Tile_index;
     typedef Tile_                                      Tile;
     typedef Serializer_                                Serializer;
 
-    typedef typename Tile::Tile_index                  Tile_index;
     typedef std::map<Tile_index, Tile>                 Container;
-    typedef typename Container::iterator               Pair_iterator;
-    typedef typename Container::const_iterator         Pair_const_iterator;
-    typedef Mapped_const_iterator<Pair_const_iterator> const_iterator ;
-    typedef Mapped_iterator<Pair_iterator>             iterator ;
-    typedef Key_const_iterator<Pair_const_iterator>    Tile_index_const_iterator ;
+    typedef typename Container::iterator               iterator;
+    typedef typename Container::const_iterator         const_iterator;
+    typedef Key_const_iterator<const_iterator>         Tile_index_const_iterator ;
 
     typedef typename Tile::Tile_triangulation          Tile_triangulation;
 
@@ -146,8 +94,8 @@ public:
     iterator end    () { return tiles.end   (); }
     iterator find(Tile_index id) { return tiles.find(id); }
 
-    std::pair<Pair_iterator,bool> emplace(Tile_index id) { return tiles.emplace(id, std::move(Tile(id, dimension_))); }
-    Tile& operator[](Tile_index id) { return emplace(id).first->second; }
+    std::pair<iterator,bool> emplace(Tile_index id) { return tiles.emplace(id, std::move(Tile(id, dimension_))); }
+
     const Tile& at(Tile_index id) const { return tiles.at(id); }
     Tile& at(Tile_index id) { return tiles.at(id); }
 
@@ -174,14 +122,14 @@ public:
     /// unloads a tile from memory, automatically saving it.
     /// returns true after the loaded tile id is successfully saved and unloaded from memory.
     /// @todo attention à la perennité des handles (tile is possibly unloaded), ou alors lock ou shared pointer.
-    void unload(Tile& tile) {
+    void unload(Tile_index id, Tile& tile) {
 
-        std::cout << "[" << std::setw(4) << std::to_string(tile.id()) << "] " << std::setfill('_');
-        for(const Tile& t : *this) {
-            if(t.locked           ) std::cout << "\x1b[1m" ; // blocked
-            if(t.id() == tile.id()) std::cout << "\x1b[41m\x1b[1m" ; // bg red
-            else if(!t.in_mem     ) std::cout << "\x1b[37m" ; // gray
-            std::cout << std::to_string(t.id()) << "\x1B[0m" ; // reset
+        std::cout << "[" << std::setw(4) << std::to_string(id) << "] " << std::setfill('_');
+        for(const auto& [tid, t] : tiles) {
+            if(t.locked      ) std::cout << "\x1b[1m" ; // blocked
+            if(tid == id     ) std::cout << "\x1b[41m\x1b[1m" ; // bg red
+            else if(!t.in_mem) std::cout << "\x1b[37m" ; // gray
+            std::cout << std::to_string(tid) << "\x1B[0m" ; // reset
         }
         std::cout << std::setfill(' ') << " (" << number_of_tiles_mem_ << " in mem)" << std::endl;
 
@@ -194,15 +142,15 @@ public:
     }
 
     /// load a tile to memory, automatically saving it.
-    void prepare_load(Tile& tile) {
+    void prepare_load(Tile_index id, Tile& tile) {
         if(tile.in_mem) return;
 
-        std::cout << "[" << std::setw(4) << std::to_string(tile.id()) << "] " << std::setfill('_');
-        for(const Tile& t : *this) {
-            if(t.locked           ) std::cout << "\x1b[1m" ; // blocked
-            if(t.id() == tile.id()) std::cout << "\x1b[42m" ; // bg green
-            else if(!t.in_mem     ) std::cout << "\x1b[37m" ; // gray
-            std::cout << std::to_string(t.id()) << "\x1B[0m" ; // reset
+        std::cout << "[" << std::setw(4) << std::to_string(id) << "] " << std::setfill('_');
+        for(const auto& [tid, t] : tiles) {
+            if(t.locked      ) std::cout << "\x1b[1m" ; // blocked
+            if(tid == id     ) std::cout << "\x1b[42m" ; // bg green
+            else if(!t.in_mem) std::cout << "\x1b[37m" ; // gray
+            std::cout << std::to_string(tid) << "\x1B[0m" ; // reset
         }
         std::cout << std::setfill(' ') << " (" << number_of_tiles_mem_ << " in mem)" << std::endl;
 
@@ -210,10 +158,10 @@ public:
         while(number_of_tiles_mem_ >= number_of_tiles_mem_max_) {
             // pick a loaded id at random and try to unload it
             std::size_t n = rand() % number_of_tiles_mem_;
-            for(Tile& tile : *this) {
-                if(tile.in_mem) {
+            for(auto& [tid, t] : tiles) {
+                if(t.in_mem) {
                     if (n == 0) {
-                        if (!tile.locked) unload(tile);
+                        if (!t.locked) unload(tid, t);
                         break;
                     }
                     --n;
@@ -224,9 +172,9 @@ public:
         ++number_of_tiles_mem_;
     }
 
-    bool safe_load(Tile& tile) {
+    bool safe_load(Tile_index id, Tile& tile) {
         if(tile.in_mem) return true;
-        if (!serializer_.has_tile(tile.id()) || serializer_.load(tile)) {
+        if (!serializer_.has_tile(id) || serializer_.load(tile)) {
             tile.in_mem = true;
             return true;
         } else {
@@ -236,9 +184,9 @@ public:
     }
 
     /// load a tile to memory.
-    bool load(Tile& tile) {
-        prepare_load(tile);
-        return safe_load(tile);
+    bool load(Tile_index id, Tile& tile) {
+        prepare_load(id, tile);
+        return safe_load(id, tile);
     }
 
 

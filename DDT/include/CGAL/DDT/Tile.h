@@ -30,7 +30,6 @@ public:
     typedef CGAL::DDT::Tile_triangulation<Triangulation, TileIndexProperty>          Tile_triangulation;
 
     Tile(Tile_index id, int dimension) :
-        id_(id),
         triangulation_(id, dimension),
         bbox_(Traits::bbox(dimension)),
         in_mem(false),
@@ -38,7 +37,6 @@ public:
     {
     }
 
-    inline Tile_index id() const { return id_; }
     const Bbox& bbox() const { return bbox_; }
     Bbox& bbox() { return bbox_; }
 
@@ -56,7 +54,6 @@ public:
     }
 
 private:
-    Tile_index id_;
     Tile_triangulation triangulation_;
     Bbox bbox_;
 };

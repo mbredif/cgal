@@ -32,12 +32,12 @@ template<typename Triangulation_,
 class Distributed_triangulation
 {
 public:
-    typedef Triangulation_                                    Triangulation;
-    typedef TileIndexProperty_                                TileIndexProperty;
-    typedef Serializer_                                       Serializer;
-    typedef CGAL::DDT::Tile<Triangulation, TileIndexProperty> Tile;
-    typedef CGAL::DDT::Tile_container<Tile, Serializer_>      TileContainer;
-    typedef typename TileContainer::Tile_index          Tile_index;
+    typedef Triangulation_                                           Triangulation;
+    typedef TileIndexProperty_                                       TileIndexProperty;
+    typedef Serializer_                                              Serializer;
+    typedef CGAL::DDT::Tile<Triangulation, TileIndexProperty>        Tile;
+    typedef typename Tile::Tile_index                                Tile_index;
+    typedef CGAL::DDT::Tile_container<Tile_index, Tile, Serializer_> TileContainer;
 
 private:
     typedef typename TileContainer::iterator            Tile_iterator;
@@ -135,43 +135,43 @@ public:
     /// checks the validity of the Distributed_triangulation
     bool is_valid(bool verbose = false, int level = 0) const
     {
-        for(const Tile& tile : tiles)
+        for(const auto& [id, tile] : tiles)
         {
-            const typename Tile::Tile_triangulation& dt = tile.triangulation();
-            for(Tile_vertex_index v = dt.vertices_begin(); v != dt.vertices_end(); ++v)
+            const typename Tile::Tile_triangulation& tri = tile.triangulation();
+            for(Tile_vertex_index v = tri.vertices_begin(); v != tri.vertices_end(); ++v)
             {
-                assert(dt.vertex_is_infinite(v) || (dt.vertex_is_local(v) + dt.vertex_is_foreign(v) == 1));
-                if(dt.vertex_is_infinite(v)) continue;
-                Tile_index tid = dt.vertex_id(v);
-                if(tid == dt.id()) continue;
+                assert(tri.vertex_is_infinite(v) || (tri.vertex_is_local(v) + tri.vertex_is_foreign(v) == 1));
+                if(tri.vertex_is_infinite(v)) continue;
+                Tile_index tid = tri.vertex_id(v);
+                if(tid == tri.id()) continue;
                 Tile_const_iterator t = tiles.find(tid);
-                const Tile_triangulation& dt2 = t->triangulation();
-                if(dt2.relocate_vertex(dt, v) == dt2.vertices_end())
+                const Tile_triangulation& tri2 = t->second.triangulation();
+                if(tri2.relocate_vertex(tri, v) == tri2.vertices_end())
                 {
                     assert(! "relocate_vertex failed" );
                     return false;
                 }
             }
-            for(Tile_facet_index f = dt.facets_begin(); f != dt.facets_end(); ++f)
+            for(Tile_facet_index f = tri.facets_begin(); f != tri.facets_end(); ++f)
             {
-                assert(dt.facet_is_local(f) + dt.facet_is_mixed(f) + dt.facet_is_foreign(f) == 1);
-                if(!dt.facet_is_mixed(f)) continue;
+                assert(tri.facet_is_local(f) + tri.facet_is_mixed(f) + tri.facet_is_foreign(f) == 1);
+                if(!tri.facet_is_mixed(f)) continue;
                 std::set<Tile_index> tids;
-                for(int d = 0; d <= dt.current_dimension(); ++d)
+                for(int d = 0; d <= tri.current_dimension(); ++d)
                 {
-                    if(d==dt.index_of_covertex(f)) continue;
-                    Tile_cell_index c = dt.cell(f);
-                    Tile_vertex_index v = dt.vertex(c, d);
-                    if(dt.vertex_is_infinite(v)) continue;
-                    Tile_index tid = dt.vertex_id(v);
-                    if(tid == dt.id()) continue;
+                    if(d==tri.index_of_covertex(f)) continue;
+                    Tile_cell_index c = tri.cell(f);
+                    Tile_vertex_index v = tri.vertex(c, d);
+                    if(tri.vertex_is_infinite(v)) continue;
+                    Tile_index tid = tri.vertex_id(v);
+                    if(tid == tri.id()) continue;
                     tids.insert(tid);
                 }
                 for(Tile_index tid : tids)
                 {
                     Tile_const_iterator t = tiles.find(tid);
-                    const Tile_triangulation& dt2 = t->triangulation();
-                    if(dt2.relocate_facet(dt, f) == dt2.facets_end())
+                    const Tile_triangulation& tri2 = t->second.triangulation();
+                    if(tri2.relocate_facet(tri, f) == tri2.facets_end())
                     {
                       assert(! "relocate_facet failed" );
                       return false;
@@ -179,24 +179,24 @@ public:
                 }
 
             }
-            for(Tile_cell_index c = dt.cells_begin(); c != dt.cells_end(); ++c)
+            for(Tile_cell_index c = tri.cells_begin(); c != tri.cells_end(); ++c)
             {
-                assert(dt.cell_is_local(c) + dt.cell_is_mixed(c) + dt.cell_is_foreign(c) == 1);
-                if(!dt.cell_is_mixed(c)) continue;
+                assert(tri.cell_is_local(c) + tri.cell_is_mixed(c) + tri.cell_is_foreign(c) == 1);
+                if(!tri.cell_is_mixed(c)) continue;
                 std::set<Tile_index> tids;
-                for(int d = 0; d <= dt.current_dimension(); ++d)
+                for(int d = 0; d <= tri.current_dimension(); ++d)
                 {
-                    Tile_vertex_index v = dt.vertex(c, d);
-                    if(dt.vertex_is_infinite(v)) continue;
-                    Tile_index tid = dt.vertex_id(v);
-                    if(tid == dt.id()) continue;
+                    Tile_vertex_index v = tri.vertex(c, d);
+                    if(tri.vertex_is_infinite(v)) continue;
+                    Tile_index tid = tri.vertex_id(v);
+                    if(tid == tri.id()) continue;
                     tids.insert(tid);
                 }
                 for(Tile_index tid : tids)
                 {
                     Tile_const_iterator t = tiles.find(tid);
-                    const Tile_triangulation& dt2 = t->triangulation();
-                    if(dt2.relocate_cell(dt, c) == dt2.cells_end())
+                    const Tile_triangulation& tri2 = t->second.triangulation();
+                    if(tri2.relocate_cell(tri, c) == tri2.cells_end())
                     {
                       assert(! "relocate_facet failed" );
                         return false;
@@ -211,12 +211,12 @@ public:
         std::size_t number_of_facets = 0;
         std::size_t number_of_cells = 0;
 
-        for(const Tile& tile : tiles)
+        for(const auto& [id, tile] : tiles)
         {
 
             if(!tile.is_valid(verbose, level))
             {
-                std::cerr << "Tile " << std::to_string(tile.id()) << " is invalid" << std::endl;
+                std::cerr << "Tile " << std::to_string(id) << " is invalid" << std::endl;
                 //assert(! "CGAL tile not valid" );
                 return false;
             }
@@ -268,9 +268,9 @@ public:
     Tile_index id(const Facet_const_iterator& f) const { return f.triangulation().facet_id(*f); }
     Tile_index id(const Cell_const_iterator&  c) const { return c.triangulation().cell_id(*c); }
 
-    Tile_index tile_id(const Vertex_const_iterator& v) const { return v.tile()->id(); }
-    Tile_index tile_id(const Facet_const_iterator&  f) const { return f.tile()->id(); }
-    Tile_index tile_id(const Cell_const_iterator&   c) const { return c.tile()->id(); }
+    Tile_index tile_id(const Vertex_const_iterator& v) const { return v.id(); }
+    Tile_index tile_id(const Facet_const_iterator&  f) const { return f.id(); }
+    Tile_index tile_id(const Cell_const_iterator&   c) const { return c.id(); }
     /// @}
 
     /// \name Iterator relocation
@@ -286,8 +286,9 @@ public:
         if (id == tile_id(v)) return v; // v is already in tile id
         Tile_const_iterator tile = tiles.find(id);
         if (tile == tiles.end()) return vertices_end();
-        Tile_vertex_index vertex = tile->triangulation().relocate_vertex(v.triangulation(), *v);
-        if (vertex==tile->triangulation().vertices_end()) return vertices_end();
+        const Tile_triangulation& tri = tile->second.triangulation();
+        Tile_vertex_index vertex = tri.relocate_vertex(v.triangulation(), *v);
+        if (vertex==tri.vertices_end()) return vertices_end();
         return Vertex_const_iterator(&tiles, tile, vertex);
     }
 
@@ -298,8 +299,9 @@ public:
         if (id == tile_id(f)) return f; // f is already in tile id
         Tile_const_iterator tile = tiles.find(id);
         if (tile == tiles.end()) return facets_end();
-        Tile_facet_index facet = tile->triangulation().relocate_facet(f.triangulation(), *f);
-        if (facet==tile->triangulation().facets_end()) return facets_end();
+        const Tile_triangulation& tri = tile->second.triangulation();
+        Tile_facet_index facet = tri.relocate_facet(f.triangulation(), *f);
+        if (facet==tri.facets_end()) return facets_end();
         return Facet_const_iterator(&tiles, tile, facet);
     }
 
@@ -310,8 +312,9 @@ public:
         if (id == tile_id(c)) return c; // c is already in tile id
         Tile_const_iterator tile = tiles.find(id);
         if (tile == tiles.end()) return cells_end();
-        Tile_cell_index cell = tile->triangulation().relocate_cell(c.triangulation(), *c);
-        if (cell==tile->triangulation().cells_end()) return cells_end();
+        const Tile_triangulation& tri = tile->second.triangulation();
+        Tile_cell_index cell = tri.relocate_cell(c.triangulation(), *c);
+        if (cell==tri.cells_end()) return cells_end();
         return Cell_const_iterator(&tiles, tile, cell);
     }
 
@@ -334,7 +337,8 @@ public:
     {
         assert(!tiles.empty());
         Tile_const_iterator tile = tiles.cbegin();
-        return Vertex_const_iterator(&tiles, tile, tile->triangulation().infinite_vertex());
+        const Tile_triangulation& tri = tile->second.triangulation();
+        return Vertex_const_iterator(&tiles, tile, tri.infinite_vertex());
     }
 
     /// returns the ith vertex of cell c.
@@ -360,9 +364,9 @@ public:
     Facet_const_iterator mirror_facet(const Facet_const_iterator& f) const
     {
         assert(is_valid(f));
-        Tile_const_iterator tile = f.tile();
-        assert(tile->triangulation().facet_is_valid(*f));
-        return Facet_const_iterator(&tiles, tile, tile->triangulation().mirror_facet(*f));
+        const Tile_triangulation& tri = f.triangulation();
+        assert(tri.facet_is_valid(*f));
+        return Facet_const_iterator(&tiles, f.tile(), tri.mirror_facet(*f));
     }
 
     /// returns the mirror index of facet f, such that neighbor(cell(mirror_facet(f)), mirror_index)==cell(f)
@@ -379,27 +383,26 @@ public:
     Cell_const_iterator cell(const Facet_const_iterator& f) const
     {
         assert(is_valid(f));
-        Tile_const_iterator tile = f.tile();
-        Tile_cell_index c = tile->triangulation().cell(*f);
-        if(tile->triangulation().cell_is_foreign(c)) return local_cell(main(f)); // any non foreign representative could do
-        return Cell_const_iterator(&tiles, tile, c);
+        const Tile_triangulation& tri = f.triangulation();
+        Tile_cell_index c = tri.cell(*f);
+        if(tri.cell_is_foreign(c)) return local_cell(main(f)); // any non foreign representative could do
+        return Cell_const_iterator(&tiles, f.tile(), c);
     }
 
     /// returns one of the full cells that is incident to the input vertex v. The operation is local
     Cell_const_iterator cell(const Vertex_const_iterator& v) const
     {
-        Tile_const_iterator tile = v.tile();
-        const Tile_triangulation& triangulation = tile->triangulation();
+        const Tile_triangulation& triangulation = v.triangulation();
         Tile_vertex_index tv = *v;
         Tile_cell_index tc = triangulation.cell(tv);
         if(!triangulation.cell_is_foreign(tc))
-            return Cell_const_iterator(&tiles, tile, tc);
+            return Cell_const_iterator(&tiles, v.tile(), tc);
 
         std::vector<Tile_cell_index> cells;
         triangulation.incident_cells(tv, std::back_inserter(cells));
         for(Tile_cell_index c: cells)
             if(!triangulation.cell_is_foreign(c))
-                return Cell_const_iterator(&tiles, tile, c);
+                return Cell_const_iterator(&tiles, v.tile(), c);
         assert(false); // all incident cells are foreign, v should have been simplified !
         return cells_end();
     }
@@ -407,17 +410,16 @@ public:
     /// returns whether vertex v is incident to cell c. The operation is local in the tile of c
     bool has_vertex(const Cell_const_iterator& c, const Vertex_const_iterator& v) const
     {
-        Tile_const_iterator ctile = c.tile();
-        Tile_const_iterator vtile = v.tile();
         Tile_cell_index tc = *c;
         Tile_vertex_index tv = *v;
-        const Tile_triangulation& ctriangulation = ctile->triangulation();
-        if (ctile == vtile)
-            for(int d = 0; d <= ctriangulation.current_dimension(); ++d)
-                if(ctriangulation.vertex(tc, d) == tv)
+        const Tile_triangulation& ctri = c.triangulation();
+        if (c.tile() == v.tile())
+            for(int d = 0; d <= ctri.current_dimension(); ++d)
+                if(ctri.vertex(tc, d) == tv)
                     return true;
-        for(int d = 0; d <= ctriangulation.current_dimension(); ++d)
-            if(ctriangulation.are_vertices_equal(ctriangulation.vertex(tc, d), vtile->triangulation(), tv))
+        const Tile_triangulation& vtri = v.triangulation();
+        for(int d = 0; d <= ctri.current_dimension(); ++d)
+            if(ctri.are_vertices_equal(ctri.vertex(tc, d), vtri, tv))
                 return true;
         return false;
     }
@@ -427,11 +429,10 @@ public:
     inline int index_of_covertex(const Facet_const_iterator& f) const
     {
         assert(is_valid(f));
-        Tile_const_iterator tile = f.tile();
-        const Tile_triangulation& triangulation = tile->triangulation();
-        Tile_cell_index c = triangulation.cell(*f);
-        if(triangulation.cell_is_main(c)) return local_index_of_covertex(f);
-        return local_index_of_covertex(relocate(f, triangulation.cell_id(c)));
+        const Tile_triangulation& tri = f.triangulation();
+        Tile_cell_index c = tri.cell(*f);
+        if(tri.cell_is_main(c)) return local_index_of_covertex(f);
+        return local_index_of_covertex(relocate(f, tri.cell_id(c)));
     }
 
     /// returns the covertex of a facet f
@@ -439,11 +440,10 @@ public:
     Vertex_const_iterator covertex(const Facet_const_iterator& f) const
     {
         assert(is_valid(f));
-        Tile_const_iterator tile = f.tile();
-        const Tile_triangulation& triangulation = tile->triangulation();
-        Tile_cell_index c = triangulation.cell(*f);
-        if(triangulation.cell_is_foreign(c)) return local_covertex(main(f)); // any non foreign representative could do
-        return Vertex_const_iterator(&tiles, tile, triangulation.covertex(*f));
+        const Tile_triangulation& tri = f.triangulation();
+        Tile_cell_index c = tri.cell(*f);
+        if(tri.cell_is_foreign(c)) return local_covertex(main(f)); // any non foreign representative could do
+        return Vertex_const_iterator(&tiles, f.tile(), tri.covertex(*f));
     }
 
     /// returns the mirror_vertex of a facet f, as the covertex of its mirror facet.
@@ -497,8 +497,7 @@ public:
     Vertex_const_iterator local_vertex (const Cell_const_iterator& c, const int i) const
     {
         assert(is_valid(c));
-        Tile_const_iterator tile = c.tile();
-        return Vertex_const_iterator(&tiles, tile, tile->triangulation().vertex(*c, i));
+        return Vertex_const_iterator(&tiles, c.tile(), c.triangulation().vertex(*c, i));
     }
 
     /// returns the index of the covertex of f in its local cell
@@ -509,8 +508,7 @@ public:
     inline int local_index_of_covertex(const Facet_const_iterator& f) const
     {
         assert(is_valid(f));
-        Tile_const_iterator tile = f.tile();
-        return tile->triangulation().index_of_covertex(*f);
+        return f.triangulation().index_of_covertex(*f);
     }
 
     /// constructs a facet locally given a cell and a local index i
@@ -519,8 +517,7 @@ public:
     Facet_const_iterator local_facet(const Cell_const_iterator& c, int i) const
     {
         assert(is_valid(c));
-        Tile_const_iterator tile = c.tile();
-        return Facet_const_iterator(&tiles, tile, tile->triangulation().facet(*c, i));
+        return Facet_const_iterator(&tiles, c.tile(), c.triangulation().facet(*c, i));
     }
 
     /// returns the index of the mirror vertex of f locally
@@ -529,11 +526,10 @@ public:
     inline int local_mirror_index(const Facet_const_iterator& f) const
     {
         assert(is_valid(f));
-        Tile_const_iterator tile = f.tile();
-        const Tile_triangulation& triangulation = tile->triangulation();
-        Tile_cell_index c = triangulation.cell(*f);
-        assert(!triangulation.cell_is_foreign(c));
-        return tile->mirror_index(c,triangulation.index_of_covertex(*f));
+        const Tile_triangulation& tri= f.triangulation();
+        Tile_cell_index c = tri.cell(*f);
+        assert(!tri.cell_is_foreign(c));
+        return tri.mirror_index(c,tri.index_of_covertex(*f));
     }
 
     /// returns the full cell that is adjacent to the input facet f and that joins the covertex with the vertices of f
@@ -541,10 +537,9 @@ public:
     Cell_const_iterator local_cell(const Facet_const_iterator& f) const
     {
         assert(is_valid(f));
-        Tile_const_iterator tile = f.tile();
-        Tile_cell_index c = tile->triangulation().cell(*f);
-        assert(!tile->triangulation().cell_is_foreign(c));
-        return Cell_const_iterator(&tiles, tile, c);
+        Tile_cell_index c = f.triangulation().cell(*f);
+        assert(!tri.cell_is_foreign(c));
+        return Cell_const_iterator(&tiles, f.tile(), c);
     }
 
     /// @returns the covertex of the input facet f
@@ -552,10 +547,10 @@ public:
     Vertex_const_iterator local_covertex(const Facet_const_iterator& f) const
     {
         assert(is_valid(f));
-        Tile_const_iterator tile = f.tile();
-        Tile_cell_index c = tile->triangulation().cell(*f);
-        assert(!tile->triangulation().cell_is_foreign(c));
-        return Vertex_const_iterator(&tiles, tile, tile->triangulation().covertex(*f));
+        const Tile_triangulation& tri = f.triangulation();
+        Tile_cell_index c = tri.cell(*f);
+        assert(!tri.cell_is_foreign(c));
+        return Vertex_const_iterator(&tiles, f.tile(), tri.covertex(*f));
     }
     /// @}
 
@@ -662,7 +657,7 @@ public:
         number_of_finite_cells_ = 0;
         number_of_facets_ = 0;
         number_of_cells_ = 0;
-        for(Tile& tile : tiles)
+        for(auto& [id, tile] : tiles)
         {
             if (tile.in_mem) tile.triangulation().finalize();
             number_of_finite_vertices_ += tile.triangulation().number_of_main_finite_vertices();

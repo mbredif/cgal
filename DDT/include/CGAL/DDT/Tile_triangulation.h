@@ -60,6 +60,7 @@ public:
     inline const Triangulation& triangulation() const { return tri_; }
 
     inline Tile_index id() const { return id_; }
+    inline Tile_index& id() { return id_; }
 
     inline int maximal_dimension() const { return Traits::maximal_dimension(tri_); }
     inline int current_dimension() const { return Traits::current_dimension(tri_); }

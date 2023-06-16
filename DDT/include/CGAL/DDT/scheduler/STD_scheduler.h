@@ -43,13 +43,14 @@ struct STD_scheduler
          typename V = std::invoke_result_t<Reduce,
                                            std::invoke_result_t<Transform, Tile&>,
                                            std::invoke_result_t<Transform, Tile&> > >
-    V for_each(TileContainer& tc, Transform transform, Reduce reduce = {}, V init = {})
+    V for_each(TileContainer& tiles, Transform transform, Reduce reduce = {}, V init = {})
     {
         return std::transform_reduce(CGAL_DDT_SCHEDULER_STD_SCHEDULER_PAR
-                                     tc.begin(), tc.end(), init, reduce, [&tc, &transform, &init](Tile& tile){
+                                     tiles.begin(), tiles.end(), init, reduce, [&tiles, &transform, &init](auto& p){
+            Tile& tile = p.second;
             tile.locked = true;
             V value = init;
-            if (tc.load(tile)) value = transform(tile);
+            if (tiles.load(p.first, tile)) value = transform(tile);
             tile.locked = false;
             return value;
         } );
@@ -64,15 +65,15 @@ struct STD_scheduler
              typename V = std::invoke_result_t<Reduce,
                                                std::invoke_result_t<Transform, Tile&, Messaging&>,
                                                std::invoke_result_t<Transform, Tile&, Messaging&> > >
-    V for_each_zip(TileContainer& tc, MessagingContainer& messagings, Transform transform, Reduce reduce = {}, V init = {})
+    V for_each_zip(TileContainer& tiles, MessagingContainer& messagings, Transform transform, Reduce reduce = {}, V init = {})
     {
         typedef typename MessagingContainer::value_type value_type;
         return std::transform_reduce(CGAL_DDT_SCHEDULER_STD_SCHEDULER_PAR
-                                     messagings.begin(), messagings.end(), init, reduce, [&tc, &messagings, &transform, &init](value_type& messaging){
-            Tile& tile = tc[messaging.first];
+                                     messagings.begin(), messagings.end(), init, reduce, [&tiles, &messagings, &transform, &init](value_type& messaging){
+            Tile& tile = tiles.emplace(messaging.first).first->second;
             tile.locked = true;
             V value = init;
-            if (tc.load(tile)) value = transform(tile, messaging.second);
+            if (tiles.load(messaging.first, tile)) value = transform(tile, messaging.second);
             messagings.send_points(messaging.first);
             tile.locked = false;
             return value;
@@ -88,11 +89,11 @@ struct STD_scheduler
              typename V = std::invoke_result_t<Reduce,
                                                std::invoke_result_t<Transform, Tile&, Messaging&>,
                                                std::invoke_result_t<Transform, Tile&, Messaging&> > >
-    V for_each_rec(TileContainer& tc, MessagingContainer& messagings, Transform transform, Reduce reduce = {}, V init = {})
+    V for_each_rec(TileContainer& tiles, MessagingContainer& messagings, Transform transform, Reduce reduce = {}, V init = {})
     {
         V value = init, v;
         do {
-            v = for_each_zip(tc, messagings, transform, reduce, init);
+            v = for_each_zip(tiles, messagings, transform, reduce, init);
             value = reduce(value, v);
         } while (v != init);
         return value;

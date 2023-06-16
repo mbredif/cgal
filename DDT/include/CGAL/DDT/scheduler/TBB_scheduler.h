@@ -30,41 +30,37 @@ namespace DDT {
 
 namespace Impl {
 template<typename TileContainer, typename Transform, typename Reduce, typename V, typename Tile_index>
-V transform_reduce_id(TileContainer& tc, Transform transform, Reduce reduce, V value, Tile_index id, std::mutex& mutex)
+V transform_reduce_id(TileContainer& tiles, Transform transform, Reduce reduce, V value, Tile_index id, std::mutex& mutex)
 {
-    typedef typename TileContainer::iterator Tile_iterator;
-    Tile_iterator tile;
-    {
-        std::unique_lock<std::mutex> lock(mutex);
-        tile = tc.emplace(id).first;
-        tile->locked = true;
-        tc.prepare_load(*tile);
-    }
-    if (tc.safe_load(*tile)) value = reduce(value, transform(*tile));
-    {
-        std::unique_lock<std::mutex> lock(mutex);
-        tile->locked = false;
-    }
+    typedef typename TileContainer::Tile Tile;
+    std::unique_lock<std::mutex> lock(mutex);
+    Tile& tile = tiles.emplace(id).first->second;
+    tile.locked = true;
+    tiles.prepare_load(id, tile);
+
+    lock.unlock();
+    if (tiles.safe_load(id, tile)) value = reduce(value, transform(tile));
+
+    lock.lock();
+    tile.locked = false;
     return value;
 }
 
 template<typename TileContainer, typename MessagingContainer, typename Transform, typename Reduce, typename V, typename Tile_index>
-V transform_reduce_id(TileContainer& tc, MessagingContainer& messagings, Transform transform, Reduce reduce, V value, Tile_index id, std::mutex& mutex)
+V transform_reduce_id(TileContainer& tiles, MessagingContainer& messagings, Transform transform, Reduce reduce, V value, Tile_index id, std::mutex& mutex)
 {
-    typedef typename TileContainer::iterator Tile_iterator;
-    Tile_iterator tile;
-    {
-        std::unique_lock<std::mutex> lock(mutex);
-        tile = tc.emplace(id).first;
-        tile->locked = true;
-        tc.prepare_load(*tile);
-    }
-    if (tc.safe_load(*tile)) value = reduce(value, transform(*tile, messagings[id]));
-    {
-        std::unique_lock<std::mutex> lock(mutex);
-        messagings.send_points(id);
-        tile->locked = false;
-    }
+    typedef typename TileContainer::Tile Tile;
+    std::unique_lock<std::mutex> lock(mutex);
+    Tile& tile = tiles.emplace(id).first->second;
+    tile.locked = true;
+    tiles.prepare_load(id, tile);
+
+    lock.unlock();
+    if (tiles.safe_load(id, tile)) value = reduce(value, transform(tile, messagings[id]));
+
+    lock.lock();
+    messagings.send_points(id);
+    tile.locked = false;
     return value;
 }
 }
@@ -84,10 +80,10 @@ struct TBB_scheduler
          typename V = std::invoke_result_t<Reduce,
                                            std::invoke_result_t<Transform, Tile&>,
                                            std::invoke_result_t<Transform, Tile&> > >
-    V for_each(TileContainer& tc, Transform transform, Reduce reduce = {}, V init = {})
+    V for_each(TileContainer& tiles, Transform transform, Reduce reduce = {}, V init = {})
     {
         typedef typename TileContainer::Tile_index Tile_index;
-        std::vector<Tile_index> ids(tc.ids_begin(), tc.ids_end());
+        std::vector<Tile_index> ids(tiles.ids_begin(), tiles.ids_end());
         return arena.execute([&]{
             return tbb::parallel_reduce(
                   tbb::blocked_range<int>(0,ids.size()),
@@ -95,7 +91,7 @@ struct TBB_scheduler
             {
                 V value = init;
                 for (int i=r.begin(); i<r.end(); ++i)
-                    value = Impl::transform_reduce_id(tc, transform, reduce, value, ids[i], mutex);
+                    value = Impl::transform_reduce_id(tiles, transform, reduce, value, ids[i], mutex);
                 return value;
             }, reduce);
         });
@@ -110,7 +106,7 @@ struct TBB_scheduler
              typename V = std::invoke_result_t<Reduce,
                                                std::invoke_result_t<Transform, Tile&, Messaging&>,
                                                std::invoke_result_t<Transform, Tile&, Messaging&> > >
-    V for_each_zip(TileContainer& tc, MessagingContainer& messagings, Transform transform, Reduce reduce = {}, V init = {})
+    V for_each_zip(TileContainer& tiles, MessagingContainer& messagings, Transform transform, Reduce reduce = {}, V init = {})
     {
         typedef typename TileContainer::Tile_index Tile_index;
         std::vector<Tile_index> ids;
@@ -122,7 +118,7 @@ struct TBB_scheduler
             {
                 V value = init;
                 for (int i=r.begin(); i<r.end(); ++i)
-                    value = Impl::transform_reduce_id(tc, messagings, transform, reduce, value, ids[i], mutex);
+                    value = Impl::transform_reduce_id(tiles, messagings, transform, reduce, value, ids[i], mutex);
                 return value;
             }, reduce);
         });
@@ -137,11 +133,11 @@ struct TBB_scheduler
              typename V = std::invoke_result_t<Reduce,
                                                std::invoke_result_t<Transform, Tile&, Messaging&>,
                                                std::invoke_result_t<Transform, Tile&, Messaging&> > >
-    V for_each_rec(TileContainer& tc, MessagingContainer& messagings, Transform transform, Reduce reduce = {}, V init = {})
+    V for_each_rec(TileContainer& tiles, MessagingContainer& messagings, Transform transform, Reduce reduce = {}, V init = {})
     {
         V value = init, v;
         do {
-            v = for_each_zip(tc, messagings, transform, reduce, init);
+            v = for_each_zip(tiles, messagings, transform, reduce, init);
             value = reduce(value, v);
         } while (v != init);
         return value;

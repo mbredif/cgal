@@ -34,12 +34,12 @@ struct Sequential_scheduler
              typename V = std::invoke_result_t<Reduce,
                                                std::invoke_result_t<Transform, Tile&>,
                                                std::invoke_result_t<Transform, Tile&> > >
-    V for_each(TileContainer& tc, Transform transform, Reduce reduce = {}, V init = {})
+    V for_each(TileContainer& tiles, Transform transform, Reduce reduce = {}, V init = {})
     {
         V value = init;
-        for(Tile& tile : tc) {
+        for(auto& [id, tile] : tiles) {
             tile.locked = true;
-            if (tc.load(tile)) value = reduce(value, transform(tile));
+            if (tiles.load(id, tile)) value = reduce(value, transform(tile));
             tile.locked = false;
         }
         return value;
@@ -54,14 +54,14 @@ struct Sequential_scheduler
              typename V = std::invoke_result_t<Reduce,
                                                std::invoke_result_t<Transform, Tile&, Messaging&>,
                                                std::invoke_result_t<Transform, Tile&, Messaging&> > >
-    V for_each_zip(TileContainer& tc, MessagingContainer& messagings, Transform transform, Reduce reduce = {}, V init = {})
+    V for_each_zip(TileContainer& tiles, MessagingContainer& messagings, Transform transform, Reduce reduce = {}, V init = {})
     {
         V value = init;
-        for(auto& messaging : messagings) {
-            Tile& tile = tc[messaging.first];
+        for(auto& [id, messaging] : messagings) {
+            Tile& tile = tiles.emplace(id).first->second;
             tile.locked = true;
-            if (tc.load(tile)) value = reduce(value, transform(tile, messaging.second));
-            messagings.send_points(messaging.first);
+            if (tiles.load(id, tile)) value = reduce(value, transform(tile, messaging));
+            messagings.send_points(id);
             tile.locked = false;
         }
         return value;
@@ -76,11 +76,11 @@ struct Sequential_scheduler
          typename V = std::invoke_result_t<Reduce,
                                            std::invoke_result_t<Transform, Tile&, Messaging&>,
                                            std::invoke_result_t<Transform, Tile&, Messaging&> > >
-    V for_each_rec(TileContainer& tc, MessagingContainer& messagings, Transform transform, Reduce reduce = {}, V init = {})
+    V for_each_rec(TileContainer& tiles, MessagingContainer& messagings, Transform transform, Reduce reduce = {}, V init = {})
     {
         V value = init, v;
         do {
-            v = for_each_zip(tc, messagings, transform, reduce, init);
+            v = for_each_zip(tiles, messagings, transform, reduce, init);
             value = reduce(value, v);
         } while (v != init);
         return value;

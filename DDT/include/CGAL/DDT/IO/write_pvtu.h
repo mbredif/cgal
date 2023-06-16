@@ -325,7 +325,7 @@ void write_pvtu(DistributedTriangulation& tri, Scheduler& sch, const std::string
     boost::filesystem::path p(dirname);
     boost::filesystem::create_directories(p);
     sch.for_each(tri.tiles, [&dirname,&binary](typename DistributedTriangulation::Tile& tile) {
-        std::string filename(dirname + "/" + std::to_string(tile.id()));
+        std::string filename(dirname + "/" + std::to_string(tile.triangulation().id()));
         std::ofstream os(filename+".vtu");
         write_vtu_tile(os, tile, binary);
         return 1;
