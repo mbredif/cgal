@@ -16,7 +16,6 @@
 #include <CGAL/DDT/iterator/Facet_iterator.h>
 #include <CGAL/DDT/iterator/Cell_iterator.h>
 #include <CGAL/DDT/insert.h>
-#include <CGAL/DDT/Point_set.h>
 #include <CGAL/DDT/Tile_triangulation.h>
 #include <CGAL/DDT/Tile_container.h>
 #include <CGAL/DDT/Tile.h>
@@ -50,8 +49,6 @@ private:
     typedef typename Traits::Cell_index                 Tile_cell_index;
     typedef typename Traits::Facet_index                Tile_facet_index;
     typedef typename Traits::Point                      Point;
-
-    typedef CGAL::Distributed_point_set<CGAL::DDT::Point_set<Tile_index, Point>> Distributed_point_set;
 
 public:
 /// \name Types
@@ -561,8 +558,8 @@ public:
     /// triangulation of all inserted points.
     /// The scheduler provides the distribution environment (single thread, multithread, MPI...)
     /// @returns the number of newly inserted vertices
-    template<typename Scheduler, typename Point_set>
-    std::size_t insert(Scheduler& sch, CGAL::Distributed_point_set<Point_set>& point_sets){
+    template<typename Scheduler, typename Point, typename TileIndex, typename TilePoints>
+    std::size_t insert(Scheduler& sch, CGAL::Distributed_point_set<Point, TileIndex, TilePoints>& point_sets){
         std::size_t n = number_of_finite_vertices();
         CGAL::DDT::impl::insert_and_send_all_axis_extreme_points(tiles, point_sets, sch);
         CGAL::DDT::impl::splay_stars(tiles, point_sets, sch);
@@ -578,55 +575,9 @@ public:
     /// @todo returns a descritor to the inserted vertex and a bool ?
     template<typename Scheduler, typename Point, typename Tile_index>
     typename std::size_t insert(Scheduler& sch, const Point& point, Tile_index id){
-        Distributed_point_set point_set;
+        Distributed_point_set<Point, Tile_index> point_set;
         point_set[id].send_point(id,id,point);
         return insert(sch, point_set);
-    }
-
-    /// \ingroup PkgDDTInsert
-    /// inserts the points of the provided point+id range in the tiles given by the given ids, in the Delaunay triangulation stored in the tile container.
-    /// The scheduler provides the distribution environment (single thread, multithread, MPI...)
-    /// @returns the number of newly inserted vertices
-    template<typename Scheduler, typename PointIndexRange>
-    std::size_t insert(Scheduler& sch, const PointIndexRange& range) {
-        Distributed_point_set point_set;
-        for (auto& p : range)
-            point_set[p.first].send_point(p.first,p.first,p.second);
-        return insert(sch, point_set);
-    }
-
-    /// \ingroup PkgDDTInsert
-    /// inserts the points of the provided point range in the tiles given by the partitioning function, in the Delaunay triangulation stored in the tile container.
-    /// The scheduler provides the distribution environment (single thread, multithread, MPI...)
-    /// @returns the number of newly inserted vertices
-    template<typename Scheduler, typename PointRange, typename Partitioner>
-    std::size_t insert(Scheduler& sch, const PointRange& points, Partitioner& part) {
-        Distributed_point_set point_set;
-        for(const auto& p : points)  {
-            typename Partitioner::Tile_index id = part(p);
-            point_set[id].send_point(id,id,p);
-        }
-        return insert(sch, point_set);
-    }
-
-    /// \ingroup PkgDDTInsert
-    /// inserts the points of the provided point range in the tiles given by the partitioning function, in the Delaunay triangulation stored in the tile container.
-    /// The scheduler provides the distribution environment (single thread, multithread, MPI...)
-    /// @returns the number of newly inserted vertices
-    template<typename Scheduler, typename Iterator, typename Partitioner>
-    std::size_t insert(Scheduler& sch, Iterator it, int count, Partitioner& part) {
-    #if __cplusplus >= 202002L
-        // using c++20 and #include <ranges>
-        return insert(sch, std::views::counted(it, count), part);
-    #else
-        Distributed_point_set point_set;
-        for(; count; --count, ++it) {
-            auto p(*it);
-            Tile_index id = part(p);
-            point_set[id].send_point(id,id,p);
-        }
-        return insert(sch, point_set);
-    #endif
     }
 
     void get_adjacency_graph(std::unordered_multimap<Tile_index,Tile_index>& edges) const

@@ -15,12 +15,14 @@ typedef CGAL::Exact_predicates_inexact_constructions_kernel                  Geo
 typedef CGAL::Triangulation_vertex_base_with_info_2<Tile_index, Geom_traits> Vb;
 typedef CGAL::Triangulation_data_structure_2<Vb>                             TDS;
 typedef CGAL::Delaunay_triangulation_2<Geom_traits, TDS>                     Triangulation;
+typedef typename Triangulation::Point                                        Point;
 typedef CGAL::DDT::Vertex_info_property_map<Triangulation>                   TileIndexProperty;
 
-typedef CGAL::Random_points_in_square_2<typename Triangulation::Point>                Random_points;
+typedef CGAL::Random_points_in_square_2<Point>                                        Random_points;
 typedef CGAL::DDT::Sequential_scheduler                                               Scheduler;
 typedef CGAL::DDT::File_points_serializer<Triangulation, TileIndexProperty>           Serializer;
 typedef CGAL::Distributed_triangulation<Triangulation, TileIndexProperty, Serializer> Distributed_triangulation;
+typedef CGAL::Distributed_point_set<Point, Tile_index>                                Distributed_point_set;
 
 int main(int argc, char **argv)
 {
@@ -34,8 +36,9 @@ int main(int argc, char **argv)
     Serializer serializer("tile_");
     Distributed_triangulation tri(2, max_number_of_tiles, serializer);
     Scheduler scheduler;
-    Random_points points(range);
-    tri.insert(scheduler, points, number_of_points, partitioner);
+    Random_points generator(range);
+    Distributed_point_set points(generator, number_of_points, partitioner);
+    tri.insert(scheduler, points);
 
     CGAL::DDT::write_vrt_verts(tri, scheduler, "out_v");
     CGAL::DDT::write_vrt_facets(tri, scheduler, "out_f");

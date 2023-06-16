@@ -13,12 +13,17 @@
 #define CGAL_DISTRIBUTED_POINT_SET_H
 
 #include <map>
+#include <CGAL/DDT/tile_points/No_tile_points.h>
+#include <CGAL/DDT/Point_set.h>
 
 namespace CGAL {
 
-template<typename Point_set>
+template<typename Point_, typename TileIndex, typename TilePoints = CGAL::DDT::No_tile_points>
 struct Distributed_point_set {
-    typedef typename Point_set::Tile_index Tile_index;
+    typedef Point_ Point;
+    typedef TileIndex Tile_index;
+
+    typedef CGAL::DDT::Point_set<Point, Tile_index, TilePoints> Point_set;
     typedef typename Point_set::Points Points;
     typedef std::map<Tile_index, Point_set> Container;
     typedef typename Container::iterator iterator;
@@ -26,6 +31,7 @@ struct Distributed_point_set {
     typedef typename Container::mapped_type mapped_type;
     typedef typename Container::key_type key_type;
 
+    Distributed_point_set() {}
 
     template <typename Iterator>
     Distributed_point_set(Iterator begin, Iterator end, Tile_index id = Tile_index()) {
@@ -35,7 +41,29 @@ struct Distributed_point_set {
             std::cout << std::to_string(id) << " : " << filename << " (" << num_points << " points)" << std::endl;
         }
     }
-    Distributed_point_set() {}
+
+    template<typename PointIndexRange>
+    Distributed_point_set(const PointIndexRange& range) {
+        for (auto& p : range)
+            point_sets[p.first].send_point(p.first,p.first,p.second);
+    }
+
+    template<typename PointRange, typename Partitioner>
+    Distributed_point_set(const PointRange& points, Partitioner& part) {
+        for(const auto& p : points)  {
+            typename Partitioner::Tile_index id = part(p);
+            point_sets[id].send_point(id,id,p);
+        }
+    }
+
+    template<typename Iterator, typename Partitioner>
+    Distributed_point_set(Iterator it, int count, Partitioner& part) {
+        for(; count; --count, ++it) {
+            auto p(*it);
+            Tile_index id = part(p);
+            point_sets[id].send_point(id,id,p);
+        }
+    }
 
     mapped_type& operator[](key_type key) { return point_sets[key]; }
     iterator erase(iterator pos) { return point_sets.erase(pos); }

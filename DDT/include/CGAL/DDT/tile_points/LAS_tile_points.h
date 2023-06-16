@@ -20,13 +20,11 @@ namespace DDT {
 /// \ingroup PkgDDTClasses
 /// \tparam T is a model of the TriangulationTraits concept
 /// The LAS_tile_points is a proxy to a LAS file, to be read on demand
-template<class Triangulation>
+template<class Point>
 class LAS_tile_points {
 public:
-    typedef typename Triangulation_traits<Triangulation>::Bbox Bbox;
-    typedef typename Triangulation_traits<Triangulation>::Point Point;
     LAS_tile_points(const std::string& fn) : filename_(fn) {
-        read_LAS_header(fn, size_, bbox_);
+        read_LAS_header(fn, size_, pmin_, pmax_);
     }
     template<typename PointOutputIterator>
     void read(PointOutputIterator out) {
@@ -36,12 +34,14 @@ public:
     }
     const std::string& filename() const { return filename_; }
     const std::size_t size() const { return size_; }
-    const Bbox& bbox() const { return bbox_; }
+    const Point& min BOOST_PREVENT_MACRO_SUBSTITUTION() const { return pmin_; }
+    const Point& max BOOST_PREVENT_MACRO_SUBSTITUTION() const { return pmax_; }
 
 private:
     std::string filename_;
     std::size_t size_;
-    Bbox bbox_;
+    Point pmin_;
+    Point pmax_;
 };
 
 

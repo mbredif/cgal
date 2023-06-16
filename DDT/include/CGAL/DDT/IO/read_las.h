@@ -17,7 +17,8 @@
 
 namespace CGAL {
 namespace DDT {
-read_LAS_header(const std::string& fname, std::size_t& npoints, CGAL::Bbox_3& bbox)
+template<typename Point>
+read_LAS_header(const std::string& fname, std::size_t& npoints, Point& pmin, Point& pmax)
 {
   std::ifstream is(fname, std::ios::binary);
   CGAL::IO::set_mode(is, CGAL::IO::BINARY);
@@ -26,10 +27,8 @@ read_LAS_header(const std::string& fname, std::size_t& npoints, CGAL::Bbox_3& bb
   LASreaderLAS lasreader;
   lasreader.open(is);
   npoints = lasreader.npoints;
-  bbox = CGAL::Bbox_3(
-              lasreader.get_min_x(), lasreader.get_min_y(), lasreader.get_min_z(),
-              lasreader.get_max_x(), lasreader.get_max_y(), lasreader.get_max_z()
-              );
+  pmin = Point(lasreader.get_min_x(), lasreader.get_min_y(), lasreader.get_min_z());
+  pmax = Point(lasreader.get_max_x(), lasreader.get_max_y(), lasreader.get_max_z());
   return true;
 }
 

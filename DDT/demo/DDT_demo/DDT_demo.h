@@ -22,7 +22,10 @@ int DDT_demo(int argc, char **argv)
 {
   typedef CGAL::DDT::Triangulation_traits<Triangulation> Traits;
   typedef typename Traits::Random_points_in_box Random_points;
+  typedef typename Traits::Point Point;
+  typedef typename TileIndexProperty::value_type Tile_index;
   typedef CGAL::Distributed_triangulation<Triangulation, TileIndexProperty, Serializer> Distributed_triangulation;
+  typedef CGAL::Distributed_point_set<Point, Tile_index>                                Distributed_point_set;
 
   int NP, loglevel, max_concurrency, max_number_of_tiles;
   std::vector<int> NT;
@@ -105,9 +108,11 @@ int DDT_demo(int argc, char **argv)
 
   CGAL::DDT::logging<> log("--- Overall --> ", loglevel);
   log.step("Random_points   ");
-  Random_points points(dimension, range);
+  Random_points generator(dimension, range);
+  Distributed_point_set points(generator, NP, partitioner);
+
   log.step("insertion       ");
-  std::size_t count = tri.insert(scheduler, points, NP, partitioner);
+  std::size_t count = tri.insert(scheduler, points);
 
   if ( vm.count("vrt")  )
   {

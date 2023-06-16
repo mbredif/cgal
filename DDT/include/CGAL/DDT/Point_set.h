@@ -14,17 +14,16 @@
 
 #include <vector>
 #include <map>
-#include <CGAL/DDT/tile_points/No_tile_points.h>
 
 namespace CGAL {
 namespace DDT {
 
-template<class TileIndex, class Point, class TilePoints = No_tile_points>
+template<class Point, class TileIndex, class TilePoints>
 struct Point_set {
-    typedef TileIndex                    Tile_index;
+    typedef TileIndex                                  Tile_index;
     typedef std::vector<std::pair<Tile_index, Point>>  Points;
-    typedef std::map<Tile_index, Points> Points_map;
-    typedef TilePoints                   Tile_points;
+    typedef std::map<Tile_index, Points>               Points_map;
+    typedef TilePoints                                 Tile_points;
 
     Point_set() : points_() {}
 

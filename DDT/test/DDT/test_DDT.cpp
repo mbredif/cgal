@@ -27,6 +27,7 @@ typedef CGAL::DDT::Grid_partitioner<Triangulation, TileIndexProperty> Partitione
 
 #include <CGAL/Distributed_triangulation.h>
 typedef CGAL::Distributed_triangulation<Triangulation, TileIndexProperty> Distributed_triangulation;
+typedef CGAL::Distributed_point_set<Point, Tile_index> Distributed_point_set;
 
 #include <CGAL/DDT/IO/write_vrt.h>
 
@@ -55,7 +56,8 @@ int main(int, char **)
     Distributed_triangulation tri;
     Partitioner partitioner(bbox, ND, ND+tri.maximal_dimension());
     Scheduler scheduler;
-    tri.insert(scheduler, points.begin(), points.size(), partitioner);
+    Distributed_point_set pointset(points, partitioner);
+    tri.insert(scheduler, pointset);
     ddt_assert(tri.is_valid());
 
     for(auto vertex = tri.vertices_begin(); vertex != tri.vertices_end(); ++vertex)

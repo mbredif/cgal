@@ -26,13 +26,13 @@ typedef CGAL::Exact_predicates_inexact_constructions_kernel                  Geo
 typedef CGAL::Triangulation_vertex_base_with_info_3<Tile_index, Geom_traits> Vb;
 typedef CGAL::Triangulation_data_structure_3<Vb>                             TDS;
 typedef CGAL::Delaunay_triangulation_3<Geom_traits, TDS>                     Triangulation;
+typedef typename Triangulation::Point                                        Point;
 typedef CGAL::DDT::Vertex_info_property_map<Triangulation>                   TileIndexProperty;
 
 typedef CGAL::DDT::Multithread_scheduler                                     Scheduler;
 typedef CGAL::DDT::File_serializer<Triangulation, TileIndexProperty>         Serializer;
-typedef CGAL::DDT::LAS_tile_points<Triangulation>                            Tile_points;
-typedef CGAL::DDT::Point_set<Tile_index, Triangulation::Point, Tile_points>             Point_set;
-typedef CGAL::Distributed_point_set<Point_set>                                     Distributed_point_set;
+typedef CGAL::DDT::LAS_tile_points<Point>                                    Tile_points;
+typedef CGAL::Distributed_point_set<Point, Tile_index, Tile_points>                   Distributed_point_set;
 typedef CGAL::Distributed_triangulation<Triangulation, TileIndexProperty, Serializer> Distributed_triangulation;
 
 

@@ -53,13 +53,17 @@ int test_traits(const Partitioner& partitioner, const std::string& testname, int
 
     typedef CGAL::DDT::Sequential_scheduler Scheduler;
     typedef CGAL::Distributed_triangulation<Triangulation, TileIndexProperty> Distributed_triangulation;
+    typedef typename CGAL::DDT::Triangulation_traits<Triangulation>::Point Point;
+    typedef typename TileIndexProperty::value_type Tile_index;
     typedef typename CGAL::DDT::Triangulation_traits<Triangulation>::Random_points_in_box Random_points;
+    typedef CGAL::Distributed_point_set<Point, Tile_index> Distributed_point_set;
 
     std::cout << "== Delaunay ==" << std::endl;
-    Random_points points(dim, range);
+    Random_points generator(dim, range);
     Scheduler scheduler;
+    Distributed_point_set points(generator, NP, partitioner);
     Distributed_triangulation tri1(dim, NT);
-    tri1.insert(scheduler, points, NP, partitioner);
+    tri1.insert(scheduler, points);
     if(!tri1.is_valid())
     {
         std::cerr << "tri is not valid" << std::endl;
