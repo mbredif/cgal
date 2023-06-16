@@ -18,6 +18,7 @@
 #include <CGAL/DDT/insert.h>
 #include <CGAL/DDT/Messaging.h>
 #include <CGAL/DDT/Messaging_container.h>
+#include <CGAL/DDT/Tile_triangulation.h>
 #include <CGAL/DDT/Tile_container.h>
 #include <CGAL/DDT/Tile.h>
 
@@ -32,17 +33,17 @@ template<typename Triangulation_,
 class Distributed_triangulation
 {
 public:
-    typedef Triangulation_                                           Triangulation;
-    typedef TileIndexProperty_                                       TileIndexProperty;
-    typedef Serializer_                                              Serializer;
-    typedef CGAL::DDT::Tile<Triangulation, TileIndexProperty>        Tile;
-    typedef typename Tile::Tile_index                                Tile_index;
-    typedef CGAL::DDT::Tile_container<Tile_index, Tile, Serializer_> TileContainer;
+    typedef Triangulation_                                                  Triangulation;
+    typedef TileIndexProperty_                                              TileIndexProperty;
+    typedef Serializer_                                                     Serializer;
+    typedef CGAL::DDT::Tile_triangulation<Triangulation, TileIndexProperty> Tile_triangulation;
+    typedef CGAL::DDT::Tile<Tile_triangulation>                             Tile;
+    typedef typename TileIndexProperty::value_type                          Tile_index;
+    typedef CGAL::DDT::Tile_container<Tile_index, Tile, Serializer_>        TileContainer;
 
 private:
     typedef typename TileContainer::iterator            Tile_iterator;
     typedef typename TileContainer::const_iterator      Tile_const_iterator;
-    typedef typename TileContainer::Tile_triangulation  Tile_triangulation;
 
     typedef CGAL::DDT::Triangulation_traits<Triangulation>    Traits;
     typedef typename Traits::Vertex_index               Tile_vertex_index;
@@ -214,7 +215,7 @@ public:
         for(const auto& [id, tile] : tiles)
         {
 
-            if(!tile.is_valid(verbose, level))
+            if(!tile.triangulation().is_valid(verbose, level))
             {
                 std::cerr << "Tile " << std::to_string(id) << " is invalid" << std::endl;
                 //assert(! "CGAL tile not valid" );

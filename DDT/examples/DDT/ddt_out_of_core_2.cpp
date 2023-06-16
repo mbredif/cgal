@@ -1,7 +1,7 @@
 #include <CGAL/DDT/traits/Triangulation_traits_2.h>
 #include <CGAL/DDT/partitioner/Grid_partitioner.h>
 #include <CGAL/DDT/scheduler/Sequential_scheduler.h>
-#include <CGAL/DDT/serializer/File_serializer.h>
+#include <CGAL/DDT/serializer/File_points_serializer.h>
 #include <CGAL/Distributed_triangulation.h>
 #include <CGAL/DDT/IO/write_ply.h>
 #include <CGAL/DDT/IO/write_vrt.h>
@@ -17,10 +17,10 @@ typedef CGAL::Triangulation_data_structure_2<Vb>                             TDS
 typedef CGAL::Delaunay_triangulation_2<Geom_traits, TDS>                     Triangulation;
 typedef CGAL::DDT::Vertex_info_property_map<Triangulation>                   TileIndexProperty;
 
-typedef CGAL::Random_points_in_square_2<typename Triangulation::Point>       Random_points;
-typedef CGAL::DDT::Sequential_scheduler                                      Scheduler;
-typedef CGAL::DDT::File_serializer<Triangulation, TileIndexProperty>         Serializer;
-typedef CGAL::Distributed_triangulation<Triangulation, TileIndexProperty, Serializer>             Distributed_triangulation;
+typedef CGAL::Random_points_in_square_2<typename Triangulation::Point>                Random_points;
+typedef CGAL::DDT::Sequential_scheduler                                               Scheduler;
+typedef CGAL::DDT::File_points_serializer<Triangulation, TileIndexProperty>           Serializer;
+typedef CGAL::Distributed_triangulation<Triangulation, TileIndexProperty, Serializer> Distributed_triangulation;
 
 int main(int argc, char **argv)
 {

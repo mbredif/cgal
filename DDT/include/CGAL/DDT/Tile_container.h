@@ -189,7 +189,6 @@ public:
         return safe_load(id, tile);
     }
 
-
     const Serializer& serializer() const { return serializer_; }
 
 private:

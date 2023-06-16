@@ -23,11 +23,11 @@ namespace DDT {
 /// The point set of each tile is sorted spatially before saving, so that the Delaunay triangulation could be recomputed efficiently when the tile is reloaded.
 /// This trades off decreased disc usage and bandwith for increased computations.
 /// \cgalModels Serializer
-template <typename Tile>
+template <typename Triangulation, typename TileIndexProperty>
 struct File_points_serializer
 {
-  typedef typename Traits::Tile_index       Tile_index;
-  typedef typename Traits::Bbox             Bbox;
+  typedef typename TileIndexProperty::value_type       Tile_index;
+  typedef typename Triangulation_traits<Triangulation>::Bbox             Bbox;
 
   /// Each tile is saved as the file "{prefix}{tile_index}.txt".
   File_points_serializer(const std::string& prefix = "") : m_prefix(prefix) {
@@ -52,7 +52,8 @@ struct File_points_serializer
     return in.is_open();
   }
 
-  bool load(Tile_index id, Bbox& bbox) const {
+  template<typename TileIndex, typename Bbox>
+  bool load(TileIndex id, Bbox& bbox) const {
       const std::string fname = filename(id);
       std::ifstream in(fname, std::ios::in | std::ios::binary);
       in >> bbox;
@@ -64,19 +65,22 @@ struct File_points_serializer
 #ifdef CGAL_DEBUG_DDT
     ++nb_loads;
 #endif
+    typedef typename Tile::Tile_triangulation  Tile_triangulation;
+    typedef typename Tile_triangulation::Point Point;
+    typedef typename Tile_triangulation::Vertex_index Vertex_index;
+    typedef typename Tile_triangulation::Traits Traits;
 
-    const std::string fname = filename(tile.id());
+    const std::string fname = filename(tile.triangulation().id());
     std::ifstream in(fname, std::ios::in | std::ios::binary);
-    in >> tile.bbox();
+    in >> tile.triangulation().bbox();
     std::size_t count;
     in >> count;
-    typename Tile::Vertex_handle v;
+    Vertex_index v;
     for(std::size_t i = 0; i < count; ++i) {
-        typedef typename Tile::Point Point;
         Point p;
         Tile_index id;
         in >> p >> id;
-        tile.bbox() += p;
+        tile.triangulation().bbox() += Traits::bbox(p);
         v = tile.triangulation().insert(p,id,v).first;
     }
     if(!in.fail()) return true;
@@ -88,14 +92,14 @@ struct File_points_serializer
 #ifdef CGAL_DEBUG_DDT
     ++nb_save;
 #endif
-    typedef typename Tile::Point Point;
-    typename Tile::Tile_triangulation  Tile_triangulation;
-    typedef typename Tile::Vertex_index Vertex_index;
-    const std::string fname = filename(tile.id());
+    typedef typename Tile::Tile_triangulation  Tile_triangulation;
+    typedef typename Tile_triangulation::Point Point;
+    typedef typename Tile_triangulation::Vertex_index Vertex_index;
+    const std::string fname = filename(tile.triangulation().id());
     std::ofstream out(fname, std::ios::out | std::ios::binary);
-    out << std::setprecision(17) << tile.bbox() << "\n";
+    out << std::setprecision(17) << tile.triangulation().bbox() << "\n";
 
-    Tile_triangulation& triangulation = tile.triangulation();
+    const Tile_triangulation& triangulation = tile.triangulation();
     out << triangulation.number_of_vertices() << "\n";
     std::vector<std::size_t> indices;
     std::vector<Point>  points;
@@ -130,8 +134,8 @@ private:
 #endif
 };
 
-template<typename Tile>
-std::ostream& operator<<(std::ostream& out, const File_points_serializer<Tile>& serializer) {
+template<typename Triangulation, typename TileIndexProperty>
+std::ostream& operator<<(std::ostream& out, const File_points_serializer<Triangulation, TileIndexProperty>& serializer) {
     return out << "File_points_serializer(prefix=" << serializer.prefix() << ")";
 }
 

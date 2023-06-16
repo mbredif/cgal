@@ -27,8 +27,8 @@ namespace impl {
 template<typename Tile, typename Messaging>
 std::size_t splay_tile(Tile& tile, Messaging& messaging)
 {
-    typedef typename Tile::Tile_index                 Tile_index;
     typedef typename Tile::Tile_triangulation         Tile_triangulation;
+    typedef typename Tile_triangulation::Tile_index   Tile_index;
     typedef typename Tile_triangulation::Vertex_index Vertex_index;
     typedef typename Messaging::Points                Points;
     Points received;
@@ -60,7 +60,7 @@ std::size_t insert_and_send_all_axis_extreme_points(TileContainer& tiles, Messag
         std::vector<Vertex_index> vertices;
         tri.get_axis_extreme_points(vertices);
         for(Vertex_index v : vertices)
-            tile.bbox() += tri.bbox(v);
+            tri.bbox() += tri.bbox(v);
         messaging.send_vertices_to_all_tiles(tri, vertices);
         return count;
     });

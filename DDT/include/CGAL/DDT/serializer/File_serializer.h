@@ -14,7 +14,6 @@
 
 #include <boost/filesystem.hpp>
 #include <iomanip>
-#include <CGAL/DDT/Tile.h>
 
 namespace CGAL {
 namespace DDT {
@@ -67,7 +66,7 @@ struct File_serializer
     const std::string fname = filename(tile.triangulation().id());
     std::ifstream in(fname, std::ios::in | std::ios::binary);
     tile.triangulation().clear();
-    in >> tile.bbox();
+    in >> tile.triangulation().bbox();
     in >> tile.triangulation();
     if(!in.fail()) return true;
     tile.triangulation().clear();
@@ -80,7 +79,7 @@ struct File_serializer
 #endif
     const std::string fname = filename(tile.triangulation().id());
     std::ofstream out(fname, std::ios::out | std::ios::binary);
-    out << std::setprecision(17) << tile.bbox() << "\n" << tile.triangulation();
+    out << std::setprecision(17) << tile.triangulation().bbox() << "\n" << tile.triangulation();
     return !out.fail();
   }
 

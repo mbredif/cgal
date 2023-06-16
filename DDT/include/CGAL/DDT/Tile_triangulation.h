@@ -53,7 +53,8 @@ public:
           number_of_main_finite_facets_(0),
           number_of_main_finite_cells_(0),
           number_of_main_facets_(0),
-          number_of_main_cells_(0)
+          number_of_main_cells_(0),
+          bbox_(Traits::bbox(dimension))
     {}
 
     inline Triangulation& triangulation() { return tri_; }
@@ -82,6 +83,9 @@ public:
     inline std::size_t number_of_main_finite_vertices() const { return number_of_main_finite_vertices_; }
     inline std::size_t number_of_main_finite_facets  () const { return number_of_main_finite_facets_;   }
     inline std::size_t number_of_main_finite_cells   () const { return number_of_main_finite_cells_;    }
+
+    const Bbox& bbox() const { return bbox_; }
+    Bbox& bbox() { return bbox_; }
 
     inline Tile_index vertex_id(Vertex_index v) const { assert(!vertex_is_infinite(v)); return get(tile_indices, v); }
 
@@ -607,6 +611,7 @@ private:
     std::size_t number_of_main_finite_cells_;
     std::size_t number_of_main_facets_;
     std::size_t number_of_main_cells_;
+    Bbox bbox_;
 };
 
 template<class T, class Pmap, template <class> class Selector>

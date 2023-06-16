@@ -69,7 +69,7 @@ int write_cgal(const DistributedTriangulation& tri, const std::string& dirname)
         std::string sid = std::to_string(id);
         std::string fpath = sid + ".bin";
         std::ostringstream ss;
-        ss << tile.bbox();
+        ss << tile.triangulation().bbox();
         tiles_node.put (sid, fpath);
         bboxes_node.put(sid, ss.str());
         i += !write_cgal_tile(tile, dirname);
