@@ -9,16 +9,15 @@
 //
 // Author(s)     : Mathieu Brédif and Laurent Caraffa
 
-#ifndef CGAL_DDT_POINT_SET_CONTAINER_H
-#define CGAL_DDT_POINT_SET_CONTAINER_H
+#ifndef CGAL_DISTRIBUTED_POINT_SET_H
+#define CGAL_DISTRIBUTED_POINT_SET_H
 
 #include <map>
 
 namespace CGAL {
-namespace DDT {
 
 template<typename Point_set>
-struct Point_set_container {
+struct Distributed_point_set {
     typedef typename Point_set::Tile_index Tile_index;
     typedef typename Point_set::Points Points;
     typedef std::map<Tile_index, Point_set> Container;
@@ -26,6 +25,17 @@ struct Point_set_container {
     typedef typename Container::value_type value_type;
     typedef typename Container::mapped_type mapped_type;
     typedef typename Container::key_type key_type;
+
+
+    template <typename Iterator>
+    Distributed_point_set(Iterator begin, Iterator end, Tile_index id = Tile_index()) {
+        for(Iterator it = begin; it != end; ++it, ++id) {
+            std::string filename(*it);
+            std::size_t num_points = point_sets[id].insert(filename);
+            std::cout << std::to_string(id) << " : " << filename << " (" << num_points << " points)" << std::endl;
+        }
+    }
+    Distributed_point_set() {}
 
     mapped_type& operator[](key_type key) { return point_sets[key]; }
     iterator erase(iterator pos) { return point_sets.erase(pos); }
@@ -68,6 +78,5 @@ struct Point_set_container {
 };
 
 }
-}
 
-#endif // CGAL_DDT_POINT_SET_CONTAINER_H
+#endif // CGAL_DISTRIBUTED_POINT_SET_H

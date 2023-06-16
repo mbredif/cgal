@@ -17,10 +17,10 @@
 #include <CGAL/DDT/iterator/Cell_iterator.h>
 #include <CGAL/DDT/insert.h>
 #include <CGAL/DDT/Point_set.h>
-#include <CGAL/DDT/Point_set_container.h>
 #include <CGAL/DDT/Tile_triangulation.h>
 #include <CGAL/DDT/Tile_container.h>
 #include <CGAL/DDT/Tile.h>
+#include <CGAL/Distributed_point_set.h>
 
 namespace CGAL {
 
@@ -51,7 +51,7 @@ private:
     typedef typename Traits::Facet_index                Tile_facet_index;
     typedef typename Traits::Point                      Point;
 
-    typedef CGAL::DDT::Point_set_container<CGAL::DDT::Point_set<Tile_index, Point>> Point_set_container;
+    typedef CGAL::Distributed_point_set<CGAL::DDT::Point_set<Tile_index, Point>> Distributed_point_set;
 
 public:
 /// \name Types
@@ -562,7 +562,7 @@ public:
     /// The scheduler provides the distribution environment (single thread, multithread, MPI...)
     /// @returns the number of newly inserted vertices
     template<typename Scheduler, typename Point_set>
-    std::size_t insert(Scheduler& sch, CGAL::DDT::Point_set_container<Point_set>& point_sets){
+    std::size_t insert(Scheduler& sch, CGAL::Distributed_point_set<Point_set>& point_sets){
         std::size_t n = number_of_finite_vertices();
         CGAL::DDT::impl::insert_and_send_all_axis_extreme_points(tiles, point_sets, sch);
         CGAL::DDT::impl::splay_stars(tiles, point_sets, sch);
@@ -578,7 +578,7 @@ public:
     /// @todo returns a descritor to the inserted vertex and a bool ?
     template<typename Scheduler, typename Point, typename Tile_index>
     typename std::size_t insert(Scheduler& sch, const Point& point, Tile_index id){
-        Point_set_container point_set;
+        Distributed_point_set point_set;
         point_set[id].send_point(id,id,point);
         return insert(sch, point_set);
     }
@@ -589,7 +589,7 @@ public:
     /// @returns the number of newly inserted vertices
     template<typename Scheduler, typename PointIndexRange>
     std::size_t insert(Scheduler& sch, const PointIndexRange& range) {
-        Point_set_container point_set;
+        Distributed_point_set point_set;
         for (auto& p : range)
             point_set[p.first].send_point(p.first,p.first,p.second);
         return insert(sch, point_set);
@@ -601,7 +601,7 @@ public:
     /// @returns the number of newly inserted vertices
     template<typename Scheduler, typename PointRange, typename Partitioner>
     std::size_t insert(Scheduler& sch, const PointRange& points, Partitioner& part) {
-        Point_set_container point_set;
+        Distributed_point_set point_set;
         for(const auto& p : points)  {
             typename Partitioner::Tile_index id = part(p);
             point_set[id].send_point(id,id,p);
@@ -619,7 +619,7 @@ public:
         // using c++20 and #include <ranges>
         return insert(sch, std::views::counted(it, count), part);
     #else
-        Point_set_container point_set;
+        Distributed_point_set point_set;
         for(; count; --count, ++it) {
             auto p(*it);
             Tile_index id = part(p);

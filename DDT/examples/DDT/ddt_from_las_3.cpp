@@ -31,32 +31,29 @@ typedef CGAL::DDT::Vertex_info_property_map<Triangulation>                   Til
 typedef CGAL::DDT::Multithread_scheduler                                     Scheduler;
 typedef CGAL::DDT::File_serializer<Triangulation, TileIndexProperty>         Serializer;
 typedef CGAL::DDT::LAS_tile_points<Triangulation>                            Tile_points;
-typedef CGAL::DDT::Point_set<Tile_index, Tile_points::Point, Tile_points>             Point_set;
-typedef CGAL::DDT::Point_set_container<Point_set>                                     Point_set_container;
+typedef CGAL::DDT::Point_set<Tile_index, Triangulation::Point, Tile_points>             Point_set;
+typedef CGAL::Distributed_point_set<Point_set>                                     Distributed_point_set;
 typedef CGAL::Distributed_triangulation<Triangulation, TileIndexProperty, Serializer> Distributed_triangulation;
 
 
 int main(int argc, char*argv[])
 {
-    if (argc < 5) {
+    if (argc < 5 || argc > 260) {
         std::cerr << "usage : " << argv[0] << " [max_number_of_tiles in memory] [tmp prefix] [out prefix] [las files...]" << std::endl;
+        std::cerr << "maximum number of las files is 256, as tile indices are coded using a uchar8." << std::endl;
         return -1;
     }
     int max_number_of_tiles = atoi(argv[1]);
-    const char* tmp  = argv[2];
-    const char* out  = argv[3];
+    char* const tmp  = argv[2];
+    char* const out  = argv[3];
+    char* const*begin= argv+4; // filenames
+    char* const*end  = argv+argc;
 
     Serializer serializer(tmp);
     Distributed_triangulation tri(3, max_number_of_tiles, serializer);
     Scheduler scheduler;
 
-    Point_set_container points;
-    for(Tile_index i = 0; i< argc - 4; ++i) {
-        const char *las = argv[i+4];
-        std::size_t num_points = points[i].insert(las);
-        std::cout << std::to_string(i) << " : " << las << " (" << num_points << " points)" << std::endl;
-    }
-    // -> Distributed_point_set points(argv+4, argv+argc);
+    Distributed_point_set points(begin, end);
 
     std::cout << "Inserting points using " << max_number_of_tiles << " tiles at most in memory" << std::endl;
     tri.insert(scheduler, points);
