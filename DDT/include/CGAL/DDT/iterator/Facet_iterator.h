@@ -9,8 +9,8 @@
 //
 // Author(s)     : Mathieu Brédif and Laurent Caraffa
 
-#ifndef CGAL_DDT_FACET_CONST_ITERATOR_H
-#define CGAL_DDT_FACET_CONST_ITERATOR_H
+#ifndef CGAL_DDT_FACET_ITERATOR_H
+#define CGAL_DDT_FACET_ITERATOR_H
 
 #include <iterator>
 
@@ -18,7 +18,7 @@ namespace CGAL {
 namespace DDT {
 
 template<typename TileContainer>
-class Facet_const_iterator
+class Facet_iterator
 {
 public:
     typedef typename TileContainer::const_iterator     Tile_const_iterator;
@@ -38,7 +38,7 @@ private:
     Tile_facet_index facet_;
 
 public:
-    Facet_const_iterator(const TileContainer *tiles, Tile_const_iterator tile)
+    Facet_iterator(const TileContainer *tiles, Tile_const_iterator tile)
         : tiles_(tiles), tile_(tile), facet_()
     {
         if(tile_ != tiles_->cend())
@@ -49,20 +49,20 @@ public:
         assert(is_valid());
     }
 
-    Facet_const_iterator(const TileContainer *tiles, Tile_const_iterator tile, Tile_facet_index facet)
+    Facet_iterator(const TileContainer *tiles, Tile_const_iterator tile, Tile_facet_index facet)
         : tiles_(tiles), tile_(tile), facet_(facet)
     {
         // do not enforce main here !
         assert(is_valid());
     }
 
-    Facet_const_iterator(const Facet_const_iterator& c)
+    Facet_iterator(const Facet_iterator& c)
         : tiles_(c.tiles_), tile_(c.tile_), facet_(c.facet_)
     {
         // do not enforce main here !
         assert(is_valid());
     }
-    Facet_const_iterator& advance_to_main()
+    Facet_iterator& advance_to_main()
     {
         while(tile_ != tiles_->cend())
         {
@@ -83,21 +83,21 @@ public:
         return *this;
     }
 
-    Facet_const_iterator& operator++()
+    Facet_iterator& operator++()
     {
         assert(tile_ != tiles_->cend());
         ++facet_;
         return advance_to_main();
     }
 
-    Facet_const_iterator operator++(int)
+    Facet_iterator operator++(int)
     {
-        Facet_const_iterator tmp(*this);
+        Facet_iterator tmp(*this);
         operator++();
         return tmp;
     }
 
-    bool operator==(const Facet_const_iterator& f) const
+    bool operator==(const Facet_iterator& f) const
     {
         if (tiles_ != f.tiles_) return false;
         if (tile_ == tiles_->cend() || f.tile_ == tiles_->cend()) return tile_ == f.tile_;
@@ -105,7 +105,7 @@ public:
         return triangulation().are_facets_equal(facet_, f.triangulation(), f.facet_);
     }
 
-    bool operator!=(const Facet_const_iterator& rhs) const { return !(*this == rhs); }
+    bool operator!=(const Facet_iterator& rhs) const { return !(*this == rhs); }
 
     const Tile_const_iterator&       tile()  const { return tile_;  }
     const value_type& operator*() const { return facet_; }
@@ -121,4 +121,4 @@ public:
 }
 }
 
-#endif // CGAL_DDT_FACET_CONST_ITERATOR_H
+#endif // CGAL_DDT_FACET_ITERATOR_H

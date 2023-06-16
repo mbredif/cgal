@@ -20,7 +20,7 @@ typedef CGAL::DDT::Tile<Traits> Tile;
 class py_vertex_iterator
 {
 private:
-    Tile::Vertex_const_iterator v;
+    Tile::Vertex_iterator v;
     const Tile& tile;
 
 public:
@@ -30,7 +30,7 @@ public:
     using pointer = value_type*;
     using reference = value_type&;
 
-    py_vertex_iterator(Tile::Vertex_const_iterator i, const Tile& t) : v(i), tile(t) {}
+    py_vertex_iterator(Tile::Vertex_iterator i, const Tile& t) : v(i), tile(t) {}
     py_vertex_iterator(const py_vertex_iterator& i) : v(i.v), tile(i.tile) {}
 
     py_vertex_iterator& operator++()
@@ -61,7 +61,7 @@ public:
 class py_cell_iterator
 {
 private:
-    Tile::Cell_const_iterator c;
+    Tile::Cell_iterator c;
     const Tile& tile;
 
 public:
@@ -71,7 +71,7 @@ public:
     using pointer = value_type*;
     using reference = value_type&;
 
-    py_cell_iterator(Tile::Cell_const_iterator i, const Tile& t) : c(i), tile(t) {}
+    py_cell_iterator(Tile::Cell_iterator i, const Tile& t) : c(i), tile(t) {}
     py_cell_iterator(const py_cell_iterator& i) : c(i.c), tile(i.tile) {}
 
     py_cell_iterator& operator++()
@@ -175,7 +175,7 @@ public:
 
     boost::python::tuple py_vertex(int id) const
     {
-        Vertex_const_iterator v = vertices_begin();
+        Vertex_iterator v = vertices_begin();
         v += id;
         Point p = point(v);
         return boost::python::make_tuple(p[0], p[1], tile_id(v));
@@ -183,14 +183,14 @@ public:
 
     boost::python::tuple py_cell(int id) const
     {
-        Cell_const_iterator c = cells_begin();
+        Cell_iterator c = cells_begin();
         c += id;
         Tile_const_iterator tile = c.tile();
         std::vector<int> vid;
         assert(tile->current_dimension() == 2);
         for(int d = 0; d <= tile->current_dimension(); d++)
         {
-            Vertex_const_iterator vit = main(vertex(c, d));
+            Vertex_iterator vit = main(vertex(c, d));
             vid.push_back(vertex_id(vit));
         }
 
@@ -205,7 +205,7 @@ public:
 //                             std::to_string(id)+ "_" + std::to_string(deg) +
 //                             std::string(".vrt"));
 
-//        std::set<Cell_const_iterator> lnb;
+//        std::set<Cell_iterator> lnb;
 //        get_ring(c, deg, lnb);
 //        write_vrt_cell_range(lnb.begin(), lnb.end(), filename);
 //    }

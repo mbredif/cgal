@@ -9,8 +9,8 @@
 //
 // Author(s)     : Mathieu Brédif and Laurent Caraffa
 
-#ifndef CGAL_DDT_VERTEX_CONST_ITERATOR_H
-#define CGAL_DDT_VERTEX_CONST_ITERATOR_H
+#ifndef CGAL_DDT_VERTEX_ITERATOR_H
+#define CGAL_DDT_VERTEX_ITERATOR_H
 
 #include <iterator>
 
@@ -18,7 +18,7 @@ namespace CGAL {
 namespace DDT {
 
 template<typename TileContainer>
-class Vertex_const_iterator
+class Vertex_iterator
 {
 public:
     typedef typename TileContainer::const_iterator     Tile_const_iterator;
@@ -38,7 +38,7 @@ private:
     Tile_vertex_index vertex_;
 
 public:
-    Vertex_const_iterator(const TileContainer *tiles, Tile_const_iterator tile)
+    Vertex_iterator(const TileContainer *tiles, Tile_const_iterator tile)
         : tiles_(tiles), tile_(tile), vertex_()
     {
         if(tile_ != tiles_->cend())
@@ -49,21 +49,21 @@ public:
         assert(is_valid());
     }
 
-    Vertex_const_iterator(const TileContainer *tiles, Tile_const_iterator tile, Tile_vertex_index vertex)
+    Vertex_iterator(const TileContainer *tiles, Tile_const_iterator tile, Tile_vertex_index vertex)
         : tiles_(tiles), tile_(tile), vertex_(vertex)
     {
         // do not enforce main here !
         assert(is_valid());
     }
 
-    Vertex_const_iterator(const Vertex_const_iterator& v)
+    Vertex_iterator(const Vertex_iterator& v)
         : tiles_(v.tiles_), tile_(v.tile_), vertex_(v.vertex_)
     {
         // do not enforce main here !
         assert(is_valid());
     }
 
-    Vertex_const_iterator& advance_to_main()
+    Vertex_iterator& advance_to_main()
     {
         while(tile_ != tiles_->cend())
         {
@@ -84,20 +84,20 @@ public:
         return *this;
     }
 
-    Vertex_const_iterator& operator++()
+    Vertex_iterator& operator++()
     {
         ++vertex_;
         return advance_to_main();
     }
 
-    Vertex_const_iterator operator++(int)
+    Vertex_iterator operator++(int)
     {
-        Vertex_const_iterator tmp(*this);
+        Vertex_iterator tmp(*this);
         operator++();
         return tmp;
     }
 
-    Vertex_const_iterator& operator+=(int n)
+    Vertex_iterator& operator+=(int n)
     {
         for(Tile_vertex_index v = triangulation().vertices_begin(); v != vertex_; ++v)
             if(triangulation().vertex_is_main(v))
@@ -116,7 +116,7 @@ public:
         return *this;
     }
 
-    bool operator==(const Vertex_const_iterator& v) const
+    bool operator==(const Vertex_iterator& v) const
     {
         if (tiles_ != v.tiles_) return false;
         if (tile_ == tiles_->cend() || v.tile_ == tiles_->cend()) return tile_ == v.tile_;
@@ -124,7 +124,7 @@ public:
         return triangulation().are_vertices_equal(vertex_, v.triangulation(), v.vertex_);
     }
 
-    bool operator!=(const Vertex_const_iterator& rhs) const { return !(*this == rhs); }
+    bool operator!=(const Vertex_iterator& rhs) const { return !(*this == rhs); }
 
     const Tile_const_iterator&        tile() const { return tile_;   }
     const value_type&  operator*() const { return vertex_; }
@@ -140,4 +140,4 @@ public:
 }
 }
 
-#endif // CGAL_DDT_VERTEX_CONST_ITERATOR_H
+#endif // CGAL_DDT_VERTEX_ITERATOR_H

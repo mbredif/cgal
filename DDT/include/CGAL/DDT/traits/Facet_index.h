@@ -9,8 +9,8 @@
 //
 // Author(s)     : Mathieu Brédif and Laurent Caraffa
 
-#ifndef CGAL_DDT_TRAITS_FACET_CONST_ITERATOR_H
-#define CGAL_DDT_TRAITS_FACET_CONST_ITERATOR_H
+#ifndef CGAL_DDT_TRAITS_FACET_INDEX_H
+#define CGAL_DDT_TRAITS_FACET_INDEX_H
 
 #include <iterator>
 
@@ -107,4 +107,4 @@ public:
 }
 }
 
-#endif // CGAL_DDT_TRAITS_FACET_CONST_ITERATOR_H
+#endif // CGAL_DDT_TRAITS_FACET_INDEX_H

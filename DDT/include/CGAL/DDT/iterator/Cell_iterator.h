@@ -9,8 +9,8 @@
 //
 // Author(s)     : Mathieu Brédif and Laurent Caraffa
 
-#ifndef CGAL_DDT_CELL_CONST_ITERATOR_H
-#define CGAL_DDT_CELL_CONST_ITERATOR_H
+#ifndef CGAL_DDT_CELL_ITERATOR_H
+#define CGAL_DDT_CELL_ITERATOR_H
 
 #include <iterator>
 
@@ -18,7 +18,7 @@ namespace CGAL {
 namespace DDT {
 
 template<typename TileContainer>
-class Cell_const_iterator
+class Cell_iterator
 {
 public:
     typedef typename TileContainer::const_iterator     Tile_const_iterator;
@@ -38,7 +38,7 @@ private:
     Tile_cell_index cell_;
 
 public:
-    Cell_const_iterator(const TileContainer *tiles, Tile_const_iterator tile)
+    Cell_iterator(const TileContainer *tiles, Tile_const_iterator tile)
         : tiles_(tiles), tile_(tile), cell_()
     {
         if(tile_ != tiles_->cend())
@@ -49,21 +49,21 @@ public:
         assert(is_valid());
     }
 
-    Cell_const_iterator(const TileContainer *tiles, Tile_const_iterator tile, Tile_cell_index cell)
+    Cell_iterator(const TileContainer *tiles, Tile_const_iterator tile, Tile_cell_index cell)
         : tiles_(tiles), tile_(tile), cell_(cell)
     {
         // do not enforce main here !
         assert(is_valid());
     }
 
-    Cell_const_iterator(const Cell_const_iterator& c)
+    Cell_iterator(const Cell_iterator& c)
         : tiles_(c.tiles_), tile_(c.tile_), cell_(c.cell_)
     {
         // do not enforce main here !
         assert(is_valid());
     }
 
-    Cell_const_iterator& advance_to_main()
+    Cell_iterator& advance_to_main()
     {
         while(tile_ != tiles_->cend())
         {
@@ -84,7 +84,7 @@ public:
         return *this;
     }
 
-    bool operator<(const Cell_const_iterator& c) const
+    bool operator<(const Cell_iterator& c) const
     {
         assert(tiles_ == c.tiles_);
         if (c.tile_ == tiles_->cend()) return tile_ != tiles_->cend();
@@ -92,21 +92,21 @@ public:
         return  tile_->id() < c.tile_->id() || (tile_->id() == c.tile_->id() && cell_ < c.cell_);
     }
 
-    Cell_const_iterator& operator++()
+    Cell_iterator& operator++()
     {
         assert(tile_ != tiles_->cend());
         ++cell_;
         return advance_to_main();
     }
 
-    Cell_const_iterator operator++(int)
+    Cell_iterator operator++(int)
     {
-        Cell_const_iterator tmp(*this);
+        Cell_iterator tmp(*this);
         operator++();
         return tmp;
     }
 
-    Cell_const_iterator& operator+=(int n)
+    Cell_iterator& operator+=(int n)
     {
         assert(tile_ != tiles_->cend());
         for(Tile_cell_index c = triangulation().cells_begin(); c != cell_; ++c)
@@ -127,7 +127,7 @@ public:
         return *this;
     }
 
-    bool operator==(const Cell_const_iterator& c) const
+    bool operator==(const Cell_iterator& c) const
     {
         if (tiles_ != c.tiles_) return false;
         if (tile_ == tiles_->cend() || c.tile_ == tiles_->cend()) return tile_ == c.tile_;
@@ -135,7 +135,7 @@ public:
         return triangulation().are_cells_equal(cell_, c.triangulation(), c.cell_);
     }
 
-    bool operator!=(const Cell_const_iterator& rhs) const { return !(*this == rhs); }
+    bool operator!=(const Cell_iterator& rhs) const { return !(*this == rhs); }
 
     const Tile_const_iterator&    tile() const { return tile_; }
     const value_type& operator*() const { return cell_; }
@@ -151,4 +151,4 @@ public:
 }
 }
 
-#endif // CGAL_DDT_CELL_CONST_ITERATOR_H
+#endif // CGAL_DDT_CELL_ITERATOR_H
