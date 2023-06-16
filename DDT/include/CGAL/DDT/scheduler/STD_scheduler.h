@@ -57,43 +57,43 @@ struct STD_scheduler
     }
 
     template<typename TileContainer,
-             typename MessagingContainer,
+             typename Point_SetContainer,
              typename Transform,
              typename Reduce = std::plus<>,
              typename Tile = typename TileContainer::Tile,
-             typename Messaging = typename MessagingContainer::mapped_type,
+             typename Point_set = typename Point_SetContainer::mapped_type,
              typename V = std::invoke_result_t<Reduce,
-                                               std::invoke_result_t<Transform, Tile&, Messaging&>,
-                                               std::invoke_result_t<Transform, Tile&, Messaging&> > >
-    V for_each_zip(TileContainer& tiles, MessagingContainer& messagings, Transform transform, Reduce reduce = {}, V init = {})
+                                               std::invoke_result_t<Transform, Tile&, Point_set&>,
+                                               std::invoke_result_t<Transform, Tile&, Point_set&> > >
+    V for_each_zip(TileContainer& tiles, Point_SetContainer& point_sets, Transform transform, Reduce reduce = {}, V init = {})
     {
-        typedef typename MessagingContainer::value_type value_type;
+        typedef typename Point_SetContainer::value_type value_type;
         return std::transform_reduce(CGAL_DDT_SCHEDULER_STD_SCHEDULER_PAR
-                                     messagings.begin(), messagings.end(), init, reduce, [&tiles, &messagings, &transform, &init](value_type& messaging){
-            Tile& tile = tiles.emplace(messaging.first).first->second;
+                                     point_sets.begin(), point_sets.end(), init, reduce, [&tiles, &point_sets, &transform, &init](value_type& point_set){
+            Tile& tile = tiles.emplace(point_set.first).first->second;
             tile.locked = true;
             V value = init;
-            if (tiles.load(messaging.first, tile)) value = transform(tile, messaging.second);
-            messagings.send_points(messaging.first);
+            if (tiles.load(point_set.first, tile)) value = transform(tile, point_set.second);
+            point_sets.send_points(point_set.first);
             tile.locked = false;
             return value;
         } );
     }
 
     template<typename TileContainer,
-             typename MessagingContainer,
+             typename Point_SetContainer,
              typename Transform,
              typename Reduce = std::plus<>,
              typename Tile = typename TileContainer::Tile,
-             typename Messaging = typename MessagingContainer::mapped_type,
+             typename Point_set = typename Point_SetContainer::mapped_type,
              typename V = std::invoke_result_t<Reduce,
-                                               std::invoke_result_t<Transform, Tile&, Messaging&>,
-                                               std::invoke_result_t<Transform, Tile&, Messaging&> > >
-    V for_each_rec(TileContainer& tiles, MessagingContainer& messagings, Transform transform, Reduce reduce = {}, V init = {})
+                                               std::invoke_result_t<Transform, Tile&, Point_set&>,
+                                               std::invoke_result_t<Transform, Tile&, Point_set&> > >
+    V for_each_rec(TileContainer& tiles, Point_SetContainer& point_sets, Transform transform, Reduce reduce = {}, V init = {})
     {
         V value = init, v;
         do {
-            v = for_each_zip(tiles, messagings, transform, reduce, init);
+            v = for_each_zip(tiles, point_sets, transform, reduce, init);
             value = reduce(value, v);
         } while (v != init);
         return value;

@@ -46,8 +46,8 @@ V transform_reduce_id(TileContainer& tiles, Transform transform, Reduce reduce, 
     return value;
 }
 
-template<typename TileContainer, typename MessagingContainer, typename Transform, typename Reduce, typename V, typename Tile_index>
-V transform_reduce_id(TileContainer& tiles, MessagingContainer& messagings, Transform transform, Reduce reduce, V value, Tile_index id, std::mutex& mutex)
+template<typename TileContainer, typename Point_SetContainer, typename Transform, typename Reduce, typename V, typename Tile_index>
+V transform_reduce_id(TileContainer& tiles, Point_SetContainer& point_sets, Transform transform, Reduce reduce, V value, Tile_index id, std::mutex& mutex)
 {
     typedef typename TileContainer::Tile Tile;
     std::unique_lock<std::mutex> lock(mutex);
@@ -56,10 +56,10 @@ V transform_reduce_id(TileContainer& tiles, MessagingContainer& messagings, Tran
     tiles.prepare_load(id, tile);
 
     lock.unlock();
-    if (tiles.safe_load(id, tile)) value = reduce(value, transform(tile, messagings[id]));
+    if (tiles.safe_load(id, tile)) value = reduce(value, transform(tile, point_sets[id]));
 
     lock.lock();
-    messagings.send_points(id);
+    point_sets.send_points(id);
     tile.locked = false;
     return value;
 }
@@ -98,19 +98,19 @@ struct TBB_scheduler
     }
 
     template<typename TileContainer,
-             typename MessagingContainer,
+             typename Point_SetContainer,
              typename Transform,
              typename Reduce = std::plus<>,
              typename Tile = typename TileContainer::Tile,
-             typename Messaging = typename MessagingContainer::mapped_type,
+             typename Point_set = typename Point_SetContainer::mapped_type,
              typename V = std::invoke_result_t<Reduce,
-                                               std::invoke_result_t<Transform, Tile&, Messaging&>,
-                                               std::invoke_result_t<Transform, Tile&, Messaging&> > >
-    V for_each_zip(TileContainer& tiles, MessagingContainer& messagings, Transform transform, Reduce reduce = {}, V init = {})
+                                               std::invoke_result_t<Transform, Tile&, Point_set&>,
+                                               std::invoke_result_t<Transform, Tile&, Point_set&> > >
+    V for_each_zip(TileContainer& tiles, Point_SetContainer& point_sets, Transform transform, Reduce reduce = {}, V init = {})
     {
         typedef typename TileContainer::Tile_index Tile_index;
         std::vector<Tile_index> ids;
-        for (const auto& msg : messagings) ids.push_back(msg.first);
+        for (const auto& msg : point_sets) ids.push_back(msg.first);
         return arena.execute([&]{
             return tbb::parallel_reduce(
                   tbb::blocked_range<int>(0,ids.size()),
@@ -118,26 +118,26 @@ struct TBB_scheduler
             {
                 V value = init;
                 for (int i=r.begin(); i<r.end(); ++i)
-                    value = Impl::transform_reduce_id(tiles, messagings, transform, reduce, value, ids[i], mutex);
+                    value = Impl::transform_reduce_id(tiles, point_sets, transform, reduce, value, ids[i], mutex);
                 return value;
             }, reduce);
         });
     }
 
     template<typename TileContainer,
-             typename MessagingContainer,
+             typename Point_SetContainer,
              typename Transform,
              typename Reduce = std::plus<>,
              typename Tile = typename TileContainer::Tile,
-             typename Messaging = typename MessagingContainer::mapped_type,
+             typename Point_set = typename Point_SetContainer::mapped_type,
              typename V = std::invoke_result_t<Reduce,
-                                               std::invoke_result_t<Transform, Tile&, Messaging&>,
-                                               std::invoke_result_t<Transform, Tile&, Messaging&> > >
-    V for_each_rec(TileContainer& tiles, MessagingContainer& messagings, Transform transform, Reduce reduce = {}, V init = {})
+                                               std::invoke_result_t<Transform, Tile&, Point_set&>,
+                                               std::invoke_result_t<Transform, Tile&, Point_set&> > >
+    V for_each_rec(TileContainer& tiles, Point_SetContainer& point_sets, Transform transform, Reduce reduce = {}, V init = {})
     {
         V value = init, v;
         do {
-            v = for_each_zip(tiles, messagings, transform, reduce, init);
+            v = for_each_zip(tiles, point_sets, transform, reduce, init);
             value = reduce(value, v);
         } while (v != init);
         return value;

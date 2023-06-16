@@ -9,8 +9,8 @@
 //
 // Author(s)     : Mathieu Brédif and Laurent Caraffa
 
-#ifndef CGAL_DDT_MESSAGING_H
-#define CGAL_DDT_MESSAGING_H
+#ifndef CGAL_DDT_POINT_SET_H
+#define CGAL_DDT_POINT_SET_H
 
 #include <vector>
 #include <map>
@@ -20,13 +20,13 @@ namespace CGAL {
 namespace DDT {
 
 template<class TileIndex, class Point, class TilePoints = No_tile_points>
-struct Messaging {
+struct Point_set {
     typedef TileIndex                    Tile_index;
     typedef std::vector<std::pair<Tile_index, Point>>  Points;
     typedef std::map<Tile_index, Points> Points_map;
     typedef TilePoints                   Tile_points;
 
-    Messaging() : points_() {}
+    Point_set() : points_() {}
 
     const Points_map& points() const { return points_; }
     Points_map& points() { return points_; }
@@ -99,4 +99,4 @@ private:
 }
 }
 
-#endif // CGAL_DDT_MESSAGING_H
+#endif // CGAL_DDT_POINT_SET_H

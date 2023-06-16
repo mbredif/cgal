@@ -31,8 +31,8 @@ typedef CGAL::DDT::Vertex_info_property_map<Triangulation>                   Til
 typedef CGAL::DDT::Multithread_scheduler                                     Scheduler;
 typedef CGAL::DDT::File_serializer<Triangulation, TileIndexProperty>         Serializer;
 typedef CGAL::DDT::LAS_tile_points<Triangulation>                            Tile_points;
-typedef CGAL::DDT::Messaging<Tile_index, Tile_points::Point, Tile_points>             Messaging;
-typedef CGAL::DDT::Messaging_container<Messaging>                                     Messaging_container;
+typedef CGAL::DDT::Point_set<Tile_index, Tile_points::Point, Tile_points>             Point_set;
+typedef CGAL::DDT::Point_set_container<Point_set>                                     Point_set_container;
 typedef CGAL::Distributed_triangulation<Triangulation, TileIndexProperty, Serializer> Distributed_triangulation;
 
 
@@ -50,13 +50,13 @@ int main(int argc, char*argv[])
     Distributed_triangulation tri(3, max_number_of_tiles, serializer);
     Scheduler scheduler;
 
-    Messaging_container points;
+    Point_set_container points;
     for(Tile_index i = 0; i< argc - 4; ++i) {
         const char *las = argv[i+4];
         std::size_t num_points = points[i].insert(las);
         std::cout << std::to_string(i) << " : " << las << " (" << num_points << " points)" << std::endl;
     }
-    // -> Distributed_pointset points(argv+4, argv+argc);
+    // -> Distributed_point_set points(argv+4, argv+argc);
 
     std::cout << "Inserting points using " << max_number_of_tiles << " tiles at most in memory" << std::endl;
     tri.insert(scheduler, points);

@@ -46,41 +46,41 @@ struct Sequential_scheduler
     }
 
     template<typename TileContainer,
-             typename MessagingContainer,
+             typename Point_SetContainer,
              typename Transform,
              typename Reduce = std::plus<>,
              typename Tile = typename TileContainer::Tile,
-             typename Messaging = typename MessagingContainer::mapped_type,
+             typename Point_set = typename Point_SetContainer::mapped_type,
              typename V = std::invoke_result_t<Reduce,
-                                               std::invoke_result_t<Transform, Tile&, Messaging&>,
-                                               std::invoke_result_t<Transform, Tile&, Messaging&> > >
-    V for_each_zip(TileContainer& tiles, MessagingContainer& messagings, Transform transform, Reduce reduce = {}, V init = {})
+                                               std::invoke_result_t<Transform, Tile&, Point_set&>,
+                                               std::invoke_result_t<Transform, Tile&, Point_set&> > >
+    V for_each_zip(TileContainer& tiles, Point_SetContainer& point_sets, Transform transform, Reduce reduce = {}, V init = {})
     {
         V value = init;
-        for(auto& [id, messaging] : messagings) {
+        for(auto& [id, point_set] : point_sets) {
             Tile& tile = tiles.emplace(id).first->second;
             tile.locked = true;
-            if (tiles.load(id, tile)) value = reduce(value, transform(tile, messaging));
-            messagings.send_points(id);
+            if (tiles.load(id, tile)) value = reduce(value, transform(tile, point_set));
+            point_sets.send_points(id);
             tile.locked = false;
         }
         return value;
     }
 
     template<typename TileContainer,
-         typename MessagingContainer,
+         typename Point_SetContainer,
          typename Transform,
          typename Reduce = std::plus<>,
          typename Tile = typename TileContainer::Tile,
-         typename Messaging = typename MessagingContainer::mapped_type,
+         typename Point_set = typename Point_SetContainer::mapped_type,
          typename V = std::invoke_result_t<Reduce,
-                                           std::invoke_result_t<Transform, Tile&, Messaging&>,
-                                           std::invoke_result_t<Transform, Tile&, Messaging&> > >
-    V for_each_rec(TileContainer& tiles, MessagingContainer& messagings, Transform transform, Reduce reduce = {}, V init = {})
+                                           std::invoke_result_t<Transform, Tile&, Point_set&>,
+                                           std::invoke_result_t<Transform, Tile&, Point_set&> > >
+    V for_each_rec(TileContainer& tiles, Point_SetContainer& point_sets, Transform transform, Reduce reduce = {}, V init = {})
     {
         V value = init, v;
         do {
-            v = for_each_zip(tiles, messagings, transform, reduce, init);
+            v = for_each_zip(tiles, point_sets, transform, reduce, init);
             value = reduce(value, v);
         } while (v != init);
         return value;

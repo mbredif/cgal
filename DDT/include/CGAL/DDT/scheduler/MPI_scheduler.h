@@ -133,53 +133,53 @@ struct MPI_scheduler
     }
 
     template<typename TileContainer,
-             typename MessagingContainer,
+             typename Point_SetContainer,
              typename Transform,
              typename Reduce = std::plus<>,
              typename Tile = typename TileContainer::Tile,
-             typename Messaging = typename MessagingContainer::mapped_type,
+             typename Point_set = typename Point_SetContainer::mapped_type,
              typename V = std::invoke_result_t<Reduce,
-                                               std::invoke_result_t<Transform, Tile&, Messaging&>,
-                                               std::invoke_result_t<Transform, Tile&, Messaging&> > >
-    V for_each_zip(TileContainer& tiles, MessagingContainer& messagings, Transform transform, Reduce reduce = {}, V init = {})
+                                               std::invoke_result_t<Transform, Tile&, Point_set&>,
+                                               std::invoke_result_t<Transform, Tile&, Point_set&> > >
+    V for_each_zip(TileContainer& tiles, Point_SetContainer& point_sets, Transform transform, Reduce reduce = {}, V init = {})
     {
         V value = init;
-        for(auto& [id, messaging] : messagings) {
+        for(auto& [id, point_set] : point_sets) {
             if (!is_local(id)) continue;
             Tile& tile = tiles.emplace(id).first->second;
             tile.locked = true;
-            if (tiles.load(id, tile)) value = reduce(value, transform(tile, messaging));
-            messagings.send_points(id);
+            if (tiles.load(id, tile)) value = reduce(value, transform(tile, point_set));
+            point_sets.send_points(id);
             tile.locked = false;
         }
         return value;
     }
 
     template<typename TileContainer,
-         typename MessagingContainer,
+         typename Point_SetContainer,
          typename Transform,
          typename Reduce = std::plus<>,
          typename Tile = typename TileContainer::Tile,
-         typename Messaging = typename MessagingContainer::mapped_type,
+         typename Point_set = typename Point_SetContainer::mapped_type,
          typename V = std::invoke_result_t<Reduce,
-                                           std::invoke_result_t<Transform, Tile&, Messaging&>,
-                                           std::invoke_result_t<Transform, Tile&, Messaging&> > >
-    V for_each_rec(TileContainer& tiles, MessagingContainer& messagings, Transform transform, Reduce reduce = {}, V init = {})
+                                           std::invoke_result_t<Transform, Tile&, Point_set&>,
+                                           std::invoke_result_t<Transform, Tile&, Point_set&> > >
+    V for_each_rec(TileContainer& tiles, Point_SetContainer& point_sets, Transform transform, Reduce reduce = {}, V init = {})
     {
         // workaround : drop non local point insertions :
         // they are performed on all processes but
         // are only relevant in the local process
-        for( auto it = messagings.begin(); it != messagings.end(); ) {
-            if(!is_local(it->first)) it = messagings.erase(it);
+        for( auto it = point_sets.begin(); it != point_sets.end(); ) {
+            if(!is_local(it->first)) it = point_sets.erase(it);
             else ++it;
         }
         V value = init, v;
         do {
             do {
-                v = for_each_zip(tiles, messagings, transform, reduce, init);
+                v = for_each_zip(tiles, point_sets, transform, reduce, init);
                 value = reduce(value, v);
             } while (v != init);
-        } while (send_all_to_all(messagings));
+        } while (send_all_to_all(point_sets));
         return value;
     }
 
@@ -212,12 +212,12 @@ struct MPI_scheduler
     /// send/recv broadcast points to the tiles of other ranks/processes.
     /// send/recv points to the tiles that are local in other ranks/processes.
     /// @return whether any points were communicated.
-    template<typename MessagingContainer>
-    bool send_all_to_all(MessagingContainer& messagings)
+    template<typename Point_SetContainer>
+    bool send_all_to_all(Point_SetContainer& point_sets)
     {
-        typedef typename MessagingContainer::key_type Tile_index;
-        typedef typename MessagingContainer::mapped_type Messaging;
-        typedef typename MessagingContainer::Points Points;
+        typedef typename Point_SetContainer::key_type Tile_index;
+        typedef typename Point_SetContainer::mapped_type Point_set;
+        typedef typename Point_SetContainer::Points Points;
 
         int id_size = 4; /// @todo serialized size of tile id
         int count_size = 4; /// @todo serialized size of point count
@@ -229,11 +229,11 @@ struct MPI_scheduler
         // one to all
         {
             int broadcast_send_size = 0;
-            if (!messagings.extreme_points().empty())
-                broadcast_send_size = count_size + messagings.extreme_points().size() * data_size;
+            if (!point_sets.extreme_points().empty())
+                broadcast_send_size = count_size + point_sets.extreme_points().size() * data_size;
             std::vector<char> sendbuf(broadcast_send_size, 0);
-            if (broadcast_send_size>0) save_points(sendbuf.data(), messagings.extreme_points());
-            messagings.extreme_points().clear();
+            if (broadcast_send_size>0) save_points(sendbuf.data(), point_sets.extreme_points());
+            point_sets.extreme_points().clear();
             std::vector<int> recvcounts(world_size, 0);
             MPI_Allgather(
                 &broadcast_send_size, 1, MPI_INT,
@@ -267,9 +267,9 @@ struct MPI_scheduler
                 end   = recvbuf.data() + displs[world_size];
                 while( bytes < end ) bytes = load_points(bytes, received_points);
 
-                for(auto& [id, messaging] : messagings) {
+                for(auto& [id, point_set] : point_sets) {
                     if (!is_local(id) || received_points.empty()) continue;
-                    Points& p = messaging.points()[id];
+                    Points& p = point_set.points()[id];
                     p.insert(p.end(), received_points.begin(), received_points.end());
                 }
             }
@@ -279,7 +279,7 @@ struct MPI_scheduler
         // one to one
         {
             std::vector<int> sendcounts(world_size, 0);
-            for(const auto& [source, msg] : messagings)
+            for(const auto& [source, msg] : point_sets)
             {
                 for(const auto& [target, points] : msg.points())
                 {
@@ -309,7 +309,7 @@ struct MPI_scheduler
 
                 // serialize to sendbuf and empty inbox
                 std::vector<char> sendbuf(alltoall_send_size, 0);
-                for(auto& [source, msg] : messagings)
+                for(auto& [source, msg] : point_sets)
                 {
                     for(auto& [target, points] : msg.points())
                     {
@@ -343,19 +343,20 @@ struct MPI_scheduler
                     recvbuf.data(), recvcounts.data(), rdispls.data(), MPI_CHAR,
                     MPI_COMM_WORLD);
 
-                // deserialize recvbuf to messagings
+                // deserialize recvbuf to point_sets
                 char *bytes = recvbuf.data();
                 char *end = bytes + recvbuf.size();
                 while( bytes < end) {
                     Tile_index target;
                     bytes = load_value_4(bytes, target);
-                    Points& points = messagings[target].points()[target];
+                    Points& points = point_sets[target].points()[target];
                     std::size_t s = points.size();
                     bytes = load_points(bytes, points);
                 }
             }
         }
 
+<<<<<<< HEAD
         // communicate sendcounts to know recvcounts
         std::vector<int> recvcounts(world_size, 0);
         MPI_Alltoall(
