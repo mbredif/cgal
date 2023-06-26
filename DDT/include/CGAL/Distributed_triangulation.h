@@ -535,7 +535,8 @@ public:
     Cell_iterator local_cell(const Facet_iterator& f) const
     {
         assert(is_valid(f));
-        Tile_cell_index c = f.triangulation().cell(*f);
+        const Tile_triangulation& tri= f.triangulation();
+        Tile_cell_index c = tri.cell(*f);
         assert(!tri.cell_is_foreign(c));
         return Cell_iterator(&tiles, f.tile(), c);
     }
@@ -618,6 +619,16 @@ public:
             number_of_facets_ += tile.triangulation().number_of_main_facets();
             number_of_cells_ += tile.triangulation().number_of_main_cells();
         }
+    }
+
+    template <typename Scheduler, typename Serializer> save(Scheduler& sch,  const Serializer& serializer) {
+        auto agg = serializer.template initialize<Tile>();
+        agg = sch.for_each(tiles,
+            [&serializer](const Tile& tile) { return serializer.save(tile);},
+            [&serializer](auto& agg, const auto& val) { return serializer.aggregate(agg, val);},
+            agg
+        );
+        serializer.finalize(agg);
     }
 
     TileContainer tiles; /// underlying tile container

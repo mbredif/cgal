@@ -3,7 +3,6 @@
 #include <CGAL/DDT/scheduler/Multithread_scheduler.h>
 #include <CGAL/DDT/serializer/File_serializer.h>
 #include <CGAL/Distributed_triangulation.h>
-#include <CGAL/DDT/IO/write_ply.h>
 #include <CGAL/DDT/IO/write_vrt.h>
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
 #include <CGAL/Triangulation_vertex_base_with_info_2.h>
@@ -34,12 +33,17 @@ int main(int argc, char **argv)
 
     CGAL::Bbox_2 bbox(-range, -range, range, range);
     CGAL::DDT::Grid_partitioner<Triangulation, TileIndexProperty> partitioner(bbox, number_of_tiles_per_axis);
-    Serializer serializer("tile_");
-    Distributed_triangulation tri(2, max_number_of_tiles, serializer);
-    Scheduler scheduler(threads);
     Random_points generator(range);
     Distributed_point_set points(generator, number_of_points, partitioner);
+
+    Scheduler scheduler(threads);
+
+    Serializer serializer("tile_");
+    Distributed_triangulation tri(2, max_number_of_tiles, serializer);
+
     tri.insert(scheduler, points);
+
+    //tri.save(scheduler, CGAL::DDT::PVTU_serializer("out"));
 
     CGAL::DDT::write_vrt_verts(tri, scheduler, "out_v");
     CGAL::DDT::write_vrt_facets(tri, scheduler, "out_f");

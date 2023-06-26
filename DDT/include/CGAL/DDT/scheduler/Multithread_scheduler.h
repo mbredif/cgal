@@ -84,18 +84,17 @@ struct Multithread_scheduler
          typename Transform,
          typename Reduce = std::plus<>,
          typename Tile = typename TileContainer::Tile,
-         typename V = std::invoke_result_t<Reduce,
-                                           std::invoke_result_t<Transform, Tile&>,
-                                           std::invoke_result_t<Transform, Tile&> > >
-    V for_each(TileContainer& tiles, Transform transform, Reduce reduce = {}, V init = {})
+         typename T = std::invoke_result_t<Transform, Tile&>,
+         typename V = std::invoke_result_t<Reduce, T, T> >
+    V for_each(TileContainer& tiles, Transform transform, Reduce reduce = {}, V init_v = {}, T init_t = {})
     {
         typedef typename Tile::Tile_index Tile_index;
-        std::vector<std::future<V>> futures;
+        std::vector<std::future<T>> futures;
         for(const auto& [tid, tile] : tiles)
-            futures.push_back(pool.submit([this, &tiles, &transform, &init](Tile_index id){
-                return Impl::transform_id(tiles, transform, init, id, mutex);
+            futures.push_back(pool.submit([this, &tiles, &transform, &init_t](Tile_index id){
+                return Impl::transform_id(tiles, transform, init_t, id, mutex);
             }, tid));
-        V value = init;
+        V value = init_v;
         for(auto& f: futures) value = reduce(value, f.get());
         return value;
     }
@@ -106,9 +105,8 @@ struct Multithread_scheduler
              typename Reduce = std::plus<>,
              typename Tile = typename TileContainer::Tile,
              typename PointSet = typename PointSetContainer::mapped_type,
-             typename V = std::invoke_result_t<Reduce,
-                                               std::invoke_result_t<Transform, Tile&, PointSet&>,
-                                               std::invoke_result_t<Transform, Tile&, PointSet&> > >
+             typename T = std::invoke_result_t<Transform, Tile&, PointSet&>,
+             typename V = std::invoke_result_t<Reduce, T, T> >
     V for_each_zip(TileContainer& tiles, PointSetContainer& point_sets, Transform transform, Reduce reduce = {}, V init = {})
     {
         typedef typename Tile::Tile_index Tile_index;
@@ -131,9 +129,8 @@ struct Multithread_scheduler
              typename Reduce = std::plus<>,
              typename Tile = typename TileContainer::Tile,
              typename PointSet = typename PointSetContainer::mapped_type,
-             typename V = std::invoke_result_t<Reduce,
-                                               std::invoke_result_t<Transform, Tile&, PointSet&>,
-                                               std::invoke_result_t<Transform, Tile&, PointSet&> > >
+             typename T = std::invoke_result_t<Transform, Tile&, PointSet&>,
+             typename V = std::invoke_result_t<Reduce, T, T> >
     V for_each_rec(TileContainer& tiles, PointSetContainer& point_sets, Transform transform, Reduce reduce = {}, V init = {})
     {
         typedef typename Tile::Tile_index Tile_index;

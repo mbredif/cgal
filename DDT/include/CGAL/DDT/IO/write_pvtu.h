@@ -126,6 +126,7 @@ write_vtu_cells_tag(std::ostream& os,
   typedef typename Tr::Cell_index Cell_index;
   const char *format = binary ? "appended" : "ascii";
   const char *type = Impl::vtk_types<std::size_t>::string;
+  int dim = tr.maximal_dimension();
 
   // Write connectivity table
   os << "   <Cells>\n"
@@ -133,7 +134,7 @@ write_vtu_cells_tag(std::ostream& os,
 
   if (binary) { // if binary output, just write the xml tag
     os << "\" offset=\"" << offset << "\"/>\n";
-    offset += (4 * size_of_cells + 1) * sizeof(std::size_t);
+    offset += ((dim+1) * size_of_cells + 1) * sizeof(std::size_t);
     // 4 indices (size_t) per cell + length of the encoded data (size_t)
   }
   else {
@@ -143,7 +144,7 @@ write_vtu_cells_tag(std::ostream& os,
          ++c )
     {
       if(tr.cell_is_infinite(c) || !tr.cell_is_main(c)) continue;
-      for (int i=0; i<4; i++) {
+      for (int i=0; i<=dim; i++) {
         os << V[tr.vertex(c, i)] << " ";
       }
     }
@@ -167,8 +168,10 @@ write_vtu_cells_tag(std::ostream& os,
     os << "\n    </DataArray>\n";
   }
 
+  const unsigned char VTK_TRIANGLE = 5;
   const unsigned char VTK_TETRA = 10;
-  write_vtu_data_array_tag(os, "types", binary, size_of_cells, offset, VTK_TETRA);
+  unsigned char vtk_type = dim == 3 ? VTK_TETRA : VTK_TRIANGLE;
+  write_vtu_data_array_tag(os, "types", binary, size_of_cells, offset, vtk_type);
   os << "   </Cells>\n";
   os << "   <CellData Scalars=\"tile\">\n";
   write_vtu_data_array_tag(os, "tile", binary, size_of_cells, offset, tr.id());
@@ -217,7 +220,7 @@ void write_vtu_points_tag(std::ostream& os,
   if (binary) {
     os << "\" offset=\"" << offset << "\"/>\n";
     offset += 3 * size_of_vertices * sizeof(FT) + sizeof(std::size_t);
-    // dim coords per points + length of the encoded data (size_t)
+    // 3 coords per points + length of the encoded data (size_t)
   } else {
     os << "\">\n";
     write_vtu_points_ascii(os, tr, V);
@@ -235,7 +238,7 @@ write_vtu_points_binary(std::ostream& os,
             const Triangulation & tr,
             std::map<Vertex_index, std::size_t> & V)
 {
-  std::size_t dim = 3;
+  int dim = tr.maximal_dimension();
   typedef typename Triangulation::Tile_index Tile_index;
   typedef double FT;
 
@@ -265,7 +268,11 @@ write_vtu_cells_binary(std::ostream& os,
   typedef typename Triangulation::Tile_index Tile_index;
   std::vector<std::size_t> connectivity_table;
   std::vector<std::size_t> offsets;
-  std::vector<unsigned char> cell_type(tr.number_of_main_finite_cells(),10);  // tetrahedra == 10
+  const unsigned char VTK_TRIANGLE = 5;
+  const unsigned char VTK_TETRA = 10;
+  int dim = tr.maximal_dimension();
+  unsigned char vtk_type = dim == 3 ? VTK_TETRA : VTK_TRIANGLE;
+  std::vector<unsigned char> cell_type(tr.number_of_main_finite_cells(), vtk_type);
   std::vector<Tile_index> tiles(tr.number_of_main_finite_cells(),tr.id());
   connectivity_table.reserve(tr.number_of_vertices());
   offsets.reserve(tr.number_of_vertices());
@@ -273,9 +280,9 @@ write_vtu_cells_binary(std::ostream& os,
   for( Cell_index c = tr.cells_begin() ; c != tr.cells_end() ; ++c )
     {
       if(tr.cell_is_infinite(c) || !tr.cell_is_main(c)) continue;
-      off += 4;
+      off += (dim+1);
       offsets.push_back(off);
-      for (int i=0; i<4; i++)
+      for (int i=0; i<=dim; i++)
         connectivity_table.push_back(V[tr.vertex(c, i)]);
     }
 
@@ -318,20 +325,41 @@ void write_vtu_tile(std::ostream& os,
   os << "</VTKFile>\n";
 }
 
-template<typename DistributedTriangulation, typename Scheduler>
-void write_pvtu(DistributedTriangulation& tri, Scheduler& sch, const std::string& dirname,
-                bool binary = true)
-{
-    boost::filesystem::path p(dirname);
-    boost::filesystem::create_directories(p);
-    sch.for_each(tri.tiles, [&dirname,&binary](typename DistributedTriangulation::Tile& tile) {
-        std::string filename(dirname + "/" + std::to_string(tile.triangulation().id()));
+class PVTU_serializer {
+public:
+    PVTU_serializer(const std::string& dirname, bool binary = true) : dirname_(dirname), binary_(binary) {}
+
+    template <class Tile, typename aggregated_type = std::vector<typename Tile::Tile_index>>
+    aggregated_type initialize() const {
+        boost::filesystem::path p(dirname_);
+        boost::filesystem::create_directories(p);
+        return {};
+    }
+
+    template <class Tile, typename value_type = typename Tile::Tile_index>
+    value_type save(const Tile& tile) const {
+        std::string filename(dirname_ + "/" + std::to_string(tile.triangulation().id()));
         std::ofstream os(filename+".vtu");
-        write_vtu_tile(os, tile, binary);
-        return 1;
-    });
-    write_pvtu_file(dirname, tri.tiles.ids_begin(), tri.tiles.ids_end());
-}
+        write_vtu_tile(os, tile, binary_);
+        return tile.triangulation().id();
+    }
+
+    template <typename aggregated_type, typename value_type>
+    aggregated_type& aggregate(aggregated_type& agg, const value_type& value) const {
+        agg.push_back(value);
+        return agg;
+    }
+
+    template <typename aggregated_type>
+    void finalize(const aggregated_type& agg) const {
+        write_pvtu_file(dirname_, agg.begin(), agg.end());
+    }
+
+    private:
+    std::string dirname_;
+    bool binary_;
+};
+
 
 }
 }

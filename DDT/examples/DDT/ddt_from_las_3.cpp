@@ -59,7 +59,7 @@ int main(int argc, char*argv[])
     tri.insert(scheduler, points);
 
     std::cout << "Writing PVTU to " << out << std::endl;
-    CGAL::DDT::write_pvtu(tri, scheduler, out);
+    tri.save(scheduler, CGAL::DDT::PVTU_serializer(out));
 
     return EXIT_SUCCESS;
 }

@@ -36,9 +36,7 @@ struct Distributed_point_set {
     template <typename Iterator>
     Distributed_point_set(Iterator begin, Iterator end, Tile_index id = Tile_index()) {
         for(Iterator it = begin; it != end; ++it, ++id) {
-            std::string filename(*it);
-            std::size_t num_points = point_sets[id].insert(filename);
-            std::cout << std::to_string(id) << " : " << filename << " (" << num_points << " points)" << std::endl;
+            point_sets[id].insert(*it);
         }
     }
 
