@@ -216,7 +216,9 @@ struct MPI_scheduler
     bool send_all_to_all(PointSetContainer& point_sets)
     {
         typedef typename PointSetContainer::key_type Tile_index;
-        typedef typename PointSetContainer::Points PointPointSet   int id_size = 4; /// @todo serialized size of tile id
+        typedef typename PointSetContainer::Points Points;
+
+        int id_size = 4; /// @todo serialized size of tile id
         int count_size = 4; /// @todo serialized size of point count
         int point_size = 16; /// @todo serialized size of a Point
         int data_size = point_size + id_size; /// @todo serialized size of a Point_id
