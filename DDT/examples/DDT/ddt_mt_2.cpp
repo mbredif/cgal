@@ -19,7 +19,7 @@ typedef typename Triangulation::Point_2                                      Poi
 
 typedef CGAL::Random_points_in_square_2<typename Triangulation::Point>       Random_points;
 typedef CGAL::DDT::Multithread_scheduler                                     Scheduler;
-typedef CGAL::DDT::File_serializer<Triangulation, TileIndexProperty>         Serializer;
+typedef CGAL::DDT::File_serializer                                           Serializer;
 typedef CGAL::Distributed_triangulation<Triangulation, TileIndexProperty, Serializer>             Distributed_triangulation;
 typedef CGAL::Distributed_point_set<Point, Tile_index>                   Distributed_point_set;
 

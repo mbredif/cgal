@@ -30,11 +30,10 @@ typedef typename Triangulation::Point                                        Poi
 typedef CGAL::DDT::Vertex_info_property_map<Triangulation>                   TileIndexProperty;
 
 typedef CGAL::DDT::Multithread_scheduler                                     Scheduler;
-typedef CGAL::DDT::File_serializer<Triangulation, TileIndexProperty>         Serializer;
+typedef CGAL::DDT::File_serializer                                           Serializer;
 typedef CGAL::DDT::LAS_tile_points<Point>                                    Tile_points;
 typedef CGAL::Distributed_point_set<Point, Tile_index, Tile_points>                   Distributed_point_set;
 typedef CGAL::Distributed_triangulation<Triangulation, TileIndexProperty, Serializer> Distributed_triangulation;
-
 
 int main(int argc, char*argv[])
 {

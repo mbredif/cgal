@@ -23,11 +23,8 @@ namespace DDT {
 /// The point set of each tile is sorted spatially before saving, so that the Delaunay triangulation could be recomputed efficiently when the tile is reloaded.
 /// This trades off decreased disc usage and bandwith for increased computations.
 /// \cgalModels Serializer
-template <typename Triangulation, typename TileIndexProperty>
 struct File_points_serializer
 {
-  typedef typename TileIndexProperty::value_type       Tile_index;
-  typedef typename Triangulation_traits<Triangulation>::Bbox             Bbox;
 
   /// Each tile is saved as the file "{prefix}{tile_index}.txt".
   File_points_serializer(const std::string& prefix = "") : m_prefix(prefix) {
@@ -45,7 +42,9 @@ struct File_points_serializer
   }
 #endif
 
-  bool has_tile(Tile_index id) const
+
+  template <typename TileIndex>
+  bool has_tile(TileIndex id) const
   {
     const std::string fname = filename(id);
     std::ifstream in(fname, std::ios::in | std::ios::binary);
@@ -69,6 +68,7 @@ struct File_points_serializer
     typedef typename Tile_triangulation::Point Point;
     typedef typename Tile_triangulation::Vertex_index Vertex_index;
     typedef typename Tile_triangulation::Traits Traits;
+    typedef typename Tile_triangulation::Tile_index Tile_index;
 
     const std::string fname = filename(tile.triangulation().id());
     std::ifstream in(fname, std::ios::in | std::ios::binary);
@@ -122,7 +122,8 @@ struct File_points_serializer
   const std::string& prefix() const { return m_prefix; }
 
 private:
-  std::string filename(Tile_index i) const
+  template <typename TileIndex>
+  std::string filename(TileIndex i) const
   {
     return m_prefix+std::to_string(i)+".txt";
   }
@@ -134,8 +135,7 @@ private:
 #endif
 };
 
-template<typename Triangulation, typename TileIndexProperty>
-std::ostream& operator<<(std::ostream& out, const File_points_serializer<Triangulation, TileIndexProperty>& serializer) {
+std::ostream& operator<<(std::ostream& out, const File_points_serializer& serializer) {
     return out << "File_points_serializer(prefix=" << serializer.prefix() << ")";
 }
 

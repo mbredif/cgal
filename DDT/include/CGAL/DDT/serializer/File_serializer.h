@@ -22,12 +22,8 @@ namespace DDT {
 /// This serializer saves and loads the bounding box and triangulation of each tile to the filesystem.
 /// It contains the iostream serialization of the bounding box and the tile triangulation.
 /// \cgalModels Serializer
-template <typename Triangulation, typename TileIndexProperty>
 struct File_serializer
 {
-  typedef typename TileIndexProperty::value_type       Tile_index;
-  typedef typename Triangulation_traits<Triangulation>::Bbox             Bbox;
-
   /// Each tile is saved as the file "{prefix}{tile_index}.txt".
   File_serializer(const std::string& prefix = "") : m_prefix(prefix) {
       boost::filesystem::path p(prefix);
@@ -44,14 +40,17 @@ struct File_serializer
   }
 #endif
 
-  bool has_tile(Tile_index id) const
+
+  template <typename TileIndex>
+  bool has_tile(TileIndex id) const
   {
     const std::string fname = filename(id);
     std::ifstream in(fname, std::ios::in | std::ios::binary);
     return in.is_open();
   }
 
-  bool load(Tile_index id, Bbox& bbox) const {
+  template <typename TileIndex, typename Bbox>
+  bool load(TileIndex id, Bbox& bbox) const {
       const std::string fname = filename(id);
       std::ifstream in(fname, std::ios::in | std::ios::binary);
       in >> bbox;
@@ -87,7 +86,8 @@ struct File_serializer
   const std::string& prefix() const { return m_prefix; }
 
 private:
-  std::string filename(Tile_index i) const
+  template <typename TileIndex>
+  std::string filename(TileIndex i) const
   {
     return m_prefix+std::to_string(i)+".txt";
   }
@@ -99,8 +99,7 @@ private:
 #endif
 };
 
-template<typename Triangulation, typename TileIndexProperty>
-std::ostream& operator<<(std::ostream& out, const File_serializer<Triangulation, TileIndexProperty>& serializer) {
+std::ostream& operator<<(std::ostream& out, const File_serializer& serializer) {
     return out << "File_serializer(prefix=" << serializer.prefix() << ")";
 }
 

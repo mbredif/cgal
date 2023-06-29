@@ -20,7 +20,7 @@ typedef CGAL::DDT::Vertex_info_property_map<Triangulation>                   Til
 
 typedef CGAL::Random_points_in_square_2<Point>                                        Random_points;
 typedef CGAL::DDT::Sequential_scheduler                                               Scheduler;
-typedef CGAL::DDT::File_points_serializer<Triangulation, TileIndexProperty>           Serializer;
+typedef CGAL::DDT::File_points_serializer                                             Serializer;
 typedef CGAL::Distributed_triangulation<Triangulation, TileIndexProperty, Serializer> Distributed_triangulation;
 typedef CGAL::Distributed_point_set<Point, Tile_index>                                Distributed_point_set;
 
