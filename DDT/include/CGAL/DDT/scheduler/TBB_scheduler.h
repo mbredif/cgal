@@ -87,9 +87,8 @@ struct TBB_scheduler
         return arena.execute([&]{
             return tbb::parallel_reduce(
                   tbb::blocked_range<int>(0,ids.size()),
-                  init, [&](tbb::blocked_range<int> r, double running_total)
+                  init, [&](tbb::blocked_range<int> r, V value)
             {
-                V value = init;
                 for (int i=r.begin(); i<r.end(); ++i)
                     value = Impl::transform_reduce_id(tiles, transform, reduce, value, ids[i], mutex);
                 return value;
@@ -114,9 +113,8 @@ struct TBB_scheduler
         return arena.execute([&]{
             return tbb::parallel_reduce(
                   tbb::blocked_range<int>(0,ids.size()),
-                  init, [&](tbb::blocked_range<int> r, double running_total)
+                  init, [&](tbb::blocked_range<int> r, V value)
             {
-                V value = init;
                 for (int i=r.begin(); i<r.end(); ++i)
                     value = Impl::transform_reduce_id(tiles, point_sets, transform, reduce, value, ids[i], mutex);
                 return value;
