@@ -23,7 +23,7 @@ class Facet_iterator
 public:
     typedef typename TileContainer::const_iterator     Tile_const_iterator;
     typedef typename TileContainer::Tile_index         Tile_index;
-    typedef typename TileContainer::Tile_triangulation Tile_triangulation;
+    typedef typename TileContainer::value_type         Tile_triangulation;
     typedef typename Tile_triangulation::Facet_index   Tile_facet_index;
 
     using iterator_category = std::forward_iterator_tag;
@@ -109,7 +109,7 @@ public:
 
     const Tile_const_iterator&       tile()  const { return tile_;  }
     const value_type& operator*() const { return facet_; }
-    const Tile_triangulation&    triangulation() const { return tile_->second.triangulation(); }
+    const Tile_triangulation&    triangulation() const { return tile_->second.value(); }
     const Tile_index&            id()            const { return tile_->first; }
 
     bool is_valid()    const

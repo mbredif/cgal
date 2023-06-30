@@ -135,7 +135,7 @@ public:
     {
         for(const auto& [id, tile] : tiles)
         {
-            const typename Tile::Tile_triangulation& tri = tile.triangulation();
+            const typename Tile::value_type& tri = tile.value();
             for(Tile_vertex_index v = tri.vertices_begin(); v != tri.vertices_end(); ++v)
             {
                 assert(tri.vertex_is_infinite(v) || (tri.vertex_is_local(v) + tri.vertex_is_foreign(v) == 1));
@@ -143,7 +143,7 @@ public:
                 Tile_index tid = tri.vertex_id(v);
                 if(tid == tri.id()) continue;
                 Tile_const_iterator t = tiles.find(tid);
-                const Tile_triangulation& tri2 = t->second.triangulation();
+                const Tile_triangulation& tri2 = t->second.value();
                 if(tri2.relocate_vertex(tri, v) == tri2.vertices_end())
                 {
                     assert(! "relocate_vertex failed" );
@@ -168,7 +168,7 @@ public:
                 for(Tile_index tid : tids)
                 {
                     Tile_const_iterator t = tiles.find(tid);
-                    const Tile_triangulation& tri2 = t->second.triangulation();
+                    const Tile_triangulation& tri2 = t->second.value();
                     if(tri2.relocate_facet(tri, f) == tri2.facets_end())
                     {
                       assert(! "relocate_facet failed" );
@@ -193,7 +193,7 @@ public:
                 for(Tile_index tid : tids)
                 {
                     Tile_const_iterator t = tiles.find(tid);
-                    const Tile_triangulation& tri2 = t->second.triangulation();
+                    const Tile_triangulation& tri2 = t->second.value();
                     if(tri2.relocate_cell(tri, c) == tri2.cells_end())
                     {
                       assert(! "relocate_facet failed" );
@@ -212,17 +212,17 @@ public:
         for(const auto& [id, tile] : tiles)
         {
 
-            if(!tile.triangulation().is_valid(verbose, level))
+            if(!tile.value().is_valid(verbose, level))
             {
                 std::cerr << "Tile " << std::to_string(id) << " is invalid" << std::endl;
                 //assert(! "CGAL tile not valid" );
                 return false;
             }
-            number_of_finite_vertices += tile.triangulation().number_of_main_finite_vertices();
-            number_of_finite_facets += tile.triangulation().number_of_main_finite_facets();
-            number_of_finite_cells += tile.triangulation().number_of_main_finite_cells();
-            number_of_facets += tile.triangulation().number_of_main_facets();
-            number_of_cells += tile.triangulation().number_of_main_cells();
+            number_of_finite_vertices += tile.value().number_of_main_finite_vertices();
+            number_of_finite_facets += tile.value().number_of_main_finite_facets();
+            number_of_finite_cells += tile.value().number_of_main_finite_cells();
+            number_of_facets += tile.value().number_of_main_facets();
+            number_of_cells += tile.value().number_of_main_cells();
         }
         if (number_of_finite_vertices != number_of_finite_vertices_) { std::cerr << "incorrect number_of_finite_vertices" << std::endl; return false; }
         if (number_of_finite_facets != number_of_finite_facets_) { std::cerr << "incorrect number_of_finite_facets" << std::endl; return false; }
@@ -284,7 +284,7 @@ public:
         if (id == tile_id(v)) return v; // v is already in tile id
         Tile_const_iterator tile = tiles.find(id);
         if (tile == tiles.end()) return vertices_end();
-        const Tile_triangulation& tri = tile->second.triangulation();
+        const Tile_triangulation& tri = tile->second.value();
         Tile_vertex_index vertex = tri.relocate_vertex(v.triangulation(), *v);
         if (vertex==tri.vertices_end()) return vertices_end();
         return Vertex_iterator(&tiles, tile, vertex);
@@ -297,7 +297,7 @@ public:
         if (id == tile_id(f)) return f; // f is already in tile id
         Tile_const_iterator tile = tiles.find(id);
         if (tile == tiles.end()) return facets_end();
-        const Tile_triangulation& tri = tile->second.triangulation();
+        const Tile_triangulation& tri = tile->second.value();
         Tile_facet_index facet = tri.relocate_facet(f.triangulation(), *f);
         if (facet==tri.facets_end()) return facets_end();
         return Facet_iterator(&tiles, tile, facet);
@@ -310,7 +310,7 @@ public:
         if (id == tile_id(c)) return c; // c is already in tile id
         Tile_const_iterator tile = tiles.find(id);
         if (tile == tiles.end()) return cells_end();
-        const Tile_triangulation& tri = tile->second.triangulation();
+        const Tile_triangulation& tri = tile->second.value();
         Tile_cell_index cell = tri.relocate_cell(c.triangulation(), *c);
         if (cell==tri.cells_end()) return cells_end();
         return Cell_iterator(&tiles, tile, cell);
@@ -335,7 +335,7 @@ public:
     {
         assert(!tiles.empty());
         Tile_const_iterator tile = tiles.cbegin();
-        const Tile_triangulation& tri = tile->second.triangulation();
+        const Tile_triangulation& tri = tile->second.value();
         return Vertex_iterator(&tiles, tile, tri.infinite_vertex());
     }
 
@@ -612,12 +612,12 @@ public:
         number_of_cells_ = 0;
         for(auto& [id, tile] : tiles)
         {
-            if (tile.in_mem) tile.triangulation().finalize();
-            number_of_finite_vertices_ += tile.triangulation().number_of_main_finite_vertices();
-            number_of_finite_facets_ += tile.triangulation().number_of_main_finite_facets();
-            number_of_finite_cells_ += tile.triangulation().number_of_main_finite_cells();
-            number_of_facets_ += tile.triangulation().number_of_main_facets();
-            number_of_cells_ += tile.triangulation().number_of_main_cells();
+            if (tile.in_mem) tile.value().finalize();
+            number_of_finite_vertices_ += tile.value().number_of_main_finite_vertices();
+            number_of_finite_facets_ += tile.value().number_of_main_finite_facets();
+            number_of_finite_cells_ += tile.value().number_of_main_finite_cells();
+            number_of_facets_ += tile.value().number_of_main_facets();
+            number_of_cells_ += tile.value().number_of_main_cells();
         }
     }
 

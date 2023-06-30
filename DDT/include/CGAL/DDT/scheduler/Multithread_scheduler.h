@@ -88,7 +88,7 @@ struct Multithread_scheduler
          typename V = std::invoke_result_t<Reduce, T, T> >
     V for_each(TileContainer& tiles, Transform transform, Reduce reduce = {}, V init_v = {}, T init_t = {})
     {
-        typedef typename Tile::Tile_index Tile_index;
+        typedef typename Tile::value_type::Tile_index Tile_index;
         std::vector<std::future<T>> futures;
         for(const auto& [tid, tile] : tiles)
             futures.push_back(pool.submit([this, &tiles, &transform, &init_t](Tile_index id){
@@ -109,7 +109,7 @@ struct Multithread_scheduler
              typename V = std::invoke_result_t<Reduce, T, T> >
     V for_each_zip(TileContainer& tiles, PointSetContainer& point_sets, Transform transform, Reduce reduce = {}, V init = {})
     {
-        typedef typename Tile::Tile_index Tile_index;
+        typedef typename Tile::value_type::Tile_index Tile_index;
         std::vector<std::future<V>> futures;
         {
             std::unique_lock<std::mutex> lock(mutex);
@@ -133,7 +133,7 @@ struct Multithread_scheduler
              typename V = std::invoke_result_t<Reduce, T, T> >
     V for_each_rec(TileContainer& tiles, PointSetContainer& point_sets, Transform transform, Reduce reduce = {}, V init = {})
     {
-        typedef typename Tile::Tile_index Tile_index;
+        typedef typename Tile::value_type::Tile_index Tile_index;
         std::map<Tile_index, std::future<V>> futures;
         {
             std::unique_lock<std::mutex> lock(mutex);

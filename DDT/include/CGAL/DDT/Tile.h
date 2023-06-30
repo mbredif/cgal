@@ -18,22 +18,22 @@ namespace DDT {
 /// \ingroup PkgDDTClasses
 /// \tparam T is a model of the Triangulation concept
 /// The Tile stores a local triangulation.
-template<class TileTriangulation>
+template<class Value>
 class Tile
 {
 public:
-    typedef TileTriangulation                       Tile_triangulation;
-    typedef typename Tile_triangulation::Tile_index Tile_index;
+    typedef Value value_type;
 
-    Tile(Tile_index id, int dimension) :
-        triangulation_(id, dimension),
+    template<typename... Args>
+    Tile(Args... args) :
+        value_(args...),
         in_mem(false),
         locked(false)
     {
     }
 
-    const Tile_triangulation& triangulation() const { return triangulation_; }
-    Tile_triangulation& triangulation() { return triangulation_; }
+    const value_type& value() const { return value_; }
+    value_type& value() { return value_; }
 
     /// lock the tile for exclusive use (no unloading, no concurrent processing)
     bool locked;
@@ -41,7 +41,7 @@ public:
     bool in_mem;
 
 private:
-    Tile_triangulation triangulation_;
+    value_type value_;
 };
 
 }

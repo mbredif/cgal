@@ -64,15 +64,15 @@ struct File_points_serializer
 #ifdef CGAL_DEBUG_DDT
     ++nb_loads;
 #endif
-    typedef typename Tile::Tile_triangulation  Tile_triangulation;
+    typedef typename Tile::value_type  Tile_triangulation;
     typedef typename Tile_triangulation::Point Point;
     typedef typename Tile_triangulation::Vertex_index Vertex_index;
     typedef typename Tile_triangulation::Traits Traits;
     typedef typename Tile_triangulation::Tile_index Tile_index;
 
-    const std::string fname = filename(tile.triangulation().id());
+    const std::string fname = filename(tile.value().id());
     std::ifstream in(fname, std::ios::in | std::ios::binary);
-    in >> tile.triangulation().bbox();
+    in >> tile.value().bbox();
     std::size_t count;
     in >> count;
     Vertex_index v;
@@ -80,11 +80,11 @@ struct File_points_serializer
         Point p;
         Tile_index id;
         in >> p >> id;
-        tile.triangulation().bbox() += Traits::bbox(p);
-        v = tile.triangulation().insert(p,id,v).first;
+        tile.value().bbox() += Traits::bbox(p);
+        v = tile.value().insert(p,id,v).first;
     }
     if(!in.fail()) return true;
-    tile.triangulation().clear();
+    tile.value().clear();
     return false;
   }
 
@@ -92,14 +92,14 @@ struct File_points_serializer
 #ifdef CGAL_DEBUG_DDT
     ++nb_save;
 #endif
-    typedef typename Tile::Tile_triangulation  Tile_triangulation;
+    typedef typename Tile::value_type  Tile_triangulation;
     typedef typename Tile_triangulation::Point Point;
     typedef typename Tile_triangulation::Vertex_index Vertex_index;
-    const std::string fname = filename(tile.triangulation().id());
+    const std::string fname = filename(tile.value().id());
     std::ofstream out(fname, std::ios::out | std::ios::binary);
-    out << std::setprecision(17) << tile.triangulation().bbox() << "\n";
+    out << std::setprecision(17) << tile.value().bbox() << "\n";
 
-    const Tile_triangulation& triangulation = tile.triangulation();
+    const Tile_triangulation& triangulation = tile.value();
     out << triangulation.number_of_vertices() << "\n";
     std::vector<std::size_t> indices;
     std::vector<Point>  points;

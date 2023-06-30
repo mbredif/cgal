@@ -43,8 +43,8 @@ template<typename Tile>
 int read_cgal_tile(Tile& tile, const std::string& dirname)
 {
 
-    std::string filename = dirname + "/" + std::to_string(tile.triangulation().id() ) + ".bin";
-    std::string json_name = dirname + "/" + std::to_string(tile.triangulation().id() ) + ".json";
+    std::string filename = dirname + "/" + std::to_string(tile.value().id() ) + ".bin";
+    std::string json_name = dirname + "/" + std::to_string(tile.value().id() ) + ".json";
     std::ifstream ifile_tri(filename,  std::ios::in );
 
     if (!ifile_tri.is_open())
@@ -53,11 +53,11 @@ int read_cgal_tile(Tile& tile, const std::string& dirname)
         return 1;
     }
 
-    ifile_tri >> tile.triangulation();
+    ifile_tri >> tile.value();
     ifile_tri.close();
 
     std::ifstream ifile_json(json_name, std::ifstream::in);
-    read_json(tile.triangulation(),ifile_json);
+    read_json(tile.value(),ifile_json);
     ifile_json.close();
 
     return 0;
@@ -83,7 +83,7 @@ int read_cgal(DistributedTriangulation& tri, const std::string& dirname)
         auto& tile = tri.tiles.emplace(tid).first->second;
         tri.tiles.load(tid, tile);
         std::istringstream iss(bboxes_node.find(its.first)->second.data());
-        iss >> tile.triangulation().bbox();
+        iss >> tile.value().bbox();
         read_cgal_tile(tile,dirname);
     }
     tri.finalize();

@@ -300,9 +300,9 @@ void write_vtu_tile(std::ostream& os,
                     const Tile& tile,
                     bool binary = true)
 {
-  typedef typename Tile::Tile_triangulation Tr;
+  typedef typename Tile::value_type Tr;
   typedef typename Tr::Vertex_index Vertex_index;
-  const Tr& tr = tile.triangulation();
+  const Tr& tr = tile.value();
   const std::size_t number_of_vertices = tr.number_of_vertices();
   const std::size_t number_of_cells = tr.number_of_main_finite_cells();
   std::map<Vertex_index, std::size_t> V;
@@ -329,19 +329,19 @@ class PVTU_serializer {
 public:
     PVTU_serializer(const std::string& dirname, bool binary = true) : dirname_(dirname), binary_(binary) {}
 
-    template <class Tile, typename aggregated_type = std::vector<typename Tile::Tile_index>>
+    template <class Tile, typename aggregated_type = std::vector<typename Tile::value_type::Tile_index>>
     aggregated_type initialize() const {
         boost::filesystem::path p(dirname_);
         boost::filesystem::create_directories(p);
         return {};
     }
 
-    template <class Tile, typename value_type = typename Tile::Tile_index>
+    template <class Tile, typename value_type = typename Tile::value_type::Tile_index>
     value_type save(const Tile& tile) const {
-        std::string filename(dirname_ + "/" + std::to_string(tile.triangulation().id()));
+        std::string filename(dirname_ + "/" + std::to_string(tile.value().id()));
         std::ofstream os(filename+".vtu");
         write_vtu_tile(os, tile, binary_);
-        return tile.triangulation().id();
+        return tile.value().id();
     }
 
     template <typename aggregated_type, typename value_type>

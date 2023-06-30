@@ -129,7 +129,7 @@ void write_ply_cell(const DistributedTriangulation& tri, const std::string& file
     write_ply_element_cell(tri, out);
     write_ply_header_end(out);
     for(const auto& [id, tile] : tri.tiles)
-        write_ply_property_cell(tile.triangulation(), out);
+        write_ply_property_cell(tile.value(), out);
     out.close();
 }
 
@@ -141,7 +141,7 @@ void write_ply_vert(const DistributedTriangulation& tri, const std::string& file
     write_ply_element_vert(tri, out);
     write_ply_header_end(out);
     for(const auto& [id, tile] : tri.tiles)
-        write_ply_property_vert(tile.triangulation(), out);
+        write_ply_property_vert(tile.value(), out);
     out.close();
 }
 
@@ -154,9 +154,9 @@ void write_ply(const DistributedTriangulation& tri, const std::string& filename)
     write_ply_element_cell(tri, out);
     write_ply_header_end(out);
     for(const auto& [id, tile] : tri.tiles)
-        write_ply_property_vert(tile.triangulation(), out);
+        write_ply_property_vert(tile.value(), out);
     for(const auto& [id, tile]: tri.tiles)
-        write_ply_property_cell(tile.triangulation(), out);
+        write_ply_property_cell(tile.value(), out);
     out.close();
 }
 

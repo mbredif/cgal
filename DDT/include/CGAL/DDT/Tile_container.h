@@ -61,7 +61,7 @@ public:
     typedef typename Container::const_iterator         const_iterator;
     typedef Key_const_iterator<const_iterator>         Tile_index_const_iterator ;
 
-    typedef typename Tile::Tile_triangulation          Tile_triangulation;
+    typedef typename Tile::value_type                  value_type;
 
     inline constexpr int maximal_dimension() const
     {
@@ -134,8 +134,8 @@ public:
         std::cout << std::setfill(' ') << " (" << number_of_tiles_mem_ << " in mem)" << std::endl;
 
         if (!tile.locked && tile.in_mem && serializer_.save(tile)) {
-            tile.triangulation().finalize();
-            tile.triangulation().clear();
+            tile.value().finalize();
+            tile.value().clear();
             tile.in_mem = false;
             --number_of_tiles_mem_;
         }
