@@ -13,20 +13,13 @@ File serializers are enabling out of core processing, by streaming points in and
 class Serializer
 {
 public:
-#ifdef DOXYGEN_RUNNING
-  /// Tile identifier type, model of `TileIndex`
-  typedef unspecified_type Tile_index;
-#else
-  typedef ::Tile_index Tile_index;
-#endif
-  /// The type of the tile.
-  typedef unspecified_type Tile;
   /// Checks if a tile id is available for deserialization
-  bool has_tile(Tile_index) const { return false; }
+  template <typename TileIndex>
+  bool has_tile(TileIndex) const { return false; }
   /// Deserialize a tile, given its id, overwriting its triangulation on success. Returns whether deserialization succeeded.
-  bool load(Tile&) const { return false; }
+  template<typename TileTriangulation> bool load(TileTriangulation&) const { return false; }
   /// Serialize a tile. Returns whether deserialization succeeded.
-  bool save(const Tile& ) const { return false;}
+  template<typename TileTriangulation> bool save(const TileTriangulation& ) const { return false;}
 };
 
 /// Streaming

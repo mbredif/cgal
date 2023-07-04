@@ -26,8 +26,8 @@ struct No_serializer
 {
   template<typename Tile_index, typename Bbox> bool load(Tile_index id, Bbox& bbox) const { return false; }
   template<typename Tile_index> bool has_tile(Tile_index) const { return false; }
-  template<typename Tile> bool load(Tile&) const { return false; }
-  template<typename Tile> bool save(const Tile& ) const { return false;}
+  template<typename TileTriangulation> bool load(TileTriangulation&) const { return false; }
+  template<typename TileTriangulation> bool save(const TileTriangulation& ) const { return false;}
 };
 
 std::ostream& operator<<(std::ostream& out, const No_serializer& serializer) {

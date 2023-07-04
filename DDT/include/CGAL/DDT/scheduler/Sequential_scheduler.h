@@ -27,60 +27,56 @@ struct Sequential_scheduler
 
     inline int max_concurrency() const { return 1; }
 
-    template<typename TileContainer,
+    template<typename Container,
              typename Transform,
-             typename Reduce = std::plus<>,
-             typename Tile = typename TileContainer::Tile,
-             typename V = std::invoke_result_t<Reduce,
-                                               std::invoke_result_t<Transform, Tile&>,
-                                               std::invoke_result_t<Transform, Tile&> > >
-    V for_each(TileContainer& tiles, Transform transform, Reduce reduce = {}, V init = {})
+             typename V,
+             typename Reduce = std::plus<>>
+    V transform_reduce(Container& c, V init_v, Transform transform, Reduce reduce = {})
     {
-        V value = init;
-        for(auto& [id, tile] : tiles) {
-            tile.locked = true;
-            if (tiles.load(id, tile)) value = reduce(value, transform(tile));
-            tile.locked = false;
+        V value = init_v;
+        for(auto& [k, v] : c) {
+            v.locked = true;
+            if (c.load(k, v)) value = reduce(value, transform(v));
+            v.locked = false;
         }
         return value;
     }
 
-    template<typename TileContainer,
-             typename PointSetContainer,
+    template<typename Container1,
+             typename Container2,
+             typename V,
              typename Transform,
              typename Reduce = std::plus<>,
-             typename Tile = typename TileContainer::Tile,
-             typename PointSet = typename PointSetContainer::mapped_type,
-             typename V = std::invoke_result_t<Reduce,
-                                               std::invoke_result_t<Transform, Tile&, PointSet&>,
-                                               std::invoke_result_t<Transform, Tile&, PointSet&> > >
-    V for_each_zip(TileContainer& tiles, PointSetContainer& point_sets, Transform transform, Reduce reduce = {}, V init = {})
+             typename... Args>
+    V join_transform_reduce(Container1& c1, Container2& c2, V init, Transform transform, Reduce reduce = {}, Args... args)
     {
         V value = init;
-        for(auto& [id, point_set] : point_sets) {
-            Tile& tile = tiles.emplace(id).first->second;
-            tile.locked = true;
-            if (tiles.load(id, tile)) value = reduce(value, transform(tile, point_set));
-            point_sets.send_points(id);
-            tile.locked = false;
+        for(auto& [k, v2] : c2) {
+            typedef typename Container1::iterator iterator1;
+            typedef typename Container1::mapped_type T1;
+            iterator1 it = c1.emplace(k, std::move(T1(k, args...))).first;
+            it->second.locked = true;
+
+            T1& v1 = it->second;
+            if (c1.load(k, it->second)) value = reduce(value, transform(v1, v2));
+
+            c2.send_points(k);
+            it->second.locked = false;
         }
         return value;
     }
 
-    template<typename TileContainer,
-         typename PointSetContainer,
-         typename Transform,
-         typename Reduce = std::plus<>,
-         typename Tile = typename TileContainer::Tile,
-         typename PointSet = typename PointSetContainer::mapped_type,
-         typename V = std::invoke_result_t<Reduce,
-                                           std::invoke_result_t<Transform, Tile&, PointSet&>,
-                                           std::invoke_result_t<Transform, Tile&, PointSet&> > >
-    V for_each_rec(TileContainer& tiles, PointSetContainer& point_sets, Transform transform, Reduce reduce = {}, V init = {})
+    template<typename Container1,
+             typename Container2,
+             typename V,
+             typename Transform,
+             typename Reduce = std::plus<>,
+             typename... Args>
+    V join_transform_reduce_loop(Container1& c1, Container2& c2, V init, Transform transform, Reduce reduce = {}, Args... args)
     {
         V value = init, v;
         do {
-            v = for_each_zip(tiles, point_sets, transform, reduce, init);
+            v = join_transform_reduce(c1, c2, init, transform, reduce, args...);
             value = reduce(value, v);
         } while (v != init);
         return value;

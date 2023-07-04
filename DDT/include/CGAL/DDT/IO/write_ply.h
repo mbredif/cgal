@@ -69,30 +69,30 @@ void write_ply_element_vert(const DistributedTriangulation& tri, std::ostream& o
 }
 
 template<typename TileTriangulation>
-void write_ply_property_cell(const TileTriangulation& dt, std::ostream& out)
+void write_ply_property_cell(const TileTriangulation& triangulation, std::ostream& out)
 {
     typedef typename TileTriangulation::Tile_index Tile_index;
     typedef typename TileTriangulation::Vertex_index Vertex_index;
     typedef typename TileTriangulation::Cell_index Cell_index;
-    unsigned char N = (unsigned char)(dt.maximal_dimension()+1);
-    Tile_index tid = dt.id();
+    unsigned char N = (unsigned char)(triangulation.maximal_dimension()+1);
+    Tile_index tid = triangulation.id();
     std::map<Vertex_index, int> dict;
 
     int id = 0;
-    for(Vertex_index v = dt.vertices_begin(); v != dt.vertices_end(); ++v)
-        if(!dt.vertex_is_infinite(v)) dict[v] = id++;
+    for(Vertex_index v = triangulation.vertices_begin(); v != triangulation.vertices_end(); ++v)
+        if(!triangulation.vertex_is_infinite(v)) dict[v] = id++;
 
-    for(Cell_index c = dt.cells_begin(); c != dt.cells_end(); ++c)
+    for(Cell_index c = triangulation.cells_begin(); c != triangulation.cells_end(); ++c)
     {
-        if(dt.cell_is_infinite(c)) continue;
+        if(triangulation.cell_is_infinite(c)) continue;
         unsigned char local = 0;
         out.write(reinterpret_cast<char *>(&N), sizeof(N));
         for(int i=0; i<N; ++i)
         {
-            Vertex_index v = dt.vertex(c, i);
+            Vertex_index v = triangulation.vertex(c, i);
             int id = dict[v];
             out.write(reinterpret_cast<char *>(&id), sizeof(id));
-            local += dt.vertex_id(v) == tid;
+            local += triangulation.vertex_id(v) == tid;
         }
         out.write(reinterpret_cast<char *>(&tid), sizeof(tid));
         out.write(reinterpret_cast<char *>(&local), sizeof(local));
@@ -101,19 +101,19 @@ void write_ply_property_cell(const TileTriangulation& dt, std::ostream& out)
 }
 
 template<typename TileTriangulation>
-void write_ply_property_vert(const TileTriangulation& dt, std::ostream& out)
+void write_ply_property_vert(const TileTriangulation& triangulation, std::ostream& out)
 {
     typedef typename TileTriangulation::Tile_index Tile_index;
     typedef typename TileTriangulation::Vertex_index Vertex_index;
-    int D = dt.maximal_dimension();
-    Tile_index tid = dt.id();
-    for(Vertex_index v = dt.vertices_begin(); v != dt.vertices_end(); ++v)
+    int D = triangulation.maximal_dimension();
+    Tile_index tid = triangulation.id();
+    for(Vertex_index v = triangulation.vertices_begin(); v != triangulation.vertices_end(); ++v)
     {
-        if(dt.vertex_is_infinite(v)) continue;
-        Tile_index id = dt.vertex_id(v);
+        if(triangulation.vertex_is_infinite(v)) continue;
+        Tile_index id = triangulation.vertex_id(v);
         for(int d=0; d<D; ++d)
         {
-            float coord = float(dt.approximate_cartesian_coordinate(v,d));
+            float coord = float(triangulation.approximate_cartesian_coordinate(v,d));
             out.write(reinterpret_cast<char *>(&coord), sizeof(coord));
         }
         out.write(reinterpret_cast<char *>(&tid), sizeof(tid));

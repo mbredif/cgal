@@ -19,39 +19,45 @@ namespace CGAL {
 namespace DDT {
 
 namespace Impl {
-template< typename TileContainer, typename Transform, typename V, typename Tile_index >
-V transform_id(TileContainer& tiles, Transform transform, V init, Tile_index id, std::mutex& mutex)
+template< typename Container, typename Transform, typename V, typename Key>
+V transform_id(Container& c, V init, Transform transform, Key k, std::mutex& mutex)
 {
-    typedef typename TileContainer::Tile Tile;
+    typedef typename Container::iterator iterator;
+    typedef typename Container::mapped_type T;
     std::unique_lock<std::mutex> lock(mutex);
-    Tile& tile = tiles.emplace(id).first->second;
-    tile.locked = true;
-    tiles.prepare_load(id, tile);
-
+    iterator it = c.find(k);
+    it->second.locked = true;
+    c.prepare_load(k, it->second);
     lock.unlock();
-    V value = (tiles.safe_load(id, tile)) ? transform(tile) : init;
+
+    T& v = it->second;
+    V value = (c.safe_load(k, it->second)) ? transform(v) : init;
 
     lock.lock();
-    tile.locked = false;
+    it->second.locked = false;
     return value;
 }
 
 
-template< typename TileContainer, typename PointSetContainer, typename Transform, typename V, typename Tile_index >
-V transform_zip_id(TileContainer& tiles, PointSetContainer& point_sets, Transform transform, V init, Tile_index id, std::mutex& mutex)
+template< typename Container1, typename Container2, typename Transform, typename V, typename Key, typename... Args>
+V transform_zip_id(Container1& c1, Container2& c2, V init, Transform transform, Key k, std::mutex& mutex, Args... args)
 {
-    typedef typename TileContainer::Tile Tile;
+    typedef typename Container1::iterator iterator1;
+    typedef typename Container1::mapped_type T1;
+    typedef typename Container2::mapped_type T2;
     std::unique_lock<std::mutex> lock(mutex);
-    Tile& tile = tiles.emplace(id).first->second;
-    tile.locked = true;
-    tiles.prepare_load(id, tile);
-
+    iterator1 it = c1.emplace(k, std::move(T1(k, args...))).first;
+    it->second.locked = true;
+    c1.prepare_load(k, it->second);
     lock.unlock();
-    V value = (tiles.safe_load(id, tile)) ? transform(tile, point_sets[id]) : init;
+
+    T1& v1 = it->second;
+    T2& v2 = c2[k];
+    V value = (c1.safe_load(k, it->second)) ? transform(v1, v2) : init;
 
     lock.lock();
-    point_sets.send_points(id);
-    tile.locked = false;
+    c2.send_points(k);
+    it->second.locked = false;
     return value;
 }
 
@@ -80,67 +86,61 @@ struct Multithread_scheduler
         pool.shutdown();
     }
 
-    template<typename TileContainer,
-         typename Transform,
-         typename Reduce = std::plus<>,
-         typename Tile = typename TileContainer::Tile,
-         typename T = std::invoke_result_t<Transform, Tile&>,
-         typename V = std::invoke_result_t<Reduce, T, T> >
-    V for_each(TileContainer& tiles, Transform transform, Reduce reduce = {}, V init_v = {}, T init_t = {})
+    template<typename Container,
+             typename V,
+             typename Transform,
+             typename Reduce = std::plus<>>
+    V transform_reduce(Container& c, V init, Transform transform, Reduce reduce = {})
     {
-        typedef typename Tile::value_type::Tile_index Tile_index;
-        std::vector<std::future<T>> futures;
-        for(const auto& [tid, tile] : tiles)
-            futures.push_back(pool.submit([this, &tiles, &transform, &init_t](Tile_index id){
-                return Impl::transform_id(tiles, transform, init_t, id, mutex);
-            }, tid));
-        V value = init_v;
+        typedef typename Container::key_type key_type;
+        std::vector<std::future<V>> futures;
+        for(const auto& [k, v] : c)
+            futures.push_back(pool.submit([this, &c, &init, &transform](key_type k){
+                return Impl::transform_id(c, init, transform, k, mutex);
+            }, k));
+        V value = init;
         for(auto& f: futures) value = reduce(value, f.get());
         return value;
     }
 
-    template<typename TileContainer,
-             typename PointSetContainer,
+    template<typename Container1,
+             typename Container2,
+             typename V,
              typename Transform,
              typename Reduce = std::plus<>,
-             typename Tile = typename TileContainer::Tile,
-             typename PointSet = typename PointSetContainer::mapped_type,
-             typename T = std::invoke_result_t<Transform, Tile&, PointSet&>,
-             typename V = std::invoke_result_t<Reduce, T, T> >
-    V for_each_zip(TileContainer& tiles, PointSetContainer& point_sets, Transform transform, Reduce reduce = {}, V init = {})
+             typename... Args>
+    V join_transform_reduce(Container1& c1, Container2& c2, V init, Transform transform, Reduce reduce = {}, Args... args)
     {
-        typedef typename Tile::value_type::Tile_index Tile_index;
+        typedef typename Container1::key_type key_type;
         std::vector<std::future<V>> futures;
         {
             std::unique_lock<std::mutex> lock(mutex);
-            for(const auto& [id, point_set] : point_sets)
-                futures.push_back(pool.submit([this, &tiles, &point_sets, &transform, &init](Tile_index id){
-                    return Impl::transform_zip_id(tiles, point_sets, transform, init, id, mutex);
-                }, id));
+            for(const auto& [k, v2] : c2)
+                futures.push_back(pool.submit([this, &c1, &c2, &init, &transform, &args...](key_type k){
+                    return Impl::transform_zip_id(c1, c2, init, transform, k, mutex, args...);
+                }, k));
         }
         V value = init;
         for(auto& f: futures) value = reduce(value, f.get());
         return value;
     }
 
-    template<typename TileContainer,
-             typename PointSetContainer,
+    template<typename Container1,
+             typename Container2,
+             typename V,
              typename Transform,
              typename Reduce = std::plus<>,
-             typename Tile = typename TileContainer::Tile,
-             typename PointSet = typename PointSetContainer::mapped_type,
-             typename T = std::invoke_result_t<Transform, Tile&, PointSet&>,
-             typename V = std::invoke_result_t<Reduce, T, T> >
-    V for_each_rec(TileContainer& tiles, PointSetContainer& point_sets, Transform transform, Reduce reduce = {}, V init = {})
+             typename... Args>
+    V join_transform_reduce_loop(Container1& c1, Container2& c2, V init, Transform transform, Reduce reduce = {}, Args... args)
     {
-        typedef typename Tile::value_type::Tile_index Tile_index;
-        std::map<Tile_index, std::future<V>> futures;
+        typedef typename Container1::key_type key_type;
+        std::map<key_type, std::future<V>> futures;
         {
             std::unique_lock<std::mutex> lock(mutex);
-            for(const auto& [id, point_set] : point_sets)
-                futures.emplace(id, pool.submit([this, &tiles, &point_sets, &transform, &init](Tile_index id){
-                    return Impl::transform_zip_id(tiles, point_sets, transform, init, id, mutex);
-                }, id));
+            for(const auto& [k, v2] : c2)
+                futures.emplace(k, pool.submit([this, &c1, &c2, &init, &transform, &args...](key_type k){
+                    return Impl::transform_zip_id(c1, c2, init, transform, k, mutex, args...);
+                }, k));
         }
 
         V value = init;
@@ -154,15 +154,15 @@ struct Multithread_scheduler
                     std::unique_lock<std::mutex> lock(mutex);
                     value = reduce(value, fit->second.get());
                     futures.erase(fit++);
-                    std::vector<Tile_index> ids;
-                    for(const auto& point_set : point_sets)
-                        if (!point_set.second.points().at(point_set.first).empty())
-                            ids.push_back(point_set.first);
-                    for(auto id : ids)
-                        if (futures.count(id) == 0)
-                            futures.emplace(id, pool.submit([this, &tiles, &point_sets, &transform, &init](Tile_index id){
-                                return Impl::transform_zip_id(tiles, point_sets, transform, init, id, mutex);
-                            }, id));
+                    std::vector<key_type> keys;
+                    for(const auto& v2 : c2)
+                        if (!v2.second.points().at(v2.first).empty())
+                            keys.push_back(v2.first);
+                    for(auto k : keys)
+                        if (futures.count(k) == 0)
+                            futures.emplace(k, pool.submit([this, &c1, &c2, &init, &transform, &args...](key_type k){
+                                return Impl::transform_zip_id(c1, c2, init, transform, k, mutex, args...);
+                            }, k));
                 }
             }
         }

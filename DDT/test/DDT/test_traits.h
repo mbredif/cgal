@@ -62,7 +62,7 @@ int test_traits(const Partitioner& partitioner, const std::string& testname, int
     Random_points generator(dim, range);
     Scheduler scheduler;
     Distributed_point_set points(generator, NP, partitioner);
-    Distributed_triangulation tri1(dim, NT);
+    Distributed_triangulation tri1(dim);
     tri1.insert(scheduler, points);
     if(!tri1.is_valid())
     {

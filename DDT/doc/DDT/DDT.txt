@@ -109,9 +109,9 @@ The \ref CGAL::Distributed_triangulation class is a view on the distributed Dela
 \subsubsection SSSection_DDT_Iterators Iterators
 Iterators are provided to enumerate the main simplices of the loaded tiles in a DDT.
 
-- \ref CGAL::Distributed_triangulation::Cell_const_iterator
-- \ref CGAL::Distributed_triangulation::Vertex_const_iterator
-- \ref CGAL::Distributed_triangulation::Facet_const_iterator
+- \ref CGAL::Distributed_triangulation::Cell_iterator
+- \ref CGAL::Distributed_triangulation::Vertex_iterator
+- \ref CGAL::Distributed_triangulation::Facet_iterator
 
 These iterators are implemented by maintaining a local filtered iterator over the main simplices and an iterator over the tiles.
 It thus iterates over the  **main** simplices of each loaded tiles in turn.

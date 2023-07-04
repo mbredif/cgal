@@ -35,6 +35,9 @@ public:
     const value_type& value() const { return value_; }
     value_type& value() { return value_; }
 
+    operator Value&() { return value_; }
+    operator const Value&() const { return value_; }
+
     /// lock the tile for exclusive use (no unloading, no concurrent processing)
     bool locked;
     /// is the triangulation in memory ?

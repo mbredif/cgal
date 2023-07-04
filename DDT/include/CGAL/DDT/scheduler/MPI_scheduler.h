@@ -114,72 +114,77 @@ struct MPI_scheduler
         return rank(id) == world_rank;
     }
 
-    template<typename TileContainer,
+    template<typename Container,
+             typename V,
              typename Transform,
-             typename Reduce = std::plus<>,
-             typename Tile = typename TileContainer::Tile,
-             typename V = std::invoke_result_t<Reduce,
-                                               std::invoke_result_t<Transform, Tile&>,
-                                               std::invoke_result_t<Transform, Tile&> > >
-    V for_each(TileContainer& tiles, Transform transform, Reduce reduce = {}, V init = {})
+             typename Reduce = std::plus<>>
+    V transform_reduce(Container& c, V init, Transform transform, Reduce reduce = {})
     {
         V value = init;
-        for(auto& [id, tile] : tiles) {
-            tile.locked = true;
-            if (tiles.load(id, tile)) value = reduce(value, transform(tile));
-            tile.locked = false;
+        for(auto& [k, v] : c) {
+            if (!is_local(k)) continue;
+            v.locked = true;
+            if (c.load(k, v)) value = reduce(value, transform(v));
+            v.locked = true;
         }
+
+        // @todo : aggregate the values of all processors
         return value;
     }
 
-    template<typename TileContainer,
-             typename PointSetContainer,
+    template<typename Container1,
+             typename Container2,
+             typename V,
              typename Transform,
              typename Reduce = std::plus<>,
-             typename Tile = typename TileContainer::Tile,
-             typename PointSet = typename PointSetContainer::mapped_type,
-             typename V = std::invoke_result_t<Reduce,
-                                               std::invoke_result_t<Transform, Tile&, PointSet&>,
-                                               std::invoke_result_t<Transform, Tile&, PointSet&> > >
-    V for_each_zip(TileContainer& tiles, PointSetContainer& point_sets, Transform transform, Reduce reduce = {}, V init = {})
+             typename... Args>
+    V join_transform_reduce(Container1& c1, Container2& c2, V init, Transform transform, Reduce reduce = {}, Args... args)
     {
-        V value = init;
-        for(auto& [id, point_set] : point_sets) {
-            if (!is_local(id)) continue;
-            Tile& tile = tiles.emplace(id).first->second;
-            tile.locked = true;
-            if (tiles.load(id, tile)) value = reduce(value, transform(tile, point_set));
-            point_sets.send_points(id);
-            tile.locked = false;
+        // for now, let's assume that c2 is replicated on all processes, so that its non-local keys may be ignored
+        // @todo : copartitioning of c1 and c2 ?
+        for( auto it = c2.begin(); it != c2.end(); ) {
+            if(!is_local(it->first)) it = c2.erase(it);
+            else ++it;
         }
+        V value = init;
+        for(auto& [k, v2] : c2) {
+            if (!is_local(k)) continue;
+            typedef typename Container1::iterator iterator1;
+            typedef typename Container1::mapped_type mapped_type1;
+            iterator1 it = c1.emplace(k, std::move(mapped_type1(k, args...))).first;
+            it->second.locked = true;
+
+            mapped_type1& v1 = it->second;
+            if (c1.load(k, it->second)) value = reduce(value, transform(v1, v2));
+
+            c2.send_points(k);
+            it->second.locked = false;
+        }
+        // @todo : aggregate the values of all processors
         return value;
     }
 
-    template<typename TileContainer,
-         typename PointSetContainer,
-         typename Transform,
-         typename Reduce = std::plus<>,
-         typename Tile = typename TileContainer::Tile,
-         typename PointSet = typename PointSetContainer::mapped_type,
-         typename V = std::invoke_result_t<Reduce,
-                                           std::invoke_result_t<Transform, Tile&, PointSet&>,
-                                           std::invoke_result_t<Transform, Tile&, PointSet&> > >
-    V for_each_rec(TileContainer& tiles, PointSetContainer& point_sets, Transform transform, Reduce reduce = {}, V init = {})
+    template<typename Container1,
+             typename Container2,
+             typename V,
+             typename Transform,
+             typename Reduce = std::plus<>,
+             typename... Args>
+    V join_transform_reduce_loop(Container1& c1, Container2& c2, V init, Transform transform, Reduce reduce = {}, Args... args)
     {
-        // workaround : drop non local point insertions :
-        // they are performed on all processes but
-        // are only relevant in the local process
-        for( auto it = point_sets.begin(); it != point_sets.end(); ) {
-            if(!is_local(it->first)) it = point_sets.erase(it);
+        // for now, let's assume that c2 is replicated on all processes, so that its non-local keys may be ignored
+        // @todo : copartitioning of c1 and c2 ?
+        for( auto it = c2.begin(); it != c2.end(); ) {
+            if(!is_local(it->first)) it = c2.erase(it);
             else ++it;
         }
         V value = init, v;
         do {
             do {
-                v = for_each_zip(tiles, point_sets, transform, reduce, init);
+                v = join_transform_reduce(c1, c2, init, transform, reduce, args...);
                 value = reduce(value, v);
             } while (v != init);
-        } while (send_all_to_all(point_sets));
+        } while (send_all_to_all(c2));
         return value;
     }
 

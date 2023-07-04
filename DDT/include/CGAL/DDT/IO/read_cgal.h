@@ -27,24 +27,32 @@
 namespace CGAL {
 namespace DDT {
 
+template<typename Statistics>
+void read_json_statistics(boost::property_tree::ptree& node, Statistics& stats)
+{
+    stats.number_of_finite_vertices = node.get<std::size_t>("finite_vertices");
+    stats.number_of_finite_facets = node.get<std::size_t>("finite_facets");
+    stats.number_of_finite_cells = node.get<std::size_t>("finite_cells");
+    stats.number_of_facets = node.get<std::size_t>("facets");
+    stats.number_of_cells = node.get<std::size_t>("cells");
+}
+
 template<typename Tile_triangulation>
 std::istream& read_json(Tile_triangulation& tri,std::istream&  ifile)
 {
     boost::property_tree::ptree root_node;
     boost::property_tree::read_json(ifile, root_node);
     tri.id() =  root_node.get<typename Tile_triangulation::Tile_index>("id");
-    //tri.number_of_main_finite_cells() = root_node.get<std::size_t>("nbmc");
-    //tri.number_of_main_finite_vertices() = root_node.get<std::size_t>("nbmv");
-    //tri.number_of_main_finite_facets() = root_node.get<std::size_t>("nbmf");
+    read_json_statistics(root_node, tri.statistics());
     return ifile;
 }
 
-template<typename Tile>
-int read_cgal_tile(Tile& tile, const std::string& dirname)
+template<typename TileTriangulation>
+int read_cgal_tile(TileTriangulation& triangulation, const std::string& dirname)
 {
 
-    std::string filename = dirname + "/" + std::to_string(tile.value().id() ) + ".bin";
-    std::string json_name = dirname + "/" + std::to_string(tile.value().id() ) + ".json";
+    std::string filename = dirname + "/" + std::to_string(triangulation.id() ) + ".bin";
+    std::string json_name = dirname + "/" + std::to_string(triangulation.id() ) + ".json";
     std::ifstream ifile_tri(filename,  std::ios::in );
 
     if (!ifile_tri.is_open())
@@ -53,11 +61,11 @@ int read_cgal_tile(Tile& tile, const std::string& dirname)
         return 1;
     }
 
-    ifile_tri >> tile.value();
+    ifile_tri >> triangulation;
     ifile_tri.close();
 
     std::ifstream ifile_json(json_name, std::ifstream::in);
-    read_json(tile.value(),ifile_json);
+    read_json(triangulation,ifile_json);
     ifile_json.close();
 
     return 0;
@@ -67,6 +75,7 @@ template<typename DistributedTriangulation>
 int read_cgal(DistributedTriangulation& tri, const std::string& dirname)
 {
     typedef typename DistributedTriangulation::Tile_index Tile_index;
+    typedef typename DistributedTriangulation::Tile_triangulation Tile_triangulation;
     boost::property_tree::ptree root_node;
     boost::property_tree::ptree tiles_node;
     boost::property_tree::ptree bboxes_node;
@@ -77,17 +86,15 @@ int read_cgal(DistributedTriangulation& tri, const std::string& dirname)
     int dimension = root_node.get<int>("dimension");
     tiles_node = root_node.get_child("tiles");
     bboxes_node = root_node.get_child("bboxes");
+    read_json_statistics(root_node, tri.statistics());
     for (auto its : tiles_node)
     {
         Tile_index tid = std::stoi(its.first);
-        auto& tile = tri.tiles.emplace(tid).first->second;
-        tri.tiles.load(tid, tile);
+        Tile_triangulation& triangulation = tri.tiles.emplace(tid, std::move(Tile_triangulation(tid, tri.maximal_dimension()))).first->second;
         std::istringstream iss(bboxes_node.find(its.first)->second.data());
-        iss >> tile.value().bbox();
-        read_cgal_tile(tile,dirname);
+        iss >> triangulation.bbox();
+        read_cgal_tile(triangulation, dirname);
     }
-    tri.finalize();
-    //std::cout << tri.is_valid() << std::endl;
     return 0;
 }
 

@@ -29,40 +29,47 @@ namespace CGAL {
 namespace DDT {
 
 namespace Impl {
-template<typename TileContainer, typename Transform, typename Reduce, typename V, typename Tile_index>
-V transform_reduce_id(TileContainer& tiles, Transform transform, Reduce reduce, V value, Tile_index id, std::mutex& mutex)
+template<typename Container, typename V, typename Transform, typename Reduce, typename Key>
+V transform_reduce_id(Container& c, V value, Transform transform, Reduce reduce, Key k, std::mutex& mutex)
 {
-    typedef typename TileContainer::Tile Tile;
+    typedef typename Container::iterator iterator;
+    typedef typename Container::mapped_type T;
     std::unique_lock<std::mutex> lock(mutex);
-    Tile& tile = tiles.emplace(id).first->second;
-    tile.locked = true;
-    tiles.prepare_load(id, tile);
-
+    iterator it = c.find(k);
+    it->second.locked = true;
+    c.prepare_load(k, it->second);
     lock.unlock();
-    if (tiles.safe_load(id, tile)) value = reduce(value, transform(tile));
+
+    T& v = it->second;
+    if (c.safe_load(k, it->second)) value = reduce(value, transform(v));
 
     lock.lock();
-    tile.locked = false;
+    it->second.locked = false;
     return value;
 }
 
-template<typename TileContainer, typename PointSetContainer, typename Transform, typename Reduce, typename V, typename Tile_index>
-V transform_reduce_id(TileContainer& tiles, PointSetContainer& point_sets, Transform transform, Reduce reduce, V value, Tile_index id, std::mutex& mutex)
+template< typename Container1, typename Container2, typename V, typename Transform, typename Reduce, typename Key, typename... Args>
+V transform_zip_id(Container1& c1, Container2& c2, V value, Transform transform, Reduce reduce, Key k, std::mutex& mutex, Args... args)
 {
-    typedef typename TileContainer::Tile Tile;
+    typedef typename Container1::iterator iterator1;
+    typedef typename Container1::mapped_type T1;
+    typedef typename Container2::mapped_type T2;
     std::unique_lock<std::mutex> lock(mutex);
-    Tile& tile = tiles.emplace(id).first->second;
-    tile.locked = true;
-    tiles.prepare_load(id, tile);
-
+    iterator1 it = c1.emplace(k, std::move(T1(k, args...))).first;
+    it->second.locked = true;
+    c1.prepare_load(k, it->second);
     lock.unlock();
-    if (tiles.safe_load(id, tile)) value = reduce(value, transform(tile, point_sets[id]));
+
+    T1& v1 = it->second;
+    T2& v2 = c2[k];
+    if (c1.safe_load(k, it->second)) value = reduce(value, transform(v1, v2));
 
     lock.lock();
-    point_sets.send_points(id);
-    tile.locked = false;
+    c2.send_points(k);
+    it->second.locked = false;
     return value;
 }
+
 }
 
 /// \ingroup PkgDDTSchedulerClasses
@@ -73,69 +80,63 @@ struct TBB_scheduler
 
     inline int max_concurrency() const { return arena.max_concurrency(); }
 
-    template<typename TileContainer,
-         typename Transform,
-         typename Reduce = std::plus<>,
-         typename Tile = typename TileContainer::Tile,
-         typename V = std::invoke_result_t<Reduce,
-                                           std::invoke_result_t<Transform, Tile&>,
-                                           std::invoke_result_t<Transform, Tile&> > >
-    V for_each(TileContainer& tiles, Transform transform, Reduce reduce = {}, V init = {})
+    template<typename Container,
+             typename Transform,
+             typename V,
+             typename Reduce = std::plus<>>
+    V transform_reduce(Container& c, V init, Transform transform, Reduce reduce = {})
     {
-        typedef typename TileContainer::Tile_index Tile_index;
-        std::vector<Tile_index> ids(tiles.ids_begin(), tiles.ids_end());
+        typedef typename Container::key_type key_type;
+        std::vector<key_type> keys;
+        for(const auto& [k,v] : c) keys.push_back(k);
+        keys.erase(std::unique(keys.begin(), keys.end()), keys.end()); // erase duplicates, if any
         return arena.execute([&]{
             return tbb::parallel_reduce(
-                  tbb::blocked_range<int>(0,ids.size()),
+                  tbb::blocked_range<int>(0,keys.size()),
                   init, [&](tbb::blocked_range<int> r, V value)
             {
                 for (int i=r.begin(); i<r.end(); ++i)
-                    value = Impl::transform_reduce_id(tiles, transform, reduce, value, ids[i], mutex);
+                    value = Impl::transform_reduce_id(c, value, transform, reduce, keys[i], mutex);
                 return value;
             }, reduce);
         });
     }
 
-    template<typename TileContainer,
-             typename PointSetContainer,
+    template<typename Container1,
+             typename Container2,
+             typename V,
              typename Transform,
              typename Reduce = std::plus<>,
-             typename Tile = typename TileContainer::Tile,
-             typename PointSet = typename PointSetContainer::mapped_type,
-             typename V = std::invoke_result_t<Reduce,
-                                               std::invoke_result_t<Transform, Tile&, PointSet&>,
-                                               std::invoke_result_t<Transform, Tile&, PointSet&> > >
-    V for_each_zip(TileContainer& tiles, PointSetContainer& point_sets, Transform transform, Reduce reduce = {}, V init = {})
+             typename... Args>
+    V join_transform_reduce(Container1& c1, Container2& c2, V init, Transform transform, Reduce reduce = {}, Args... args)
     {
-        typedef typename TileContainer::Tile_index Tile_index;
-        std::vector<Tile_index> ids;
-        for (const auto& msg : point_sets) ids.push_back(msg.first);
+        typedef typename Container1::key_type key_type;
+        std::vector<key_type> keys;
+        for (const auto& [k,v] : c2) keys.push_back(k);
+        keys.erase(std::unique(keys.begin(), keys.end()), keys.end()); // erase duplicates, if any
         return arena.execute([&]{
             return tbb::parallel_reduce(
-                  tbb::blocked_range<int>(0,ids.size()),
+                  tbb::blocked_range<int>(0,keys.size()),
                   init, [&](tbb::blocked_range<int> r, V value)
             {
                 for (int i=r.begin(); i<r.end(); ++i)
-                    value = Impl::transform_reduce_id(tiles, point_sets, transform, reduce, value, ids[i], mutex);
+                    value = Impl::transform_zip_id(c1, c2, value, transform, reduce, keys[i], mutex, args...);
                 return value;
             }, reduce);
         });
     }
 
-    template<typename TileContainer,
-             typename PointSetContainer,
+    template<typename Container1,
+             typename Container2,
+             typename V,
              typename Transform,
              typename Reduce = std::plus<>,
-             typename Tile = typename TileContainer::Tile,
-             typename PointSet = typename PointSetContainer::mapped_type,
-             typename V = std::invoke_result_t<Reduce,
-                                               std::invoke_result_t<Transform, Tile&, PointSet&>,
-                                               std::invoke_result_t<Transform, Tile&, PointSet&> > >
-    V for_each_rec(TileContainer& tiles, PointSetContainer& point_sets, Transform transform, Reduce reduce = {}, V init = {})
+             typename... Args>
+    V join_transform_reduce_loop(Container1& c1, Container2& c2, V init, Transform transform, Reduce reduce = {}, Args... args)
     {
         V value = init, v;
         do {
-            v = for_each_zip(tiles, point_sets, transform, reduce, init);
+            v = join_transform_reduce(c1, c2, init, transform, reduce, args...);
             value = reduce(value, v);
         } while (v != init);
         return value;

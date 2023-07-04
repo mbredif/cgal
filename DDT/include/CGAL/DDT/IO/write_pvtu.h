@@ -295,16 +295,14 @@ write_vtu_cells_binary(std::ostream& os,
 
 // VTU tile writers
 
-template <class Tile>
+template <class TileTriangulation>
 void write_vtu_tile(std::ostream& os,
-                    const Tile& tile,
+                    const TileTriangulation& tri,
                     bool binary = true)
 {
-  typedef typename Tile::value_type Tr;
-  typedef typename Tr::Vertex_index Vertex_index;
-  const Tr& tr = tile.value();
-  const std::size_t number_of_vertices = tr.number_of_vertices();
-  const std::size_t number_of_cells = tr.number_of_main_finite_cells();
+  typedef typename TileTriangulation::Vertex_index Vertex_index;
+  const std::size_t number_of_vertices = tri.number_of_vertices();
+  const std::size_t number_of_cells = tri.number_of_main_finite_cells();
   std::map<Vertex_index, std::size_t> V;
   std::size_t offset = 0;
 
@@ -312,14 +310,14 @@ void write_vtu_tile(std::ostream& os,
   write_vtk_header(os, "UnstructuredGrid", "0.1");
   os << " <UnstructuredGrid>\n"
      << "  <Piece NumberOfPoints=\"" << number_of_vertices << "\" NumberOfCells=\"" << number_of_cells << "\">\n";
-  write_vtu_points_tag(os, tr, number_of_vertices, V, binary, offset); // fills V if the mode is ASCII
-  write_vtu_cells_tag (os, tr, number_of_cells   , V, binary, offset);
+  write_vtu_points_tag(os, tri, number_of_vertices, V, binary, offset); // fills V if the mode is ASCII
+  write_vtu_cells_tag (os, tri, number_of_cells   , V, binary, offset);
   os << "  </Piece>\n"
      << " </UnstructuredGrid>\n";
   if (binary) {
     os << "<AppendedData encoding=\"raw\">\n_";
-    write_vtu_points_binary(os, tr, V); // fills V if the mode is BINARY
-    write_vtu_cells_binary(os, tr, V);
+    write_vtu_points_binary(os, tri, V); // fills V if the mode is BINARY
+    write_vtu_cells_binary(os, tri, V);
     os << "</AppendedData>\n";
   }
   os << "</VTKFile>\n";
@@ -329,30 +327,30 @@ class PVTU_serializer {
 public:
     PVTU_serializer(const std::string& dirname, bool binary = true) : dirname_(dirname), binary_(binary) {}
 
-    template <class Tile, typename aggregated_type = std::vector<typename Tile::value_type::Tile_index>>
-    aggregated_type initialize() const {
+    template <class TileTriangulation, typename value_type = std::vector<typename TileTriangulation::Tile_index>>
+    value_type initialize() const {
         boost::filesystem::path p(dirname_);
         boost::filesystem::create_directories(p);
         return {};
     }
 
-    template <class Tile, typename value_type = typename Tile::value_type::Tile_index>
-    value_type save(const Tile& tile) const {
-        std::string filename(dirname_ + "/" + std::to_string(tile.value().id()));
+    template <class TileTriangulation, typename value_type = std::vector<typename TileTriangulation::Tile_index>>
+    value_type save(const TileTriangulation& tri) const {
+        std::string filename(dirname_ + "/" + std::to_string(tri.id()));
         std::ofstream os(filename+".vtu");
-        write_vtu_tile(os, tile, binary_);
-        return tile.value().id();
+        write_vtu_tile(os, tri, binary_);
+        return {1, tri.id()};
     }
 
-    template <typename aggregated_type, typename value_type>
-    aggregated_type& aggregate(aggregated_type& agg, const value_type& value) const {
-        agg.push_back(value);
-        return agg;
+    template <typename value_type>
+    value_type& reduce(value_type& v1, const value_type& v2) const {
+        v1.insert(v1.end(), v2.begin(), v2.end());
+        return v1;
     }
 
-    template <typename aggregated_type>
-    void finalize(const aggregated_type& agg) const {
-        write_pvtu_file(dirname_, agg.begin(), agg.end());
+    template <typename value_type>
+    void finalize(const value_type& v) const {
+        write_pvtu_file(dirname_, v.begin(), v.end());
     }
 
     private:

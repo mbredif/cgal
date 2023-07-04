@@ -18,7 +18,6 @@
 #include <CGAL/DDT/insert.h>
 #include <CGAL/DDT/Tile_triangulation.h>
 #include <CGAL/DDT/Tile_container.h>
-#include <CGAL/DDT/Tile.h>
 #include <CGAL/Distributed_point_set.h>
 
 namespace CGAL {
@@ -36,14 +35,15 @@ public:
     typedef TileIndexProperty_                                              TileIndexProperty;
     typedef Serializer_                                                     Serializer;
     typedef CGAL::DDT::Tile_triangulation<Triangulation, TileIndexProperty> Tile_triangulation;
-    typedef CGAL::DDT::Tile<Tile_triangulation>                             Tile;
     typedef typename TileIndexProperty::value_type                          Tile_index;
-    typedef CGAL::DDT::Tile_container<Tile_index, Tile, Serializer_>        TileContainer;
+    typedef CGAL::DDT::Tile_container<Tile_index, Tile_triangulation, Serializer_>        TileContainer;
+    //typedef std::map<Tile_index, Tile_triangulation>        TileContainer;
 
 private:
     typedef typename TileContainer::iterator            Tile_iterator;
     typedef typename TileContainer::const_iterator      Tile_const_iterator;
 
+    typedef CGAL::DDT::Statistics Statistics;
     typedef CGAL::DDT::Triangulation_traits<Triangulation>    Traits;
     typedef typename Traits::Vertex_index               Tile_vertex_index;
     typedef typename Traits::Cell_index                 Tile_cell_index;
@@ -69,29 +69,27 @@ public:
 /// @}
 
     /// contructor
-    Distributed_triangulation(int dimension = Traits::D, std::size_t number_of_tiles_mem_max = 0, const Serializer& serializer = Serializer())
-    :   tiles(dimension, number_of_tiles_mem_max, serializer),
-        number_of_finite_vertices_(0),
-        number_of_finite_facets_  (0),
-        number_of_finite_cells_   (0),
-        number_of_facets_  (0),
-        number_of_cells_   (0)
+    template<typename... Args>
+    Distributed_triangulation(int dim, const Args&... args)
+    :   maximal_dimension_(dim),
+        tiles(args...),
+        statistics_()
     {}
 
     /// returns the dimension of the triangulation
-    inline int maximal_dimension() const { return tiles.maximal_dimension(); }
+    inline int maximal_dimension() const { return maximal_dimension_; }
     /// returns the number of finite cells in the triangulation, including cells incident to the vertex at infinity.
-    inline std::size_t number_of_finite_cells   () const { return number_of_finite_cells_;    }
+    inline std::size_t number_of_finite_cells   () const { return statistics_.number_of_finite_cells;    }
     /// returns the number of finite vertices in the triangulation, including the vertex at infinity.
-    inline std::size_t number_of_finite_vertices() const { return number_of_finite_vertices_; }
+    inline std::size_t number_of_finite_vertices() const { return statistics_.number_of_finite_vertices; }
     /// returns the number of facets in the triangulation, including facets incident to the vertex at infinity.
-    inline std::size_t number_of_finite_facets  () const { return number_of_finite_facets_;   }
+    inline std::size_t number_of_finite_facets  () const { return statistics_.number_of_finite_facets;   }
     /// returns the number of finite cells in the triangulation.
-    inline std::size_t number_of_cells   () const { return number_of_cells_;    }
+    inline std::size_t number_of_cells   () const { return statistics_.number_of_cells;    }
     /// returns the number of finite vertices in the triangulation.
-    inline std::size_t number_of_vertices() const { return number_of_finite_vertices_ + 1; }
+    inline std::size_t number_of_vertices() const { return statistics_.number_of_finite_vertices + 1; }
     /// returns the number of finite facets in the triangulation.
-    inline std::size_t number_of_facets  () const { return number_of_facets_;   }
+    inline std::size_t number_of_facets  () const { return statistics_.number_of_facets;   }
 
     /// \name Iterators
     /// @{
@@ -135,7 +133,7 @@ public:
     {
         for(const auto& [id, tile] : tiles)
         {
-            const typename Tile::value_type& tri = tile.value();
+            const Tile_triangulation& tri = tile;
             for(Tile_vertex_index v = tri.vertices_begin(); v != tri.vertices_end(); ++v)
             {
                 assert(tri.vertex_is_infinite(v) || (tri.vertex_is_local(v) + tri.vertex_is_foreign(v) == 1));
@@ -143,7 +141,7 @@ public:
                 Tile_index tid = tri.vertex_id(v);
                 if(tid == tri.id()) continue;
                 Tile_const_iterator t = tiles.find(tid);
-                const Tile_triangulation& tri2 = t->second.value();
+                const Tile_triangulation& tri2 = t->second;
                 if(tri2.relocate_vertex(tri, v) == tri2.vertices_end())
                 {
                     assert(! "relocate_vertex failed" );
@@ -168,7 +166,7 @@ public:
                 for(Tile_index tid : tids)
                 {
                     Tile_const_iterator t = tiles.find(tid);
-                    const Tile_triangulation& tri2 = t->second.value();
+                    const Tile_triangulation& tri2 = t->second;
                     if(tri2.relocate_facet(tri, f) == tri2.facets_end())
                     {
                       assert(! "relocate_facet failed" );
@@ -193,7 +191,7 @@ public:
                 for(Tile_index tid : tids)
                 {
                     Tile_const_iterator t = tiles.find(tid);
-                    const Tile_triangulation& tri2 = t->second.value();
+                    const Tile_triangulation& tri2 = t->second;
                     if(tri2.relocate_cell(tri, c) == tri2.cells_end())
                     {
                       assert(! "relocate_facet failed" );
@@ -201,34 +199,14 @@ public:
                     }
                 }
             }
-        }
 
-        std::size_t number_of_finite_vertices = 0;
-        std::size_t number_of_finite_facets = 0;
-        std::size_t number_of_finite_cells = 0;
-        std::size_t number_of_facets = 0;
-        std::size_t number_of_cells = 0;
-
-        for(const auto& [id, tile] : tiles)
-        {
-
-            if(!tile.value().is_valid(verbose, level))
+            if(!tri.is_valid(verbose, level))
             {
                 std::cerr << "Tile " << std::to_string(id) << " is invalid" << std::endl;
                 //assert(! "CGAL tile not valid" );
                 return false;
             }
-            number_of_finite_vertices += tile.value().number_of_main_finite_vertices();
-            number_of_finite_facets += tile.value().number_of_main_finite_facets();
-            number_of_finite_cells += tile.value().number_of_main_finite_cells();
-            number_of_facets += tile.value().number_of_main_facets();
-            number_of_cells += tile.value().number_of_main_cells();
         }
-        if (number_of_finite_vertices != number_of_finite_vertices_) { std::cerr << "incorrect number_of_finite_vertices" << std::endl; return false; }
-        if (number_of_finite_facets != number_of_finite_facets_) { std::cerr << "incorrect number_of_finite_facets" << std::endl; return false; }
-        if (number_of_finite_cells != number_of_finite_cells_) { std::cerr << "incorrect number_of_finite_cells" << std::endl; return false; }
-        if (number_of_facets != number_of_facets_) { std::cerr << "incorrect number_of_facets" << std::endl; return false; }
-        if (number_of_cells != number_of_cells_) { std::cerr << "incorrect number_of_cells" << std::endl; return false; }
         return true;
     }
 
@@ -284,7 +262,7 @@ public:
         if (id == tile_id(v)) return v; // v is already in tile id
         Tile_const_iterator tile = tiles.find(id);
         if (tile == tiles.end()) return vertices_end();
-        const Tile_triangulation& tri = tile->second.value();
+        const Tile_triangulation& tri = tile->second;
         Tile_vertex_index vertex = tri.relocate_vertex(v.triangulation(), *v);
         if (vertex==tri.vertices_end()) return vertices_end();
         return Vertex_iterator(&tiles, tile, vertex);
@@ -297,7 +275,7 @@ public:
         if (id == tile_id(f)) return f; // f is already in tile id
         Tile_const_iterator tile = tiles.find(id);
         if (tile == tiles.end()) return facets_end();
-        const Tile_triangulation& tri = tile->second.value();
+        const Tile_triangulation& tri = tile->second;
         Tile_facet_index facet = tri.relocate_facet(f.triangulation(), *f);
         if (facet==tri.facets_end()) return facets_end();
         return Facet_iterator(&tiles, tile, facet);
@@ -310,7 +288,7 @@ public:
         if (id == tile_id(c)) return c; // c is already in tile id
         Tile_const_iterator tile = tiles.find(id);
         if (tile == tiles.end()) return cells_end();
-        const Tile_triangulation& tri = tile->second.value();
+        const Tile_triangulation& tri = tile->second;
         Tile_cell_index cell = tri.relocate_cell(c.triangulation(), *c);
         if (cell==tri.cells_end()) return cells_end();
         return Cell_iterator(&tiles, tile, cell);
@@ -335,7 +313,7 @@ public:
     {
         assert(!tiles.empty());
         Tile_const_iterator tile = tiles.cbegin();
-        const Tile_triangulation& tri = tile->second.value();
+        const Tile_triangulation& tri = tile->second;
         return Vertex_iterator(&tiles, tile, tri.infinite_vertex());
     }
 
@@ -562,9 +540,9 @@ public:
     template<typename Scheduler, typename Point, typename TileIndex, typename TilePoints>
     std::size_t insert(Scheduler& sch, CGAL::Distributed_point_set<Point, TileIndex, TilePoints>& point_sets){
         std::size_t n = number_of_finite_vertices();
-        CGAL::DDT::impl::insert_and_send_all_axis_extreme_points(tiles, point_sets, sch);
-        CGAL::DDT::impl::splay_stars(tiles, point_sets, sch);
-        finalize(); /// @todo : return 0 for unloaded tiles
+        CGAL::DDT::impl::insert_and_send_all_axis_extreme_points(tiles, point_sets, sch, maximal_dimension());
+        CGAL::DDT::impl::splay_stars(tiles, point_sets, sch, maximal_dimension());
+        finalize(sch);
         return number_of_finite_vertices() - n;
     }
 
@@ -603,42 +581,31 @@ public:
         return edges == reversed;
     }
 
-    void finalize()
+    template <typename Scheduler>
+    void finalize(Scheduler& sch)
     {
-        number_of_finite_vertices_ = 0;
-        number_of_finite_facets_ = 0;
-        number_of_finite_cells_ = 0;
-        number_of_facets_ = 0;
-        number_of_cells_ = 0;
-        for(auto& [id, tile] : tiles)
-        {
-            if (tile.in_mem) tile.value().finalize();
-            number_of_finite_vertices_ += tile.value().number_of_main_finite_vertices();
-            number_of_finite_facets_ += tile.value().number_of_main_finite_facets();
-            number_of_finite_cells_ += tile.value().number_of_main_finite_cells();
-            number_of_facets_ += tile.value().number_of_main_facets();
-            number_of_cells_ += tile.value().number_of_main_cells();
-        }
+        Statistics stats;
+        statistics_ = sch.transform_reduce(tiles, stats,
+            [](Tile_triangulation& tri) { tri.finalize(); return tri.statistics();});
     }
 
     template <typename Scheduler, typename Serializer> save(Scheduler& sch,  const Serializer& serializer) {
-        auto agg = serializer.template initialize<Tile>();
-        agg = sch.for_each(tiles,
-            [&serializer](const Tile& tile) { return serializer.save(tile);},
-            [&serializer](auto& agg, const auto& val) { return serializer.aggregate(agg, val);},
-            agg
+        auto agg = serializer.template initialize<Tile_triangulation>();
+        agg = sch.transform_reduce(tiles, agg,
+            [&serializer](const Tile_triangulation& tri) { return serializer.save(tri);},
+            [&serializer](auto& agg, const auto& val) { return serializer.reduce(agg, val);}
         );
         serializer.finalize(agg);
     }
 
+    const Statistics& statistics() const { return statistics_; }
+    Statistics& statistics() { return statistics_; }
+
     TileContainer tiles; /// underlying tile container
 
     private:
-    std::size_t number_of_finite_vertices_;
-    std::size_t number_of_finite_facets_;
-    std::size_t number_of_finite_cells_;
-    std::size_t number_of_facets_;
-    std::size_t number_of_cells_;
+    Statistics statistics_;
+    int maximal_dimension_;
 };
 
 }

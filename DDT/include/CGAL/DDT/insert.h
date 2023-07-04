@@ -24,15 +24,13 @@ namespace CGAL {
 namespace DDT {
 namespace impl {
 
-template<typename Tile, typename PointSet>
-std::size_t splay_tile(Tile& tile, PointSet& point_set)
+template<typename Triangulation, typename PointSet>
+std::size_t splay_tile(Triangulation& tri, PointSet& point_set)
 {
-    typedef typename Tile::value_type                 Tile_triangulation;
-    typedef typename Tile_triangulation::Tile_index   Tile_index;
-    typedef typename Tile_triangulation::Vertex_index Vertex_index;
-    typedef typename PointSet::Points                Points;
+    typedef typename Triangulation::Tile_index   Tile_index;
+    typedef typename Triangulation::Vertex_index Vertex_index;
+    typedef typename PointSet::Points            Points;
     Points received;
-    Tile_triangulation& tri = tile.value();
     point_set.receive_points(tri.id(), received);
     if (received.empty()) return 0;
     // insert them into the current tile triangulation and get the new foreign points
@@ -46,16 +44,14 @@ std::size_t splay_tile(Tile& tile, PointSet& point_set)
 }
 
 template<typename TileContainer, typename PointSetContainer, typename Scheduler>
-std::size_t insert_and_send_all_axis_extreme_points(TileContainer& tiles, PointSetContainer& point_sets, Scheduler& sch)
+std::size_t insert_and_send_all_axis_extreme_points(TileContainer& tiles, PointSetContainer& point_sets, Scheduler& sch, int dim)
 {
-    typedef typename TileContainer::Tile              Tile;
-    typedef typename Tile::value_type         Tile_triangulation;
-    typedef typename Tile_triangulation::Vertex_index Vertex_index;
+    typedef typename TileContainer::mapped_type Triangulation;
     typedef typename PointSetContainer::mapped_type  PointSet;
-    return sch.for_each_zip(tiles, point_sets, [](Tile& tile, PointSet& point_set)
+    return sch.join_transform_reduce(tiles, point_sets, 0, [](Triangulation& tri, PointSet& point_set)
     {
-        std::size_t count = splay_tile(tile, point_set);
-        Tile_triangulation& tri = tile.value();
+        typedef typename Triangulation::Vertex_index Vertex_index;
+        std::size_t count = splay_tile(tri, point_set);
         // send the extreme points along each axis to all tiles to initialize the star splaying
         std::vector<Vertex_index> vertices;
         tri.get_axis_extreme_points(vertices);
@@ -63,15 +59,15 @@ std::size_t insert_and_send_all_axis_extreme_points(TileContainer& tiles, PointS
             tri.bbox() += tri.bbox(v);
         point_set.send_vertices_to_all_tiles(tri, vertices);
         return count;
-    });
+    }, std::plus<>(), dim);
 }
 
 template<typename TileContainer, typename PointSetContainer, typename Scheduler>
-std::size_t splay_stars(TileContainer& tiles, PointSetContainer& point_sets, Scheduler& sch)
+std::size_t splay_stars(TileContainer& tiles, PointSetContainer& point_sets, Scheduler& sch, int dim)
 {
-    typedef typename TileContainer::Tile Tile;
+    typedef typename TileContainer::mapped_type Triangulation;
     typedef typename PointSetContainer::mapped_type PointSet;
-    return sch.for_each_rec(tiles, point_sets, [](Tile& tile, PointSet& point_set) { return splay_tile(tile, point_set); });
+    return sch.join_transform_reduce_loop(tiles, point_sets, 0, [](Triangulation& tri, PointSet& point_set) { return splay_tile(tri, point_set); }, std::plus<>(), dim);
 }
 
 } // namespace impl

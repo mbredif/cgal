@@ -23,6 +23,32 @@
 namespace CGAL {
 namespace DDT {
 
+struct Statistics {
+    std::size_t number_of_finite_vertices;
+    std::size_t number_of_finite_facets;
+    std::size_t number_of_finite_cells;
+    std::size_t number_of_facets;
+    std::size_t number_of_cells;
+
+    Statistics() :
+        number_of_finite_vertices(0),
+        number_of_finite_facets  (0),
+        number_of_finite_cells   (0),
+        number_of_facets         (0),
+        number_of_cells          (0)
+    {}
+
+    Statistics operator+(const Statistics& stats) const {
+        Statistics res;
+        res.number_of_finite_vertices = number_of_finite_vertices + stats.number_of_finite_vertices;
+        res.number_of_finite_facets   = number_of_finite_facets   + stats.number_of_finite_facets;
+        res.number_of_finite_cells    = number_of_finite_cells    + stats.number_of_finite_cells;
+        res.number_of_facets          = number_of_facets          + stats.number_of_facets;
+        res.number_of_cells           = number_of_cells           + stats.number_of_cells;
+        return res;
+    }
+};
+
 /// \ingroup PkgDDTClasses
 /// \tparam T is a model of the TriangulationTraits concept
 /// \tparam Selector is a template for a model of the Selector concept (defaults to Median_selector)
@@ -49,11 +75,7 @@ public:
     Tile_triangulation(Tile_index id, int dimension)
         : id_(id),
           tri_(Traits::triangulation(dimension)),
-          number_of_main_finite_vertices_(0),
-          number_of_main_finite_facets_(0),
-          number_of_main_finite_cells_(0),
-          number_of_main_facets_(0),
-          number_of_main_cells_(0),
+          statistics_(),
           bbox_(Traits::bbox(dimension))
     {}
 
@@ -78,11 +100,11 @@ public:
     inline std::size_t number_of_vertices() const { return Traits::number_of_vertices(tri_); }
     inline std::size_t number_of_cells   () const { return Traits::number_of_cells   (tri_); }
 
-    inline std::size_t number_of_main_facets  () const { return number_of_main_facets_;   }
-    inline std::size_t number_of_main_cells   () const { return number_of_main_cells_;    }
-    inline std::size_t number_of_main_finite_vertices() const { return number_of_main_finite_vertices_; }
-    inline std::size_t number_of_main_finite_facets  () const { return number_of_main_finite_facets_;   }
-    inline std::size_t number_of_main_finite_cells   () const { return number_of_main_finite_cells_;    }
+    inline std::size_t number_of_main_facets  () const { return statistics_.number_of_facets;   }
+    inline std::size_t number_of_main_cells   () const { return statistics_.number_of_cells;    }
+    inline std::size_t number_of_main_finite_vertices() const { return statistics_.number_of_finite_vertices; }
+    inline std::size_t number_of_main_finite_facets  () const { return statistics_.number_of_finite_facets;   }
+    inline std::size_t number_of_main_finite_cells   () const { return statistics_.number_of_finite_cells;    }
 
     const Bbox& bbox() const { return bbox_; }
     Bbox& bbox() { return bbox_; }
@@ -562,24 +584,24 @@ public:
     void finalize()
     {
 
-        number_of_main_finite_vertices_ = 0;
-        number_of_main_finite_facets_ = 0;
-        number_of_main_finite_cells_ = 0;
-        number_of_main_facets_ = 0;
-        number_of_main_cells_ = 0;
+        statistics_.number_of_finite_vertices = 0;
+        statistics_.number_of_finite_facets = 0;
+        statistics_.number_of_finite_cells = 0;
+        statistics_.number_of_facets = 0;
+        statistics_.number_of_cells = 0;
 
         for(Vertex_index v = vertices_begin(); v != vertices_end(); ++v)
         {
             if(vertex_is_main(v))
-                ++number_of_main_finite_vertices_;
+                ++statistics_.number_of_finite_vertices;
         }
         for(Facet_index f = facets_begin(); f != facets_end(); ++f )
         {
             if(facet_is_main(f))
             {
-                ++number_of_main_facets_;
+                ++statistics_.number_of_facets;
                 if(!facet_is_infinite(f))
-                    ++number_of_main_finite_facets_;
+                    ++statistics_.number_of_finite_facets;
             }
         }
 
@@ -587,9 +609,9 @@ public:
         {
             if(cell_is_main(c))
             {
-                ++number_of_main_cells_;
+                ++statistics_.number_of_cells;
                 if(!cell_is_infinite(c))
-                    ++number_of_main_finite_cells_;
+                    ++statistics_.number_of_finite_cells;
             }
         }
     }
@@ -600,17 +622,15 @@ public:
       return Traits::is_valid(tri_, verbose, level);
     }
 
+    Statistics& statistics() { return statistics_; }
+    const Statistics& statistics() const { return statistics_; }
 private:
     Tile_index id_;
     Triangulation tri_;
     Tile_index_property tile_indices;
     mutable Selector<Tile_index> selector;
 
-    std::size_t number_of_main_finite_vertices_;
-    std::size_t number_of_main_finite_facets_;
-    std::size_t number_of_main_finite_cells_;
-    std::size_t number_of_main_facets_;
-    std::size_t number_of_main_cells_;
+    Statistics statistics_;
     Bbox bbox_;
 };
 

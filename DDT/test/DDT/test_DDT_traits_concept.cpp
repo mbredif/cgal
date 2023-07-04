@@ -18,7 +18,7 @@ int main(int argc, char **)
 
   typedef CGAL::Distributed_triangulation<::Triangulation, TileIndexProperty> Distributed_triangulation;
 
-  Distributed_triangulation tri;
+  Distributed_triangulation tri(1);
 
   return 0;
 }

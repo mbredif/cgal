@@ -57,28 +57,28 @@ struct File_serializer
       return !in.fail();
   }
 
-  template<typename Tile> bool load(Tile& tile) const
+  template<typename TileTriangulation> bool load(TileTriangulation& tri) const
   {
 #ifdef CGAL_DEBUG_DDT
     ++nb_loads;
 #endif
-    const std::string fname = filename(tile.value().id());
+    const std::string fname = filename(tri.id());
     std::ifstream in(fname, std::ios::in | std::ios::binary);
-    tile.value().clear();
-    in >> tile.value().bbox();
-    in >> tile.value();
+    tri.clear();
+    in >> tri.bbox();
+    in >> tri;
     if(!in.fail()) return true;
-    tile.value().clear();
+    tri.clear();
     return false;
   }
 
-  template<typename Tile> bool save(const Tile& tile) const {
+  template<typename TileTriangulation> bool save(const TileTriangulation& tri) const {
 #ifdef CGAL_DEBUG_DDT
     ++nb_save;
 #endif
-    const std::string fname = filename(tile.value().id());
+    const std::string fname = filename(tri.id());
     std::ofstream out(fname, std::ios::out | std::ios::binary);
-    out << std::setprecision(17) << tile.value().bbox() << "\n" << tile.value();
+    out << std::setprecision(17) << tri.bbox() << "\n" << tri;
     return !out.fail();
   }
 

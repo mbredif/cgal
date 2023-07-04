@@ -4,6 +4,7 @@
 #include <CGAL/DDT/serializer/File_serializer.h>
 #include <CGAL/Distributed_triangulation.h>
 #include <CGAL/DDT/IO/write_vrt.h>
+#include <CGAL/DDT/IO/write_pvtu.h>
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
 #include <CGAL/Triangulation_vertex_base_with_info_2.h>
 #include <CGAL/DDT/traits/Vertex_info_property_map.h>
@@ -43,7 +44,7 @@ int main(int argc, char **argv)
 
     tri.insert(scheduler, points);
 
-    //tri.save(scheduler, CGAL::DDT::PVTU_serializer("out"));
+    tri.save(scheduler, CGAL::DDT::PVTU_serializer("out"));
 
     CGAL::DDT::write_vrt_verts(tri, scheduler, "out_v");
     CGAL::DDT::write_vrt_facets(tri, scheduler, "out_f");

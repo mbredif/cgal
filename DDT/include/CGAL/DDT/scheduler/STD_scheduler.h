@@ -36,64 +36,57 @@ struct STD_scheduler
 
     inline int max_concurrency() const { return 0; }
 
-    template<typename TileContainer,
-         typename Transform,
-         typename Reduce = std::plus<>,
-         typename Tile = typename TileContainer::Tile,
-         typename V = std::invoke_result_t<Reduce,
-                                           std::invoke_result_t<Transform, Tile&>,
-                                           std::invoke_result_t<Transform, Tile&> > >
-    V for_each(TileContainer& tiles, Transform transform, Reduce reduce = {}, V init = {})
+    template<typename Container,
+             typename Transform,
+             typename V,
+             typename Reduce = std::plus<>>
+    V transform_reduce(Container& c, V init, Transform transform, Reduce reduce = {})
     {
         return std::transform_reduce(CGAL_DDT_SCHEDULER_STD_SCHEDULER_PAR
-                                     tiles.begin(), tiles.end(), init, reduce, [&tiles, &transform, &init](auto& p){
-            Tile& tile = p.second;
-            tile.locked = true;
+                                     c.begin(), c.end(), init, reduce, [&c, &init, &transform](auto& p){
+            p.second.locked = true;
             V value = init;
-            if (tiles.load(p.first, tile)) value = transform(tile);
-            tile.locked = false;
+            if (c.load(p.first, p.second)) value = transform(p.second);
+            p.second.locked = false;
             return value;
         } );
     }
 
-    template<typename TileContainer,
-             typename PointSetContainer,
+    template<typename Container1,
+             typename Container2,
+             typename V,
              typename Transform,
              typename Reduce = std::plus<>,
-             typename Tile = typename TileContainer::Tile,
-             typename PointSet = typename PointSetContainer::mapped_type,
-             typename V = std::invoke_result_t<Reduce,
-                                               std::invoke_result_t<Transform, Tile&, PointSet&>,
-                                               std::invoke_result_t<Transform, Tile&, PointSet&> > >
-    V for_each_zip(TileContainer& tiles, PointSetContainer& point_sets, Transform transform, Reduce reduce = {}, V init = {})
+             typename... Args>
+    V join_transform_reduce(Container1& c1, Container2& c2, V init, Transform transform, Reduce reduce = {}, Args... args)
     {
-        typedef typename PointSetContainer::value_type value_type;
         return std::transform_reduce(CGAL_DDT_SCHEDULER_STD_SCHEDULER_PAR
-                                     point_sets.begin(), point_sets.end(), init, reduce, [&tiles, &point_sets, &transform, &init](value_type& point_set){
-            Tile& tile = tiles.emplace(point_set.first).first->second;
-            tile.locked = true;
+                                     c2.begin(), c2.end(), init, reduce, [&c1, &c2, &init, &transform, &args...](auto& p){
+            typedef typename Container2::key_type key_type;
+            typedef typename Container1::iterator iterator;
+            typedef typename Container1::mapped_type mapped_type1;
+            key_type k = p.first;
+            iterator it = c1.emplace(k, std::move(mapped_type1(k, args...))).first;
+            it->second.locked = true;
             V value = init;
-            if (tiles.load(point_set.first, tile)) value = transform(tile, point_set.second);
-            point_sets.send_points(point_set.first);
-            tile.locked = false;
+            if (c1.load(k, it->second)) value = transform(it->second, p.second);
+            c2.send_points(k);
+            it->second.locked = false;
             return value;
         } );
     }
 
-    template<typename TileContainer,
-             typename PointSetContainer,
+    template<typename Container1,
+             typename Container2,
+             typename V,
              typename Transform,
              typename Reduce = std::plus<>,
-             typename Tile = typename TileContainer::Tile,
-             typename PointSet = typename PointSetContainer::mapped_type,
-             typename V = std::invoke_result_t<Reduce,
-                                               std::invoke_result_t<Transform, Tile&, PointSet&>,
-                                               std::invoke_result_t<Transform, Tile&, PointSet&> > >
-    V for_each_rec(TileContainer& tiles, PointSetContainer& point_sets, Transform transform, Reduce reduce = {}, V init = {})
+             typename... Args>
+    V join_transform_reduce_loop(Container1& c1, Container2& c2, V init, Transform transform, Reduce reduce = {}, Args... args)
     {
         V value = init, v;
         do {
-            v = for_each_zip(tiles, point_sets, transform, reduce, init);
+            v = join_transform_reduce(c1, c2, init, transform, reduce, args...);
             value = reduce(value, v);
         } while (v != init);
         return value;

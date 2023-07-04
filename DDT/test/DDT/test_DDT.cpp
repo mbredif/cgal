@@ -13,10 +13,10 @@ typedef CGAL::DDT::Vertex_info_property_map<Triangulation>                   Til
 typedef Triangulation::Point Point;
 typedef CGAL::Bbox_2 Bbox;
 
-//#include <CGAL/DDT/scheduler/Sequential_scheduler.h>
-//typedef CGAL::DDT::Sequential_scheduler Scheduler;
-#include <CGAL/DDT/scheduler/Multithread_scheduler.h>
-typedef CGAL::DDT::Multithread_scheduler Scheduler;
+#include <CGAL/DDT/scheduler/Sequential_scheduler.h>
+typedef CGAL::DDT::Sequential_scheduler Scheduler;
+//#include <CGAL/DDT/scheduler/Multithread_scheduler.h>
+//typedef CGAL::DDT::Multithread_scheduler Scheduler;
 //#include <CGAL/DDT/scheduler/TBB_scheduler.h>
 //typedef CGAL::DDT::TBB_scheduler Scheduler;
 //#include <CGAL/DDT/scheduler/MPI_scheduler.h>
@@ -53,7 +53,7 @@ int main(int, char **)
     double range = 3;
     Bbox bbox(-range, -range, range, range);
 
-    Distributed_triangulation tri;
+    Distributed_triangulation tri(2);
     Partitioner partitioner(bbox, ND, ND+tri.maximal_dimension());
     Scheduler scheduler;
     Distributed_point_set pointset(points, partitioner);
