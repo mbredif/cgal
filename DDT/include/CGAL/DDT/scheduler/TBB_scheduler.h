@@ -41,7 +41,7 @@ V transform_reduce_id(Container& c, V value, Transform transform, Reduce reduce,
     lock.unlock();
 
     T& v = it->second;
-    if (c.safe_load(k, it->second)) value = reduce(value, transform(v));
+    if (c.safe_load(k, it->second)) value = reduce(value, transform(k, v));
 
     lock.lock();
     it->second.locked = false;
@@ -62,7 +62,7 @@ V transform_zip_id(Container1& c1, Container2& c2, V value, Transform transform,
 
     T1& v1 = it->second;
     T2& v2 = c2[k];
-    if (c1.safe_load(k, it->second)) value = reduce(value, transform(v1, v2));
+    if (c1.safe_load(k, it->second)) value = reduce(value, transform(k, v1, v2));
 
     lock.lock();
     c2.send_points(k);

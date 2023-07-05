@@ -232,10 +232,12 @@ void write_tile_vrt_tins(const std::string& filename, const TileTriangulation& t
 template<typename DistributedTriangulation, typename Scheduler>
 void write_vrt_verts(DistributedTriangulation& tri, Scheduler& sch, const std::string& dirname)
 {
+    typedef typename DistributedTriangulation::Tile_triangulation Tile_triangulation;
+    typedef typename DistributedTriangulation::Tile_index         Tile_index;
     boost::filesystem::path p(dirname);
     boost::filesystem::create_directories(p);
-    sch.transform_reduce(tri.tiles, 0, [&dirname](typename DistributedTriangulation::Tile_triangulation& triangulation) {
-        std::string filename(dirname + "/" + std::to_string(triangulation.id()));
+    sch.transform_reduce(tri.tiles, 0, [&dirname](Tile_index id, Tile_triangulation& triangulation) {
+        std::string filename(dirname + "/" + std::to_string(id));
         write_tile_vrt_verts(filename, triangulation);
         return 1;
     });
@@ -245,10 +247,12 @@ void write_vrt_verts(DistributedTriangulation& tri, Scheduler& sch, const std::s
 template<typename DistributedTriangulation, typename Scheduler>
 void write_vrt_facets(DistributedTriangulation& tri, Scheduler& sch, const std::string& dirname)
 {
+    typedef typename DistributedTriangulation::Tile_triangulation Tile_triangulation;
+    typedef typename DistributedTriangulation::Tile_index         Tile_index;
     boost::filesystem::path p(dirname);
     boost::filesystem::create_directories(p);
-    sch.transform_reduce(tri.tiles, 0, [&dirname](typename DistributedTriangulation::Tile_triangulation& triangulation) {
-        std::string filename(dirname + "/" + std::to_string(triangulation.id()));
+    sch.transform_reduce(tri.tiles, 0, [&dirname](Tile_index id, Tile_triangulation& triangulation) {
+        std::string filename(dirname + "/" + std::to_string(id));
         write_tile_vrt_facets(filename, triangulation);
         return 1;
     });
@@ -258,10 +262,12 @@ void write_vrt_facets(DistributedTriangulation& tri, Scheduler& sch, const std::
 template<typename DistributedTriangulation, typename Scheduler>
 void write_vrt_cells(DistributedTriangulation& tri, Scheduler& sch, const std::string& dirname)
 {
+    typedef typename DistributedTriangulation::Tile_triangulation Tile_triangulation;
+    typedef typename DistributedTriangulation::Tile_index         Tile_index;
     boost::filesystem::path p(dirname);
     boost::filesystem::create_directories(p);
-    sch.transform_reduce(tri.tiles, 0, [&dirname](typename DistributedTriangulation::Tile_triangulation& triangulation) {
-        std::string filename(dirname + "/" + std::to_string(triangulation.id()));
+    sch.transform_reduce(tri.tiles, 0, [&dirname](Tile_index id, Tile_triangulation& triangulation) {
+        std::string filename(dirname + "/" + std::to_string(id));
         write_tile_vrt_cells(filename, triangulation);
         return 1;
     });
@@ -278,10 +284,12 @@ void write_vrt_bboxes(const DistributedTriangulation& tri, const std::string& fi
 template<typename DistributedTriangulation, typename Scheduler>
 void write_vrt_tins(DistributedTriangulation& tri, Scheduler& sch, const std::string& dirname)
 {
+    typedef typename DistributedTriangulation::Tile_triangulation Tile_triangulation;
+    typedef typename DistributedTriangulation::Tile_index         Tile_index;
     boost::filesystem::path p(dirname);
     boost::filesystem::create_directories(p);
-    sch.transform_reduce(tri.tiles, 0, [&dirname](typename DistributedTriangulation::Tile_triangulation& triangulation) {
-        std::string filename(dirname + "/" + std::to_string(triangulation.id()));
+    sch.transform_reduce(tri.tiles, 0, [&dirname](Tile_index id, Tile_triangulation& triangulation) {
+        std::string filename(dirname + "/" + std::to_string(id));
         write_tile_vrt_tins(filename, triangulation);
         return 1;
     });

@@ -31,7 +31,7 @@ V transform_id(Container& c, V init, Transform transform, Key k, std::mutex& mut
     lock.unlock();
 
     T& v = it->second;
-    V value = (c.safe_load(k, it->second)) ? transform(v) : init;
+    V value = (c.safe_load(k, it->second)) ? transform(k, v) : init;
 
     lock.lock();
     it->second.locked = false;
@@ -53,7 +53,7 @@ V transform_zip_id(Container1& c1, Container2& c2, V init, Transform transform, 
 
     T1& v1 = it->second;
     T2& v2 = c2[k];
-    V value = (c1.safe_load(k, it->second)) ? transform(v1, v2) : init;
+    V value = (c1.safe_load(k, it->second)) ? transform(k, v1, v2) : init;
 
     lock.lock();
     c2.send_points(k);

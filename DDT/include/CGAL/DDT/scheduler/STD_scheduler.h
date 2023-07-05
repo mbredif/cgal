@@ -46,7 +46,7 @@ struct STD_scheduler
                                      c.begin(), c.end(), init, reduce, [&c, &init, &transform](auto& p){
             p.second.locked = true;
             V value = init;
-            if (c.load(p.first, p.second)) value = transform(p.second);
+            if (c.load(p.first, p.second)) value = transform(p.first, p.second);
             p.second.locked = false;
             return value;
         } );
@@ -69,7 +69,7 @@ struct STD_scheduler
             iterator it = c1.emplace(k, std::move(mapped_type1(k, args...))).first;
             it->second.locked = true;
             V value = init;
-            if (c1.load(k, it->second)) value = transform(it->second, p.second);
+            if (c1.load(k, it->second)) value = transform(k, it->second, p.second);
             c2.send_points(k);
             it->second.locked = false;
             return value;

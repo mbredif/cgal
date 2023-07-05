@@ -24,7 +24,7 @@ namespace CGAL {
 
 /// \ingroup PkgDDTRef
 /// \tparam template params to instantiate a `CGAL::DDT::Tile_container` that manages the storage of the triangulation tiles.
-/// The Distributed_triangulation class wraps a TileContainer to expose a triangulation interface.
+/// The Distributed_triangulation class wraps a Container to expose a triangulation interface.
 template<typename Triangulation_,
          typename TileIndexProperty_,
          typename Serializer_ = CGAL::DDT::No_serializer >
@@ -34,14 +34,15 @@ public:
     typedef Triangulation_                                                  Triangulation;
     typedef TileIndexProperty_                                              TileIndexProperty;
     typedef Serializer_                                                     Serializer;
-    typedef CGAL::DDT::Tile_triangulation<Triangulation, TileIndexProperty> Tile_triangulation;
+
     typedef typename TileIndexProperty::value_type                          Tile_index;
-    typedef CGAL::DDT::Tile_container<Tile_index, Tile_triangulation, Serializer_>        TileContainer;
-    //typedef std::map<Tile_index, Tile_triangulation>        TileContainer;
+    typedef CGAL::DDT::Tile_triangulation<Triangulation, TileIndexProperty> Tile_triangulation;
+    typedef CGAL::DDT::Tile_container<Tile_index, Tile_triangulation, Serializer_>        Container;
+    //typedef std::map<Tile_index, Tile_triangulation>        Container;
 
 private:
-    typedef typename TileContainer::iterator            Tile_iterator;
-    typedef typename TileContainer::const_iterator      Tile_const_iterator;
+    typedef typename Container::iterator            Tile_iterator;
+    typedef typename Container::const_iterator      Tile_const_iterator;
 
     typedef CGAL::DDT::Statistics Statistics;
     typedef CGAL::DDT::Triangulation_traits<Triangulation>    Traits;
@@ -55,9 +56,9 @@ public:
 /// @{
 
 #ifndef DOXYGEN_RUNNING
-    typedef CGAL::DDT::Vertex_iterator<TileContainer> Vertex_iterator;
-    typedef CGAL::DDT::Facet_iterator <TileContainer> Facet_iterator;
-    typedef CGAL::DDT::Cell_iterator  <TileContainer> Cell_iterator;
+    typedef CGAL::DDT::Vertex_iterator<Container> Vertex_iterator;
+    typedef CGAL::DDT::Facet_iterator <Container> Facet_iterator;
+    typedef CGAL::DDT::Cell_iterator  <Container> Cell_iterator;
 #else
     /// A const iterator to the vertices of a distributed Delaunay triangulation
     typedef unspecified_type Vertex_iterator;
@@ -586,13 +587,13 @@ public:
     {
         Statistics stats;
         statistics_ = sch.transform_reduce(tiles, stats,
-            [](Tile_triangulation& tri) { tri.finalize(); return tri.statistics();});
+            [](Tile_index id, Tile_triangulation& tri) { tri.finalize(); return tri.statistics();});
     }
 
     template <typename Scheduler, typename Serializer> save(Scheduler& sch,  const Serializer& serializer) {
         auto agg = serializer.template initialize<Tile_triangulation>();
         agg = sch.transform_reduce(tiles, agg,
-            [&serializer](const Tile_triangulation& tri) { return serializer.save(tri);},
+            [&serializer](Tile_index id, const Tile_triangulation& tri) { return serializer.save(tri);},
             [&serializer](auto& agg, const auto& val) { return serializer.reduce(agg, val);}
         );
         serializer.finalize(agg);
@@ -601,7 +602,7 @@ public:
     const Statistics& statistics() const { return statistics_; }
     Statistics& statistics() { return statistics_; }
 
-    TileContainer tiles; /// underlying tile container
+    Container tiles;
 
     private:
     Statistics statistics_;

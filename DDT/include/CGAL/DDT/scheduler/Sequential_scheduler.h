@@ -36,7 +36,7 @@ struct Sequential_scheduler
         V value = init_v;
         for(auto& [k, v] : c) {
             v.locked = true;
-            if (c.load(k, v)) value = reduce(value, transform(v));
+            if (c.load(k, v)) value = reduce(value, transform(k, v));
             v.locked = false;
         }
         return value;
@@ -58,7 +58,7 @@ struct Sequential_scheduler
             it->second.locked = true;
 
             T1& v1 = it->second;
-            if (c1.load(k, it->second)) value = reduce(value, transform(v1, v2));
+            if (c1.load(k, it->second)) value = reduce(value, transform(k, v1, v2));
 
             c2.send_points(k);
             it->second.locked = false;
