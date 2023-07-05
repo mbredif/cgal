@@ -54,7 +54,7 @@ struct Sequential_scheduler
         for(auto& [k, v2] : c2) {
             typedef typename Container1::iterator iterator1;
             typedef typename Container1::mapped_type T1;
-            iterator1 it = c1.emplace(k, std::move(T1(k, args...))).first;
+            iterator1 it = c1.try_emplace(k, k, std::forward<Args>(args)...).first;
             it->second.locked = true;
 
             T1& v1 = it->second;

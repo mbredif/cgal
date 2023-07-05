@@ -66,7 +66,7 @@ struct STD_scheduler
             typedef typename Container1::iterator iterator;
             typedef typename Container1::mapped_type mapped_type1;
             key_type k = p.first;
-            iterator it = c1.emplace(k, std::move(mapped_type1(k, args...))).first;
+            iterator it = c1.try_emplace(k, k, std::forward<Args>(args)...).first;
             it->second.locked = true;
             V value = init;
             if (c1.load(k, it->second)) value = transform(k, it->second, p.second);

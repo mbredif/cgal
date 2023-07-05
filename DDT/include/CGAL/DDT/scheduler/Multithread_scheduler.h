@@ -46,7 +46,7 @@ V transform_zip_id(Container1& c1, Container2& c2, V init, Transform transform, 
     typedef typename Container1::mapped_type T1;
     typedef typename Container2::mapped_type T2;
     std::unique_lock<std::mutex> lock(mutex);
-    iterator1 it = c1.emplace(k, std::move(T1(k, args...))).first;
+    iterator1 it = c1.try_emplace(k, k, std::forward<Args>(args)...).first;
     it->second.locked = true;
     c1.prepare_load(k, it->second);
     lock.unlock();

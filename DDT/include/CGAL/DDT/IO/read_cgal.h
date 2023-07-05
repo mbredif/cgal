@@ -90,7 +90,7 @@ int read_cgal(DistributedTriangulation& tri, const std::string& dirname)
     for (auto its : tiles_node)
     {
         Tile_index tid = std::stoi(its.first);
-        Tile_triangulation& triangulation = tri.tiles.emplace(tid, std::move(Tile_triangulation(tid, tri.maximal_dimension()))).first->second;
+        Tile_triangulation& triangulation = tri.tiles.try_emplace(tid, tid, tri.maximal_dimension()).first->second;
         std::istringstream iss(bboxes_node.find(its.first)->second.data());
         iss >> triangulation.bbox();
         read_cgal_tile(triangulation, dirname);

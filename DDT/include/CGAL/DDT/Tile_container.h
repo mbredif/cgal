@@ -63,8 +63,9 @@ public:
     iterator end    () { return tiles.end   (); }
     iterator find(key_type key) { return tiles.find(key); }
 
-    std::pair<iterator,bool> emplace(key_type key, mapped_type&& value) {
-        return tiles.emplace(key, std::move(value));
+    template< class... Args >
+    std::pair<iterator,bool> try_emplace(key_type key, Args&&... args) {
+        return tiles.try_emplace(key, std::forward<Args>(args)...);
     }
 
 

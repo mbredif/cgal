@@ -151,7 +151,7 @@ struct MPI_scheduler
             if (!is_local(k)) continue;
             typedef typename Container1::iterator iterator1;
             typedef typename Container1::mapped_type mapped_type1;
-            iterator1 it = c1.emplace(k, std::move(mapped_type1(k, args...))).first;
+            iterator1 it = c1.try_emplace(k, k, std::forward<Args>(args)...).first;
             it->second.locked = true;
 
             mapped_type1& v1 = it->second;
