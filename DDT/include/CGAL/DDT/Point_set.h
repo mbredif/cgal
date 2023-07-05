@@ -85,7 +85,7 @@ struct Point_set {
 
     template<typename... Args>
     std::size_t insert(Args... args) {
-        input_points_.emplace_back(args...);
+        input_points_.emplace_back(std::forward<Args>(args)...);
         return input_points_.back().size();
     }
 

@@ -26,7 +26,7 @@ public:
 
     template<typename... Args>
     Tile(Args... args) :
-        value_(args...),
+        value_(std::forward<Args>(args)...),
         in_mem(false),
         locked(false)
     {

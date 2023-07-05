@@ -117,7 +117,7 @@ struct Multithread_scheduler
             std::unique_lock<std::mutex> lock(mutex);
             for(const auto& [k, v2] : c2)
                 futures.push_back(pool.submit([this, &c1, &c2, &init, &transform, &args...](key_type k){
-                    return Impl::transform_zip_id(c1, c2, init, transform, k, mutex, args...);
+                    return Impl::transform_zip_id(c1, c2, init, transform, k, mutex, std::forward<Args>(args)...);
                 }, k));
         }
         V value = init;
@@ -139,7 +139,7 @@ struct Multithread_scheduler
             std::unique_lock<std::mutex> lock(mutex);
             for(const auto& [k, v2] : c2)
                 futures.emplace(k, pool.submit([this, &c1, &c2, &init, &transform, &args...](key_type k){
-                    return Impl::transform_zip_id(c1, c2, init, transform, k, mutex, args...);
+                    return Impl::transform_zip_id(c1, c2, init, transform, k, mutex, std::forward<Args>(args)...);
                 }, k));
         }
 

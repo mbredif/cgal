@@ -51,7 +51,7 @@ public:
     /// \tparam V the return type of the function
     /// \tparam Transform a model of `Callable` with a `key_type` value and `mapped_type` references of the `Container`s as its argument type
     /// \tparam Reduce a model of `Callable` with `V` and `V` as argument types and `V` as its return type
-    /// \tparam Args... types for the extra constructor arguments
+    /// \tparam Args types for the extra constructor arguments
     /// \return the reduction by `reduce` of the values returned by `transform`, starting at the value `init`.
     template<typename Container1,
              typename Container2,
@@ -59,7 +59,7 @@ public:
              typename Transform,
              typename Reduce = std::plus<>,
              typename... Args>
-    V join_transform_reduce(Container1& c1, Container2& c2, V init, Transform transform, Reduce reduce = {}, Args... args) { return init; }
+    V join_transform_reduce(Container1& c1, Container2& c2, V init, Transform transform, Reduce reduce = {}, Args&&... args) { return init; }
 
     /// \brief repeatedly joins two associative containers `c1` and `c2` by key and aggregate `v=reduce(v, u)` with `u=transform(k,v1,v2)` and
     ///        values `v1,v2` sharing a key `k` in the containers `c1,c2`, starting with `v=init`. Repeated joins occur until convergence, meaning that
@@ -72,7 +72,7 @@ public:
              typename Transform,
              typename Reduce = std::plus<>,
              typename... Args>
-    V join_transform_reduce_loop(Container1& c1, Container2& c2, V init, Transform transform, Reduce reduce = {}, Args... args) { return init; }
+    V join_transform_reduce_loop(Container1& c1, Container2& c2, V init, Transform transform, Reduce reduce = {}, Args&&... args) { return init; }
 /// @}
 
 };

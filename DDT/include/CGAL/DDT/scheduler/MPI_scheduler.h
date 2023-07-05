@@ -181,7 +181,7 @@ struct MPI_scheduler
         V value = init, v;
         do {
             do {
-                v = join_transform_reduce(c1, c2, init, transform, reduce, args...);
+                v = join_transform_reduce(c1, c2, init, transform, reduce, std::forward<Args>(args)...);
                 value = reduce(value, v);
             } while (v != init);
         } while (send_all_to_all(c2));
