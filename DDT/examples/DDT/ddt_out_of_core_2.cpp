@@ -26,6 +26,7 @@ typedef CGAL::Distributed_point_set<Point, Tile_index>                          
 
 int main(int argc, char **argv)
 {
+    std::cout << argv[0] << " [number_of_points] [number_of_tiles_per_axis] [max_number_of_tiles]" << std::endl;
     int number_of_points          = (argc>1) ? atoi(argv[1]) : 1000;
     int number_of_tiles_per_axis  = (argc>2) ? atoi(argv[2]) : 3;
     int max_number_of_tiles       = (argc>3) ? atoi(argv[3]) : 1;

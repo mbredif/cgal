@@ -3,6 +3,7 @@
 #include <CGAL/Delaunay_triangulation_2.h>
 #include <CGAL/DDT/traits/Triangulation_traits_2.h>
 #include <CGAL/DDT/traits/Vertex_info_property_map.h>
+#include <CGAL/DDT/serializer/File_points_serializer.h>
 
 typedef int                                                                  Tile_index;
 typedef CGAL::Exact_predicates_inexact_constructions_kernel                  Geom_traits;
@@ -10,6 +11,7 @@ typedef CGAL::Triangulation_vertex_base_with_info_2<Tile_index, Geom_traits> Vb;
 typedef CGAL::Triangulation_data_structure_2<Vb>                             TDS;
 typedef CGAL::Delaunay_triangulation_2<Geom_traits, TDS>                     Triangulation;
 typedef CGAL::DDT::Vertex_info_property_map<Triangulation>                   TileIndexProperty;
+typedef CGAL::DDT::File_points_serializer                                    Serializer;
 typedef Triangulation::Point Point;
 typedef CGAL::Bbox_2 Bbox;
 
@@ -26,17 +28,20 @@ typedef CGAL::DDT::Sequential_scheduler Scheduler;
 typedef CGAL::DDT::Grid_partitioner<Triangulation, TileIndexProperty> Partitioner;
 
 #include <CGAL/Distributed_triangulation.h>
-typedef CGAL::Distributed_triangulation<Triangulation, TileIndexProperty> Distributed_triangulation;
+typedef CGAL::Distributed_triangulation<Triangulation, TileIndexProperty, Serializer> Distributed_triangulation;
 typedef CGAL::Distributed_point_set<Point, Tile_index> Distributed_point_set;
 
 #include <CGAL/DDT/IO/write_vrt.h>
 
 #define ddt_assert(x) if (!(x)) { std::cerr << "Assertion failed [" << __LINE__ << "] : " << #x << std::endl; ++errors; }
 
-int main(int, char **)
+int main(int argc, char **argv)
 {
+    std::cout << argv[0] << " [max_number_of_tiles_in_mem]" << std::endl;
+    int max_number_of_tiles_in_mem = (argc>1) ? atoi(argv[1]) : 0;
+
     int errors = 0;
-    int ND[] = {2, 1};
+    int ND[] = {2, 2};
 
     std::vector<Point> points;
 
@@ -45,15 +50,25 @@ int main(int, char **)
     points.emplace_back(-1, -2);
     points.emplace_back(-1, -1);
 
+    points.emplace_back(-2, 2);
+    points.emplace_back(-2, 1);
+    points.emplace_back(-1, 2);
+    points.emplace_back(-1, 1);
+
     points.emplace_back(2, 2);
     points.emplace_back(2, 1);
     points.emplace_back(1, 2);
     points.emplace_back(1, 1);
 
+    points.emplace_back(2, -2);
+    points.emplace_back(2, -1);
+    points.emplace_back(1, -2);
+    points.emplace_back(1, -1);
+
     double range = 3;
     Bbox bbox(-range, -range, range, range);
-
-    Distributed_triangulation tri(2);
+    Serializer serializer("tmp_");
+    Distributed_triangulation tri(2, max_number_of_tiles_in_mem, serializer);
     Partitioner partitioner(bbox, ND, ND+tri.maximal_dimension());
     Scheduler scheduler;
     Distributed_point_set pointset(points, partitioner);

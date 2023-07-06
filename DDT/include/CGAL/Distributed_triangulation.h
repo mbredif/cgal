@@ -71,9 +71,9 @@ public:
 
     /// contructor
     template<typename... Args>
-    Distributed_triangulation(int dim, const Args&... args)
+    Distributed_triangulation(int dim, Args&&... args)
     :   maximal_dimension_(dim),
-        tiles(args...),
+        tiles(std::forward<Args>(args)...),
         statistics_()
     {}
 
@@ -541,9 +541,13 @@ public:
     template<typename Scheduler, typename Point, typename TileIndex, typename TilePoints>
     std::size_t insert(Scheduler& sch, CGAL::Distributed_point_set<Point, TileIndex, TilePoints>& point_sets){
         std::size_t n = number_of_finite_vertices();
+        std::cout << std::endl << "---insert_and_send_all_axis_extreme_points---" << std::endl;
         CGAL::DDT::impl::insert_and_send_all_axis_extreme_points(tiles, point_sets, sch, maximal_dimension());
+        std::cout << std::endl << "---splay_stars---" << std::endl;
         CGAL::DDT::impl::splay_stars(tiles, point_sets, sch, maximal_dimension());
+        std::cout << std::endl << "---finalize---" << std::endl;
         finalize(sch);
+        std::cout << std::endl << "---inserted---" << std::endl;
         return number_of_finite_vertices() - n;
     }
 
@@ -587,7 +591,7 @@ public:
     {
         Statistics stats;
         statistics_ = sch.transform_reduce(tiles, stats,
-            [](Tile_index id, Tile_triangulation& tri) { tri.finalize(); return tri.statistics();});
+            [](Tile_index id, const Tile_triangulation& tri) { tri.finalize(); return tri.statistics();});
     }
 
     template <typename Scheduler, typename Serializer> save(Scheduler& sch,  const Serializer& serializer) {

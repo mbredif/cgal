@@ -581,7 +581,7 @@ public:
         return cells_end();
     }
 
-    void finalize()
+    void finalize() const
     {
 
         statistics_.number_of_finite_vertices = 0;
@@ -630,7 +630,7 @@ private:
     Tile_index_property tile_indices;
     mutable Selector<Tile_index> selector;
 
-    Statistics statistics_;
+    mutable Statistics statistics_;
     Bbox bbox_;
 };
 

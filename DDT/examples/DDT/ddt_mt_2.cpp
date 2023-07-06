@@ -26,10 +26,11 @@ typedef CGAL::Distributed_point_set<Point, Tile_index>                   Distrib
 
 int main(int argc, char **argv)
 {
-    int number_of_points          = (argc>1) ? atoi(argv[1]) : 1000;
-    int number_of_tiles_per_axis  = (argc>2) ? atoi(argv[2]) : 3;
-    int threads                   = (argc>3) ? atoi(argv[3]) : 0;
-    int max_number_of_tiles       = (argc>4) ? atoi(argv[4]) : 0;
+    std::cout << argv[0] << " [number_of_points] [number_of_tiles_per_axis] [threads] [max_number_of_tiles_in_mem]" << std::endl;
+    int number_of_points           = (argc>1) ? atoi(argv[1]) : 1000;
+    int number_of_tiles_per_axis   = (argc>2) ? atoi(argv[2]) : 3;
+    int threads                    = (argc>3) ? atoi(argv[3]) : 0;
+    int max_number_of_tiles_in_mem = (argc>4) ? atoi(argv[4]) : 0;
     double range = 1;
 
     CGAL::Bbox_2 bbox(-range, -range, range, range);
@@ -40,7 +41,7 @@ int main(int argc, char **argv)
     Scheduler scheduler(threads);
 
     Serializer serializer("tile_");
-    Distributed_triangulation tri(2, max_number_of_tiles, serializer);
+    Distributed_triangulation tri(2, max_number_of_tiles_in_mem, serializer);
 
     tri.insert(scheduler, points);
 

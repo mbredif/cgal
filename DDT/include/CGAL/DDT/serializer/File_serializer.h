@@ -31,15 +31,6 @@ struct File_serializer
       if(p.has_parent_path() && !boost::filesystem::exists(q))
           boost::filesystem::create_directories(q);
   }
-#ifdef CGAL_DEBUG_DDT
-  ~File_serializer()
-  {
-    std::cout << *this << "\n";
-    std::cout << "nb_loads " << nb_loads << "\n";
-    std::cout << "nb_save " << nb_save << "\n";
-  }
-#endif
-
 
   template <typename TileIndex>
   bool has_tile(TileIndex id) const
@@ -59,9 +50,6 @@ struct File_serializer
 
   template<typename TileTriangulation> bool load(TileTriangulation& tri) const
   {
-#ifdef CGAL_DEBUG_DDT
-    ++nb_loads;
-#endif
     const std::string fname = filename(tri.id());
     std::ifstream in(fname, std::ios::in | std::ios::binary);
     tri.clear();
@@ -73,9 +61,6 @@ struct File_serializer
   }
 
   template<typename TileTriangulation> bool save(const TileTriangulation& tri) const {
-#ifdef CGAL_DEBUG_DDT
-    ++nb_save;
-#endif
     const std::string fname = filename(tri.id());
     std::ofstream out(fname, std::ios::out | std::ios::binary);
     out << std::setprecision(17) << tri.bbox() << "\n" << tri;
@@ -93,10 +78,6 @@ private:
   }
 
   std::string m_prefix;
-#ifdef CGAL_DEBUG_DDT
-  mutable int nb_loads = 0;
-  mutable int nb_save = 0;
-#endif
 };
 
 std::ostream& operator<<(std::ostream& out, const File_serializer& serializer) {

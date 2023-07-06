@@ -37,8 +37,8 @@ typedef CGAL::Distributed_triangulation<Triangulation, TileIndexProperty, Serial
 
 int main(int argc, char*argv[])
 {
+    std::cout << argv[0] << " [max_number_of_tiles in memory] [tmp prefix] [out prefix] [las files...]" << std::endl;
     if (argc < 5 || argc > 260) {
-        std::cerr << "usage : " << argv[0] << " [max_number_of_tiles in memory] [tmp prefix] [out prefix] [las files...]" << std::endl;
         std::cerr << "maximum number of las files is 256, as tile indices are coded using a uchar8." << std::endl;
         return -1;
     }

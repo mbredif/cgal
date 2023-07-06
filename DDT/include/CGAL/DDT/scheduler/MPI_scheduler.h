@@ -118,15 +118,12 @@ struct MPI_scheduler
              typename V,
              typename Transform,
              typename Reduce = std::plus<>>
-    V transform_reduce(Container& c, V init, Transform transform, Reduce reduce = {})
+    V transform_reduce(Container& c, V value, Transform transform, Reduce reduce = {})
     {
-        V value = init;
-        for(auto& [k, v] : c) {
-            if (!is_local(k)) continue;
-            v.locked = true;
-            if (c.load(k, v)) value = reduce(value, transform(k, v));
-            v.locked = true;
-        }
+        typedef typename Container::iterator iterator;
+        for(iterator it = c.begin(); it != c.end(); ++it)
+            if (is_local(it->first))
+                value = reduce(value, transform(it->first, it->second));
 
         // @todo : aggregate the values of all processors
         return value;
@@ -138,27 +135,26 @@ struct MPI_scheduler
              typename Transform,
              typename Reduce = std::plus<>,
              typename... Args>
-    V join_transform_reduce(Container1& c1, Container2& c2, V init, Transform transform, Reduce reduce = {}, Args... args)
+    V join_transform_reduce(Container1& c1, Container2& c2, V value, Transform transform, Reduce reduce = {}, Args&&... args)
     {
+        typedef typename Container1::iterator iterator1;
+        typedef typename Container2::iterator iterator2;
+        typedef typename Container1::key_type key_type;
+
         // for now, let's assume that c2 is replicated on all processes, so that its non-local keys may be ignored
         // @todo : copartitioning of c1 and c2 ?
         for( auto it = c2.begin(); it != c2.end(); ) {
             if(!is_local(it->first)) it = c2.erase(it);
             else ++it;
         }
-        V value = init;
-        for(auto& [k, v2] : c2) {
+        for(iterator2 it2 = c2.begin(); it2 != c2.end(); ++it2) {
+            key_type k = it2->first;
             if (!is_local(k)) continue;
-            typedef typename Container1::iterator iterator1;
-            typedef typename Container1::mapped_type mapped_type1;
-            iterator1 it = c1.try_emplace(k, k, std::forward<Args>(args)...).first;
-            it->second.locked = true;
+            iterator1 it1 = c1.try_emplace(k, k, std::forward<Args>(args)...).first;
 
-            mapped_type1& v1 = it->second;
-            if (c1.load(k, it->second)) value = reduce(value, transform(k, v1, v2));
+            value = reduce(value, transform(k, it1->second, it2->second));
 
             c2.send_points(k);
-            it->second.locked = false;
         }
         // @todo : aggregate the values of all processors
         return value;
@@ -170,7 +166,7 @@ struct MPI_scheduler
              typename Transform,
              typename Reduce = std::plus<>,
              typename... Args>
-    V join_transform_reduce_loop(Container1& c1, Container2& c2, V init, Transform transform, Reduce reduce = {}, Args... args)
+    V join_transform_reduce_loop(Container1& c1, Container2& c2, V init, Transform transform, Reduce reduce = {}, Args&&... args)
     {
         // for now, let's assume that c2 is replicated on all processes, so that its non-local keys may be ignored
         // @todo : copartitioning of c1 and c2 ?
@@ -338,7 +334,7 @@ struct MPI_scheduler
                 std::vector<int> rdispls(world_size+1, 0);
                 for(int i=0; i<world_size; ++i) rdispls[i+1] = rdispls[i] + recvcounts[i];
 
-            std::cout << processor_name <<":"<< pid << ":" << world_rank << " alltoall_recv_size " << rdispls[world_size] << std::endl;
+                std::cout << processor_name <<":"<< pid << ":" << world_rank << " alltoall_recv_size " << rdispls[world_size] << std::endl;
 
                 // send sendbuf to recvbuf
                 std::vector<char> recvbuf(rdispls[world_size], 0);
@@ -360,55 +356,11 @@ struct MPI_scheduler
             }
         }
 
-<<<<<<< HEAD
-        // communicate sendcounts to know recvcounts
-        std::vector<int> recvcounts(world_size, 0);
-        MPI_Alltoall(
-            &sendcounts[0], 1, MPI_INT, 
-            &recvcounts[0], 1, MPI_INT, 
-            MPI_COMM_WORLD);
+        for(auto& [source, msg] : point_sets)
+            for(auto& [target, points] : msg.points())
+                std::cout << processor_name <<":"<< pid << ":" << world_rank << " points:"<< source << "->" << target << " = " << points.size() << std::endl;
 
-        // compute rdispls
-        std::vector<int> rdispls(world_size+1, 0);
-        for(int i=0; i<world_size; ++i) rdispls[i+1] = rdispls[i] + recvcounts[i];
-
-        // send sendbuf to recvbuf
-        std::vector<char> recvbuf(rdispls[world_size], 0);
-        MPI_Alltoallv(
-            &sendbuf[0], &sendcounts[0], &sdispls[0], MPI_CHAR,
-            &recvbuf[0], &recvcounts[0], &rdispls[0], MPI_CHAR,
-            MPI_COMM_WORLD);
-
-        // deserialize recvbuf to inbox
-        char *bytes = &recvbuf[0];
-        char *end = bytes + recvbuf.size();
-        while( bytes < end) bytes = load_points(bytes);
-
-        // debug: write sent msg to file
-        if (false) {
-            std::string filename = "./";
-            std::ostringstream oss;
-            oss << "./send_" << world_rank << ".bin";
-            std::ofstream out(oss.str().c_str(), std::ios::binary);
-            out.write((const char*)(&sendbuf[0]), sendbuf.size());
-            out.close();
-        }
-
-        // debug: write received msg to file
-        if (false) {
-            std::string filename = "./";
-            std::ostringstream oss;
-            oss << "./recv_" << world_rank << ".bin";
-            std::ofstream out(oss.str().c_str(), std::ios::binary);
-            out.write((const char*)(&recvbuf[0]), recvbuf.size());
-            out.close();
-        }
-        for(const auto& it:inbox) {
-            std::cout << int(it.first) << ":" << it.second.size() << " ";
-        }
-        std::cout << std::endl;
-
-        return max_count;
+        return (broadcast_recv_size > 0) || (max_alltoall_send_size > 0);
     }
 
 private:

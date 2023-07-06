@@ -31,14 +31,11 @@ struct Sequential_scheduler
              typename Transform,
              typename V,
              typename Reduce = std::plus<>>
-    V transform_reduce(Container& c, V init_v, Transform transform, Reduce reduce = {})
+    V transform_reduce(Container& c, V value, Transform transform, Reduce reduce = {})
     {
-        V value = init_v;
-        for(auto& [k, v] : c) {
-            v.locked = true;
-            if (c.load(k, v)) value = reduce(value, transform(k, v));
-            v.locked = false;
-        }
+        typedef typename Container::iterator iterator;
+        for(iterator it = c.begin(); it != c.end(); ++it)
+            value = reduce(value, transform(it->first, it->second));
         return value;
     }
 
@@ -48,20 +45,16 @@ struct Sequential_scheduler
              typename Transform,
              typename Reduce = std::plus<>,
              typename... Args>
-    V join_transform_reduce(Container1& c1, Container2& c2, V init, Transform transform, Reduce reduce = {}, Args... args)
+    V join_transform_reduce(Container1& c1, Container2& c2, V value, Transform transform, Reduce reduce = {}, Args&&... args)
     {
-        V value = init;
-        for(auto& [k, v2] : c2) {
-            typedef typename Container1::iterator iterator1;
-            typedef typename Container1::mapped_type T1;
-            iterator1 it = c1.try_emplace(k, k, std::forward<Args>(args)...).first;
-            it->second.locked = true;
-
-            T1& v1 = it->second;
-            if (c1.load(k, it->second)) value = reduce(value, transform(k, v1, v2));
-
+        typedef typename Container1::iterator iterator1;
+        typedef typename Container2::iterator iterator2;
+        typedef typename Container1::key_type key_type;
+        for(iterator2 it2 = c2.begin(); it2 != c2.end(); ++it2) {
+            key_type k = it2->first;
+            iterator1 it1 = c1.try_emplace(k, k, std::forward<Args>(args)...).first;
+            value = reduce(value, transform(k, it1->second, it2->second));
             c2.send_points(k);
-            it->second.locked = false;
         }
         return value;
     }
@@ -72,7 +65,7 @@ struct Sequential_scheduler
              typename Transform,
              typename Reduce = std::plus<>,
              typename... Args>
-    V join_transform_reduce_loop(Container1& c1, Container2& c2, V init, Transform transform, Reduce reduce = {}, Args... args)
+    V join_transform_reduce_loop(Container1& c1, Container2& c2, V init, Transform transform, Reduce reduce = {}, Args&&... args)
     {
         V value = init, v;
         do {

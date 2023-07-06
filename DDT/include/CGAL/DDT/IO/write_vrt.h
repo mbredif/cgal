@@ -107,7 +107,7 @@ void write_csv_bboxes(const std::string& filename, const DistributedTriangulatio
 {
     std::ofstream csv(filename+".csv");
     csv << "geom,id" << std::endl;
-    for(auto& [id, tile] : tri.tiles)
+    for(const auto& [id, tile] : tri.tiles)
     {
         const auto& bbox = tile.value().bbox();
         csv << "\"POLYGON((";
@@ -236,7 +236,7 @@ void write_vrt_verts(DistributedTriangulation& tri, Scheduler& sch, const std::s
     typedef typename DistributedTriangulation::Tile_index         Tile_index;
     boost::filesystem::path p(dirname);
     boost::filesystem::create_directories(p);
-    sch.transform_reduce(tri.tiles, 0, [&dirname](Tile_index id, Tile_triangulation& triangulation) {
+    sch.transform_reduce(tri.tiles, 0, [&dirname](Tile_index id, const Tile_triangulation& triangulation) {
         std::string filename(dirname + "/" + std::to_string(id));
         write_tile_vrt_verts(filename, triangulation);
         return 1;
@@ -251,7 +251,7 @@ void write_vrt_facets(DistributedTriangulation& tri, Scheduler& sch, const std::
     typedef typename DistributedTriangulation::Tile_index         Tile_index;
     boost::filesystem::path p(dirname);
     boost::filesystem::create_directories(p);
-    sch.transform_reduce(tri.tiles, 0, [&dirname](Tile_index id, Tile_triangulation& triangulation) {
+    sch.transform_reduce(tri.tiles, 0, [&dirname](Tile_index id, const Tile_triangulation& triangulation) {
         std::string filename(dirname + "/" + std::to_string(id));
         write_tile_vrt_facets(filename, triangulation);
         return 1;
@@ -266,7 +266,7 @@ void write_vrt_cells(DistributedTriangulation& tri, Scheduler& sch, const std::s
     typedef typename DistributedTriangulation::Tile_index         Tile_index;
     boost::filesystem::path p(dirname);
     boost::filesystem::create_directories(p);
-    sch.transform_reduce(tri.tiles, 0, [&dirname](Tile_index id, Tile_triangulation& triangulation) {
+    sch.transform_reduce(tri.tiles, 0, [&dirname](Tile_index id, const Tile_triangulation& triangulation) {
         std::string filename(dirname + "/" + std::to_string(id));
         write_tile_vrt_cells(filename, triangulation);
         return 1;
@@ -288,7 +288,7 @@ void write_vrt_tins(DistributedTriangulation& tri, Scheduler& sch, const std::st
     typedef typename DistributedTriangulation::Tile_index         Tile_index;
     boost::filesystem::path p(dirname);
     boost::filesystem::create_directories(p);
-    sch.transform_reduce(tri.tiles, 0, [&dirname](Tile_index id, Tile_triangulation& triangulation) {
+    sch.transform_reduce(tri.tiles, 0, [&dirname](Tile_index id, const Tile_triangulation& triangulation) {
         std::string filename(dirname + "/" + std::to_string(id));
         write_tile_vrt_tins(filename, triangulation);
         return 1;

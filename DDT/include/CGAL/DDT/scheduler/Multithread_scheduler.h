@@ -19,45 +19,31 @@ namespace CGAL {
 namespace DDT {
 
 namespace Impl {
+
 template< typename Container, typename Transform, typename V, typename Key>
-V transform_id(Container& c, V init, Transform transform, Key k, std::mutex& mutex)
+V transform_id(Container& c, V value, Transform transform, Key k, std::mutex& mutex)
 {
-    typedef typename Container::iterator iterator;
-    typedef typename Container::mapped_type T;
     std::unique_lock<std::mutex> lock(mutex);
-    iterator it = c.find(k);
-    it->second.locked = true;
-    c.prepare_load(k, it->second);
+    typename Container::iterator it = c.find(k);
     lock.unlock();
 
-    T& v = it->second;
-    V value = (c.safe_load(k, it->second)) ? transform(k, v) : init;
-
-    lock.lock();
-    it->second.locked = false;
-    return value;
+    return transform(k, it->second);
 }
 
 
 template< typename Container1, typename Container2, typename Transform, typename V, typename Key, typename... Args>
-V transform_zip_id(Container1& c1, Container2& c2, V init, Transform transform, Key k, std::mutex& mutex, Args... args)
+V transform_zip_id(Container1& c1, Container2& c2, V value, Transform transform, Key k, std::mutex& mutex, Args&&... args)
 {
-    typedef typename Container1::iterator iterator1;
-    typedef typename Container1::mapped_type T1;
-    typedef typename Container2::mapped_type T2;
     std::unique_lock<std::mutex> lock(mutex);
-    iterator1 it = c1.try_emplace(k, k, std::forward<Args>(args)...).first;
-    it->second.locked = true;
-    c1.prepare_load(k, it->second);
+    typename Container1::iterator it1 = c1.try_emplace(k, k, std::forward<Args>(args)...).first;
+    typename Container2::iterator it2 = c2.find(k);
     lock.unlock();
 
-    T1& v1 = it->second;
-    T2& v2 = c2[k];
-    V value = (c1.safe_load(k, it->second)) ? transform(k, v1, v2) : init;
+    value = transform(k, it1->second, it2->second);
 
     lock.lock();
     c2.send_points(k);
-    it->second.locked = false;
+
     return value;
 }
 
@@ -94,10 +80,13 @@ struct Multithread_scheduler
     {
         typedef typename Container::key_type key_type;
         std::vector<std::future<V>> futures;
-        for(const auto& [k, v] : c)
-            futures.push_back(pool.submit([this, &c, &init, &transform](key_type k){
-                return Impl::transform_id(c, init, transform, k, mutex);
-            }, k));
+        {
+            std::unique_lock<std::mutex> lock(mutex);
+            for(const auto& [k, _] : c)
+                futures.push_back(pool.submit([this, &c, &init, &transform](key_type k){
+                    return Impl::transform_id(c, init, transform, k, mutex);
+                }, k));
+        }
         V value = init;
         for(auto& f: futures) value = reduce(value, f.get());
         return value;
@@ -109,13 +98,13 @@ struct Multithread_scheduler
              typename Transform,
              typename Reduce = std::plus<>,
              typename... Args>
-    V join_transform_reduce(Container1& c1, Container2& c2, V init, Transform transform, Reduce reduce = {}, Args... args)
+    V join_transform_reduce(Container1& c1, Container2& c2, V init, Transform transform, Reduce reduce = {}, Args&&... args)
     {
         typedef typename Container1::key_type key_type;
         std::vector<std::future<V>> futures;
         {
             std::unique_lock<std::mutex> lock(mutex);
-            for(const auto& [k, v2] : c2)
+            for(const auto& [k, _] : c2)
                 futures.push_back(pool.submit([this, &c1, &c2, &init, &transform, &args...](key_type k){
                     return Impl::transform_zip_id(c1, c2, init, transform, k, mutex, std::forward<Args>(args)...);
                 }, k));
@@ -131,13 +120,13 @@ struct Multithread_scheduler
              typename Transform,
              typename Reduce = std::plus<>,
              typename... Args>
-    V join_transform_reduce_loop(Container1& c1, Container2& c2, V init, Transform transform, Reduce reduce = {}, Args... args)
+    V join_transform_reduce_loop(Container1& c1, Container2& c2, V init, Transform transform, Reduce reduce = {}, Args&&... args)
     {
         typedef typename Container1::key_type key_type;
         std::map<key_type, std::future<V>> futures;
         {
             std::unique_lock<std::mutex> lock(mutex);
-            for(const auto& [k, v2] : c2)
+            for(const auto& [k, _] : c2)
                 futures.emplace(k, pool.submit([this, &c1, &c2, &init, &transform, &args...](key_type k){
                     return Impl::transform_zip_id(c1, c2, init, transform, k, mutex, std::forward<Args>(args)...);
                 }, k));
@@ -155,13 +144,13 @@ struct Multithread_scheduler
                     value = reduce(value, fit->second.get());
                     futures.erase(fit++);
                     std::vector<key_type> keys;
-                    for(const auto& v2 : c2)
-                        if (!v2.second.points().at(v2.first).empty())
-                            keys.push_back(v2.first);
+                    for(const auto& [k, v2] : c2)
+                        if (!v2.points().at(k).empty())
+                            keys.push_back(k);
                     for(auto k : keys)
                         if (futures.count(k) == 0)
                             futures.emplace(k, pool.submit([this, &c1, &c2, &init, &transform, &args...](key_type k){
-                                return Impl::transform_zip_id(c1, c2, init, transform, k, mutex, args...);
+                                return Impl::transform_zip_id(c1, c2, init, transform, k, mutex, std::forward<Args>(args)...);
                             }, k));
                 }
             }

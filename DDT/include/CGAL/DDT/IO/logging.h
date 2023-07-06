@@ -36,7 +36,7 @@ public:
     template<typename...Args>
     void operator()(int l, Args&&... args) const
     {
-        if(level>=l) do_log(args...);
+        if(level>=l) do_log(std::forward<Args>(args)...);
     }
     void step(const std::string& s) const
     {
@@ -60,7 +60,7 @@ private:
     void do_log(Arg&& arg, Args&&... args) const
     {
         std::cout << arg;
-        do_log(args...);
+        do_log(std::forward<Args>(args)...);
     }
 
     mutable std::chrono::time_point<std::chrono::system_clock> time, last, start;

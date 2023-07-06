@@ -44,11 +44,7 @@ struct STD_scheduler
     {
         return std::transform_reduce(CGAL_DDT_SCHEDULER_STD_SCHEDULER_PAR
                                      c.begin(), c.end(), init, reduce, [&c, &init, &transform](auto& p){
-            p.second.locked = true;
-            V value = init;
-            if (c.load(p.first, p.second)) value = transform(p.first, p.second);
-            p.second.locked = false;
-            return value;
+            return transform(p.first, p.second);
         } );
     }
 
@@ -58,20 +54,16 @@ struct STD_scheduler
              typename Transform,
              typename Reduce = std::plus<>,
              typename... Args>
-    V join_transform_reduce(Container1& c1, Container2& c2, V init, Transform transform, Reduce reduce = {}, Args... args)
+    V join_transform_reduce(Container1& c1, Container2& c2, V init, Transform transform, Reduce reduce = {}, Args&&... args)
     {
         return std::transform_reduce(CGAL_DDT_SCHEDULER_STD_SCHEDULER_PAR
                                      c2.begin(), c2.end(), init, reduce, [&c1, &c2, &init, &transform, &args...](auto& p){
             typedef typename Container2::key_type key_type;
             typedef typename Container1::iterator iterator;
-            typedef typename Container1::mapped_type mapped_type1;
             key_type k = p.first;
             iterator it = c1.try_emplace(k, k, std::forward<Args>(args)...).first;
-            it->second.locked = true;
-            V value = init;
-            if (c1.load(k, it->second)) value = transform(k, it->second, p.second);
+            V value = transform(k, it->second, p.second);
             c2.send_points(k);
-            it->second.locked = false;
             return value;
         } );
     }
@@ -82,7 +74,7 @@ struct STD_scheduler
              typename Transform,
              typename Reduce = std::plus<>,
              typename... Args>
-    V join_transform_reduce_loop(Container1& c1, Container2& c2, V init, Transform transform, Reduce reduce = {}, Args... args)
+    V join_transform_reduce_loop(Container1& c1, Container2& c2, V init, Transform transform, Reduce reduce = {}, Args&&... args)
     {
         V value = init, v;
         do {

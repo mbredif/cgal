@@ -29,6 +29,7 @@ struct Distributed_point_set {
     typedef typename Container::iterator iterator;
     typedef typename Container::value_type value_type;
     typedef typename Container::mapped_type mapped_type;
+    typedef typename Container::reference reference;
     typedef typename Container::key_type key_type;
 
     Distributed_point_set() {}
@@ -64,6 +65,7 @@ struct Distributed_point_set {
     }
 
     mapped_type& operator[](key_type key) { return point_sets[key]; }
+    iterator find(key_type key) { return point_sets.find(key); }
     iterator erase(iterator pos) { return point_sets.erase(pos); }
     iterator begin  () { return point_sets.begin (); }
     iterator end    () { return point_sets.end   (); }
