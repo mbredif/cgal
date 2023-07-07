@@ -109,7 +109,7 @@ void write_csv_bboxes(const std::string& filename, const DistributedTriangulatio
     csv << "geom,id" << std::endl;
     for(const auto& [id, tile] : tri.tiles)
     {
-        const auto& bbox = tile.value().bbox();
+        const auto& bbox = tile.bbox();
         csv << "\"POLYGON((";
         csv << bbox.min(0) << " "<< bbox.min(1) << ", ";
         csv << bbox.max(0) << " "<< bbox.min(1) << ", ";

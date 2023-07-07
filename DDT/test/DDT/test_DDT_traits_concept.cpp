@@ -16,9 +16,5 @@ int main(int argc, char **)
   if (argc == -1)
     test_traits<Triangulation, TileIndexProperty, Partitioner>(partitioner, "test_DDT_traits_concept", 0);
 
-  typedef CGAL::Distributed_triangulation<::Triangulation, TileIndexProperty> Distributed_triangulation;
-
-  Distributed_triangulation tri(1);
-
   return 0;
 }

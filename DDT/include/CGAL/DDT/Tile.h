@@ -18,56 +18,43 @@ namespace DDT {
 /// \ingroup PkgDDTClasses
 /// \tparam T is a model of the Triangulation concept
 /// The Tile stores a local triangulation.
-template<class Value>
 class Tile
 {
 public:
-    typedef Value value_type;
-
-    template<typename... Args>
-    Tile(Args&&... args) :
-        value_(std::forward<Args>(args)...),
+    Tile() :
         in_mem(false),
         use_count(0)
     {
     }
 
-    value_type& value() { return value_; }
-    const value_type& value() const { return value_; }
-    operator value_type&() { return value_; }
-    operator const value_type&() const { return value_; }
-
     /// lock the tile for exclusive use (no unloading, no concurrent processing)
-    mutable int use_count;
+    int use_count;
     /// is the triangulation in memory ?
-    mutable bool in_mem;
+    bool in_mem;
 
     /// unloads a tile from memory, automatically saving it.
     /// returns true after the loaded tile id is successfully saved and unloaded from memory.
     /// @todo attention à la perennité des handles (tile is possibly unloaded), ou alors lock ou shared pointer.
-    template<typename Serializer>
-    bool unload(Serializer& serializer) const {
-        if (use_count==0 && in_mem && serializer.save(value_)) {
-            value_.finalize();
-            value_.clear();
+    template<typename Value, typename Serializer>
+    bool unload(Value& value, Serializer& serializer) {
+        if (use_count==0 && in_mem && serializer.save(value)) {
+            value.finalize();
+            value.clear();
             in_mem = false;
             return true;
         }
         return false;
     }
 
-    template<typename Key, typename Serializer>
-    bool load(Key key, Serializer& serializer) const {
+    template<typename Key, typename Value, typename Serializer>
+    bool load(Key key, Value& value, Serializer& serializer) {
         if(in_mem) return true;
-        if (!serializer.has_tile(key) || serializer.load(value_)) {
+        if (!serializer.has_tile(key) || serializer.load(value)) {
             in_mem = true;
             return true;
         }
         return false;
     }
-
-private:
-    mutable value_type value_;
 };
 
 }

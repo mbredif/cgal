@@ -16,7 +16,7 @@
 #include <CGAL/DDT/Tile.h>
 #include <CGAL/DDT/iterator/Tile_iterator.h>
 
-#include <map>
+#include <unordered_map>
 #include <iomanip>
 #include <limits>
 
@@ -34,52 +34,59 @@ public:
     typedef Key                                        key_type;
     typedef Value                                      mapped_type;
     typedef Serializer_                                Serializer;
-    typedef CGAL::DDT::Tile<Value>                     Tile;
 
-    typedef std::map<key_type, Tile>                   Container;
-    typedef typename Container::iterator               raw_iterator;
-    typedef typename Container::const_iterator         raw_const_iterator;
+    typedef CGAL::DDT::Tile                            Tile;
+    typedef std::unordered_map<key_type, Value>        ValueContainer;
+    typedef std::unordered_map<key_type, Tile>         UsageContainer;
+    typedef typename ValueContainer::iterator          value_iterator;
+    typedef typename ValueContainer::const_iterator    value_const_iterator;
+    typedef typename UsageContainer::iterator          usage_iterator;
+    typedef typename UsageContainer::const_iterator    usage_const_iterator;
 
-    typedef CGAL::DDT::Tile_iterator<Tile_container, raw_iterator>  iterator;
-    typedef CGAL::DDT::Tile_iterator<const Tile_container, raw_const_iterator>  const_iterator;
+    typedef CGAL::DDT::Tile_iterator<Tile_container, usage_iterator, value_iterator>  iterator;
+    typedef CGAL::DDT::Tile_iterator<const Tile_container, usage_iterator, value_iterator>  const_iterator;
 
-    Tile_container(std::size_t number_of_tiles_mem_max = 0, const Serializer& serializer = Serializer()) :
-        tiles(),
+    Tile_container(std::size_t number_of_values_mem_max = 0, const Serializer& serializer = Serializer()) :
+        values(),
         serializer_(serializer),
-        number_of_tiles_mem_(0),
-        number_of_tiles_mem_max_(number_of_tiles_mem_max)
+        number_of_values_mem_(0),
+        number_of_values_mem_max_(number_of_values_mem_max)
     {
-        if (number_of_tiles_mem_max_ == 0) number_of_tiles_mem_max_ = std::numeric_limits<std::size_t>::max();
+        if (number_of_values_mem_max_ == 0) number_of_values_mem_max_ = std::numeric_limits<std::size_t>::max();
     }
 
-    inline std::size_t number_of_tiles_mem_max() const { return number_of_tiles_mem_max_; }
-    inline std::size_t number_of_tiles_mem() const { return number_of_tiles_mem_; }
+    inline std::size_t number_of_values_mem_max() const { return number_of_values_mem_max_; }
+    inline std::size_t number_of_values_mem() const { return number_of_values_mem_; }
 
-    bool empty() const { return tiles.empty(); }
-    const_iterator cbegin () const { return {this, tiles.cbegin ()}; }
-    const_iterator cend   () const { return {this, tiles.cend   ()}; }
-    const_iterator begin  () const { return {this, tiles.begin ()}; }
-    const_iterator end    () const { return {this, tiles.end   ()}; }
-    const_iterator find(key_type key) const { return {this, tiles.find(key)}; }
-    iterator begin  () { return {this, tiles.begin ()}; }
-    iterator end    () { return {this, tiles.end   ()}; }
-    iterator find(key_type key) { return {this, tiles.find(key)}; }
+    bool empty() const { return values.empty(); }
+    const_iterator cbegin () const { return {this, usages.begin(),  values.begin ()}; }
+    const_iterator cend   () const { return {this, usages.end(),    values.end   ()}; }
+    const_iterator begin  () const { return {this, usages.begin(),  values.begin ()}; }
+    const_iterator end    () const { return {this, usages.end(),    values.end   ()}; }
+    const_iterator find(key_type key) const { return {this, usages.find(key), values.find(key)}; }
+    iterator begin  () { return {this, usages.begin(), values.begin ()}; }
+    iterator end    () { return {this, usages.end(),   values.end   ()}; }
+    iterator find(key_type key) { return {this, usages.find(key), values.find(key)}; }
 
 
-    raw_iterator raw_end    () { return tiles.end   (); }
-    raw_const_iterator raw_end () const { return tiles.end   (); }
+    value_iterator values_end    () { return values.end   (); }
+    value_const_iterator values_end () const { return values.end   (); }
+
+    usage_iterator usages_end    () { return usages.end   (); }
+    usage_const_iterator usages_end () const { return usages.end   (); }
 
     template< class... Args >
     std::pair<iterator,bool> try_emplace(key_type key, Args&&... args) {
-        auto res = tiles.try_emplace(key, std::forward<Args>(args)...);
-        return {{this, res.first}, res.second};
+        auto use = usages.try_emplace(key);
+        auto val = values.try_emplace(key, std::forward<Args>(args)...);
+        return {{this, use.first, val.first}, val.second};
     }
 
 
     /*
      *             typename TileContainer::Tile_const_iterator tile = tc.find(*it);
             if(tile == tc.end()) {
-                while(tc.number_of_tiles_mem_ >= tc.number_of_tiles_mem_max_) {
+                while(tc.number_of_values_mem_ >= tc.number_of_values_mem_max_) {
                     auto it = tc.begin();
                     key_type k0 = it->id();
                     std::size_t count0 = inbox[id0].size();
@@ -97,14 +104,14 @@ public:
 */
 
     std::ostream& write(std::ostream& out, key_type green_key, key_type red_key) const {
-        for(const auto& [k, t] : tiles) {
-            if(t.use_count      ) out << "\x1b[1m\x1b[4m"  ; // bold, underscore
-            if(t.in_mem         ) out << "\x1b[44m\x1b[37m"; // bg blue, fg white
+        for(const auto& [k, u] : usages) {
+            if(u.use_count      ) out << "\x1b[1m\x1b[4m"  ; // bold, underscore
+            if(u.in_mem         ) out << "\x1b[44m\x1b[37m"; // bg blue, fg white
             if(k == green_key   ) out << "\x1b[42m\x1b[37m"; // bg green, fg white
             else if(k == red_key) out << "\x1b[41m\x1b[37m"; // bg red, fg white
             out << std::to_string(k) << "\x1B[0m" ; // reset
         }
-        out << std::setfill(' ') << " (" << number_of_tiles_mem_ << " in mem)";
+        out << std::setfill(' ') << " (" << number_of_values_mem_ << " in mem)";
         return out;
     }
 
@@ -115,20 +122,20 @@ public:
             return true;
         }
 
-        if (number_of_tiles_mem_ < number_of_tiles_mem_max_) {
-            ++number_of_tiles_mem_;
+        if (number_of_values_mem_ < number_of_values_mem_max_) {
+            ++number_of_values_mem_;
             write(std::cout << std::endl << "       ", key, key);
             return true;
 		}
 
         // make room
-        while(number_of_tiles_mem_ >= number_of_tiles_mem_max_) {
+        while(number_of_values_mem_ >= number_of_values_mem_max_) {
 		    // pick a loaded key at random and try to unload it
-		    std::size_t n = rand() % number_of_tiles_mem_;
-		    for(auto& [k, t] : tiles) {
-		        if(t.in_mem) {
+			std::size_t n = rand() % number_of_values_mem_;
+			for(auto& [k, u] : usages) {
+				if(u.in_mem) {
 		            if (n == 0) {
-						if (t.use_count==0 && t.unload(serializer_)) {
+						if (u.use_count==0 && u.unload(values.at(k), serializer_)) {
 							write(std::cout << std::endl << "unload ", key, k);
 							return true;
 		                }
@@ -148,11 +155,13 @@ public:
 
 
 private:
-    Container tiles;
+    mutable ValueContainer values;
+    mutable UsageContainer usages;
     Serializer serializer_;
 
-    std::size_t number_of_tiles_mem_max_;
-    mutable std::size_t number_of_tiles_mem_;
+    std::size_t number_of_values_mem_max_;
+    mutable std::size_t number_of_values_mem_;
+
 };
 
 }

@@ -17,7 +17,7 @@
 namespace CGAL {
 namespace DDT {
 
-template<typename Container, typename Iterator>
+template<typename Container, typename UseIterator, typename Iterator>
 class Tile_iterator
 {
 public:
@@ -29,55 +29,57 @@ public:
 
 private:
     Container *container_;
-    Iterator it_;
+    UseIterator usage_;
+    Iterator value_;
 
 public:
 
     void prepare_load() {
-        if(it_ != container_->raw_end())
+        if(usage_ != container_->usages_end())
         {
-            it_->second.use_count++;
-            if (!container_->prepare_load(it_->first, it_->second))
+            usage_->second.use_count++;
+            if (!container_->prepare_load(usage_->first, usage_->second))
                 throw std::runtime_error("prepare_load failed");
         }
     }
     void load() const {
-        if(!it_->second.load(it_->first, container_->serializer()))
+        if(!usage_->second.load(value_->first, value_->second, container_->serializer()))
             throw std::runtime_error("lazy loading failed");
     }
 
-    Tile_iterator(Container *container, Iterator it)
-        : container_(container), it_(it)
+    Tile_iterator(Container *container, UseIterator use, Iterator value)
+        : container_(container), usage_(use), value_(value)
     {
         prepare_load();
     }
 
     ~Tile_iterator()
     {
-        if(it_ != container_->raw_end())
+        if(usage_ != container_->usages_end())
         {
-            it_->second.use_count--;
+            usage_->second.use_count--;
         }
     }
 
     Tile_iterator(const Tile_iterator& c)
-        : container_(c.container_), it_(c.it_)
+        : container_(c.container_), usage_(c.usage_), value_(c.value_)
     {
-        if(it_ != container_->raw_end())
+        if(usage_ != container_->usages_end())
         {
-            it_->second.use_count++;
+            usage_->second.use_count++;
         }
     }
 
     bool operator<(const Tile_iterator& c) const
     {
-        return  it_ < c.it_;
+        return  value_ < c.value_;
     }
 
     Tile_iterator& operator++()
     {
-        it_->second.use_count--;
-        ++it_;
+        usage_->second.use_count--;
+        ++value_;
+        ++usage_;
         prepare_load();
         return *this;
     }
@@ -91,14 +93,14 @@ public:
 
     bool operator==(const Tile_iterator& c) const
     {
-        return (it_ == c.it_);
+        return (value_ == c.value_);
     }
 
     bool operator!=(const Tile_iterator& rhs) const { return !(*this == rhs); }
 
-    const value_type& operator*() const { load(); return *it_; }
+    const value_type& operator*() const { load(); return *value_; }
 
-    pointer operator->() const { load(); return it_.operator->(); }
+    pointer operator->() const { load(); return value_.operator->(); }
 };
 
 }

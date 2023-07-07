@@ -37,4 +37,13 @@ std::string to_string(TileIndex) { return ""; }
 }
 
 std::istream& operator>>(std::istream& in, TileIndex id) { return in; }
+
+
+// make it hashable so that it can be used in unordered associative containers
+template <>
+struct std::hash<TileIndex>
+{
+    std::size_t operator()( const TileIndex& k ) const { return 0; }
+};
+
 #endif // CGAL_DDT_CONCEPT_TILE_INDEX
