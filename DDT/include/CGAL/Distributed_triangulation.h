@@ -296,7 +296,7 @@ public:
     }
 
     /// returns the main representative of a vertex iterator
-    inline Vertex_iterator main(const Vertex_iterator& v) const { return relocate(v, id(v)); }
+    inline Vertex_iterator main(const Vertex_iterator& v) const { return is_infinite(v) ? v : relocate(v, id(v)); }
     /// returns the main representative of a facet iterator
     inline Facet_iterator main(const Facet_iterator& f) const { return relocate(f, id(f)); }
     /// returns the main representative of a cell iterator
@@ -337,13 +337,11 @@ public:
 
     /// returns the mirror facet. This operation is performed locally: the resulting facet belongs
     /// to the same tile as the input facet.
-    /// Precondition: the facet f is valid (ie: at least one of the facet points, the covertex and the mirror vertex is local)
+    /// Precondition: the facet f is valid (ie: at least one vertex is local among the covertex and the mirror vertex and the facet points)
     Facet_iterator mirror_facet(const Facet_iterator& f) const
     {
         assert(is_valid(f));
-        const Tile_triangulation& tri = f.triangulation();
-        assert(tri.facet_is_valid(*f));
-        return Facet_iterator(&tiles, f.tile(), tri.mirror_facet(*f));
+        return Facet_iterator(&tiles, f.tile(), f.triangulation().mirror_facet(*f));
     }
 
     /// returns the mirror index of facet f, such that neighbor(cell(mirror_facet(f)), mirror_index)==cell(f)
@@ -407,9 +405,9 @@ public:
     {
         assert(is_valid(f));
         const Tile_triangulation& tri = f.triangulation();
-        Tile_cell_index c = tri.cell(*f);
-        if(tri.cell_is_main(c)) return local_index_of_covertex(f);
-        return local_index_of_covertex(relocate(f, tri.cell_id(c)));
+        if (tri.cell_is_main(tri.cell(*f)))
+            return local_index_of_covertex(f);
+        return local_index_of_covertex(relocate(f, id(cell(f))));
     }
 
     /// returns the covertex of a facet f

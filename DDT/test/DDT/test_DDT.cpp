@@ -34,6 +34,54 @@ typedef CGAL::Distributed_point_set<Point, Tile_index> Distributed_point_set;
 #include <CGAL/DDT/IO/write_vrt.h>
 
 #define ddt_assert(x) if (!(x)) { std::cerr << "Assertion failed [" << __LINE__ << "] : " << #x << std::endl; ++errors; }
+#define ddt_assert_eq(x, y) if ((x)!=(y)) { ddt_assert((x)==(y)); std::cerr << #x << " = " << x << std::endl << #y << " = " << y << std::endl; }
+#define ddt_assert_neq(x, y) if ((x)==(y)) { ddt_assert((x)!=(y)); std::cerr << x << std::endl << y << std::endl; }
+
+std::ostream& operator<<(std::ostream& out, const Point& p)
+{
+    return out << p[0] << "," << p[1];
+}
+
+typedef typename Distributed_triangulation::Vertex_iterator Vertex_iterator;
+
+
+template<typename Tile_triangulation>
+std::ostream& write_point(std::ostream& out, const Tile_triangulation& tri, typename Tile_triangulation::Vertex_index v) {
+    if (tri.vertex_is_infinite(v)) return out << "inf";
+    return out << tri.vertex_id(v) << "|" << tri.point(v);
+}
+
+template<typename T>
+std::ostream& operator<<(std::ostream& out, const CGAL::DDT::Vertex_iterator<T>& v)
+{
+    auto& tri = v.triangulation();
+    out << "V" << v.id() << "(";
+    return write_point(out, tri, *v) << ")";
+}
+
+template<typename T>
+std::ostream& operator<<(std::ostream& out, const CGAL::DDT::Cell_iterator<T>& c)
+{
+    auto& tri = c.triangulation();
+    out << "C" << c.id() << "|" << tri.cell_id(*c) << "(";
+    write_point(out, tri, tri.vertex(*c,0)) << " ; ";
+    write_point(out, tri, tri.vertex(*c,1)) << " ; ";
+    write_point(out, tri, tri.vertex(*c,2)) << ")";
+    return out;
+}
+
+template<typename T>
+std::ostream& operator<<(std::ostream& out, const CGAL::DDT::Facet_iterator<T>& f)
+{
+    auto& tri = f.triangulation();
+    auto c = tri.cell(*f);
+    out << "F" << f.id() << "|" << tri.facet_id(*f) << "(" << tri.index_of_covertex(*f) << " : ";
+    write_point(out, tri, tri.vertex(c,0)) << " ; ";
+    write_point(out, tri, tri.vertex(c,1)) << " ; ";
+    write_point(out, tri, tri.vertex(c,2)) << ")";
+    return out;
+}
+
 
 int main(int argc, char **argv)
 {
@@ -96,15 +144,15 @@ int main(int argc, char **argv)
         ddt_assert(tri.is_main(facet));
         ddt_assert(tri.is_valid(facet));
         ddt_assert(!tri.is_foreign(cell));
-        ddt_assert(tri.mirror_facet(facet2) == facet);
-        ddt_assert(cell2 != cell);
-        ddt_assert(facet2 != facet);
-        ddt_assert(tri.index_of_covertex(facet2) == tri.mirror_index(facet));
-        ddt_assert(tri.mirror_index(facet2) == tri.index_of_covertex(facet));
-        ddt_assert(tri.relocate(tri.facet(cell, tri.index_of_covertex(facet)), tri.tile_id(facet)) == facet);
-        ddt_assert(tri.relocate(tri.neighbor(cell2, tri.mirror_index(facet)), tri.tile_id(cell)) == cell);
-        ddt_assert(tri.covertex(facet) == tri.mirror_vertex(facet2));
-        ddt_assert(tri.covertex(facet2) == tri.mirror_vertex(facet));
+        ddt_assert_eq(tri.mirror_facet(facet2), facet);
+        ddt_assert_neq(cell2, cell);
+        ddt_assert_neq(facet2, facet);
+        ddt_assert_eq(tri.index_of_covertex(facet2), tri.mirror_index(facet));
+        ddt_assert_eq(tri.mirror_index(facet2), tri.index_of_covertex(facet));
+        ddt_assert_eq(tri.relocate(tri.facet(cell, tri.index_of_covertex(facet)), tri.tile_id(facet)), facet);
+        ddt_assert_eq(tri.relocate(tri.neighbor(cell2, tri.mirror_index(facet)), tri.tile_id(cell)), cell);
+        ddt_assert_eq(tri.covertex(facet), tri.mirror_vertex(facet2));
+        ddt_assert_eq(tri.covertex(facet2), tri.mirror_vertex(facet));
     }
 
     int cid = 0;
@@ -119,18 +167,18 @@ int main(int argc, char **argv)
             auto vd = tri.vertex(cell, d);
             auto fd = tri.facet(cell, d);
             auto cd = tri.neighbor(cell, d);
-            ddt_assert(tri.is_infinite(vd) ? vd == tri.infinite_vertex() : vd == tri.main(vd));
-            ddt_assert(cd == tri.main(cd));
-            ddt_assert(tri.cell(tri.mirror_facet(tri.mirror_facet(fd))) == cell);
-            ddt_assert(cell != cd);
-            ddt_assert(cell != tri.main(cd));
-            ddt_assert(cd != tri.cells_end());
-            ddt_assert(tri.main(cd) != tri.cells_end());
+            ddt_assert_eq(vd, (tri.is_infinite(vd) ? tri.infinite_vertex() : tri.main(vd)));
+            ddt_assert_eq(cd, tri.main(cd));
+            ddt_assert_eq(tri.cell(tri.mirror_facet(tri.mirror_facet(fd))), cell);
+            ddt_assert_neq(cell, cd);
+            ddt_assert_neq(cell, tri.main(cd));
+            ddt_assert_neq(cd, tri.cells_end());
+            ddt_assert_neq(tri.main(cd), tri.cells_end());
             ddt_assert(tri.is_main(tri.main(cd)));
-            ddt_assert(tri.neighbor(cd, tri.mirror_index(cell, d)) == cell);
-            ddt_assert(tri.mirror_vertex(tri.mirror_facet(fd)) == vd);
-            ddt_assert(tri.covertex(tri.mirror_facet(fd)) == tri.vertex(cd, tri.mirror_index(fd)));
-            ddt_assert(tri.covertex(fd) == tri.vertex(cell, tri.mirror_index(tri.mirror_facet(fd))));
+            ddt_assert_eq(tri.neighbor(cd, tri.mirror_index(cell, d)), cell);
+            ddt_assert_eq(tri.mirror_vertex(tri.mirror_facet(fd)), vd);
+            ddt_assert_eq(tri.covertex(tri.mirror_facet(fd)), tri.vertex(cd, tri.mirror_index(fd)));
+            ddt_assert_eq(tri.covertex(fd), tri.vertex(cell, tri.mirror_index(tri.mirror_facet(fd))));
             ddt_assert(tri.has_vertex(tri.cell(vd), vd));
         }
 
@@ -140,6 +188,9 @@ int main(int argc, char **argv)
     CGAL::DDT::write_vrt_verts(tri, scheduler, "test_DDT_out_v");
     CGAL::DDT::write_vrt_facets(tri, scheduler, "test_DDT_out_f");
     CGAL::DDT::write_vrt_cells(tri, scheduler, "test_DDT_out_c");
+    CGAL::DDT::write_vrt_tins(tri, scheduler, "test_DDT_out_t");
 
+    if (errors)
+        std::cerr << errors << " errors occured !" << std::endl;
     return -errors;
 }

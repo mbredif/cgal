@@ -109,7 +109,10 @@ public:
     const Bbox& bbox() const { return bbox_; }
     Bbox& bbox() { return bbox_; }
 
-    inline Tile_index vertex_id(Vertex_index v) const { assert(!vertex_is_infinite(v)); return get(tile_indices, v); }
+    inline Tile_index vertex_id(Vertex_index v) const {
+        assert(!vertex_is_infinite(v));
+        return get(tile_indices, v);
+    }
 
     Tile_index cell_id(Cell_index c) const
     {
