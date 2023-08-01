@@ -17,69 +17,69 @@
 namespace CGAL {
 namespace DDT {
 
-template<typename Container, typename UseIterator, typename Iterator>
+template<typename Container, typename PairIterator>
 class Tile_iterator
 {
+    using iterator_type = typename PairIterator::value_type::second_type::iterator_type;
 public:
-    using value_type = typename Iterator::value_type;
-    using iterator_category = typename Iterator::iterator_category;
-    using difference_type = typename Iterator::difference_type;
-    using pointer = typename Iterator::pointer;
-    using reference = typename Iterator::reference;
+    using value_type = typename iterator_type::value_type;
+    using iterator_category = typename PairIterator::iterator_category;
+    using difference_type = typename PairIterator::difference_type;
+    using pointer = typename iterator_type::pointer;
+    using reference = typename iterator_type::reference;
 
 private:
     Container *container_;
-    UseIterator usage_;
-    Iterator value_;
+    PairIterator it_;
 
-public:
 
     void prepare_load() {
-        if(usage_ != container_->usages_end())
+        if(it_ != container_->usages_end())
         {
-            usage_->second.use_count++;
-            if (!container_->prepare_load(usage_->first, usage_->second))
+            it_->second.use_count++;
+            if (!container_->prepare_load(it_->second))
                 throw std::runtime_error("prepare_load failed");
         }
     }
     void load() const {
-        if(!usage_->second.load(value_->first, value_->second, container_->serializer()))
+        if(!it_->second.load(container_->serializer()))
             throw std::runtime_error("lazy loading failed");
     }
 
-    Tile_iterator(Container *container, UseIterator use, Iterator value)
-        : container_(container), usage_(use), value_(value)
+public:
+
+    Tile_iterator(Container *container, PairIterator it)
+        : container_(container), it_(it)
     {
         prepare_load();
     }
 
     ~Tile_iterator()
     {
-        if(usage_ != container_->usages_end())
+        if(it_ != container_->usages_end())
         {
-            usage_->second.use_count--;
+            it_->second.use_count--;
         }
     }
 
     Tile_iterator(const Tile_iterator& c)
-        : container_(c.container_), usage_(c.usage_), value_(c.value_)
+        : container_(c.container_), it_(c.it_)
     {
-        if(usage_ != container_->usages_end())
+        if(it_ != container_->usages_end())
         {
-            usage_->second.use_count++;
+            it_->second.use_count++;
         }
     }
 
     bool operator<(const Tile_iterator& c) const
     {
-        return  value_ < c.value_;
+        return  it_ < c.it_;
     }
 
     Tile_iterator& operator++()
     {
-        usage_->second.use_count--;
-        ++value_;
-        ++usage_;
+        it_->second.use_count--;
+        ++it_;
         prepare_load();
         return *this;
     }
@@ -93,14 +93,13 @@ public:
 
     bool operator==(const Tile_iterator& c) const
     {
-        return (value_ == c.value_);
+        return (it_ == c.it_);
     }
 
     bool operator!=(const Tile_iterator& rhs) const { return !(*this == rhs); }
 
-    const value_type& operator*() const { load(); return *value_; }
-
-    pointer operator->() const { load(); return value_.operator->(); }
+    const value_type& operator*() const { load(); return *(it_->second); }
+    pointer operator->() const { load(); return it_->second.operator->(); }
 };
 
 }

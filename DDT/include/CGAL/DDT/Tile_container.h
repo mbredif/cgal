@@ -16,7 +16,7 @@
 #include <CGAL/DDT/Tile.h>
 #include <CGAL/DDT/iterator/Tile_iterator.h>
 
-#include <unordered_map>
+#include <map>
 #include <iomanip>
 #include <limits>
 
@@ -25,26 +25,26 @@ namespace DDT {
 
 /// \ingroup PkgDDTClasses
 /// Tile Container
-template<typename Key,
-         typename Value,
+template<typename AssociativeContainer,
          typename Serializer_ = No_serializer >
 class Tile_container
 {
 public:
-    typedef Key                                        key_type;
-    typedef Value                                      mapped_type;
+    typedef typename AssociativeContainer::key_type    key_type;
+    typedef typename AssociativeContainer::mapped_type mapped_type;
     typedef Serializer_                                Serializer;
 
-    typedef CGAL::DDT::Tile                            Tile;
-    typedef std::unordered_map<key_type, Value>        ValueContainer;
-    typedef std::unordered_map<key_type, Tile>         UsageContainer;
+    typedef AssociativeContainer                       ValueContainer;
     typedef typename ValueContainer::iterator          value_iterator;
     typedef typename ValueContainer::const_iterator    value_const_iterator;
+
+    typedef CGAL::DDT::Usage<value_iterator>           Usage;
+    typedef std::map<key_type, Usage>                  UsageContainer;
     typedef typename UsageContainer::iterator          usage_iterator;
     typedef typename UsageContainer::const_iterator    usage_const_iterator;
 
-    typedef CGAL::DDT::Tile_iterator<Tile_container, usage_iterator, value_iterator>  iterator;
-    typedef CGAL::DDT::Tile_iterator<const Tile_container, usage_iterator, value_iterator>  const_iterator;
+    typedef CGAL::DDT::Tile_iterator<Tile_container, usage_iterator>  iterator;
+    typedef CGAL::DDT::Tile_iterator<const Tile_container, usage_iterator>  const_iterator;
 
     Tile_container(std::size_t number_of_values_mem_max = 0, const Serializer& serializer = Serializer()) :
         values(),
@@ -59,14 +59,14 @@ public:
     inline std::size_t number_of_values_mem() const { return number_of_values_mem_; }
 
     bool empty() const { return values.empty(); }
-    const_iterator cbegin () const { return {this, usages.begin(),  values.begin ()}; }
-    const_iterator cend   () const { return {this, usages.end(),    values.end   ()}; }
-    const_iterator begin  () const { return {this, usages.begin(),  values.begin ()}; }
-    const_iterator end    () const { return {this, usages.end(),    values.end   ()}; }
-    const_iterator find(key_type key) const { return {this, usages.find(key), values.find(key)}; }
-    iterator begin  () { return {this, usages.begin(), values.begin ()}; }
-    iterator end    () { return {this, usages.end(),   values.end   ()}; }
-    iterator find(key_type key) { return {this, usages.find(key), values.find(key)}; }
+    const_iterator cbegin () const { return {this, usages.begin()}; }
+    const_iterator cend   () const { return {this, usages.end()}; }
+    const_iterator begin  () const { return {this, usages.begin()}; }
+    const_iterator end    () const { return {this, usages.end()}; }
+    const_iterator find(key_type key) const { return {this, usages.find(key)}; }
+    iterator begin  () { return {this, usages.begin()}; }
+    iterator end    () { return {this, usages.end()}; }
+    iterator find(key_type key) { return {this, usages.find(key)}; }
 
 
     value_iterator values_end    () { return values.end   (); }
@@ -77,9 +77,9 @@ public:
 
     template< class... Args >
     std::pair<iterator,bool> try_emplace(key_type key, Args&&... args) {
-        auto use = usages.try_emplace(key);
         auto val = values.try_emplace(key, std::forward<Args>(args)...);
-        return {{this, use.first, val.first}, val.second};
+        auto use = usages.try_emplace(key, val.first);
+        return {{this, use.first}, use.second};
     }
 
 
@@ -116,8 +116,9 @@ public:
     }
 
     /// load a tile to memory, automatically saving it.
-    bool prepare_load(key_type key, const Tile& tile) const {
-        if(tile.in_mem) {
+    bool prepare_load(Usage& usage) const {
+        key_type key = usage->first;
+        if(usage.in_mem) {
             write(std::cout << std::endl << "in mem ", key, key);
             return true;
         }
@@ -126,25 +127,25 @@ public:
             ++number_of_values_mem_;
             write(std::cout << std::endl << "       ", key, key);
             return true;
-		}
+        }
 
         // make room
         while(number_of_values_mem_ >= number_of_values_mem_max_) {
-		    // pick a loaded key at random and try to unload it
-			std::size_t n = rand() % number_of_values_mem_;
-			for(auto& [k, u] : usages) {
-				if(u.in_mem) {
-		            if (n == 0) {
-						if (u.use_count==0 && u.unload(values.at(k), serializer_)) {
-							write(std::cout << std::endl << "unload ", key, k);
-							return true;
-		                }
-						break;
-		            }
-		            --n;
-		         }
-		    }
-		}
+            // pick a loaded key at random and try to unload it
+            std::size_t n = rand() % number_of_values_mem_;
+            for(auto& [k, u] : usages) {
+                if(u.in_mem) {
+                    if (n == 0) {
+                        if (u.use_count==0 && u.unload(serializer_)) {
+                            write(std::cout << std::endl << "unload ", key, k);
+                            return true;
+                        }
+                        break;
+                    }
+                    --n;
+                 }
+            }
+        }
 
 		write(std::cout << std::endl << "failed ", key, key) << std::endl;
 		return false;
@@ -155,7 +156,7 @@ public:
 
 
 private:
-    mutable ValueContainer values;
+    ValueContainer values;
     mutable UsageContainer usages;
     Serializer serializer_;
 

@@ -37,8 +37,10 @@ public:
 
     typedef typename TileIndexProperty::value_type                          Tile_index;
     typedef CGAL::DDT::Tile_triangulation<Triangulation, TileIndexProperty> Tile_triangulation;
-    typedef CGAL::DDT::Tile_container<Tile_index, Tile_triangulation, Serializer_>        Container;
-    //typedef std::map<Tile_index, Tile_triangulation>        Container;
+    typedef std::unordered_map<Tile_index, Tile_triangulation>              AssociativeContainer;
+    // typedef std::map<Tile_index, Tile_triangulation>                      AssociativeContainer; // alternative
+    typedef CGAL::DDT::Tile_container<AssociativeContainer, Serializer_>    Container;
+    // typedef AssociativeContainer                                            Container; // alternative, disables serialization
 
 private:
     typedef typename Container::iterator            Tile_iterator;

@@ -18,10 +18,16 @@ namespace DDT {
 /// \ingroup PkgDDTClasses
 /// \tparam T is a model of the Triangulation concept
 /// The Tile stores a local triangulation.
-class Tile
+template<typename PairIterator>
+class Usage
 {
 public:
-    Tile() :
+    using iterator_type = PairIterator;
+    using value_type    = typename iterator_type::value_type;
+    using pointer       = typename iterator_type::pointer;
+
+    Usage(PairIterator iterator) :
+        it(iterator),
         in_mem(false),
         use_count(0)
     {
@@ -35,26 +41,32 @@ public:
     /// unloads a tile from memory, automatically saving it.
     /// returns true after the loaded tile id is successfully saved and unloaded from memory.
     /// @todo attention à la perennité des handles (tile is possibly unloaded), ou alors lock ou shared pointer.
-    template<typename Value, typename Serializer>
-    bool unload(Value& value, Serializer& serializer) {
-        if (use_count==0 && in_mem && serializer.save(value)) {
-            value.finalize();
-            value.clear();
+    template<typename Serializer>
+    bool unload(Serializer& serializer) {
+        if (use_count==0 && in_mem && serializer.save(it->second)) {
+            it->second.finalize();
+            it->second.clear();
             in_mem = false;
             return true;
         }
         return false;
     }
 
-    template<typename Key, typename Value, typename Serializer>
-    bool load(Key key, Value& value, Serializer& serializer) {
+    template<typename Serializer>
+    bool load(Serializer& serializer) {
         if(in_mem) return true;
-        if (!serializer.has_tile(key) || serializer.load(value)) {
+        if (!serializer.has_tile(it->first) || serializer.load(it->second)) {
             in_mem = true;
             return true;
         }
         return false;
     }
+
+    const value_type& operator*() const { return *it; }
+    pointer operator->() const { return it.operator->(); }
+
+private:
+    iterator_type it;
 };
 
 }
