@@ -591,10 +591,11 @@ public:
     {
         Statistics stats;
         statistics_ = sch.transform_reduce(tiles, stats,
-            [](Tile_index id, const Tile_triangulation& tri) { tri.finalize(); return tri.statistics();});
+            [](Tile_index id, const Tile_triangulation& tri) { return tri.statistics();});
     }
 
-    template <typename Scheduler, typename Serializer> save(Scheduler& sch,  const Serializer& serializer) {
+    template <typename Scheduler, typename Serializer>
+    void save(Scheduler& sch,  const Serializer& serializer) {
         auto agg = serializer.template initialize<Tile_triangulation>();
         agg = sch.transform_reduce(tiles, agg,
             [&serializer](Tile_index id, const Tile_triangulation& tri) { return serializer.save(tri);},

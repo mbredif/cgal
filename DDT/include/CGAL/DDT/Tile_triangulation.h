@@ -29,16 +29,19 @@ struct Statistics {
     std::size_t number_of_finite_cells;
     std::size_t number_of_facets;
     std::size_t number_of_cells;
+    bool valid;
 
     Statistics() :
         number_of_finite_vertices(0),
         number_of_finite_facets  (0),
         number_of_finite_cells   (0),
         number_of_facets         (0),
-        number_of_cells          (0)
+        number_of_cells          (0),
+        valid                    (true)
     {}
 
     Statistics operator+(const Statistics& stats) const {
+        assert(valid && stats.valid);
         Statistics res;
         res.number_of_finite_vertices = number_of_finite_vertices + stats.number_of_finite_vertices;
         res.number_of_finite_facets   = number_of_finite_facets   + stats.number_of_finite_facets;
@@ -139,14 +142,18 @@ public:
         return selector.select();
     }
 
-    inline void clear() { Traits::clear(tri_); }
+    inline void clear() { if (!statistics_.valid) finalize(); Traits::clear(tri_); }
     inline std::pair<Vertex_index, bool> insert(const Point& p, Tile_index id, Vertex_index v = Vertex_index()) {
+        statistics_.valid = false;
         auto inserted = Traits::insert(tri_, p, v);
         if (inserted.second) put(tile_indices, inserted.first, id);
         return inserted;
     }
 
-    inline void remove(Vertex_index v) { Traits::remove(tri_, v); }
+    inline void remove(Vertex_index v) {
+        statistics_.valid = false;
+        Traits::remove(tri_, v);
+    }
 
     inline void spatial_sort(std::vector<std::size_t>& indices, const std::vector<Point>& points) const { Traits::spatial_sort(tri_, indices, points); }
 
@@ -467,6 +474,7 @@ public:
     template <class PointIdContainer>
     int insert(const PointIdContainer& received, std::set<Vertex_index>& inserted, bool report_vertices_with_mixed_stars_only=false)
     {
+        statistics_.valid = false;
         // retrieve the input points and ids in separate vectors
         // compute the axis-extreme points on the way
         std::vector<Point> points;
@@ -586,12 +594,13 @@ public:
 
     void finalize() const
     {
-
+        if (statistics_.valid) return;
         statistics_.number_of_finite_vertices = 0;
         statistics_.number_of_finite_facets = 0;
         statistics_.number_of_finite_cells = 0;
         statistics_.number_of_facets = 0;
         statistics_.number_of_cells = 0;
+        statistics_.valid = true;
 
         for(Vertex_index v = vertices_begin(); v != vertices_end(); ++v)
         {
@@ -625,8 +634,8 @@ public:
       return Traits::is_valid(tri_, verbose, level);
     }
 
-    Statistics& statistics() { return statistics_; }
-    const Statistics& statistics() const { return statistics_; }
+    Statistics& statistics() { if (!statistics_.valid) finalize(); return statistics_; }
+    const Statistics& statistics() const { if (!statistics_.valid) finalize(); return statistics_; }
 private:
     Tile_index id_;
     Triangulation tri_;
