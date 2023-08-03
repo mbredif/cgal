@@ -339,7 +339,7 @@ public:
         std::string filename(dirname_ + "/" + std::to_string(tri.id()));
         std::ofstream os(filename+".vtu");
         write_vtu_tile(os, tri, binary_);
-        return {1, tri.id()};
+        return {tri.id()};
     }
 
     template <typename value_type>
