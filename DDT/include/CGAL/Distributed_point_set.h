@@ -82,7 +82,7 @@ struct Distributed_point_set {
         for(auto& p : msg.points()) {
             if(p.first != id) {
                 auto& points = point_sets[p.first].points()[p.first];
-                points.insert(points.end(), p.second.begin(), p.second.end());
+                points.insert(p.second.begin(), p.second.end());
                 p.second.clear();
             }
         }
@@ -94,9 +94,9 @@ struct Distributed_point_set {
         for(auto& [i, msg] : point_sets) {
             if (i==id) continue;
             Points& p = msg.points()[i];
-            p.insert(p.end(), points.begin(), points.end());
+            p.insert(points.begin(), points.end());
         }
-        extreme_points_.insert(extreme_points_.end(), points.begin(), points.end());
+        extreme_points_.insert(points.begin(), points.end());
         points.clear();
     }
 
