@@ -43,7 +43,7 @@ public:
     /// @todo attention à la perennité des handles (tile is possibly unloaded), ou alors lock ou shared pointer.
     template<typename Serializer>
     bool unload(Serializer& serializer) {
-        if (use_count==0 && in_mem && serializer.save(it->second)) {
+        if (use_count==0 && in_mem && serializer.write(it->second)) {
             it->second.finalize();
             it->second.clear();
             in_mem = false;
@@ -55,7 +55,7 @@ public:
     template<typename Serializer>
     bool load(Serializer& serializer) {
         if(in_mem) return true;
-        if (!serializer.has_tile(it->first) || serializer.load(it->second)) {
+        if (!serializer.readable(it->first) || serializer.read(it->second)) {
             in_mem = true;
             return true;
         }

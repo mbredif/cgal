@@ -13,7 +13,8 @@
 #define CGAL_DDT_FILE_SERIALIZER_H
 
 #include <boost/filesystem.hpp>
-#include <iomanip>
+#include <CGAL/DDT/IO/read_cgal.h>
+#include <CGAL/DDT/IO/write_cgal.h>
 
 namespace CGAL {
 namespace DDT {
@@ -22,66 +23,71 @@ namespace DDT {
 /// This serializer saves and loads the bounding box and triangulation of each tile to the filesystem.
 /// It contains the iostream serialization of the bounding box and the tile triangulation.
 /// \cgalModels Serializer
-struct File_serializer
-{
-  /// Each tile is saved as the file "{prefix}{tile_index}.txt".
-  File_serializer(const std::string& prefix = "") : m_prefix(prefix) {
-      boost::filesystem::path p(prefix);
-      boost::filesystem::path q(p.parent_path());
-      if(p.has_parent_path() && !boost::filesystem::exists(q))
-          boost::filesystem::create_directories(q);
-  }
+class File_serializer {
+public:
+    File_serializer(const std::string& dirname) : dirname_(dirname)
+    {
+        boost::filesystem::path p(dirname_);
+        boost::filesystem::create_directories(p);
+    }
 
-  template <typename TileIndex>
-  bool has_tile(TileIndex id) const
-  {
-    const std::string fname = filename(id);
-    std::ifstream in(fname, std::ios::in | std::ios::binary);
-    return in.is_open();
-  }
+    template <class TileTriangulation>
+    bool write(const TileTriangulation& tri) const
+    {
+        return write_cgal_tile(tri, dirname_);
+    }
 
-  template <typename TileIndex, typename Bbox>
-  bool load(TileIndex id, Bbox& bbox) const {
-      const std::string fname = filename(id);
-      std::ifstream in(fname, std::ios::in | std::ios::binary);
-      in >> bbox;
-      return !in.fail();
-  }
+    template <typename DistributedTriangulation>
+    bool write_begin(const DistributedTriangulation& tri) const
+    {
+        return true;
+    }
 
-  template<typename TileTriangulation> bool load(TileTriangulation& tri) const
-  {
-    const std::string fname = filename(tri.id());
-    std::ifstream in(fname, std::ios::in | std::ios::binary);
-    tri.clear();
-    in >> tri.bbox();
-    in >> tri;
-    if(!in.fail()) return true;
-    tri.clear();
-    return false;
-  }
+    template <typename DistributedTriangulation>
+    bool write_end(const DistributedTriangulation& tri) const
+    {
+        return write_json_tiles(tri, dirname_);
+    }
 
-  template<typename TileTriangulation> bool save(const TileTriangulation& tri) const {
-    const std::string fname = filename(tri.id());
-    std::ofstream out(fname, std::ios::out | std::ios::binary);
-    out << std::setprecision(17) << tri.bbox() << "\n" << tri;
-    return !out.fail();
-  }
+    template <typename TileIndex>
+    bool readable(TileIndex id) const
+    {
+        std::cout << dirname_ << std::endl;
+        std::cout << "/" << std::endl;
+        std::cout << std::to_string(id) << std::endl;
+        std::cout << std::endl;
+        const std::string fname = dirname_ + "/" + std::to_string(id) + ".txt";
+        std::ifstream in(fname, std::ios::in);
+        return in.is_open();
+    }
 
-  /// File system prefix
-  const std::string& prefix() const { return m_prefix; }
+    template<typename TileTriangulation>
+    bool read(TileTriangulation& tri) const
+    {
+        return read_cgal_tile(tri, dirname_);
+    }
+
+    template <typename DistributedTriangulation>
+    bool read_begin(DistributedTriangulation& tri) const
+    {
+        return read_json_tiles(tri, dirname_);
+    }
+
+    template <typename DistributedTriangulation>
+    bool read_end(DistributedTriangulation& tri) const
+    {
+        return true;
+    }
+
+    /// File system directory name
+    const std::string& dirname() const { return dirname_; }
 
 private:
-  template <typename TileIndex>
-  std::string filename(TileIndex i) const
-  {
-    return m_prefix+std::to_string(i)+".txt";
-  }
-
-  std::string m_prefix;
+    std::string dirname_;
 };
 
 std::ostream& operator<<(std::ostream& out, const File_serializer& serializer) {
-    return out << "File_serializer(prefix=" << serializer.prefix() << ")";
+    return out << "File_serializer(dirname=" << serializer.dirname() << ")";
 }
 
 }

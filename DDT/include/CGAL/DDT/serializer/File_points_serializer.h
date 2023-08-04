@@ -44,22 +44,14 @@ struct File_points_serializer
 
 
   template <typename TileIndex>
-  bool has_tile(TileIndex id) const
+  bool readable(TileIndex id) const
   {
     const std::string fname = filename(id);
     std::ifstream in(fname, std::ios::in | std::ios::binary);
     return in.is_open();
   }
 
-  template<typename TileIndex, typename Bbox>
-  bool load(TileIndex id, Bbox& bbox) const {
-      const std::string fname = filename(id);
-      std::ifstream in(fname, std::ios::in | std::ios::binary);
-      in >> bbox;
-      return !in.fail();
-  }
-
-  template<typename TileTriangulation> bool load(TileTriangulation& tri) const
+  template<typename TileTriangulation> bool read(TileTriangulation& tri) const
   {
 #ifdef CGAL_DEBUG_DDT
     ++nb_loads;
@@ -86,7 +78,7 @@ struct File_points_serializer
     return false;
   }
 
-  template<typename TileTriangulation> bool save(const TileTriangulation& tri) const {
+  template<typename TileTriangulation> bool write(const TileTriangulation& tri) const {
 #ifdef CGAL_DEBUG_DDT
     ++nb_save;
 #endif

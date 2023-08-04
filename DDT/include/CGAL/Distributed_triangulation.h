@@ -81,6 +81,8 @@ public:
 
     /// returns the dimension of the triangulation
     inline int maximal_dimension() const { return maximal_dimension_; }
+    /// returns the dimension of the triangulation
+    inline int& maximal_dimension() { return maximal_dimension_; }
     /// returns the number of finite cells in the triangulation, including cells incident to the vertex at infinity.
     inline std::size_t number_of_finite_cells   () const { return statistics_.number_of_finite_cells;    }
     /// returns the number of finite vertices in the triangulation, including the vertex at infinity.
@@ -595,13 +597,23 @@ public:
     }
 
     template <typename Scheduler, typename Serializer>
-    void save(Scheduler& sch,  const Serializer& serializer) {
-        auto agg = serializer.template initialize<Tile_triangulation>();
-        agg = sch.transform_reduce(tiles, agg,
-            [&serializer](Tile_index id, const Tile_triangulation& tri) { return serializer.save(tri);},
-            [&serializer](auto& agg, const auto& val) { return serializer.reduce(agg, val);}
-        );
-        serializer.finalize(agg);
+    bool write(Scheduler& sch,  const Serializer& serializer) {
+        if (!serializer.write_begin(*this)) return false;
+        if (!sch.transform_reduce(tiles, true,
+            [&serializer](Tile_index id, const Tile_triangulation& tri) { return serializer.write(tri);},
+            std::logical_and<>()))
+            return false;
+        return serializer.write_end(*this);
+    }
+
+    template <typename Scheduler, typename Serializer>
+    bool read(Scheduler& sch,  const Serializer& serializer) {
+        if (!serializer.read_begin(*this)) return false;
+        if (!sch.transform_reduce(tiles, true,
+            [&serializer](Tile_index id, Tile_triangulation& tri) { return serializer.read(tri);},
+            std::logical_and<>()))
+            return false;
+        return serializer.read_end(*this);
     }
 
     const Statistics& statistics() const { return statistics_; }

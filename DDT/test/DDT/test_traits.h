@@ -5,8 +5,7 @@
 #include <boost/filesystem.hpp>
 #include <CGAL/DDT/IO/write_vrt.h>
 #include <CGAL/DDT/IO/write_ply.h>
-#include <CGAL/DDT/IO/write_cgal.h>
-#include <CGAL/DDT/IO/read_cgal.h>
+#include <CGAL/DDT/serializer/File_serializer.h>
 #include <CGAL/DDT/partitioner/Grid_partitioner.h>
 #include <CGAL/DDT/scheduler/Sequential_scheduler.h>
 #include <CGAL/Distributed_triangulation.h>
@@ -89,13 +88,13 @@ int test_traits(const Partitioner& partitioner, const std::string& testname, int
         boost::filesystem::create_directories(testname + "/cgal");
         boost::filesystem::create_directories(testname + "/cgal2");
         std::cout << "write..." << std::endl;
-        CGAL::DDT::write_cgal(tri1, testname + "/cgal");
+        tri1.write(scheduler, CGAL::DDT::File_serializer(testname + "/cgal"));
 
         Distributed_triangulation tri2(dim);
         std::cout << "read..." << std::endl;
-        CGAL::DDT::read_cgal(tri2, testname + "/cgal");
+        tri2.read(scheduler, CGAL::DDT::File_serializer(testname + "/cgal"));
         std::cout << "write again..." << std::endl;
-        CGAL::DDT::write_cgal(tri2, testname + "/cgal2");
+        tri2.write(scheduler, CGAL::DDT::File_serializer(testname + "/cgal2"));
 
         result += dump_2d_vrt(tri2, scheduler, testname + "/tri2");
         if (dim == 2)

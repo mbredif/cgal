@@ -2,7 +2,7 @@
 
 #include <CGAL/property_map.h>
 #include <CGAL/DDT/IO/read_las.h>
-#include <CGAL/DDT/IO/write_pvtu.h>
+#include <CGAL/DDT/serializer/PVTU_file_serializer.h>
 
 #include <CGAL/DDT/traits/Triangulation_traits_3.h>
 #include <CGAL/DDT/partitioner/Grid_partitioner.h>
@@ -58,7 +58,7 @@ int main(int argc, char*argv[])
     tri.insert(scheduler, points);
 
     std::cout << "Writing PVTU to " << out << std::endl;
-    tri.save(scheduler, CGAL::DDT::PVTU_serializer(out));
+    tri.write(scheduler, CGAL::DDT::PVTU_serializer(out));
 
     return EXIT_SUCCESS;
 }

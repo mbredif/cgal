@@ -22,7 +22,7 @@ namespace CGAL {
 namespace DDT {
 
 template<typename Statistics>
-void write_json_statistics(boost::property_tree::ptree& node, const Statistics& stats)
+void json_put_statistics(boost::property_tree::ptree& node, const Statistics& stats)
 {
     node.put("finite_vertices", stats.number_of_finite_vertices);
     node.put("finite_facets", stats.number_of_finite_facets);
@@ -32,68 +32,46 @@ void write_json_statistics(boost::property_tree::ptree& node, const Statistics& 
 }
 
 template<typename TileTriangulation>
-std::ostream & write_json(TileTriangulation & triangulation,std::string filename,std::ostream & ofile)
+bool write_cgal_tile(const TileTriangulation& triangulation, const std::string& dirname)
 {
-    boost::property_tree::ptree root_node;
-    root_node.put("filename", filename);
-    root_node.put("id", std::to_string(triangulation.id()));
-    write_json_statistics(root_node, triangulation.statistics());
-    boost::property_tree::write_json(ofile, root_node);
-    return ofile;
-}
-
-template<typename TileTriangulation>
-bool write_cgal_tile(const TileTriangulation& triangulation, std::string dirname)
-{
-    std::string filename = dirname + "/" + std::to_string(triangulation.id() ) + ".bin";
-    std::string json_name = dirname + "/" + std::to_string(triangulation.id() ) + ".json";
-    std::ofstream ofile_tri(filename, std::ios::out);
-    std::ofstream ofile_json(json_name, std::ios::out);
-    if(!ofile_tri.is_open())
+    std::string cgal_name = dirname + "/" + std::to_string(triangulation.id() ) + ".txt";
+    std::ofstream ofile(cgal_name, std::ios::out);
+    if(!ofile.is_open())
     {
         std::cerr << "write_cgal_tile : File could not be opened" << std::endl;
-        std::cerr << filename << std::endl;
+        std::cerr << cgal_name << std::endl;
         return false;
     }
-
-    ofile_tri.precision(17);
-    ofile_tri << triangulation;
-    ofile_tri.close();
-    write_json(triangulation, filename, ofile_json);
-    ofile_json.close();
-    return true;
+    ofile.precision(17);
+    ofile << triangulation;
+    return !ofile.fail();
 }
 
 template<typename DistributedTriangulation>
-int write_cgal(const DistributedTriangulation& tri, const std::string& dirname)
+bool write_json_tiles(const DistributedTriangulation& tri, const std::string& dirname)
 {
     boost::property_tree::ptree root_node;
-    boost::property_tree::ptree tiles_node;
-    boost::property_tree::ptree bboxes_node;
-    typedef typename DistributedTriangulation::Tile_triangulation Tile_triangulation;
-
-    int i = 0;
-    for(auto& [id, tile] : tri.tiles)
-    {
-        const Tile_triangulation& triangulation = tile;
-        std::string sid = std::to_string(id);
-        std::string fpath = sid + ".bin";
-        std::ostringstream ss;
-        ss << triangulation.bbox();
-        tiles_node.put (sid, fpath);
-        bboxes_node.put(sid, ss.str());
-        i += !write_cgal_tile(triangulation, dirname);
-    }
     root_node.put("dimension", tri.maximal_dimension());
+    json_put_statistics(root_node, tri.statistics());
+
+    boost::property_tree::ptree tiles_node;
+    for(const auto& [id, triangulation] : tri.tiles)
+    {
+        boost::property_tree::ptree tile_node;
+        std::string sid = std::to_string(id);
+        tile_node.put("tile", sid+".txt");
+        std::ostringstream oss;
+        oss << triangulation.bbox();
+        tile_node.put("bbox", oss.str());
+        json_put_statistics(tile_node, triangulation.statistics());
+        tiles_node.add_child(sid, tile_node);
+    }
     root_node.add_child("tiles", tiles_node);
-    root_node.add_child("bboxes", bboxes_node);
-    write_json_statistics(root_node, tri.statistics());
+
     std::string json_name = dirname + "/tiles.json";
     std::ofstream ofile(json_name, std::ios::out);
     boost::property_tree::write_json(ofile, root_node);
-    ofile.close();
-
-    return i;
+    return !ofile.fail();
 }
 
 }

@@ -60,10 +60,10 @@ void write_vtk_header(std::ostream& os, const std::string& type, const std::stri
     os << ">\n";
 }
 
-template<typename Iterator>
-void write_pvtu_file(const std::string& dirname, Iterator begin, Iterator end)
+template<typename DistributedTriangulation>
+bool write_pvtu_file(const DistributedTriangulation& tri, const std::string& dirname)
 {
-    typedef std::remove_cv_t<typename Iterator::value_type> Id;
+    typedef std::remove_cv_t<typename DistributedTriangulation::Tile_index> Id;
     boost::filesystem::path path(dirname);
     std::string stem = path.filename().string();
     const char *tile_attr = Impl::vtk_types<Id>::string;
@@ -86,10 +86,11 @@ void write_pvtu_file(const std::string& dirname, Iterator begin, Iterator end)
     os <<"   <PDataArray type=\"" << size_attr << "\" NumberOfComponents=\"1\" Name=\"offsets\"/>\n";
     os <<"   <PDataArray type=\"" << type_attr << "\" NumberOfComponents=\"1\" Name=\"types\"/>\n";
     os <<"  </PCells>\n";
-    for(Iterator it = begin; it != end; ++it)
-          os << "  <Piece Source=\"" << stem << "/" << std::to_string(*it) << ".vtu\"/>\n";
+    for(const auto& [id, triangulation] : tri.tiles)
+          os << "  <Piece Source=\"" << stem << "/" << std::to_string(id) << ".vtu\"/>\n";
     os <<" </PUnstructuredGrid>\n";
     os <<"</VTKFile>\n";
+    return true;
 }
 
 template<typename V>
@@ -322,42 +323,6 @@ void write_vtu_tile(std::ostream& os,
   }
   os << "</VTKFile>\n";
 }
-
-class PVTU_serializer {
-public:
-    PVTU_serializer(const std::string& dirname, bool binary = true) : dirname_(dirname), binary_(binary) {}
-
-    template <class TileTriangulation, typename value_type = std::vector<typename TileTriangulation::Tile_index>>
-    value_type initialize() const {
-        boost::filesystem::path p(dirname_);
-        boost::filesystem::create_directories(p);
-        return {};
-    }
-
-    template <class TileTriangulation, typename value_type = std::vector<typename TileTriangulation::Tile_index>>
-    value_type save(const TileTriangulation& tri) const {
-        std::string filename(dirname_ + "/" + std::to_string(tri.id()));
-        std::ofstream os(filename+".vtu");
-        write_vtu_tile(os, tri, binary_);
-        return {tri.id()};
-    }
-
-    template <typename value_type>
-    value_type& reduce(value_type& v1, const value_type& v2) const {
-        v1.insert(v1.end(), v2.begin(), v2.end());
-        return v1;
-    }
-
-    template <typename value_type>
-    void finalize(const value_type& v) const {
-        write_pvtu_file(dirname_, v.begin(), v.end());
-    }
-
-    private:
-    std::string dirname_;
-    bool binary_;
-};
-
 
 }
 }

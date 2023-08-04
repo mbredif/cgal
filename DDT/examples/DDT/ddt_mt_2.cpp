@@ -2,9 +2,9 @@
 #include <CGAL/DDT/partitioner/Grid_partitioner.h>
 #include <CGAL/DDT/scheduler/Multithread_scheduler.h>
 #include <CGAL/DDT/serializer/File_serializer.h>
-#include <CGAL/Distributed_triangulation.h>
+#include <CGAL/DDT/serializer/PVTU_file_serializer.h>
 #include <CGAL/DDT/IO/write_vrt.h>
-#include <CGAL/DDT/IO/write_pvtu.h>
+#include <CGAL/Distributed_triangulation.h>
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
 #include <CGAL/Triangulation_vertex_base_with_info_2.h>
 #include <CGAL/DDT/traits/Vertex_info_property_map.h>
@@ -40,12 +40,18 @@ int main(int argc, char **argv)
 
     Scheduler scheduler(threads);
 
-    Serializer serializer("tile_");
+    CGAL::DDT::File_serializer serializer("tile/");
     Distributed_triangulation tri(2, max_number_of_tiles_in_mem, serializer);
 
     tri.insert(scheduler, points);
 
-    tri.save(scheduler, CGAL::DDT::PVTU_serializer("out"));
+    tri.write(scheduler, CGAL::DDT::File_serializer("cgal/"));
+
+    Serializer serializer2("tile2/");
+    Distributed_triangulation tri2(2, max_number_of_tiles_in_mem, serializer2);
+    tri2.read (scheduler, CGAL::DDT::File_serializer("cgal/"));
+    tri2.write(scheduler, CGAL::DDT::File_serializer("cgal2/"));
+    tri2.write(scheduler, CGAL::DDT::PVTU_serializer("out"));
 
     CGAL::DDT::write_vrt_verts(tri, scheduler, "out_v");
     CGAL::DDT::write_vrt_facets(tri, scheduler, "out_f");

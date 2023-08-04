@@ -28,74 +28,57 @@ namespace CGAL {
 namespace DDT {
 
 template<typename Statistics>
-void read_json_statistics(boost::property_tree::ptree& node, Statistics& stats)
+void json_get_statistics(const boost::property_tree::ptree& node, Statistics& stats)
 {
     stats.number_of_finite_vertices = node.get<std::size_t>("finite_vertices");
     stats.number_of_finite_facets = node.get<std::size_t>("finite_facets");
     stats.number_of_finite_cells = node.get<std::size_t>("finite_cells");
     stats.number_of_facets = node.get<std::size_t>("facets");
     stats.number_of_cells = node.get<std::size_t>("cells");
-}
-
-template<typename Tile_triangulation>
-std::istream& read_json(Tile_triangulation& tri,std::istream&  ifile)
-{
-    boost::property_tree::ptree root_node;
-    boost::property_tree::read_json(ifile, root_node);
-    tri.id() =  root_node.get<typename Tile_triangulation::Tile_index>("id");
-    read_json_statistics(root_node, tri.statistics());
-    return ifile;
+    stats.valid = true;
 }
 
 template<typename TileTriangulation>
-int read_cgal_tile(TileTriangulation& triangulation, const std::string& dirname)
+bool read_cgal_tile(TileTriangulation& triangulation, const std::string& dirname)
 {
-
-    std::string filename = dirname + "/" + std::to_string(triangulation.id() ) + ".bin";
-    std::string json_name = dirname + "/" + std::to_string(triangulation.id() ) + ".json";
-    std::ifstream ifile_tri(filename,  std::ios::in );
-
-    if (!ifile_tri.is_open())
+    std::string cgal_name = dirname + "/" + std::to_string(triangulation.id() ) + ".txt";
+    std::ifstream ifile(cgal_name,  std::ios::in );
+    if(!ifile.is_open())
     {
-        std::cerr << "stream not opened : " << filename << std::endl;
-        return 1;
+        std::cerr << "read_cgal_tile : File could not be opened" << std::endl;
+        std::cerr << cgal_name << std::endl;
+        return false;
     }
 
-    ifile_tri >> triangulation;
-    ifile_tri.close();
-
-    std::ifstream ifile_json(json_name, std::ifstream::in);
-    read_json(triangulation,ifile_json);
-    ifile_json.close();
-
-    return 0;
+    ifile >> triangulation;
+    return !ifile.fail();
 }
 
 template<typename DistributedTriangulation>
-int read_cgal(DistributedTriangulation& tri, const std::string& dirname)
+bool read_json_tiles(DistributedTriangulation& tri, const std::string& dirname)
 {
+    std::string json_name = dirname + "/tiles.json";
+    std::ifstream ifile(json_name, std::ifstream::in);
+    boost::property_tree::ptree root_node;
+    boost::property_tree::read_json(ifile, root_node);
+    if (ifile.fail()) return false;
+
     typedef typename DistributedTriangulation::Tile_index Tile_index;
     typedef typename DistributedTriangulation::Tile_triangulation Tile_triangulation;
-    boost::property_tree::ptree root_node;
-    boost::property_tree::ptree tiles_node;
-    boost::property_tree::ptree bboxes_node;
-    std::string json_name = dirname + "/tiles.json";
-    std::ifstream ifile_json(json_name, std::ifstream::in);
-    boost::property_tree::read_json(ifile_json, root_node);
 
     int dimension = root_node.get<int>("dimension");
-    tiles_node = root_node.get_child("tiles");
-    bboxes_node = root_node.get_child("bboxes");
-    read_json_statistics(root_node, tri.statistics());
-    for (auto its : tiles_node)
+    tri.maximal_dimension() = dimension;
+    json_get_statistics(root_node, tri.statistics());
+    boost::property_tree::ptree tiles_node = root_node.get_child("tiles");
+    for(const auto& [sid, node] : tiles_node)
     {
-        Tile_index tid = std::stoi(its.first);
-        Tile_triangulation& triangulation = tri.tiles.try_emplace(tid, tid, tri.maximal_dimension()).first->second;
-        std::istringstream iss(bboxes_node.find(its.first)->second.data());
+        Tile_index id = std::stoi(sid);
+        Tile_triangulation& triangulation = tri.tiles.try_emplace(id, id, dimension).first->second;
+        std::istringstream iss(node.get_child("bbox").data());
         iss >> triangulation.bbox();
-        read_cgal_tile(triangulation, dirname);
+        json_get_statistics(node, triangulation.statistics());
     }
-    return 0;
+    return true;
 }
 
 }
