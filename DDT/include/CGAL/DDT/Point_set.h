@@ -21,7 +21,7 @@ namespace DDT {
 template<class Point, class TileIndex, class TilePoints>
 struct Point_set {
     typedef TileIndex                                  Tile_index;
-    typedef std::multimap<Tile_index, Point>           Points;
+    typedef std::vector<std::pair<Tile_index, Point>>   Points;
     typedef std::map<Tile_index, Points>               Points_map;
     typedef TilePoints                                 Tile_points;
 
@@ -34,19 +34,19 @@ struct Point_set {
     Points& extreme_points() { return extreme_points_; }
 
     void send_point(Tile_index id, Tile_index i, const Point& p) {
-        points_[id].emplace(i,p);
+        points_[id].emplace_back(i,p);
     }
 
     template<typename TileTriangulation, typename VertexIndex>
     void send_vertex(Tile_index id, const TileTriangulation& t, VertexIndex v) {
-        points_[id].emplace(t.vertex_id(v), t.point(v));
+        points_[id].emplace_back(t.vertex_id(v), t.point(v));
     }
 
     template<typename TileTriangulation, typename VertexIndex>
     std::size_t send_vertices(Tile_index id, const TileTriangulation& t, const std::set<VertexIndex>& vertices) {
         Points& p = points_[id];
         for(VertexIndex v : vertices)
-            p.emplace(t.vertex_id(v), t.point(v));
+            p.emplace_back(t.vertex_id(v), t.point(v));
         return vertices.size();
     }
 
@@ -62,7 +62,7 @@ struct Point_set {
     void send_vertices_to_all_tiles(const TileTriangulation& t, const std::vector<VertexIndex>& vertices) {
         for(VertexIndex v : vertices)
             if (!t.vertex_is_infinite(v))
-                extreme_points_.emplace(t.vertex_id(v), t.point(v));
+                extreme_points_.emplace_back(t.vertex_id(v), t.point(v));
     }
 
     void receive_points(Tile_index i, Points& received) {
@@ -71,7 +71,7 @@ struct Point_set {
         for(auto& ip : input_points_)
             ip.read(std::back_inserter(points_read));
         for(auto& p : points_read)
-            received.emplace(i, p);
+            received.emplace_back(i, p);
         input_points_.clear();
     }
 
