@@ -44,7 +44,6 @@ int main(int argc, char **argv)
     CGAL::DDT::write_vrt_verts(tri, scheduler, "out_v");
     CGAL::DDT::write_vrt_facets(tri, scheduler, "out_f");
     CGAL::DDT::write_vrt_cells(tri, scheduler, "out_c");
-    CGAL::DDT::write_vrt_bboxes(tri, "out_b");
     CGAL::DDT::write_vrt_tins(tri, scheduler, "out_t");
 
     return 0;

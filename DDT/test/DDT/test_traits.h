@@ -18,7 +18,6 @@ int dump_2d_vrt(T& tri, Scheduler& scheduler, const std::string& vrt)
     CGAL::DDT::write_vrt_verts(tri, scheduler, vrt+"_v");
     CGAL::DDT::write_vrt_facets(tri, scheduler, vrt+"_f");
     CGAL::DDT::write_vrt_cells(tri, scheduler, vrt+"_c");
-    CGAL::DDT::write_vrt_bboxes(tri, vrt+"_b");
     CGAL::DDT::write_vrt_tins(tri, scheduler, vrt+"_t");
     return 0;
 

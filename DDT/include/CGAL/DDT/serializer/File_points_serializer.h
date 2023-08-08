@@ -18,10 +18,10 @@ namespace CGAL {
 namespace DDT {
 
 /// \ingroup PkgDDTSerializerClasses
-/// This serializer saves and loads the bounding box and point set of each tile to the filesystem.
-/// It contains the iostream serialization of the bounding box and the point set of the tile triangulation.
+/// This serializer saves and loads the point set of each tile to the filesystem.
+/// It contains the iostream serialization of the point set of the tile triangulation.
 /// The point set of each tile is sorted spatially before saving, so that the Delaunay triangulation could be recomputed efficiently when the tile is reloaded.
-/// This trades off decreased disc usage and bandwith for increased computations.
+/// This trades off decreased disk usage and bandwith for increased computations.
 /// \cgalModels Serializer
 struct File_points_serializer
 {
@@ -63,9 +63,8 @@ struct File_points_serializer
 
     const std::string fname = filename(tri.id());
     std::ifstream in(fname, std::ios::in | std::ios::binary);
-    in >> tri.bbox();
+
     std::size_t count;
-    in >> count;
     Vertex_index v;
     for(std::size_t i = 0; i < count; ++i) {
         Point p;
@@ -86,9 +85,7 @@ struct File_points_serializer
     typedef typename TileTriangulation::Vertex_index Vertex_index;
     const std::string fname = filename(tri.id());
     std::ofstream out(fname, std::ios::out | std::ios::binary);
-    out << std::setprecision(17) << tri.bbox() << "\n";
-
-    out << tri.number_of_vertices() << "\n";
+    out << std::setprecision(17) << tri.number_of_vertices() << "\n";
     std::vector<std::size_t> indices;
     std::vector<Point>  points;
     std::vector<Vertex_index> vertices;

@@ -20,8 +20,8 @@ namespace CGAL {
 namespace DDT {
 
 /// \ingroup PkgDDTSerializerClasses
-/// This serializer saves and loads the bounding box and triangulation of each tile to the filesystem.
-/// It contains the iostream serialization of the bounding box and the tile triangulation.
+/// This serializer saves and loads the triangulation of each tile to the filesystem.
+/// It contains the iostream serialization of the tile triangulation.
 /// \cgalModels Serializer
 class File_serializer {
 public:
@@ -52,10 +52,6 @@ public:
     template <typename TileIndex>
     bool readable(TileIndex id) const
     {
-        std::cout << dirname_ << std::endl;
-        std::cout << "/" << std::endl;
-        std::cout << std::to_string(id) << std::endl;
-        std::cout << std::endl;
         const std::string fname = dirname_ + "/" + std::to_string(id) + ".txt";
         std::ifstream in(fname, std::ios::in);
         return in.is_open();

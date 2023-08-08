@@ -102,24 +102,6 @@ void write_csv_cell(const std::string& filename, const TileTriangulation& triang
     }
 }
 
-template<typename DistributedTriangulation>
-void write_csv_bboxes(const std::string& filename, const DistributedTriangulation& tri)
-{
-    std::ofstream csv(filename+".csv");
-    csv << "geom,id" << std::endl;
-    for(const auto& [id, tile] : tri.tiles)
-    {
-        const auto& bbox = tile.bbox();
-        csv << "\"POLYGON((";
-        csv << bbox.min(0) << " "<< bbox.min(1) << ", ";
-        csv << bbox.max(0) << " "<< bbox.min(1) << ", ";
-        csv << bbox.max(0) << " "<< bbox.max(1) << ", ";
-        csv << bbox.min(0) << " "<< bbox.max(1) << ", ";
-        csv << bbox.min(0) << " "<< bbox.min(1);
-        csv << "))\"," << std::to_string(id) << "\n";
-    }
-}
-
 template<typename TileTriangulation>
 void write_csv_tin(const std::string& filename, const TileTriangulation& triangulation)
 {
@@ -272,13 +254,6 @@ void write_vrt_cells(DistributedTriangulation& tri, Scheduler& sch, const std::s
         return 1;
     });
     write_vrt_header(dirname, "wkbPolygon", "cells", tri, true);
-}
-
-template<typename DistributedTriangulation>
-void write_vrt_bboxes(const DistributedTriangulation& tri, const std::string& filename)
-{
-    write_vrt_header(filename, "wkbPolygon", false);
-    write_csv_bboxes(filename, tri);
 }
 
 template<typename DistributedTriangulation, typename Scheduler>

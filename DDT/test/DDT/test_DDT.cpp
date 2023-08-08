@@ -85,8 +85,8 @@ std::ostream& operator<<(std::ostream& out, const CGAL::DDT::Facet_iterator<T>& 
 
 int main(int argc, char **argv)
 {
-    std::cout << argv[0] << " [max_number_of_tiles_in_mem]" << std::endl;
     int max_number_of_tiles_in_mem = (argc>1) ? atoi(argv[1]) : 0;
+    std::cout << argv[0] << " [max_number_of_tiles_in_mem=" << max_number_of_tiles_in_mem << "]" << std::endl;
 
     int errors = 0;
     int ND[] = {2, 2};

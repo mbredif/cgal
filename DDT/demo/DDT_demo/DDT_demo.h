@@ -122,8 +122,6 @@ int DDT_demo(int argc, char **argv)
       CGAL::DDT::write_vrt_facets(tri, scheduler, vrt+"_f");
       log.step("write_vrt_cells ");
       CGAL::DDT::write_vrt_cells(tri, scheduler, vrt+"_c");
-      log.step("write_vrt_bboxes");
-      CGAL::DDT::write_vrt_bboxes(tri, vrt+"_b");
       log.step("write_vrt_tins  ");
       CGAL::DDT::write_vrt_tins(tri, scheduler, vrt+"_t");
   }

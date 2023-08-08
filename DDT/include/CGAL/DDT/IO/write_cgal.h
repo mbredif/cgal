@@ -60,9 +60,6 @@ bool write_json_tiles(const DistributedTriangulation& tri, const std::string& di
         boost::property_tree::ptree tile_node;
         std::string sid = std::to_string(id);
         tile_node.put("tile", sid+".txt");
-        std::ostringstream oss;
-        oss << triangulation.bbox();
-        tile_node.put("bbox", oss.str());
         json_put_statistics(tile_node, triangulation.statistics());
         tiles_node.add_child(sid, tile_node);
     }

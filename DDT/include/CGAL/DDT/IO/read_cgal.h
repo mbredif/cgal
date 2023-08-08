@@ -74,8 +74,6 @@ bool read_json_tiles(DistributedTriangulation& tri, const std::string& dirname)
     {
         Tile_index id = std::stoi(sid);
         Tile_triangulation& triangulation = tri.tiles.try_emplace(id, id, dimension).first->second;
-        std::istringstream iss(node.get_child("bbox").data());
-        iss >> triangulation.bbox();
         json_get_statistics(node, triangulation.statistics());
     }
     return true;

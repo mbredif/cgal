@@ -56,8 +56,6 @@ std::size_t insert_and_send_all_axis_extreme_points(TileContainer& tiles, PointS
         // send the extreme points along each axis to all tiles to initialize the star splaying
         std::vector<Vertex_index> vertices;
         tri.get_axis_extreme_points(vertices);
-        for(Vertex_index v : vertices)
-            tri.bbox() += tri.bbox(v);
         point_set.send_vertices_to_all_tiles(tri, vertices);
         return count;
     }, {}, dim);

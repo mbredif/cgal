@@ -69,7 +69,6 @@ public:
     typedef TileIndexProperty                                        Tile_index_property;
     typedef typename Tile_index_property::value_type                 Tile_index;
     typedef typename Traits::Point                   Point;
-    typedef typename Traits::Bbox                    Bbox;
     typedef typename Traits::Vertex_index            Vertex_index;
     typedef typename Traits::Facet_index             Facet_index;
     typedef typename Traits::Cell_index              Cell_index;
@@ -78,8 +77,7 @@ public:
     Tile_triangulation(Tile_index id, int dimension)
         : id_(id),
           tri_(Traits::triangulation(dimension)),
-          statistics_(),
-          bbox_(Traits::bbox(dimension))
+          statistics_()
     {}
 
     inline Triangulation& triangulation() { return tri_; }
@@ -108,9 +106,6 @@ public:
     inline std::size_t number_of_main_finite_vertices() const { return statistics_.number_of_finite_vertices; }
     inline std::size_t number_of_main_finite_facets  () const { return statistics_.number_of_finite_facets;   }
     inline std::size_t number_of_main_finite_cells   () const { return statistics_.number_of_finite_cells;    }
-
-    const Bbox& bbox() const { return bbox_; }
-    Bbox& bbox() { return bbox_; }
 
     inline Tile_index vertex_id(Vertex_index v) const {
         assert(!vertex_is_infinite(v));
@@ -184,7 +179,6 @@ public:
     inline OutputIterator incident_cells(Vertex_index v, OutputIterator out) const { return Traits::incident_cells(tri_, v, out); }
     inline Vertex_index infinite_vertex() const { return Traits::infinite_vertex(tri_); }
     inline const Point& point(Vertex_index v) const { return Traits::point(tri_, v); }
-    inline Bbox bbox(Vertex_index v) const { return Traits::bbox(point(v)); }
     inline double approximate_cartesian_coordinate(Vertex_index v, int i) const { return Traits::approximate_cartesian_coordinate(point(v), i); }
     /// @}
 
@@ -640,10 +634,9 @@ private:
     Tile_index id_;
     Triangulation tri_;
     Tile_index_property tile_indices;
-    mutable Selector<Tile_index> selector;
 
+    mutable Selector<Tile_index> selector;
     mutable Statistics statistics_;
-    Bbox bbox_;
 };
 
 template<class T, class Pmap, template <class> class Selector>
