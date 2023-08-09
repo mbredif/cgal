@@ -71,6 +71,8 @@ public:
             {
                 if (++tile_ != tiles_->cend())
                     vertex_ = triangulation().vertices_begin();
+                else
+                    vertex_ = {};
             }
             else if(triangulation().vertex_is_main(vertex_))
             {
@@ -86,6 +88,7 @@ public:
 
     Vertex_iterator& operator++()
     {
+        assert(triangulation().vertex_is_main(vertex_));
         ++vertex_;
         return advance_to_main();
     }
@@ -97,22 +100,45 @@ public:
         return tmp;
     }
 
+    Vertex_iterator& operator-=(int n)
+    {
+        assert(triangulation().vertex_is_main(vertex_));
+        if (n<0) return operator+=(-n);
+        assert(!"Negative offsets are not implemented in Vertex_iterator+=");
+        return *this;
+    }
+
     Vertex_iterator& operator+=(int n)
     {
-        for(Tile_vertex_index v = triangulation().vertices_begin(); v != vertex_; ++v)
-            if(triangulation().vertex_is_main(v))
-                ++n;
-        int num_main_vertices = tile_->number_of_main_vertices();
+        assert(triangulation().vertex_is_main(vertex_));
+        if (n<0) return operator-=(-n);
+        Tile_vertex_index end = triangulation().vertices_end();
+        for(; vertex_ != end; ++vertex_)
+            if(triangulation().vertex_is_main(vertex_)) {
+                if (n == 0) return *this;
+                --n;
+            }
+
+        ++tile_;
+        vertex_ = {};
+        if(tile_ == tiles_->cend()) { assert(n==0); return *this; }
+        int num_main_vertices = triangulation().number_of_main_finite_vertices();
         while(n >= num_main_vertices)
         {
             n -= num_main_vertices;
             ++tile_;
-            num_main_vertices = tile_->number_of_main_vertices();
+            if(tile_ == tiles_->cend()) { assert(n==0); return *this; }
+            num_main_vertices = triangulation().number_of_main_finite_vertices();
         }
-        vertex_ = triangulation().vertices_begin();
-        advance_to_main();
-        for(; n>0 ; --n)
-            ++(*this);
+
+        end = triangulation().vertices_end();
+        for(vertex_ = triangulation().vertices_begin(); vertex_ != end; ++vertex_)
+            if(triangulation().vertex_is_main(vertex_)) {
+                if (n == 0) return *this;
+                --n;
+            }
+        ++tile_;
+        assert(tile_ == tiles_->cend() && n==0);
         return *this;
     }
 

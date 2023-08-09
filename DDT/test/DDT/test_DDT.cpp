@@ -123,7 +123,8 @@ int main(int argc, char **argv)
     tri.insert(scheduler, pointset);
     ddt_assert(tri.is_valid());
 
-    for(auto vertex = tri.vertices_begin(); vertex != tri.vertices_end(); ++vertex)
+    int n_max = points.size();
+    for(auto vertex = tri.vertices_begin(); vertex != tri.vertices_end(); ++vertex, --n_max)
     {
         ddt_assert(vertex.is_valid());
         ddt_assert(tri.is_valid(vertex));
@@ -133,6 +134,14 @@ int main(int argc, char **argv)
         ddt_assert(tri.is_local(vertex));
         ddt_assert(tri.cell(vertex).is_valid());
         ddt_assert(tri.has_vertex(tri.cell(vertex), vertex));
+        for(int n=0; n<=n_max; ++n) {
+            auto v = vertex, w = vertex;
+            v += n;
+            for(int i = 0; i<n; ++i) ++w;
+            ddt_assert(v == tri.vertices_end() || tri.is_main(v));
+            ddt_assert(w == tri.vertices_end() || tri.is_main(w));
+            ddt_assert_eq(v,w);
+        }
     }
 
     for(auto facet = tri.facets_begin(); facet != tri.facets_end(); ++facet)
