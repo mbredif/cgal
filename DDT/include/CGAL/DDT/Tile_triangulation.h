@@ -518,18 +518,6 @@ public:
         return local_inserted_size + inserted.size();
     }
 
-    void get_adjacency_graph_edges(std::set<Tile_index>& out_edges) const
-    {
-        for(auto cit = cells_begin(); cit != cells_end(); ++cit)
-            if(cell_is_mixed(cit))
-                for(int i=0; i<=current_dimension(); ++i)
-                {
-                    Vertex_index v = vertex(cit,i);
-                    if(!vertex_is_infinite(v) && vertex_is_foreign(v))
-                        out_edges.insert(vertex_id(v));
-                }
-    }
-
     bool are_vertices_equal(Vertex_index v, const Tile_triangulation& t, Vertex_index tv) const
     {
         return Traits::are_vertices_equal(tri_, v, t.tri_, tv);

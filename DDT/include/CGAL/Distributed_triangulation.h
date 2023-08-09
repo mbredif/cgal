@@ -567,28 +567,6 @@ public:
         return insert(sch, point_set);
     }
 
-    void get_adjacency_graph(std::unordered_multimap<Tile_index,Tile_index>& edges) const
-    {
-        for(const auto& [id, tile] : tiles)
-        {
-            std::set<Tile_index> out_edges;
-            tile.get_adjacency_graph_edges(out_edges);
-            Tile_index source = id;
-            for(Tile_index target : out_edges)
-                edges.emplace(source, target);
-        }
-    }
-
-    bool is_adjacency_graph_symmetric() const
-    {
-        std::unordered_multimap<Tile_index,Tile_index> edges;
-        std::unordered_multimap<Tile_index,Tile_index> reversed;
-        get_adjacency_graph(edges);
-        for(auto& edge : edges)
-            reversed.emplace(edge.second, edge.first);
-        return edges == reversed;
-    }
-
     template <typename Scheduler>
     void finalize(Scheduler& sch)
     {
