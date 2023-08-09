@@ -12,7 +12,6 @@
 #ifndef CGAL_DDT_TILE_CONTAINER_H
 #define CGAL_DDT_TILE_CONTAINER_H
 
-#include <CGAL/DDT/serializer/No_serializer.h>
 #include <CGAL/DDT/Tile.h>
 #include <CGAL/DDT/iterator/Tile_iterator.h>
 
@@ -26,7 +25,7 @@ namespace DDT {
 /// \ingroup PkgDDTClasses
 /// Tile Container
 template<typename AssociativeContainer,
-         typename Serializer_ = No_serializer >
+         typename Serializer_ >
 class Tile_container
 {
 public:

@@ -19,6 +19,7 @@
 #include <CGAL/DDT/Tile_triangulation.h>
 #include <CGAL/DDT/Tile_container.h>
 #include <CGAL/Distributed_point_set.h>
+#include <CGAL/DDT/serializer/No_serializer.h>
 
 namespace CGAL {
 
@@ -27,20 +28,20 @@ namespace CGAL {
 /// The Distributed_triangulation class wraps a Container to expose a triangulation interface.
 template<typename Triangulation_,
          typename TileIndexProperty_,
-         typename Serializer_ = CGAL::DDT::No_serializer >
+         typename Serializer = CGAL::DDT::No_serializer >
 class Distributed_triangulation
 {
 public:
-    typedef Triangulation_                                                  Triangulation;
-    typedef TileIndexProperty_                                              TileIndexProperty;
-    typedef Serializer_                                                     Serializer;
+    using Triangulation        = Triangulation_;
+    using TileIndexProperty    = TileIndexProperty_;
 
-    typedef typename TileIndexProperty::value_type                          Tile_index;
-    typedef CGAL::DDT::Tile_triangulation<Triangulation, TileIndexProperty> Tile_triangulation;
-    typedef std::unordered_map<Tile_index, Tile_triangulation>              AssociativeContainer;
-    // typedef std::map<Tile_index, Tile_triangulation>                      AssociativeContainer; // alternative
-    typedef CGAL::DDT::Tile_container<AssociativeContainer, Serializer_>    Container;
-    // typedef AssociativeContainer                                            Container; // alternative, disables serialization
+    using Tile_index           = typename TileIndexProperty::value_type;
+    using Tile_triangulation   = CGAL::DDT::Tile_triangulation<Triangulation, TileIndexProperty>;
+    using AssociativeContainer = std::map<Tile_index, Tile_triangulation>; // unordered_map is not suitable as its iterators may get invalidated by try_emplace
+    using Container = std::conditional_t<
+        std::is_same_v<Serializer, CGAL::DDT::No_serializer>,              // No serialization ?
+        AssociativeContainer ,                                             // y: tiles are kept in memory
+        CGAL::DDT::Tile_container<AssociativeContainer, Serializer> >;     // n: using serialization and a tile container
 
 private:
     typedef typename Container::iterator            Tile_iterator;
@@ -596,24 +597,34 @@ public:
             [](Tile_index id, const Tile_triangulation& tri) { return tri.statistics();});
     }
 
-    template <typename Scheduler, typename Serializer>
-    bool write(Scheduler& sch,  const Serializer& serializer) {
-        if (!serializer.write_begin(*this)) return false;
+    template <typename Scheduler, typename Writer>
+    bool write(Scheduler& sch,  const Writer& writer) {
+        if (!writer.write_begin(*this)) return false;
         if (!sch.transform_reduce(tiles, true,
-            [&serializer](Tile_index id, const Tile_triangulation& tri) { return serializer.write(tri);},
+            [&writer](Tile_index id, const Tile_triangulation& tri) { return writer.write(tri);},
             std::logical_and<>()))
             return false;
-        return serializer.write_end(*this);
+        return writer.write_end(*this);
     }
 
-    template <typename Scheduler, typename Serializer>
-    bool read(Scheduler& sch,  const Serializer& serializer) {
-        if (!serializer.read_begin(*this)) return false;
+    template <typename Scheduler, typename Reader>
+    bool read(Scheduler& sch,  const Reader& reader) {
+        if (!reader.read_begin(*this)) return false;
         if (!sch.transform_reduce(tiles, true,
-            [&serializer](Tile_index id, Tile_triangulation& tri) { return serializer.read(tri);},
+            [&reader](Tile_index id, Tile_triangulation& tri) { return reader.read(tri);},
             std::logical_and<>()))
             return false;
-        return serializer.read_end(*this);
+        return reader.read_end(*this);
+    }
+
+    template <typename Scheduler, typename Reader, typename Writer>
+    bool read_write(Scheduler& sch,  const Reader& reader, const Writer& writer) {
+        if (!(reader.read_begin(*this) && writer.write_begin(*this))) return false;
+        if (!sch.transform_reduce(tiles, true,
+            [&reader,&writer](Tile_index id, Tile_triangulation& tri) { return reader.read(tri) && writer.write(tri);},
+            std::logical_and<>()))
+            return false;
+        return reader.read_end(*this) && writer.write_end(*this);
     }
 
     const Statistics& statistics() const { return statistics_; }

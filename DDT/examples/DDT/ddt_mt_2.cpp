@@ -47,16 +47,5 @@ int main(int argc, char **argv)
 
     tri.write(scheduler, CGAL::DDT::File_serializer("cgal/"));
 
-    Serializer serializer2("tile2/");
-    Distributed_triangulation tri2(2, max_number_of_tiles_in_mem, serializer2);
-    tri2.read (scheduler, CGAL::DDT::File_serializer("cgal/"));
-    tri2.write(scheduler, CGAL::DDT::File_serializer("cgal2/"));
-    tri2.write(scheduler, CGAL::DDT::PVTU_serializer("out"));
-
-    CGAL::DDT::write_vrt_verts(tri, scheduler, "out_v");
-    CGAL::DDT::write_vrt_facets(tri, scheduler, "out_f");
-    CGAL::DDT::write_vrt_cells(tri, scheduler, "out_c");
-    CGAL::DDT::write_vrt_tins(tri, scheduler, "out_t");
-
     return 0;
 }
