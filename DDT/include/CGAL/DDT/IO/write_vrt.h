@@ -26,10 +26,57 @@
 namespace CGAL {
 namespace DDT {
 
+// VRT header writers
+
+template<typename DistributedTriangulation>
+bool write_union_vrt_header(const std::string& dirname, const std::string& type, const std::string& union_name, DistributedTriangulation& tri, bool local)
+{
+    std::ofstream f(dirname+".vrt");
+    boost::filesystem::path path(dirname);
+    std::string stem = path.stem().string();
+    f <<"<OGRVRTDataSource>" << std::endl;
+    f <<"<OGRVRTUnionLayer name=\""<< union_name << "\">" << std::endl;
+    f <<"<SourceLayerFieldName>tile</SourceLayerFieldName>" << std::endl;
+    for(const auto& [id, tile] : tri.tiles) {
+        std::string name = std::to_string(id);
+        f <<  "<OGRVRTLayer name=\"" << name <<  "\">" << std::endl;
+        f <<    "<SrcDataSource relativeToVRT=\"1\">" << stem << "/" << name << ".csv</SrcDataSource>" << std::endl;
+        f <<    "<SrcLayer>" << name <<  "</SrcLayer>" << std::endl;
+        f <<    "<LayerSRS>IGNF:LAMB93</LayerSRS> " << std::endl;
+        f <<    "<GeometryType>" << type << "</GeometryType>" << std::endl;
+        f <<    "<GeometryField encoding=\"WKT\" field=\"geom\"/>" << std::endl;
+        f <<    "<Field name=\"id\" type=\"Integer\"/>" << std::endl;
+        if (local) f <<    "<Field name=\"local\" type=\"Integer\"/>" << std::endl;
+        f <<  "</OGRVRTLayer>" << std::endl;
+    }
+    f <<"</OGRVRTUnionLayer>" << std::endl;
+    f <<"</OGRVRTDataSource>" << std::endl;
+    return !f.fail();
+}
+
+bool write_vrt_header(const std::string& filename, const std::string& type, bool local)
+{
+    boost::filesystem::path path(filename);
+    std::string stem = path.stem().string();
+    std::ofstream f(filename+".vrt");
+    f <<"<OGRVRTDataSource>" << std::endl;
+    f <<  "<OGRVRTLayer name=\"" << stem <<  "\">" << std::endl;
+    f <<    "<SrcDataSource relativeToVRT=\"1\">" << stem << ".csv</SrcDataSource>" << std::endl;
+    f <<    "<SrcLayer>" << stem <<  "</SrcLayer>" << std::endl;
+    f <<    "<LayerSRS>IGNF:LAMB93</LayerSRS> " << std::endl;
+    f <<    "<GeometryType>" << type << "</GeometryType>" << std::endl;
+    f <<    "<GeometryField encoding=\"WKT\" field=\"geom\"/>" << std::endl;
+    f <<    "<Field name=\"id\" type=\"Integer\"/>" << std::endl;
+    if (local) f <<    "<Field name=\"local\" type=\"Integer\"/>" << std::endl;
+    f <<  "</OGRVRTLayer>" << std::endl;
+    f <<"</OGRVRTDataSource>" << std::endl;
+    return !f.fail();
+}
+
 // CSV tile writers
 
 template<typename TileTriangulation>
-void write_csv_vert(const std::string& filename, const TileTriangulation& triangulation)
+bool write_csv_vert(const std::string& filename, const TileTriangulation& triangulation)
 {
     typedef typename TileTriangulation::Vertex_index Vertex_index;
     std::ofstream csv(filename+".csv");
@@ -43,10 +90,11 @@ void write_csv_vert(const std::string& filename, const TileTriangulation& triang
             csv << triangulation.approximate_cartesian_coordinate(v,d) << " ";
         csv << ")," << std::to_string(triangulation.vertex_id(v)) << "\n";
     }
+    return !csv.fail();
 }
 
 template<typename TileTriangulation>
-void write_csv_facet(const std::string& filename, const TileTriangulation& triangulation)
+bool write_csv_facet(const std::string& filename, const TileTriangulation& triangulation)
 {
     typedef typename TileTriangulation::Vertex_index Vertex_index;
     typedef typename TileTriangulation::Facet_index  Facet_index;
@@ -73,10 +121,11 @@ void write_csv_facet(const std::string& filename, const TileTriangulation& trian
         }
         csv << ")\"," << std::to_string(triangulation.facet_id(f)) << "," << local << "\n";
     }
+    return !csv.fail();
 }
 
 template<typename TileTriangulation>
-void write_csv_cell(const std::string& filename, const TileTriangulation& triangulation)
+bool write_csv_cell(const std::string& filename, const TileTriangulation& triangulation)
 {
     typedef typename TileTriangulation::Vertex_index Vertex_index;
     typedef typename TileTriangulation::Cell_index   Cell_index;
@@ -100,10 +149,11 @@ void write_csv_cell(const std::string& filename, const TileTriangulation& triang
             csv << triangulation.approximate_cartesian_coordinate(triangulation.vertex(c, 0), d) << " ";
         csv << "))\"," << std::to_string(triangulation.cell_id(c)) << "," << local << "\n";
     }
+    return !csv.fail();
 }
 
 template<typename TileTriangulation>
-void write_csv_tin(const std::string& filename, const TileTriangulation& triangulation)
+bool write_csv_tin(const std::string& filename, const TileTriangulation& triangulation)
 {
     typedef typename TileTriangulation::Vertex_index Vertex_index;
     typedef typename TileTriangulation::Cell_index   Cell_index;
@@ -130,83 +180,33 @@ void write_csv_tin(const std::string& filename, const TileTriangulation& triangu
         csv << "))";
     }
     if (!first) csv << ")\"," << std::to_string(triangulation.id()) << "\n";
- }
-
-// VRT header writers
-
-void write_vrt_header(const std::string& filename, const std::string& type, bool local)
-{
-    boost::filesystem::path path(filename);
-    std::string stem = path.stem().string();
-    std::ofstream f(filename+".vrt");
-    f <<"<OGRVRTDataSource>" << std::endl;
-    f <<  "<OGRVRTLayer name=\"" << stem <<  "\">" << std::endl;
-    f <<    "<SrcDataSource relativeToVRT=\"1\">" << stem << ".csv</SrcDataSource>" << std::endl;
-    f <<    "<SrcLayer>" << stem <<  "</SrcLayer>" << std::endl;
-    f <<    "<LayerSRS>IGNF:LAMB93</LayerSRS> " << std::endl;
-    f <<    "<GeometryType>" << type << "</GeometryType>" << std::endl;
-    f <<    "<GeometryField encoding=\"WKT\" field=\"geom\"/>" << std::endl;
-    f <<    "<Field name=\"id\" type=\"Integer\"/>" << std::endl;
-    if (local) f <<    "<Field name=\"local\" type=\"Integer\"/>" << std::endl;
-    f <<  "</OGRVRTLayer>" << std::endl;
-    f <<"</OGRVRTDataSource>" << std::endl;
+    return !csv.fail();
 }
-
-
-template<typename DistributedTriangulation>
-void write_vrt_header(const std::string& dirname, const std::string& type, const std::string& union_name, DistributedTriangulation& tri, bool local)
-{
-    std::ofstream f(dirname+".vrt");
-    boost::filesystem::path path(dirname);
-    std::string stem = path.stem().string();
-    f <<"<OGRVRTDataSource>" << std::endl;
-    f <<"<OGRVRTUnionLayer name=\""<< union_name << "\">" << std::endl;
-    f <<"<SourceLayerFieldName>tile</SourceLayerFieldName>" << std::endl;
-    for(const auto& [id, tile] : tri.tiles) {
-        std::string name = std::to_string(id);
-        f <<  "<OGRVRTLayer name=\"" << name <<  "\">" << std::endl;
-        f <<    "<SrcDataSource relativeToVRT=\"1\">" << stem << "/" << name << ".csv</SrcDataSource>" << std::endl;
-        f <<    "<SrcLayer>" << name <<  "</SrcLayer>" << std::endl;
-        f <<    "<LayerSRS>IGNF:LAMB93</LayerSRS> " << std::endl;
-        f <<    "<GeometryType>" << type << "</GeometryType>" << std::endl;
-        f <<    "<GeometryField encoding=\"WKT\" field=\"geom\"/>" << std::endl;
-        f <<    "<Field name=\"id\" type=\"Integer\"/>" << std::endl;
-        if (local) f <<    "<Field name=\"local\" type=\"Integer\"/>" << std::endl;
-        f <<  "</OGRVRTLayer>" << std::endl;
-    }
-    f <<"</OGRVRTUnionLayer>" << std::endl;
-    f <<"</OGRVRTDataSource>" << std::endl;
-}
-
 
 // VRT+CSV tile writers
 
 template<typename TileTriangulation>
-void write_tile_vrt_verts(const std::string& filename, const TileTriangulation& triangulation)
+bool write_tile_vrt_verts(const std::string& filename, const TileTriangulation& triangulation)
 {
-    write_vrt_header(filename, "wkbPoint", false);
-    write_csv_vert(filename, triangulation);
+    return write_vrt_header(filename, "wkbPoint", false) && write_csv_vert(filename, triangulation);
 }
 
 template<typename TileTriangulation>
-void write_tile_vrt_facets(const std::string& filename, const TileTriangulation& triangulation)
+bool write_tile_vrt_facets(const std::string& filename, const TileTriangulation& triangulation)
 {
-    write_vrt_header(filename, "wkbLineString", true);
-    write_csv_facet(filename, triangulation);
+    return write_vrt_header(filename, "wkbLineString", true) && write_csv_facet(filename, triangulation);
 }
 
 template<typename TileTriangulation>
-void write_tile_vrt_cells(const std::string& filename, const TileTriangulation& triangulation)
+bool write_tile_vrt_cells(const std::string& filename, const TileTriangulation& triangulation)
 {
-    write_vrt_header(filename, "wkbPolygon", true);
-    write_csv_cell(filename, triangulation);
+    return write_vrt_header(filename, "wkbPolygon", true) && write_csv_cell(filename, triangulation);
 }
 
 template<typename TileTriangulation>
-void write_tile_vrt_tins(const std::string& filename, const TileTriangulation& triangulation)
+bool write_tile_vrt_tins(const std::string& filename, const TileTriangulation& triangulation)
 {
-    write_vrt_header(filename, "wkbTIN", false);
-    write_csv_tin(filename, triangulation);
+    return write_vrt_header(filename, "wkbTIN", false) && write_csv_tin(filename, triangulation);
 }
 
 // VRT+CSV writers

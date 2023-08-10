@@ -3,8 +3,7 @@
 #include <CGAL/DDT/scheduler/Sequential_scheduler.h>
 #include <CGAL/DDT/serializer/File_points_serializer.h>
 #include <CGAL/Distributed_triangulation.h>
-#include <CGAL/DDT/IO/write_ply.h>
-#include <CGAL/DDT/IO/write_vrt.h>
+#include <CGAL/DDT/serializer/VRT_file_serializer.h>
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
 #include <CGAL/Triangulation_vertex_base_with_info_2.h>
 #include <CGAL/DDT/traits/Vertex_info_property_map.h>
@@ -41,10 +40,7 @@ int main(int argc, char **argv)
     Distributed_point_set points(generator, number_of_points, partitioner);
     tri.insert(scheduler, points);
 
-    CGAL::DDT::write_vrt_verts(tri, scheduler, "out_v");
-    CGAL::DDT::write_vrt_facets(tri, scheduler, "out_f");
-    CGAL::DDT::write_vrt_cells(tri, scheduler, "out_c");
-    CGAL::DDT::write_vrt_tins(tri, scheduler, "out_t");
+    tri.write(scheduler, CGAL::DDT::VRT_serializer("out/"));
 
     return 0;
 }

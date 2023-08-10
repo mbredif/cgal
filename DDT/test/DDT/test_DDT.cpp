@@ -31,7 +31,7 @@ typedef CGAL::DDT::Grid_partitioner<Triangulation, TileIndexProperty> Partitione
 typedef CGAL::Distributed_triangulation<Triangulation, TileIndexProperty, Serializer> Distributed_triangulation;
 typedef CGAL::Distributed_point_set<Point, Tile_index> Distributed_point_set;
 
-#include <CGAL/DDT/IO/write_vrt.h>
+#include <CGAL/DDT/serializer/VRT_file_serializer.h>
 
 #define ddt_assert(x) if (!(x)) { std::cerr << "Assertion failed [" << __LINE__ << "] : " << #x << std::endl; ++errors; }
 #define ddt_assert_eq(x, y) if ((x)!=(y)) { ddt_assert((x)==(y)); std::cerr << #x << " = " << x << std::endl << #y << " = " << y << std::endl; }
@@ -159,15 +159,6 @@ int test_DDT(Distributed_triangulation& tri)
     return errors;
 }
 
-void write(Distributed_triangulation& tri, Scheduler& scheduler, const std::string& out)
-{
-    CGAL::DDT::write_vrt_verts(tri, scheduler, out + "_v");
-    CGAL::DDT::write_vrt_facets(tri, scheduler, out + "_f");
-    CGAL::DDT::write_vrt_cells(tri, scheduler, out + "_c");
-    CGAL::DDT::write_vrt_tins(tri, scheduler, out + "_t");
-}
-
-
 int main(int argc, char **argv)
 {
     int max_number_of_tiles_in_mem = (argc>1) ? atoi(argv[1]) : 0;
@@ -225,8 +216,8 @@ int main(int argc, char **argv)
     }
     errors += test_DDT(tri1);
 
-    write(tri1, scheduler, "test_DDT_batch_out");
-    write(tri2, scheduler, "test_DDT_incr_out");
+    tri1.write(scheduler, CGAL::DDT::VRT_serializer("test_DDT_batch_out"));
+    tri2.write(scheduler, CGAL::DDT::VRT_serializer("test_DDT_incr_out"));
 
     if (errors)
         std::cerr << errors << " errors occured !" << std::endl;

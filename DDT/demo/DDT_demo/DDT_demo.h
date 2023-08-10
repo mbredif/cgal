@@ -4,8 +4,8 @@
 #define CGAL_DEBUG_DDT
 
 #include <CGAL/Distributed_triangulation.h>
+#include <CGAL/DDT/serializer/VRT_file_serializer.h>
 #include <CGAL/DDT/IO/write_ply.h>
-#include <CGAL/DDT/IO/write_vrt.h>
 #include <CGAL/DDT/IO/logging.h>
 #include <boost/program_options.hpp>
 
@@ -116,14 +116,8 @@ int DDT_demo(int argc, char **argv)
 
   if ( vm.count("vrt")  )
   {
-      log.step("write_vrt_verts ");
-      CGAL::DDT::write_vrt_verts(tri, scheduler, vrt+"_v");
-      log.step("write_vrt_facets");
-      CGAL::DDT::write_vrt_facets(tri, scheduler, vrt+"_f");
-      log.step("write_vrt_cells ");
-      CGAL::DDT::write_vrt_cells(tri, scheduler, vrt+"_c");
-      log.step("write_vrt_tins  ");
-      CGAL::DDT::write_vrt_tins(tri, scheduler, vrt+"_t");
+      log.step("write_vrt       ");
+      tri.write(scheduler, CGAL::DDT::VRT_serializer(vrt));
   }
 
   if ( vm.count("ply")  )

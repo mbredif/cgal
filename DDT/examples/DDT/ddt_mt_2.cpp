@@ -2,8 +2,7 @@
 #include <CGAL/DDT/partitioner/Grid_partitioner.h>
 #include <CGAL/DDT/scheduler/Multithread_scheduler.h>
 #include <CGAL/DDT/serializer/File_serializer.h>
-#include <CGAL/DDT/serializer/PVTU_file_serializer.h>
-#include <CGAL/DDT/IO/write_vrt.h>
+#include <CGAL/DDT/serializer/VRT_file_serializer.h>
 #include <CGAL/Distributed_triangulation.h>
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
 #include <CGAL/Triangulation_vertex_base_with_info_2.h>
@@ -45,7 +44,7 @@ int main(int argc, char **argv)
 
     tri.insert(scheduler, points);
 
-    tri.write(scheduler, CGAL::DDT::File_serializer("cgal/"));
+    tri.write(scheduler, CGAL::DDT::VRT_serializer("out/"));
 
     return 0;
 }
