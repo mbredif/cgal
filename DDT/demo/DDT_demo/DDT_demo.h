@@ -6,8 +6,8 @@
 #include <CGAL/Distributed_triangulation.h>
 #include <CGAL/DDT/serializer/VRT_file_serializer.h>
 #include <CGAL/DDT/IO/write_ply.h>
-#include <CGAL/DDT/IO/logging.h>
 #include <boost/program_options.hpp>
+#include "logging.h"
 
 namespace po = boost::program_options;
 
