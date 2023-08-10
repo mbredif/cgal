@@ -44,7 +44,6 @@ std::ostream& operator<<(std::ostream& out, const Point& p)
 
 typedef typename Distributed_triangulation::Vertex_iterator Vertex_iterator;
 
-
 template<typename Tile_triangulation>
 std::ostream& write_point(std::ostream& out, const Tile_triangulation& tri, typename Tile_triangulation::Vertex_index v) {
     if (tri.vertex_is_infinite(v)) return out << "inf";
@@ -82,48 +81,13 @@ std::ostream& operator<<(std::ostream& out, const CGAL::DDT::Facet_iterator<T>& 
     return out;
 }
 
-
-int main(int argc, char **argv)
+int test_DDT(Distributed_triangulation& tri)
 {
-    int max_number_of_tiles_in_mem = (argc>1) ? atoi(argv[1]) : 0;
-    std::cout << argv[0] << " [max_number_of_tiles_in_mem=" << max_number_of_tiles_in_mem << "]" << std::endl;
-
     int errors = 0;
-    int ND[] = {2, 2};
-
-    std::vector<Point> points;
-
-    points.emplace_back(-2, -2);
-    points.emplace_back(-2, -1);
-    points.emplace_back(-1, -2);
-    points.emplace_back(-1, -1);
-
-    points.emplace_back(-2, 2);
-    points.emplace_back(-2, 1);
-    points.emplace_back(-1, 2);
-    points.emplace_back(-1, 1);
-
-    points.emplace_back(2, 2);
-    points.emplace_back(2, 1);
-    points.emplace_back(1, 2);
-    points.emplace_back(1, 1);
-
-    points.emplace_back(2, -2);
-    points.emplace_back(2, -1);
-    points.emplace_back(1, -2);
-    points.emplace_back(1, -1);
-
-    double range = 3;
-    Bbox bbox(-range, -range, range, range);
-    Serializer serializer("tmp_");
-    Distributed_triangulation tri(2, max_number_of_tiles_in_mem, serializer);
-    Partitioner partitioner(bbox, ND, ND+tri.maximal_dimension());
-    Scheduler scheduler;
-    Distributed_point_set pointset(points, partitioner);
-    tri.insert(scheduler, pointset);
     ddt_assert(tri.is_valid());
 
-    int n_max = points.size();
+    int n_max = tri.number_of_finite_vertices();
+    ddt_assert_eq(n_max, 16);
     for(auto vertex = tri.vertices_begin(); vertex != tri.vertices_end(); ++vertex, --n_max)
     {
         ddt_assert(vertex.is_valid());
@@ -190,14 +154,79 @@ int main(int argc, char **argv)
             ddt_assert_eq(tri.covertex(fd), tri.vertex(cell, tri.mirror_index(tri.mirror_facet(fd))));
             ddt_assert(tri.has_vertex(tri.cell(vd), vd));
         }
-
-
     }
 
-    CGAL::DDT::write_vrt_verts(tri, scheduler, "test_DDT_out_v");
-    CGAL::DDT::write_vrt_facets(tri, scheduler, "test_DDT_out_f");
-    CGAL::DDT::write_vrt_cells(tri, scheduler, "test_DDT_out_c");
-    CGAL::DDT::write_vrt_tins(tri, scheduler, "test_DDT_out_t");
+    return errors;
+}
+
+void write(Distributed_triangulation& tri, Scheduler& scheduler, const std::string& out)
+{
+    CGAL::DDT::write_vrt_verts(tri, scheduler, out + "_v");
+    CGAL::DDT::write_vrt_facets(tri, scheduler, out + "_f");
+    CGAL::DDT::write_vrt_cells(tri, scheduler, out + "_c");
+    CGAL::DDT::write_vrt_tins(tri, scheduler, out + "_t");
+}
+
+
+int main(int argc, char **argv)
+{
+    int max_number_of_tiles_in_mem = (argc>1) ? atoi(argv[1]) : 0;
+    std::cout << argv[0] << " [max_number_of_tiles_in_mem=" << max_number_of_tiles_in_mem << "]" << std::endl;
+
+    int errors = 0;
+    int N = 2;
+    int ND[] = {2, 2};
+
+    std::vector<Point> points;
+
+    points.emplace_back(-2, -2);
+    points.emplace_back(-2, -1);
+    points.emplace_back(-1, -2);
+    points.emplace_back(-1, -1);
+
+    points.emplace_back(-2, 2);
+    points.emplace_back(-2, 1);
+    points.emplace_back(-1, 2);
+    points.emplace_back(-1, 1);
+
+    points.emplace_back(2, 2);
+    points.emplace_back(2, 1);
+    points.emplace_back(1, 2);
+    points.emplace_back(1, 1);
+
+    points.emplace_back(2, -2);
+    points.emplace_back(2, -1);
+    points.emplace_back(1, -2);
+    points.emplace_back(1, -1);
+
+    double range = 3;
+    Bbox bbox(-range, -range, range, range);
+    Partitioner partitioner(bbox, ND, ND+N);
+    Serializer serializer("tmp_");
+    Scheduler scheduler;
+
+    Distributed_triangulation tri1(N, max_number_of_tiles_in_mem, serializer);
+    Distributed_point_set pointset(points, partitioner);
+    tri1.insert(scheduler, pointset);
+    errors += test_DDT(tri1);
+
+    Distributed_triangulation tri2(N, max_number_of_tiles_in_mem, serializer);
+    for(auto& p : points)
+    {
+        auto inserted = tri2.insert(scheduler, p, partitioner(p));
+        ddt_assert(inserted.second);
+    }
+    errors += test_DDT(tri2);
+
+    for(auto& p : points)
+    {
+        auto inserted = tri1.insert(scheduler, p, partitioner(p));
+        ddt_assert(!inserted.second);
+    }
+    errors += test_DDT(tri1);
+
+    write(tri1, scheduler, "test_DDT_batch_out");
+    write(tri2, scheduler, "test_DDT_incr_out");
 
     if (errors)
         std::cerr << errors << " errors occured !" << std::endl;

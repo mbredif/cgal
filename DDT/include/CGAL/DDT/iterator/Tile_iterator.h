@@ -21,12 +21,15 @@ template<typename Container, typename PairIterator>
 class Tile_iterator
 {
     using iterator_type = typename PairIterator::value_type::second_type::iterator_type;
+    using Tile_const_iterator = Tile_iterator<std::add_const_t<Container>, PairIterator>;
+
 public:
     using value_type = typename iterator_type::value_type;
     using iterator_category = typename PairIterator::iterator_category;
     using difference_type = typename PairIterator::difference_type;
     using pointer = typename iterator_type::pointer;
     using reference = typename iterator_type::reference;
+    friend Tile_const_iterator;
 
 private:
     Container *container_;
@@ -62,8 +65,10 @@ public:
         }
     }
 
-    Tile_iterator(const Tile_iterator& c)
-        : container_(c.container_), it_(c.it_)
+    // enable non-const -> const copy construction
+    template<typename C, typename = std::enable_if_t<std::is_convertible_v<C, Container>>>
+    Tile_iterator(const Tile_iterator<C, PairIterator>& t)
+        : container_(t.container_), it_(t.it_)
     {
         if(it_ != container_->usages_end())
         {
@@ -71,9 +76,18 @@ public:
         }
     }
 
-    bool operator<(const Tile_iterator& c) const
+    Tile_iterator(const Tile_iterator& t)
+        : container_(t.container_), it_(t.it_)
     {
-        return  it_ < c.it_;
+        if(it_ != container_->usages_end())
+        {
+            it_->second.use_count++;
+        }
+    }
+
+    bool operator<(const Tile_iterator& t) const
+    {
+        return  it_ < t.it_;
     }
 
     Tile_iterator& operator++()
@@ -91,9 +105,9 @@ public:
         return tmp;
     }
 
-    bool operator==(const Tile_iterator& c) const
+    bool operator==(const Tile_iterator& t) const
     {
-        return (it_ == c.it_);
+        return (it_ == t.it_);
     }
 
     bool operator!=(const Tile_iterator& rhs) const { return !(*this == rhs); }
