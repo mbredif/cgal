@@ -641,6 +641,55 @@ public:
         return reader.read_end(*this) && writer.write_end(*this);
     }
 
+    template <typename Scheduler, typename Partitioner, typename DistributedTriangulation>
+    void partition(Scheduler& sch,  const Partitioner& part, const DistributedTriangulation& that) {
+        typedef typename Tile_triangulation::Vertex_index Vertex_index;
+        typedef std::vector<std::pair<Tile_index, Point>> PointSet;
+        typedef std::multimap<Tile_index, PointSet> PointSetContainer;
+        PointSetContainer point_sets;
+        sch.flat_map(that.tiles, std::inserter(point_sets, point_sets.begin()), [&part](Tile_index /* unused */, const Tile_triangulation& tri, auto& out) {
+            std::map<Tile_index, std::set<Vertex_index>> vertex_set_map;
+            for(Vertex_index v = tri.vertices_begin(); v != tri.vertices_end(); ++v)
+            {
+                if (tri.vertex_is_infinite(v)) continue;
+                Tile_index key = part(tri.point(v));
+                std::set<Vertex_index>& vertex_set = vertex_set_map[key];
+                vertex_set.insert(v);
+                tri.adjacent_vertices(v, std::inserter(vertex_set, vertex_set.end()));
+            }
+            for(const auto& p : vertex_set_map)
+            {
+                PointSet points;
+                Tile_index key = p.first;
+                const std::set<Vertex_index>& vertex_set = p.second;
+                for(const auto& v : vertex_set)
+                {
+                    if (tri.vertex_is_infinite(v)) continue;
+                    const Point& p = tri.point(v);
+                    points.emplace_back(part(p), p);
+                }
+                *out++ = {key, points};
+            }
+        });
+        int dim = that.maximal_dimension();
+        maximal_dimension_ = dim;
+        Statistics stats;
+        statistics_ = sch.reduce_by_key(point_sets, std::inserter(tiles, tiles.begin()), stats, [&dim](auto& range, auto& out) {
+            Tile_index key = range.first->first;
+            Tile_triangulation tri(key, dim);
+            Vertex_index hint;
+            // simplification is not needed (local and adjacent to local points only are received)
+            // simplification would be incorrect, as foreign vertices may come first and be simplified before their local neighbor is inserted
+            // should we spatial sort ?
+            for(auto it = range.first; it != range.second; ++it)
+                for(const auto& p : it->second)
+                    hint = tri.insert(p.second, p.first, hint).first;
+            Statistics stats = tri.statistics();
+            *out++ = { key, std::move(tri) };
+            return stats;
+        });
+    }
+
     const Statistics& statistics() const { return statistics_; }
     Statistics& statistics() { return statistics_; }
 

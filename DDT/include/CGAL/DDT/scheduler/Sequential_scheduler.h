@@ -39,6 +39,31 @@ struct Sequential_scheduler
         return value;
     }
 
+    template<typename Container,
+             typename Iterator,
+             typename Transform>
+    void flat_map(Container& c, Iterator out, Transform transform)
+    {
+        for(auto it = c.begin(); it != c.end(); ++it)
+            transform(it->first, it->second, out);
+    }
+
+    template<typename Container,
+             typename Iterator,
+             typename Transform,
+             typename V,
+             typename Reduce = std::plus<>>
+    V reduce_by_key(Container& c, Iterator out, V value, Transform transform, Reduce reduce = {})
+    {
+        for(auto it = c.begin(); it != c.end();)
+        {
+            auto range = c.equal_range(it->first);
+            value = reduce(value, transform(range, out));
+            it = range.second;
+        }
+        return value;
+    }
+
     template<typename Container1,
              typename Container2,
              typename V,
