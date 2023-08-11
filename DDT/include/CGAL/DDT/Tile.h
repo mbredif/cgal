@@ -64,6 +64,7 @@ public:
 
     const value_type& operator*() const { return *it; }
     pointer operator->() const { return it.operator->(); }
+    iterator_type iterator() { return it; }
 
 private:
     iterator_type it;

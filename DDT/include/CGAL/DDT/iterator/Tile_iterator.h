@@ -30,6 +30,7 @@ public:
     using pointer = typename iterator_type::pointer;
     using reference = typename iterator_type::reference;
     friend Tile_const_iterator;
+    friend Container;
 
 private:
     Container *container_;

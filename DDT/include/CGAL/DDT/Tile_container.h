@@ -31,6 +31,7 @@ class Tile_container
 public:
     typedef typename AssociativeContainer::key_type    key_type;
     typedef typename AssociativeContainer::mapped_type mapped_type;
+    typedef typename AssociativeContainer::value_type  value_type;
     typedef Serializer_                                Serializer;
 
     typedef AssociativeContainer                       ValueContainer;
@@ -67,7 +68,6 @@ public:
     iterator end    () { return {this, usages.end()}; }
     iterator find(key_type key) { return {this, usages.find(key)}; }
 
-
     value_iterator values_end    () { return values.end   (); }
     value_const_iterator values_end () const { return values.end   (); }
 
@@ -81,6 +81,14 @@ public:
         return {{this, use.first}, use.second};
     }
 
+    template<typename P>
+    iterator insert( iterator pos, P&& value ) {
+        key_type key = value.first;
+        value_iterator vpos = (pos == end()) ? values.end() : pos.it_->second.iterator();
+        value_iterator it = values.insert(vpos, std::forward<P>(value));
+        auto use = usages.try_emplace(key, it);
+        return {this, use.first};
+    }
 
     /*
      *             typename TileContainer::Tile_const_iterator tile = tc.find(*it);
