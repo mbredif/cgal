@@ -401,7 +401,7 @@ public:
     void get_axis_extreme_points(std::vector<Vertex_index>& out) const
     {
         std::vector<Vertex_index> vertices;
-        int D = Traits::maximal_dimension(tri_);
+        int D = maximal_dimension();
         vertices.reserve(2*D);
         Vertex_index v = vertices_begin();
         // first local point
@@ -549,16 +549,31 @@ public:
     {
         assert(t.facet_is_valid(f));
         Cell_index c = t.cell(f);
-        if(t.cell_is_foreign(c)) return mirror_facet(relocate_facet(t, t.mirror_facet(f)));
-        assert(!t.cell_is_foreign(c));
-        Cell_index d = relocate_cell(t, c);
-        if (d == cells_end()) return facets_end();
-        Vertex_index v = t.vertex(c, t.index_of_covertex(f));
-        for(int i=0; i<=current_dimension(); ++i)
-        {
-            if(Traits::are_vertices_equal(t.tri_, v, tri_, vertex(d, i)))
-                return facet(d, i);
+        if(t.cell_is_foreign(c)) {
+            Facet_index g = t.mirror_facet(f);
+            Facet_index h = relocate_facet(t, g);
+            assert(h != facets_end());
+            return mirror_facet(h);
         }
+        int icv = t.index_of_covertex(f);
+        int iv  = !icv;
+        // v is a relocated vertex on the facet (!=covertex)
+        Vertex_index v = relocate_vertex(t, t.vertex(c, iv));
+        assert(v!=vertices_end());
+        if (v == vertices_end()) return facets_end();
+        std::vector<Cell_index> cells;
+        incident_cells(v, std::back_inserter(cells));
+        int D = maximal_dimension();
+        for(Cell_index c2: cells)
+        {
+            for(int icv2 =0; icv2<=D; ++icv2)
+            {
+                Facet_index f2 = t.facet(c2, icv2);
+                if (are_facets_equal(f2, t, f))
+                    return f2;
+            }
+        }
+        assert(false);
         return facets_end();
     }
 

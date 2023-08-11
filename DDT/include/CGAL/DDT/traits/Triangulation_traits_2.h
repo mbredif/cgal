@@ -200,25 +200,35 @@ struct Triangulation_traits<CGAL::Delaunay_triangulation_2<GT, TDS>>
         Cell_index c2 = f2.cell();
         int icv1 = f1.index_of_covertex();
         int icv2 = f2.index_of_covertex();
-        for(int i1 = 0; i1 < t1.dimension(); ++i1 )
+        int perm[D+1];
+        for(int i1 = 0; i1 <= D; ++i1 )
         {
-            if(i1 == icv1) continue;
+            if(i1 == icv1) {
+                perm[icv1] = icv2;
+                continue;
+            }
             auto v1 = c1->vertex(i1);
             bool found = false;
-            for(int i2 = 0; i2 < t2.dimension(); ++i2 )
+            for(int i2 = 0; i2 <= D; ++i2 )
             {
                 if(i2 == icv2) continue;
                 auto v2 = c2->vertex(i2);
                 if(are_vertices_equal(t1, v1, t2, v2))
                 {
                     found = true;
+                    perm[i1] = i2;
                     break;
                 }
             }
             if(!found)
                 return false;
         }
-        return true;
+
+        bool orientation = true;
+        for(int i = 0; i <= D; ++i)
+            for(int j = i+1; j <= D; ++j)
+                if (perm[i] > perm[j]) orientation = !orientation;
+        return orientation;
     }
 
     static bool are_cells_equal(const Triangulation& t1, Cell_index c1, const Triangulation& t2, Cell_index c2)
