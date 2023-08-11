@@ -73,6 +73,60 @@ struct Multithread_scheduler
     }
 
     template<typename Container,
+             typename Iterator,
+             typename Transform>
+    void flat_map(Container& c, Iterator out, Transform transform)
+    {
+        using value_type = typename Iterator::container_type::value_type;
+        using key_type   = typename Container::key_type;
+        std::vector<std::future<void>> futures;
+        {
+            std::unique_lock<std::mutex> lock(mutex);
+            for(const auto& [k, _] : c)
+                futures.push_back(pool.submit([this, &c, &out, &transform](key_type k){
+                    std::vector<value_type> tmp;
+                    std::unique_lock<std::mutex> lock(mutex);
+                    auto it = c.find(k);
+                    lock.unlock();
+                    transform(k, it->second, std::back_inserter(tmp));
+                    lock.lock();
+                    std::move(tmp.begin(), tmp.end(), out);
+                }, k));
+        }
+        for(auto& f: futures) f.get();
+    }
+
+    template<typename Container,
+             typename Iterator,
+             typename Transform,
+             typename V,
+             typename Reduce = std::plus<>>
+    V reduce_by_key(Container& c, Iterator out, V init, Transform transform, Reduce reduce = {})
+    {
+        using value_type = typename Iterator::container_type::value_type;
+        typedef typename Container::key_type key_type;
+        std::vector<std::future<V>> futures;
+        for(auto it = c.begin(); it != c.end();)
+        {
+            auto range = c.equal_range(it->first);
+            futures.push_back(pool.submit([this, &c, &out, &init, &transform](key_type k){
+                std::vector<value_type> tmp;
+                std::unique_lock<std::mutex> lock(mutex);
+                auto range = c.equal_range(k);
+                lock.unlock();
+                V value = transform(range, std::back_inserter(tmp));
+                lock.lock();
+                std::move(tmp.begin(), tmp.end(), out);
+                return value;
+            }, it->first));
+            it = range.second;
+        }
+        V value = init;
+        for(auto& f: futures) value = reduce(value, f.get());
+        return value;
+    }
+
+    template<typename Container,
              typename V,
              typename Transform,
              typename Reduce = std::plus<>>

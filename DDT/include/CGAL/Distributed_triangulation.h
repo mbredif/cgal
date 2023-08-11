@@ -647,7 +647,7 @@ public:
         typedef std::vector<std::pair<Tile_index, Point>> PointSet;
         typedef std::multimap<Tile_index, PointSet> PointSetContainer;
         PointSetContainer point_sets;
-        sch.flat_map(that.tiles, std::inserter(point_sets, point_sets.begin()), [&part](Tile_index /* unused */, const Tile_triangulation& tri, auto& out) {
+        sch.flat_map(that.tiles, std::inserter(point_sets, point_sets.begin()), [&part](Tile_index /* unused */, const Tile_triangulation& tri, auto out) {
             std::map<Tile_index, std::set<Vertex_index>> vertex_set_map;
             for(Vertex_index v = tri.vertices_begin(); v != tri.vertices_end(); ++v)
             {
@@ -674,7 +674,7 @@ public:
         int dim = that.maximal_dimension();
         maximal_dimension_ = dim;
         Statistics stats;
-        statistics_ = sch.reduce_by_key(point_sets, std::inserter(tiles, tiles.begin()), stats, [&dim](auto& range, auto& out) {
+        statistics_ = sch.reduce_by_key(point_sets, std::inserter(tiles, tiles.begin()), stats, [&dim](auto& range, auto out) {
             Tile_index key = range.first->first;
             Tile_triangulation tri(key, dim);
             Vertex_index hint;
