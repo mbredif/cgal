@@ -12,35 +12,37 @@ if(NOT TARGET Boost::filesystem)
   return()
 endif()
 
-find_package(LASLIB)
-include(CGAL_LASLIB_support)
-if(TARGET CGAL::LASLIB_support)
-  create_single_source_cgal_program( "ddt_from_las_3.cpp")
-  target_link_libraries(ddt_from_las_3 PRIVATE ${CGAL_libs} Boost::filesystem CGAL::LASLIB_support)
-else()
-  message(
-    STATUS
-      "NOTICE : the LAS reader test requires LASlib and will not be compiled.")
-endif()
-
-create_single_source_cgal_program( "ddt_mt_2.cpp" )
-create_single_source_cgal_program( "ddt_out_of_core_2.cpp" )
-target_link_libraries(ddt_mt_2  PRIVATE Boost::filesystem Boost::program_options)
-target_link_libraries(ddt_out_of_core_2 PRIVATE Boost::filesystem Boost::program_options)
-
 option (USE_TBB "Use TBB " ON)
 if (USE_TBB)
   find_package(TBB QUIET)
 endif()
-
 include(CGAL_TBB_support)
+
+find_package(LASLIB)
+include(CGAL_LASLIB_support)
+
+create_single_source_cgal_program( "ddt_out_of_core_2.cpp" )
+target_link_libraries(ddt_out_of_core_2 PRIVATE Boost::filesystem Boost::program_options)
+
 if(TARGET CGAL::TBB_support)
-  target_link_libraries(ddt_mt_2 PUBLIC CGAL::TBB_support)
+
+  create_single_source_cgal_program( "ddt_tbb_2.cpp" )
+  target_link_libraries(ddt_tbb_2 PUBLIC Boost::filesystem Boost::program_options CGAL::TBB_support)
+
+  if(TARGET CGAL::LASLIB_support)
+
+	create_single_source_cgal_program( "ddt_from_las_3.cpp")
+	target_link_libraries(ddt_from_las_3 PRIVATE ${CGAL_libs} Boost::filesystem Boost::program_options CGAL::LASLIB_support CGAL::TBB_support)
+
+  else()
+	message(STATUS "NOTICE : ddt_from_las_3 requires LASlib and will not be compiled.")
+  endif()
+
 else()
-  message(STATUS "ddt_mt_2 will be used without TBB support")
+  message(STATUS "ddt_tbb_2 and ddt_from_las_3 require TBB and will not be compiled.")
 endif()
 
-option (USE_MPI "Use MPI " ON)
+option (USE_MPI "Use MPI " OFF)
 if (USE_MPI)
   find_package(MPI)
   if ( MPI_FOUND )

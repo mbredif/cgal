@@ -6,7 +6,7 @@
 
 #include <CGAL/DDT/traits/Triangulation_traits_3.h>
 #include <CGAL/DDT/partitioner/Grid_partitioner.h>
-#include <CGAL/DDT/scheduler/Multithread_scheduler.h>
+#include <CGAL/DDT/scheduler/TBB_scheduler.h>
 #include <CGAL/DDT/serializer/File_serializer.h>
 #include <CGAL/DDT/tile_points/LAS_tile_points.h>
 
@@ -29,10 +29,10 @@ typedef CGAL::Delaunay_triangulation_3<Geom_traits, TDS>                     Tri
 typedef typename Triangulation::Point                                        Point;
 typedef CGAL::DDT::Vertex_info_property_map<Triangulation>                   TileIndexProperty;
 
-typedef CGAL::DDT::Multithread_scheduler                                     Scheduler;
+typedef CGAL::DDT::TBB_scheduler                                             Scheduler;
 typedef CGAL::DDT::File_serializer                                           Serializer;
 typedef CGAL::DDT::LAS_tile_points<Point>                                    Tile_points;
-typedef CGAL::Distributed_point_set<Tile_index, Point, Tile_points>                   Distributed_point_set;
+typedef CGAL::Distributed_point_set<Tile_index, Point, Tile_points>          Distributed_point_set;
 typedef CGAL::Distributed_triangulation<Triangulation, TileIndexProperty, Serializer> Distributed_triangulation;
 
 int main(int argc, char*argv[])

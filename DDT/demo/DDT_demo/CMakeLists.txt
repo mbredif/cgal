@@ -4,6 +4,8 @@
 cmake_minimum_required(VERSION 3.1...3.14)
 project( DDT_Demos )
 
+include_directories("include")
+
 find_package(CGAL REQUIRED)
 find_package(Boost QUIET COMPONENTS filesystem program_options)
 if(NOT TARGET Boost::filesystem OR NOT TARGET Boost::program_options)
