@@ -1,4 +1,5 @@
 /*!
-\example DDT/ddt_mt_2.cpp
+\example DDT/ddt_tbb_2.cpp
 \example DDT/ddt_out_of_core_2.cpp
+\example DDT/ddt_from_las_3.cpp
 */

@@ -88,9 +88,9 @@ General info about the code :
 
 
 \subsection SSection_DDT_Files Files
-
+TODO
 \subsubsection SSSection_DDT_Tile Tile.hpp
-The \ref CGAL::DDT::Tile "Tile" class encapsulates :
+The Tile class encapsulates :
   - The tile identifier.
   - The Delaunay tile-triangulation, obviously. In order to keep track of the tile id of foreign points, the vertices are templated with a data attribute to hold this id. The access is provided by a function of the trait : id(Vertex_handle v) . However, other storage policies are possible , such as storing the tile ids of the vertices outside the DT in an external data structure, which would save space by not storing the id of local vertices.
   - The number of main vertices, facets and cells in the tile-triangulation (cached for performance)

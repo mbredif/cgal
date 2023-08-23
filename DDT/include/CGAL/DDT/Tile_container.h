@@ -22,8 +22,6 @@
 namespace CGAL {
 namespace DDT {
 
-/// \ingroup PkgDDTClasses
-/// Tile Container
 template<typename AssociativeContainer,
          typename Serializer_ >
 class Tile_container
@@ -76,9 +74,9 @@ public:
     usage_const_iterator usages_end () const { return usages.end   (); }
 
     template< class... Args >
-    std::pair<iterator,bool> try_emplace(key_type key, Args&&... args) {
-        auto val = values.try_emplace(key, std::forward<Args>(args)...);
-        auto use = usages.try_emplace(key, val.first);
+    std::pair<iterator,bool> emplace(Args&&... args) {
+        auto val = values.emplace(std::forward<Args>(args)...);
+        auto use = usages.try_emplace(val.first->first, val.first);
         return {{this, use.first}, use.second};
     }
 
@@ -123,7 +121,7 @@ public:
         return out;
     }
 
-    /// load a tile to memory, automatically saving it.
+    // load a tile to memory, automatically saving it.
     bool prepare_load(Usage& usage) const {
         key_type key = usage->first;
         if(usage.in_mem) {

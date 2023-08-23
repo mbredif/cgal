@@ -14,7 +14,7 @@ struct VertexIndex : public SimplexIndex {};
 struct FacetIndex: public SimplexIndex {};
 struct CellIndex: public SimplexIndex {};
 
-/*!
+/*
 \ingroup PkgDDTConcepts
 \cgalConcept
 

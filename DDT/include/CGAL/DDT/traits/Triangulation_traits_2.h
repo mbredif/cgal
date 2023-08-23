@@ -23,9 +23,6 @@
 namespace CGAL {
 namespace DDT {
 
-/// \ingroup PkgDDTTraitsClasses
-/// 2-dimensional triangulation traits.
-/// \cgalModels TriangulationTraits
 template<typename GT, typename TDS>
 struct Triangulation_traits<CGAL::Delaunay_triangulation_2<GT, TDS>>
 {
@@ -318,7 +315,6 @@ struct Triangulation_traits<CGAL::Delaunay_triangulation_2<GT, TDS>>
     static inline std::ostream& write(std::ostream& out, const Triangulation& tri) { return out << tri; }
     static inline std::istream& read(std::istream& in, Triangulation& tri) { return in >> tri; }
 
-    /// Bbox type
     typedef CGAL::Bbox_2 Bbox;
 
     static inline Bbox bbox(const Point& p) {

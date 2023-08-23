@@ -40,9 +40,6 @@ namespace Impl {
     };
 }
 
-/// \ingroup PkgDDTTraitsClasses
-/// D dimensional triangulation traits
-/// \cgalModels TriangulationTraits
 template<typename GT, typename TDS>
 struct Triangulation_traits<CGAL::Delaunay_triangulation<GT, TDS>>
 {

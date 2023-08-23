@@ -18,7 +18,7 @@ namespace CGAL {
 namespace DDT {
 
 /// \ingroup PkgDDTClasses
-/// \tparam T is a model of the TriangulationTraits concept
+/// \tparam Point type
 /// The LAS_tile_points is a proxy to a LAS file, to be read on demand
 template<class Point>
 class LAS_tile_points {

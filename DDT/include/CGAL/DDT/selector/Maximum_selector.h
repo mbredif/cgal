@@ -17,9 +17,8 @@
 namespace CGAL {
 namespace DDT {
 
-/// \ingroup PkgDDTSelectorClasses
-/// Select the maximum value among the set of inserted values.
-/// \cgalModels Selector
+// Select the maximum value among the set of inserted values.
+// \cgalModels Selector
 template<typename T>
 class Maximum_selector
 {

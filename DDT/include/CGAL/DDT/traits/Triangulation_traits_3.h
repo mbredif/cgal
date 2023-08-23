@@ -23,9 +23,6 @@
 namespace CGAL {
 namespace DDT {
 
-/// \ingroup PkgDDTTraitsClasses
-/// 3-dimensional triangulation traits.
-/// \cgalModels TriangulationTraits
 template<typename GT, typename TDS>
 struct Triangulation_traits<CGAL::Delaunay_triangulation_3<GT, TDS>>
 {

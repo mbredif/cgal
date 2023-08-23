@@ -17,6 +17,8 @@
 
 namespace CGAL {
 
+/// \ingroup PkgDDTClasses
+/// Distributed point set
 template<typename TileIndex, typename Point_, typename PointSerializer = CGAL::DDT::No_point_serializer>
 struct Distributed_point_set {
     typedef Point_ Point;

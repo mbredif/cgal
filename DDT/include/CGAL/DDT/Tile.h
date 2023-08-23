@@ -15,9 +15,8 @@
 namespace CGAL {
 namespace DDT {
 
-/// \ingroup PkgDDTClasses
-/// \tparam T is a model of the Triangulation concept
-/// The Tile stores a local triangulation.
+// \tparam T is a model of the Triangulation concept
+// The Tile stores a local triangulation.
 template<typename PairIterator>
 class Usage
 {
@@ -33,14 +32,14 @@ public:
     {
     }
 
-    /// lock the tile for exclusive use (no unloading, no concurrent processing)
+    // lock the tile for exclusive use (no unloading, no concurrent processing)
     int use_count;
-    /// is the triangulation in memory ?
+    // is the triangulation in memory ?
     bool in_mem;
 
-    /// unloads a tile from memory, automatically saving it.
-    /// returns true after the loaded tile id is successfully saved and unloaded from memory.
-    /// @todo attention à la perennité des handles (tile is possibly unloaded), ou alors lock ou shared pointer.
+    // unloads a tile from memory, automatically saving it.
+    // returns true after the loaded tile id is successfully saved and unloaded from memory.
+    // @todo attention à la perennité des handles (tile is possibly unloaded), ou alors lock ou shared pointer.
     template<typename Serializer>
     bool unload(Serializer& serializer) {
         if (use_count==0 && in_mem && serializer.write(it->second)) {

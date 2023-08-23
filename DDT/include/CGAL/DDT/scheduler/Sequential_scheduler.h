@@ -80,7 +80,9 @@ struct Sequential_scheduler
         typedef typename Container1::key_type key_type;
         for(iterator2 it2 = c2.begin(); it2 != c2.end(); ++it2) {
             key_type k = it2->first;
-            iterator1 it1 = c1.try_emplace(k, k, std::forward<Args>(args)...).first;
+            iterator1 it1 = c1.emplace(std::piecewise_construct,
+                std::forward_as_tuple(k),
+                std::forward_as_tuple(k, std::forward<Args>(args)...)).first;
             auto res = transform(k, it1->second, it2->second, out);
             out = res.second;
             value = reduce(value, res.first);
@@ -104,7 +106,9 @@ struct Sequential_scheduler
         while(!c2.empty()) {
             iterator2 it2 = c2.begin();
             key_type k = it2->first;
-            iterator1 it1 = c1.try_emplace(k, k, std::forward<Args>(args)...).first;
+            iterator1 it1 = c1.emplace(std::piecewise_construct,
+                std::forward_as_tuple(k),
+                std::forward_as_tuple(k, std::forward<Args>(args)...)).first;
             auto res = transform(k, it1->second, it2->second, out2);
             value = reduce(value, res.first);
             out2 = res.second;

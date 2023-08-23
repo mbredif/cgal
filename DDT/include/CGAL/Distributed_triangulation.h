@@ -578,7 +578,9 @@ public:
     template<typename Point, typename Tile_index, typename Scheduler>
     std::pair<Vertex_iterator, bool> insert(const Point& point, Tile_index id, Scheduler& sch)
     {
-        auto emplaced = tiles.try_emplace(id, id, maximal_dimension());
+        auto emplaced = tiles.emplace(std::piecewise_construct,
+                std::forward_as_tuple(id),
+                std::forward_as_tuple(id, maximal_dimension()));
         // insert the point in its local tile
         Tile_iterator tile = emplaced.first;
         Tile_triangulation& tri  = tile->second;

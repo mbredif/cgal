@@ -5,16 +5,10 @@
 /// \defgroup PkgDDTSchedulerClasses Scheduler Classes
 /// \ingroup PkgDDTRef
 
-/// \defgroup PkgDDTTraitsClasses Triangulation Traits Classes
-/// \ingroup PkgDDTRef
-
 /// \defgroup PkgDDTPartitionerClasses Partitioner Classes
 /// \ingroup PkgDDTRef
 
 /// \defgroup PkgDDTSerializerClasses Serializer Classes
-/// \ingroup PkgDDTRef
-
-/// \defgroup PkgDDTInsert Insertion
 /// \ingroup PkgDDTRef
 
 /// \defgroup PkgDDTClasses Classes
@@ -46,7 +40,7 @@ The Distributed Delaunay Triangulation (DDT) package, ....
 - `Serializer`
 
 \cgalCRPSection{Classes}
-- `CGAL::DDT::Tile_container<TriangulationTraits,Serializer>`
+- `CGAL::Distributed_point_set<TileIndex,Point,PointSerializer>`
 - `CGAL::Distributed_triangulation<TileContainer>`
 
 \cgalCRPSection{%Scheduler Classes}

@@ -17,9 +17,8 @@
 namespace CGAL {
 namespace DDT {
 
-/// \ingroup PkgDDTSelectorClasses
-/// Selects the minimum value among the set of inserted values.
-/// \cgalModels Selector
+// Selects the minimum value among the set of inserted values.
+// \cgalModels Selector
 template<typename T>
 class Minimum_selector
 {

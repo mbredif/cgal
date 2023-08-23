@@ -52,11 +52,10 @@ struct Statistics {
     }
 };
 
-/// \ingroup PkgDDTClasses
-/// \tparam T is a model of the TriangulationTraits concept
-/// \tparam Selector is a template for a model of the Selector concept (defaults to Median_selector)
-/// The Tile_triangulation stores a local Delaunay triangulation.
-/// The main id of a simplex is defined by the selector
+// \tparam T is a model of the Triangulation concept
+// \tparam Selector is a template for a model of the Selector concept (defaults to Median_selector)
+// The Tile_triangulation stores a local Delaunay triangulation.
+// The main id of a simplex is defined by the selector
 template<
     class T,
     class TileIndexProperty,
