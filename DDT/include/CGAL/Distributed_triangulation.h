@@ -618,16 +618,15 @@ public:
     void finalize(Scheduler& sch)
     {
         Statistics stats;
-        statistics_ = sch.transform_reduce(tiles, stats,
+        statistics_ = sch.transform_reduce(tiles, stats, std::plus<>(),
             [](Tile_index id, const Tile_triangulation& tri) { return tri.statistics();});
     }
 
     template <typename Scheduler, typename Writer>
     bool write(Scheduler& sch,  const Writer& writer) {
         if (!writer.write_begin(*this)) return false;
-        if (!sch.transform_reduce(tiles, true,
-            [&writer](Tile_index id, const Tile_triangulation& tri) { return writer.write(tri);},
-            std::logical_and<>()))
+        if (!sch.transform_reduce(tiles, true, std::logical_and<>(),
+            [&writer](Tile_index id, const Tile_triangulation& tri) { return writer.write(tri);}))
             return false;
         return writer.write_end(*this);
     }
@@ -635,9 +634,8 @@ public:
     template <typename Scheduler, typename Reader>
     bool read(Scheduler& sch,  const Reader& reader) {
         if (!reader.read_begin(*this)) return false;
-        if (!sch.transform_reduce(tiles, true,
-            [&reader](Tile_index id, Tile_triangulation& tri) { return reader.read(tri);},
-            std::logical_and<>()))
+        if (!sch.transform_reduce(tiles, true, std::logical_and<>(),
+            [&reader](Tile_index id, Tile_triangulation& tri) { return reader.read(tri);}))
             return false;
         return reader.read_end(*this);
     }
@@ -645,9 +643,8 @@ public:
     template <typename Scheduler, typename Reader, typename Writer>
     bool read_write(Scheduler& sch,  const Reader& reader, const Writer& writer) {
         if (!(reader.read_begin(*this) && writer.write_begin(*this))) return false;
-        if (!sch.transform_reduce(tiles, true,
-            [&reader,&writer](Tile_index id, Tile_triangulation& tri) { return reader.read(tri) && writer.write(tri);},
-            std::logical_and<>()))
+        if (!sch.transform_reduce(tiles, true, std::logical_and<>(),
+            [&reader,&writer](Tile_index id, Tile_triangulation& tri) { return reader.read(tri) && writer.write(tri);}))
             return false;
         return reader.read_end(*this) && writer.write_end(*this);
     }
@@ -685,7 +682,7 @@ public:
         int dim = that.maximal_dimension();
         maximal_dimension_ = dim;
         Statistics stats;
-        statistics_ = sch.reduce_by_key(point_sets, std::inserter(tiles, tiles.begin()), [&dim](auto& range, auto out) {
+        statistics_ = sch.reduce_by_key(point_sets, std::inserter(tiles, tiles.begin()), stats, std::plus<>(), [&dim](auto& range, auto out) {
             Tile_index key = range.first->first;
             Tile_triangulation tri(key, dim);
             Vertex_index hint;
@@ -698,7 +695,7 @@ public:
             Statistics stats = tri.statistics();
             *out++ = { key, std::move(tri) };
             return stats;
-        }, stats);
+        });
     }
 
     const Statistics& statistics() const { return statistics_; }

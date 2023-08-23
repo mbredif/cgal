@@ -58,7 +58,7 @@ std::size_t insert_and_get_axis_extreme_points(TileContainer& tiles, PointSetCon
     typedef typename TileContainer::key_type         Index;
     typedef typename TileContainer::mapped_type      Triangulation;
     typedef typename PointSetContainer::mapped_type  PointSet;
-    return sch.join_transform_reduce(tiles, point_sets, out, [](Index id, Triangulation& tri, PointSet& point_set, Iterator out)
+    return sch.join_transform_reduce(tiles, point_sets, out, 0, {}, [](Index id, Triangulation& tri, PointSet& point_set, Iterator out)
     {
         typedef typename Triangulation::Vertex_index Vertex_index;
         std::size_t count = splay_tile(id, tri, point_set, out);
@@ -68,7 +68,7 @@ std::size_t insert_and_get_axis_extreme_points(TileContainer& tiles, PointSetCon
         for(auto v : vertices)
             point_set.emplace_back(tri.vertex_id(v), tri.point(v));
         return count;
-    }, 0, {}, dim);
+    }, dim);
 }
 
 template<typename TileContainer, typename PointSetContainer, typename Scheduler>
@@ -78,8 +78,8 @@ std::size_t splay_stars(TileContainer& tiles, PointSetContainer& point_sets, Sch
     typedef typename TileContainer::mapped_type      Triangulation;
     typedef typename PointSetContainer::mapped_type  PointSet;
     return sch.join_transform_reduce_loop(tiles, point_sets,
-        std::back_inserter(point_sets),
-        [](Index id, Triangulation& tri, PointSet& point_set, auto out) { return splay_tile(id, tri, point_set, out); }, 0, {}, dim);
+        std::back_inserter(point_sets), 0, {},
+        [](Index id, Triangulation& tri, PointSet& point_set, auto out) { return splay_tile(id, tri, point_set, out); }, dim);
 }
 
 template<typename TileTriangulation, typename PointSetContainer>

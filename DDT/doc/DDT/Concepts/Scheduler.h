@@ -34,7 +34,7 @@ public:
              typename V,
              typename Transform,
              typename Reduce = std::plus<>>
-    V transform_reduce(Container& c, V init, Transform transform, Reduce reduce = {}) { return init; }
+    V transform_reduce(Container& c, V init, Reduce reduce, Transform transform) { return init; }
 
     /// \brief joins two associative containers `c1` and `c2` by key and aggregate, using a `reduce` function operating on the initial value `init_v`,
     /// the values returned by `transform(k, v1, v2)` on all values `v1` and `v2` that share a key `k`.
@@ -59,7 +59,7 @@ public:
              typename Transform,
              typename Reduce = std::plus<>,
              typename... Args>
-    V join_transform_reduce(Container1& c1, Container2& c2, V init, Transform transform, Reduce reduce = {}, Args&&... args) { return init; }
+    V join_transform_reduce(Container1& c1, Container2& c2, V init, Reduce reduce, Transform transform, Args&&... args) { return init; }
 
     /// \brief repeatedly joins two associative containers `c1` and `c2` by key and aggregate `v=reduce(v, u)` with `u=transform(k,v1,v2)` and
     ///        values `v1,v2` sharing a key `k` in the containers `c1,c2`, starting with `v=init`. Repeated joins occur until convergence, meaning that
@@ -72,7 +72,7 @@ public:
              typename Transform,
              typename Reduce = std::plus<>,
              typename... Args>
-    V join_transform_reduce_loop(Container1& c1, Container2& c2, V init, Transform transform, Reduce reduce = {}, Args&&... args) { return init; }
+    V join_transform_reduce_loop(Container1& c1, Container2& c2, V init, Reduce reduce, Transform transform, Args&&... args) { return init; }
 /// @}
 
 };

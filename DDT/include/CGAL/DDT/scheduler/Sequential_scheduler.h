@@ -41,7 +41,7 @@ struct Sequential_scheduler
              typename Transform,
              typename V,
              typename Reduce = std::plus<>>
-    V reduce_by_key(Container& c, Iterator out, Transform transform, V value = {}, Reduce reduce = {})
+    V reduce_by_key(Container& c, Iterator out, V value, Reduce reduce, Transform transform)
     {
         for(auto it = c.begin(); it != c.end();)
         {
@@ -56,7 +56,7 @@ struct Sequential_scheduler
              typename Transform,
              typename V,
              typename Reduce = std::plus<>>
-    V transform_reduce(Container& c, V value, Transform transform, Reduce reduce = {})
+    V transform_reduce(Container& c, V value, Reduce reduce, Transform transform)
     {
         for(auto it = c.begin(); it != c.end(); ++it)
             value = reduce(value, transform(it->first, it->second));
@@ -65,12 +65,12 @@ struct Sequential_scheduler
 
     template<typename Container1,
              typename Container2,
-             typename Iterator,
+             typename OutputIterator,
              typename Transform,
              typename V,
              typename Reduce = std::plus<>,
              typename... Args>
-    V join_transform_reduce(Container1& c1, Container2& c2, Iterator out, Transform transform, V value, Reduce reduce = {}, Args&&... args)
+    V join_transform_reduce(Container1& c1, Container2& c2, OutputIterator out, V value, Reduce reduce, Transform transform, Args&&... args)
     {
         typedef typename Container1::iterator iterator1;
         typedef typename Container2::iterator iterator2;
@@ -90,7 +90,7 @@ struct Sequential_scheduler
              typename V,
              typename Reduce = std::plus<>,
              typename... Args>
-    V join_transform_reduce_loop(Container1& c1, Container2& c2, OutputIterator2 out2, Transform transform, V value, Reduce reduce = {}, Args&&... args)
+    V join_transform_reduce_loop(Container1& c1, Container2& c2, OutputIterator2 out2, V value, Reduce reduce, Transform transform, Args&&... args)
     {
         typedef typename Container1::iterator iterator1;
         typedef typename Container2::iterator iterator2;
