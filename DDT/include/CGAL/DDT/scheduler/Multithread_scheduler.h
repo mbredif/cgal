@@ -13,7 +13,7 @@
 #define CGAL_DDT_SCHEDULER_MULTITHREAD_SCHEDULER_H
 
 #include <CGAL/DDT/scheduler/multithread_scheduler/thread_pool.h>
-#include <CGAL/DDT/Tile.h>
+#include <functional>
 
 namespace CGAL {
 namespace DDT {

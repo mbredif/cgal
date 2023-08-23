@@ -13,7 +13,7 @@
 #define CGAL_DDT_SCHEDULER_SEQUENTIAL_SCHEDULER_H
 
 #include <assert.h>
-#include <CGAL/DDT/Tile.h>
+#include <functional>
 
 namespace CGAL {
 namespace DDT {
@@ -26,18 +26,6 @@ struct Sequential_scheduler
     Sequential_scheduler(int max_concurrency = 0) { assert(max_concurrency==0 || max_concurrency==1); }
 
     inline int max_concurrency() const { return 1; }
-
-    template<typename Container,
-             typename Transform,
-             typename V,
-             typename Reduce = std::plus<>>
-    V transform_reduce(Container& c, V value, Transform transform, Reduce reduce = {})
-    {
-        typedef typename Container::iterator iterator;
-        for(iterator it = c.begin(); it != c.end(); ++it)
-            value = reduce(value, transform(it->first, it->second));
-        return value;
-    }
 
     template<typename Container,
              typename Iterator,
@@ -53,7 +41,7 @@ struct Sequential_scheduler
              typename Transform,
              typename V,
              typename Reduce = std::plus<>>
-    V reduce_by_key(Container& c, Iterator out, V value, Transform transform, Reduce reduce = {})
+    V reduce_by_key(Container& c, Iterator out, Transform transform, V value = {}, Reduce reduce = {})
     {
         for(auto it = c.begin(); it != c.end();)
         {
@@ -64,13 +52,25 @@ struct Sequential_scheduler
         return value;
     }
 
+    template<typename Container,
+             typename Transform,
+             typename V,
+             typename Reduce = std::plus<>>
+    V transform_reduce(Container& c, V value, Transform transform, Reduce reduce = {})
+    {
+        for(auto it = c.begin(); it != c.end(); ++it)
+            value = reduce(value, transform(it->first, it->second));
+        return value;
+    }
+
     template<typename Container1,
              typename Container2,
-             typename V,
+             typename Iterator,
              typename Transform,
+             typename V,
              typename Reduce = std::plus<>,
              typename... Args>
-    V join_transform_reduce(Container1& c1, Container2& c2, V value, Transform transform, Reduce reduce = {}, Args&&... args)
+    V join_transform_reduce(Container1& c1, Container2& c2, Iterator out, Transform transform, V value, Reduce reduce = {}, Args&&... args)
     {
         typedef typename Container1::iterator iterator1;
         typedef typename Container2::iterator iterator2;
@@ -78,25 +78,30 @@ struct Sequential_scheduler
         for(iterator2 it2 = c2.begin(); it2 != c2.end(); ++it2) {
             key_type k = it2->first;
             iterator1 it1 = c1.try_emplace(k, k, std::forward<Args>(args)...).first;
-            value = reduce(value, transform(k, it1->second, it2->second));
-            c2.send_points(k);
+            value = reduce(value, transform(k, it1->second, it2->second, out));
         }
         return value;
     }
 
     template<typename Container1,
              typename Container2,
-             typename V,
+             typename OutputIterator2,
              typename Transform,
+             typename V,
              typename Reduce = std::plus<>,
              typename... Args>
-    V join_transform_reduce_loop(Container1& c1, Container2& c2, V init, Transform transform, Reduce reduce = {}, Args&&... args)
+    V join_transform_reduce_loop(Container1& c1, Container2& c2, OutputIterator2 out2, Transform transform, V value, Reduce reduce = {}, Args&&... args)
     {
-        V value = init, v;
-        do {
-            v = join_transform_reduce(c1, c2, init, transform, reduce, std::forward<Args>(args)...);
-            value = reduce(value, v);
-        } while (v != init);
+        typedef typename Container1::iterator iterator1;
+        typedef typename Container2::iterator iterator2;
+        typedef typename Container1::key_type key_type;
+        while(!c2.empty()) {
+            iterator2 it2 = c2.begin();
+            key_type k = it2->first;
+            iterator1 it1 = c1.try_emplace(k, k, std::forward<Args>(args)...).first;
+            value = reduce(value, transform(k, it1->second, it2->second, out2));
+            if (it2->second.empty()) c2.erase(it2);
+        }
         return value;
     }
 };

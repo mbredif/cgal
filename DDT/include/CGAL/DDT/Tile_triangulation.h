@@ -398,7 +398,8 @@ public:
     }
 
     /// collects at most 2*D vertices which points define the bounding box of the local tile vertices
-    void get_axis_extreme_points(std::vector<Vertex_index>& out) const
+    template <class VertexContainer>
+    void get_axis_extreme_points(VertexContainer& out) const
     {
         std::vector<Vertex_index> vertices;
         int D = maximal_dimension();
@@ -438,7 +439,8 @@ public:
 
     /// collects (vertex,id) pairs listing finite vertices that are possibly newly adjacent to vertices of a foreign tile (id),
     /// after the insertion of the inserted vertices, as required by the star splaying algorithm.
-    void get_finite_neighbors(const std::set<Vertex_index>& inserted, std::map<Tile_index, std::set<Vertex_index>>& out) const
+    template <class VertexContainer>
+    void get_finite_neighbors(const VertexContainer& inserted, std::map<Tile_index, std::set<Vertex_index>>& out) const
     {
         for(auto v : inserted) {
             if(vertex_is_infinite(v)) continue;

@@ -35,7 +35,7 @@ struct Triangulation_traits<CGAL::Delaunay_triangulation_3<GT, TDS>>
     typedef typename TDS::Vertex_iterator                            Vertex_index;
     typedef typename TDS::Cell_iterator                              Cell_index;
 
-    static const int D = 3;
+    static constexpr int D = 3;
     typedef CGAL::DDT::Facet_index<D, Cell_index>                    Facet_index;
 
     static inline Triangulation triangulation(int dim)

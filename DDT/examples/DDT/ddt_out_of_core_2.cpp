@@ -21,7 +21,7 @@ typedef CGAL::Random_points_in_square_2<Point>                                  
 typedef CGAL::DDT::Sequential_scheduler                                               Scheduler;
 typedef CGAL::DDT::File_points_serializer                                             Serializer;
 typedef CGAL::Distributed_triangulation<Triangulation, TileIndexProperty, Serializer> Distributed_triangulation;
-typedef CGAL::Distributed_point_set<Point, Tile_index>                                Distributed_point_set;
+typedef CGAL::Distributed_point_set<Tile_index, Point>                                Distributed_point_set;
 
 int main(int argc, char **argv)
 {

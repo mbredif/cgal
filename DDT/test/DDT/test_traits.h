@@ -41,7 +41,7 @@ int test_traits(const Partitioner& partitioner, const std::string& testname, int
     typedef typename CGAL::DDT::Triangulation_traits<Triangulation>::Point Point;
     typedef typename TileIndexProperty::value_type Tile_index;
     typedef typename CGAL::DDT::Triangulation_traits<Triangulation>::Random_points_in_box Random_points;
-    typedef CGAL::Distributed_point_set<Point, Tile_index> Distributed_point_set;
+    typedef CGAL::Distributed_point_set<Tile_index, Point> Distributed_point_set;
 
     std::cout << "== Delaunay ==" << std::endl;
     Random_points generator(dim, range);

@@ -26,14 +26,14 @@ namespace DDT {
 namespace Impl {
     template < typename D >
     struct Dim_value {
-      static const int value = D::value;
+      static constexpr int value = D::value;
       Dim_value(int dim) { CGAL_assertion(dim == value); }
       inline constexpr int dimension() const { return value; }
     };
 
     template <>
     struct Dim_value <Dynamic_dimension_tag> {
-        static const int value = 0;
+        static constexpr int value = 0;
         int dimension_;
         Dim_value(int dim) : dimension_(dim) { CGAL_assertion(dim >= 2); }
         inline int dimension() const { return dimension_; }
@@ -51,7 +51,7 @@ struct Triangulation_traits<CGAL::Delaunay_triangulation<GT, TDS>>
     typedef typename TDS::Full_cell_const_iterator                 Cell_index;
     typedef typename GT::Point_d                                   Point;
 
-    static const int D = Impl::Dim_value<typename Triangulation::Maximal_dimension>::value;
+    static constexpr int D = Impl::Dim_value<typename Triangulation::Maximal_dimension>::value;
     typedef CGAL::DDT::Facet_index<D, Cell_index>                  Facet_index;
 
 private:

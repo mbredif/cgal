@@ -19,7 +19,7 @@
 #include <mpi.h>
 #include <map>
 #include <vector>
-#include <CGAL/DDT/Tile.h>
+#include <functional>
 
 namespace CGAL {
 namespace DDT {

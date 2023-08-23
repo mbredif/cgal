@@ -537,27 +537,38 @@ public:
 
 
     /// \ingroup PkgDDTInsert
-    /// Triangulate the points into the tile container, so that each of its tile triangulations contain a local view of the overall
+    /// triangulates the points into the tile container, so that each of its tile triangulations contain a local view of the overall
     /// triangulation of all inserted points.
     /// The scheduler provides the distribution environment (single thread, multithread, MPI...)
     /// @returns the number of newly inserted vertices
-    template<typename Scheduler, typename Point, typename TileIndex, typename TilePoints>
-    std::size_t insert(Scheduler& sch, CGAL::Distributed_point_set<Point, TileIndex, TilePoints>& point_sets)
+    template<typename Scheduler, typename TileIndex, typename Point, typename TilePoints>
+    std::size_t insert(Scheduler& sch, CGAL::Distributed_point_set<TileIndex, Point, TilePoints>& point_sets)
     {
+        typedef CGAL::Distributed_point_set<TileIndex, Point, TilePoints> Distributed_point_set;
+
         std::size_t n = number_of_finite_vertices();
+
         std::cout << std::endl << "---insert_and_send_all_axis_extreme_points---" << std::endl;
-        CGAL::DDT::impl::insert_and_send_all_axis_extreme_points(tiles, point_sets, sch, maximal_dimension());
+        Distributed_point_set points;
+        CGAL::DDT::impl::insert_and_get_axis_extreme_points(tiles, point_sets, std::back_inserter(points), sch, maximal_dimension());
+
+        std::cout << std::endl << "---splay_root_triangulation---" << std::endl;
+        Tile_triangulation tri(-1, maximal_dimension());
+        CGAL::DDT::impl::splay_root_triangulation(tri, point_sets, points);
+
         std::cout << std::endl << "---splay_stars---" << std::endl;
-        CGAL::DDT::impl::splay_stars(tiles, point_sets, sch, maximal_dimension());
+        CGAL::DDT::impl::splay_stars(tiles, points, sch, maximal_dimension());
+
         std::cout << std::endl << "---finalize---" << std::endl;
         finalize(sch);
+
         std::cout << std::endl << "---inserted---" << std::endl;
         return number_of_finite_vertices() - n;
     }
 
 
     /// \ingroup PkgDDTInsert
-    /// Inserts the given point in the tile given by the given id, in the Delaunay triangulation stored in the tile container.
+    /// inserts the given point in the tile given by the given id, in the Delaunay triangulation stored in the tile container.
     /// The scheduler provides the distribution environment (single thread, multithread, MPI...)
     /// @returns v a descriptor to the inserted vertex and a bool
     template<typename Scheduler, typename Point, typename Tile_index>
@@ -573,13 +584,13 @@ public:
         Vertex_iterator res(&tiles, tile, v);
         if (!p.second) return std::make_pair(res, false);
 
-        CGAL::Distributed_point_set<Point, Tile_index> point_sets;
+        CGAL::Distributed_point_set<Tile_index, Point> point_sets;
 
         if (emplaced.second) { // tile did not exist
             // send (id, point) to all other tiles
             for(const auto& [i, _] : tiles)
                 if (i!=id)
-                    point_sets[i].send_point(i, id, point);
+                    point_sets[i].emplace_back(id, point);
 
         } else {
             // get its neighbors
@@ -596,7 +607,7 @@ public:
 
             // send (id, point) to each such neighboring tile
             for (auto idw : indices)
-                point_sets[idw].send_point(idw, id, point);
+                point_sets[idw].emplace_back(id, point);
         }
 
         insert(sch, point_sets);
@@ -674,7 +685,7 @@ public:
         int dim = that.maximal_dimension();
         maximal_dimension_ = dim;
         Statistics stats;
-        statistics_ = sch.reduce_by_key(point_sets, std::inserter(tiles, tiles.begin()), stats, [&dim](auto& range, auto out) {
+        statistics_ = sch.reduce_by_key(point_sets, std::inserter(tiles, tiles.begin()), [&dim](auto& range, auto out) {
             Tile_index key = range.first->first;
             Tile_triangulation tri(key, dim);
             Vertex_index hint;
@@ -687,7 +698,7 @@ public:
             Statistics stats = tri.statistics();
             *out++ = { key, std::move(tri) };
             return stats;
-        });
+        }, stats);
     }
 
     const Statistics& statistics() const { return statistics_; }

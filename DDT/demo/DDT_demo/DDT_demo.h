@@ -25,7 +25,7 @@ int DDT_demo(int argc, char **argv)
   typedef typename Traits::Point Point;
   typedef typename TileIndexProperty::value_type Tile_index;
   typedef CGAL::Distributed_triangulation<Triangulation, TileIndexProperty, Serializer> Distributed_triangulation;
-  typedef CGAL::Distributed_point_set<Point, Tile_index>                                Distributed_point_set;
+  typedef CGAL::Distributed_point_set<Tile_index, Point>                                Distributed_point_set;
 
   int NP, loglevel, max_concurrency, max_number_of_tiles;
   std::vector<int> NT;

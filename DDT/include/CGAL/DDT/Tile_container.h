@@ -58,7 +58,8 @@ public:
     inline std::size_t number_of_values_mem_max() const { return number_of_values_mem_max_; }
     inline std::size_t number_of_values_mem() const { return number_of_values_mem_; }
 
-    bool empty() const { return values.empty(); }
+    inline std::size_t size() const { return values.size(); }
+    inline bool empty() const { return values.empty(); }
     const_iterator cbegin () const { return {this, usages.begin()}; }
     const_iterator cend   () const { return {this, usages.end()}; }
     const_iterator begin  () const { return {this, usages.begin()}; }

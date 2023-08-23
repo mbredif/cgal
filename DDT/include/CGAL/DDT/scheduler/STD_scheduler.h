@@ -18,7 +18,7 @@
 #else
 #define CGAL_DDT_SCHEDULER_STD_SCHEDULER_PAR
 #endif
-#include <CGAL/DDT/Tile.h>
+#include <functional>
 
 namespace CGAL {
 namespace DDT {
