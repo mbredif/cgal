@@ -52,6 +52,8 @@ else()
 endif()
 
 create_single_source_cgal_program( "test_DDT_traits_concept.cpp" )
+include_directories(SYSTEM "include/")
+include_directories(SYSTEM "../../doc/DDT/")
 target_compile_options(test_DDT_traits_concept PRIVATE -Wno-unused-parameter)
 
 create_single_source_cgal_program( "test_DDT_traits_2.cpp" )

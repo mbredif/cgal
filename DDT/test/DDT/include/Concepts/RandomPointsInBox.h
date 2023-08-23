@@ -2,7 +2,7 @@
 #ifndef CGAL_DDT_CONCEPT_RANDOM_POINTS_IN_BOX
 #define CGAL_DDT_CONCEPT_RANDOM_POINTS_IN_BOX
 
-#include "Point.h"
+#include <Concepts/Point.h>
 
 /*
 \ingroup PkgDDTConcepts

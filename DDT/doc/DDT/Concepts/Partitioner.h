@@ -2,8 +2,9 @@
 #ifndef CGAL_DDT_CONCEPT_PARTITIONER
 #define CGAL_DDT_CONCEPT_PARTITIONER
 
-#include "TileIndex.h"
-#include "Point.h"
+#include <Concepts/TileIndex.h>
+#include <Concepts/Point.h>
+
 /*!
 \ingroup PkgDDTConcepts
 \cgalConcept
@@ -23,7 +24,7 @@ public:
 #ifdef DOXYGEN_RUNNING
     /// model of `TileIndex`
     typedef unspecified_type Tile_index;
-    /// model of `Point`
+    /// Point type
     typedef unspecified_type Point;
 #else
     typedef ::TileIndex Tile_index;

@@ -41,21 +41,13 @@ The Distributed Delaunay Triangulation (DDT) package, ....
 \cgalClassifedRefPages
 
 \cgalCRPSection{Concepts}
-- `TriangulationTraits`
 - `Scheduler`
 - `Partitioner`
 - `Serializer`
 
 \cgalCRPSection{Classes}
-- `CGAL::DDT::Tile<TriangulationTraits>`
 - `CGAL::DDT::Tile_container<TriangulationTraits,Serializer>`
-- `CGAL::Distributed_Delaunay_triangulation<TileContainer>`
-
-\cgalCRPSection{Traits Classes}
-- `CGAL::DDT::Triangulation_traits_2`
-- `CGAL::DDT::Triangulation_traits_3`
-- `CGAL::DDT::Triangulation_traits_d`
-- `CGAL::DDT::Triangulation_traits`
+- `CGAL::Distributed_triangulation<TileContainer>`
 
 \cgalCRPSection{%Scheduler Classes}
 - `CGAL::DDT::Sequential_scheduler`
@@ -70,9 +62,6 @@ The Distributed Delaunay Triangulation (DDT) package, ....
 - `CGAL::DDT::File_points_serializer`
 - `CGAL::DDT::File_serializer`
 - `CGAL::DDT::No_serializer`
-
-\cgalCRPSection{Functions}
-- \link PkgDDTInsert `CGAL::DDT::insert()` \endlink
 
 */
 

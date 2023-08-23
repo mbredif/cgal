@@ -1,8 +1,15 @@
 #ifndef CGAL_DDT_CONCEPT_TRIANGULATION_TRAITS
 #define CGAL_DDT_CONCEPT_TRIANGULATION_TRAITS
 
-#include "Point.h"
-#include "SimplexIndex.h"
+#include <Concepts/Point.h>
+#include <Concepts/SimplexIndex.h>
+#include <Concepts/Bbox.h>
+#include <Concepts/TileIndex.h>
+#include <Concepts/RandomPointsInBox.h>
+#include <Concepts/RandomPointsInBall.h>
+#include <CGAL/DDT/traits/Triangulation_traits.h>
+#include <vector>
+
 struct VertexIndex : public SimplexIndex {};
 struct FacetIndex: public SimplexIndex {};
 struct CellIndex: public SimplexIndex {};
@@ -20,12 +27,6 @@ The concept `TriangulationTraits` describes the requirements of a traits that ad
 
 */
 
-#include "Bbox.h"
-#include "TileIndex.h"
-#include "RandomPointsInBox.h"
-#include "RandomPointsInBall.h"
-#include <CGAL/DDT/traits/Triangulation_traits.h>
-#include <vector>
 
 namespace CGAL {
 namespace DDT {

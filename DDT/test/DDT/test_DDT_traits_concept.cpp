@@ -1,7 +1,7 @@
 struct Triangulation {};
-#include "../../../DDT/doc/DDT/Concepts/TriangulationTraits.h"
-#include "../../../DDT/doc/DDT/Concepts/Partitioner.h"
-#include "../../../DDT/doc/DDT/Concepts/VertexPropertyMap.h"
+#include <Concepts/TriangulationTraits.h>
+#include <Concepts/Partitioner.h>
+#include <Concepts/VertexPropertyMap.h>
 
 #include "test_traits.h"
 
