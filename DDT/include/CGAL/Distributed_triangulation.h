@@ -678,6 +678,7 @@ public:
                 }
                 *out++ = {key, points};
             }
+            return out;
         });
         int dim = that.maximal_dimension();
         maximal_dimension_ = dim;
@@ -694,8 +695,8 @@ public:
                     hint = tri.insert(p.second, p.first, hint).first;
             Statistics stats = tri.statistics();
             *out++ = { key, std::move(tri) };
-            return stats;
-        });
+            return std::make_pair(stats, out);
+        }).first;
     }
 
     const Statistics& statistics() const { return statistics_; }
