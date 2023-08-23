@@ -541,28 +541,32 @@ public:
     /// triangulation of all inserted points.
     /// The scheduler provides the distribution environment (single thread, multithread, MPI...)
     /// @returns the number of newly inserted vertices
-    template<typename Scheduler, typename TileIndex, typename Point, typename TilePoints>
-    std::size_t insert(Scheduler& sch, CGAL::Distributed_point_set<TileIndex, Point, TilePoints>& point_sets)
+    template<typename TileIndex, typename Point, typename TilePoints, typename Scheduler>
+    std::size_t insert(CGAL::Distributed_point_set<TileIndex, Point, TilePoints>& point_sets, Scheduler& sch)
     {
         typedef CGAL::Distributed_point_set<TileIndex, Point, TilePoints> Distributed_point_set;
-
         std::size_t n = number_of_finite_vertices();
-
+#ifdef CGAL_DEBUG_DDT
         std::cout << std::endl << "---insert_and_send_all_axis_extreme_points---" << std::endl;
+#endif
         Distributed_point_set points;
         CGAL::DDT::impl::insert_and_get_axis_extreme_points(tiles, point_sets, std::back_inserter(points), sch, maximal_dimension());
-
+#ifdef CGAL_DEBUG_DDT
         std::cout << std::endl << "---splay_root_triangulation---" << std::endl;
+#endif
         Tile_triangulation tri(-1, maximal_dimension());
         CGAL::DDT::impl::splay_root_triangulation(tri, point_sets, points);
-
+#ifdef CGAL_DEBUG_DDT
         std::cout << std::endl << "---splay_stars---" << std::endl;
+#endif
         CGAL::DDT::impl::splay_stars(tiles, points, sch, maximal_dimension());
-
+#ifdef CGAL_DEBUG_DDT
         std::cout << std::endl << "---finalize---" << std::endl;
+#endif
         finalize(sch);
-
+#ifdef CGAL_DEBUG_DDT
         std::cout << std::endl << "---inserted---" << std::endl;
+#endif
         return number_of_finite_vertices() - n;
     }
 
@@ -571,8 +575,8 @@ public:
     /// inserts the given point in the tile given by the given id, in the Delaunay triangulation stored in the tile container.
     /// The scheduler provides the distribution environment (single thread, multithread, MPI...)
     /// @returns v a descriptor to the inserted vertex and a bool
-    template<typename Scheduler, typename Point, typename Tile_index>
-    std::pair<Vertex_iterator, bool> insert(Scheduler& sch, const Point& point, Tile_index id)
+    template<typename Point, typename Tile_index, typename Scheduler>
+    std::pair<Vertex_iterator, bool> insert(const Point& point, Tile_index id, Scheduler& sch)
     {
         auto emplaced = tiles.try_emplace(id, id, maximal_dimension());
         // insert the point in its local tile
@@ -610,7 +614,7 @@ public:
                 point_sets[idw].emplace_back(id, point);
         }
 
-        insert(sch, point_sets);
+        insert(point_sets, sch);
         return std::make_pair(res, true);
     }
 
@@ -622,8 +626,9 @@ public:
             [](Tile_index id, const Tile_triangulation& tri) { return tri.statistics();});
     }
 
-    template <typename Scheduler, typename Writer>
-    bool write(Scheduler& sch,  const Writer& writer) {
+    template <typename Writer, typename Scheduler>
+    bool write(const Writer& writer, Scheduler& sch) // TODO: const ?
+    {
         if (!writer.write_begin(*this)) return false;
         if (!sch.transform_reduce(tiles, true, std::logical_and<>(),
             [&writer](Tile_index id, const Tile_triangulation& tri) { return writer.write(tri);}))
@@ -631,8 +636,8 @@ public:
         return writer.write_end(*this);
     }
 
-    template <typename Scheduler, typename Reader>
-    bool read(Scheduler& sch,  const Reader& reader) {
+    template <typename Reader, typename Scheduler>
+    bool read(const Reader& reader, Scheduler& sch) {
         if (!reader.read_begin(*this)) return false;
         if (!sch.transform_reduce(tiles, true, std::logical_and<>(),
             [&reader](Tile_index id, Tile_triangulation& tri) { return reader.read(tri);}))
@@ -640,8 +645,8 @@ public:
         return reader.read_end(*this);
     }
 
-    template <typename Scheduler, typename Reader, typename Writer>
-    bool read_write(Scheduler& sch,  const Reader& reader, const Writer& writer) {
+    template <typename Reader, typename Writer, typename Scheduler>
+    bool read_write(const Reader& reader, const Writer& writer, Scheduler& sch) {
         if (!(reader.read_begin(*this) && writer.write_begin(*this))) return false;
         if (!sch.transform_reduce(tiles, true, std::logical_and<>(),
             [&reader,&writer](Tile_index id, Tile_triangulation& tri) { return reader.read(tri) && writer.write(tri);}))
@@ -649,8 +654,8 @@ public:
         return reader.read_end(*this) && writer.write_end(*this);
     }
 
-    template <typename Scheduler, typename Partitioner, typename DistributedTriangulation>
-    void partition(Scheduler& sch,  const Partitioner& part, const DistributedTriangulation& that) {
+    template <typename DistributedTriangulation, typename Partitioner, typename Scheduler>
+    void partition(const Partitioner& part, const DistributedTriangulation& that, Scheduler& sch) {
         typedef typename Tile_triangulation::Vertex_index Vertex_index;
         typedef std::vector<std::pair<Tile_index, Point>> PointSet;
         typedef std::multimap<Tile_index, PointSet> PointSetContainer;

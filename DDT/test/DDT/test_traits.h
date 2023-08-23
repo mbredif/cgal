@@ -48,7 +48,7 @@ int test_traits(const Partitioner& partitioner, const std::string& testname, int
     Scheduler scheduler;
     Distributed_point_set points(generator, NP, partitioner);
     Distributed_triangulation tri1(dim);
-    tri1.insert(scheduler, points);
+    tri1.insert(points, scheduler);
     if(!tri1.is_valid())
     {
         std::cerr << "tri is not valid" << std::endl;
@@ -64,7 +64,7 @@ int test_traits(const Partitioner& partitioner, const std::string& testname, int
     if (dim == 2)
     {
         std::cout << "== write_vrt == " << testname << "/tri1_*.vrt" << std::endl;
-        result += !tri1.write(scheduler, CGAL::DDT::VRT_serializer(testname + "/tri1"));
+        result += !tri1.write(CGAL::DDT::VRT_serializer(testname + "/tri1"), scheduler);
         if(!is_euler_valid(tri1))
             return 1;
     }
@@ -75,18 +75,18 @@ int test_traits(const Partitioner& partitioner, const std::string& testname, int
         boost::filesystem::create_directories(testname + "/cgal");
         boost::filesystem::create_directories(testname + "/cgal2");
         std::cout << "write..." << std::endl;
-        tri1.write(scheduler, CGAL::DDT::File_serializer(testname + "/cgal"));
+        tri1.write(CGAL::DDT::File_serializer(testname + "/cgal"), scheduler);
 
         Distributed_triangulation tri2(dim);
         std::cout << "read..." << std::endl;
-        tri2.read(scheduler, CGAL::DDT::File_serializer(testname + "/cgal"));
+        tri2.read(CGAL::DDT::File_serializer(testname + "/cgal"), scheduler);
         std::cout << "write again..." << std::endl;
-        tri2.write(scheduler, CGAL::DDT::File_serializer(testname + "/cgal2"));
+        tri2.write(CGAL::DDT::File_serializer(testname + "/cgal2"), scheduler);
 
         if (dim == 2)
         {
-            result += !tri1.write(scheduler, CGAL::DDT::VRT_serializer(testname + "/tri1"));
-            result += !tri2.write(scheduler, CGAL::DDT::VRT_serializer(testname + "/tri2"));
+            result += !tri1.write(CGAL::DDT::VRT_serializer(testname + "/tri1"), scheduler);
+            result += !tri2.write(CGAL::DDT::VRT_serializer(testname + "/tri2"), scheduler);
             if(!is_euler_valid(tri2))
                 result += 1;
         }

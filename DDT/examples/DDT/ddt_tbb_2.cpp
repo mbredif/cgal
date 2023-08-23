@@ -42,15 +42,15 @@ int main(int argc, char **argv)
     CGAL::DDT::File_serializer serializer("tile/");
     Distributed_triangulation tri(2, max_number_of_tiles_in_mem, serializer);
 
-    tri.insert(scheduler, points);
+    tri.insert(points, scheduler);
 
-    tri.write(scheduler, CGAL::DDT::VRT_serializer("out/"));
+    tri.write(CGAL::DDT::VRT_serializer("out/"), scheduler);
 
     CGAL::DDT::File_serializer serializer2("tile2/");
     Distributed_triangulation tri2(3, max_number_of_tiles_in_mem, serializer2);
     CGAL::DDT::Grid_partitioner<Triangulation, TileIndexProperty> partitioner2(bbox, number_of_tiles_per_axis + 1);
-    tri2.partition(scheduler, partitioner2, tri);
-    tri2.write(scheduler, CGAL::DDT::VRT_serializer("out2/"));
+    tri2.partition(partitioner2, tri, scheduler);
+    tri2.write(CGAL::DDT::VRT_serializer("out2/"), scheduler);
 
     return 0;
 }

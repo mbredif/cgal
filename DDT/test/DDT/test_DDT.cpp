@@ -198,33 +198,33 @@ int main(int argc, char **argv)
 
     Distributed_triangulation tri1(N, max_number_of_tiles_in_mem, serializer);
     Distributed_point_set pointset(points, partitioner);
-    tri1.insert(scheduler, pointset);
+    tri1.insert(pointset, scheduler);
     errors += test_DDT(tri1);
 
     Distributed_triangulation tri2(N, max_number_of_tiles_in_mem, serializer);
     for(auto& p : points)
     {
-        auto inserted = tri2.insert(scheduler, p, partitioner(p));
+        auto inserted = tri2.insert(p, partitioner(p), scheduler);
         ddt_assert(inserted.second);
     }
     errors += test_DDT(tri2);
 
     for(auto& p : points)
     {
-        auto inserted = tri1.insert(scheduler, p, partitioner(p));
+        auto inserted = tri1.insert(p, partitioner(p), scheduler);
         ddt_assert(!inserted.second);
     }
     errors += test_DDT(tri1);
 
-    tri1.write(scheduler, CGAL::DDT::VRT_serializer("test_DDT_batch_out"));
-    tri2.write(scheduler, CGAL::DDT::VRT_serializer("test_DDT_incr_out"));
+    tri1.write(CGAL::DDT::VRT_serializer("test_DDT_batch_out"), scheduler);
+    tri2.write(CGAL::DDT::VRT_serializer("test_DDT_incr_out"), scheduler);
 
     int ND2[] = {16 , 16};
     Partitioner partitioner2(bbox, ND2, ND2+N);
     Serializer serializer2("tmp2_");
     Distributed_triangulation tri3(N, max_number_of_tiles_in_mem, serializer2);
-    tri3.partition(scheduler, partitioner2, tri1);
-    tri3.write(scheduler, CGAL::DDT::VRT_serializer("test_DDT_retile_out"));
+    tri3.partition(partitioner2, tri1, scheduler);
+    tri3.write(CGAL::DDT::VRT_serializer("test_DDT_retile_out"), scheduler);
     errors += test_DDT(tri3);
 
     if (errors)
