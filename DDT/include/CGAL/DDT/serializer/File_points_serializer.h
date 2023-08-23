@@ -44,7 +44,7 @@ struct File_points_serializer
 
 
   template <typename TileIndex>
-  bool readable(TileIndex id) const
+  bool is_readable(TileIndex id) const
   {
     const std::string fname = filename(id);
     std::ifstream in(fname, std::ios::in | std::ios::binary);

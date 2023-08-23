@@ -55,7 +55,7 @@ public:
     template<typename Serializer>
     bool load(Serializer& serializer) {
         if(in_mem) return true;
-        if (!serializer.readable(it->first) || serializer.read(it->second)) {
+        if (!serializer.is_readable(it->first) || serializer.read(it->second)) {
             in_mem = true;
             return true;
         }

@@ -50,7 +50,7 @@ public:
     }
 
     template <typename TileIndex>
-    bool readable(TileIndex id) const
+    bool is_readable(TileIndex id) const
     {
         const std::string fname = dirname_ + "/" + std::to_string(id) + ".txt";
         std::ifstream in(fname, std::ios::in);

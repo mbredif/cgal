@@ -15,7 +15,7 @@ class Serializer
 public:
   /// Checks if a tile id is available for deserialization
   template <typename TileIndex>
-  bool readable(TileIndex) const { return false; }
+  bool is_readable(TileIndex) const { return false; }
   /// Deserialize a tile, given its id, overwriting its triangulation on success. Returns whether deserialization succeeded.
   template<typename TileTriangulation> bool read(TileTriangulation&) const { return false; }
   /// Serialize a tile. Returns whether serialization succeeded.
