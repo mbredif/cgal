@@ -55,10 +55,10 @@ int main(int argc, char*argv[])
     Distributed_point_set points(begin, end);
 
     std::cout << "Inserting points using " << max_number_of_tiles << " tiles at most in memory" << std::endl;
-    tri.insert(scheduler, points);
+    tri.insert(points, scheduler);
 
     std::cout << "Writing PVTU to " << out << std::endl;
-    tri.write(scheduler, CGAL::DDT::PVTU_serializer(out));
+    tri.write(CGAL::DDT::PVTU_serializer(out), scheduler);
 
     return EXIT_SUCCESS;
 }

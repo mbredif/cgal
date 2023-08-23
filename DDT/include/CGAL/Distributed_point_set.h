@@ -44,14 +44,14 @@ struct Distributed_point_set {
     iterator begin  () { return point_sets.begin (); }
     iterator end    () { return point_sets.end   (); }
     bool empty() const { return point_sets.empty(); }
-/*
+
     template <typename Iterator>
     Distributed_point_set(Iterator begin, Iterator end, Tile_index id = Tile_index()) {
         for(Iterator it = begin; it != end; ++it, ++id) {
-            point_sets[id].insert(*it);
+            // point_sets[id].insert(*it); // TODO use a tile container with a LAS reader/serializer
         }
     }
-*/
+
     template<typename PointIndexRange>
     Distributed_point_set(const PointIndexRange& range) {
         for (auto& p : range)

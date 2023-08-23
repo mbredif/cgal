@@ -38,9 +38,9 @@ int main(int argc, char **argv)
     Scheduler scheduler;
     Random_points generator(range);
     Distributed_point_set points(generator, number_of_points, partitioner);
-    tri.insert(scheduler, points);
+    tri.insert(points, scheduler);
 
-    tri.write(scheduler, CGAL::DDT::VRT_serializer("out/"));
+    tri.write(CGAL::DDT::VRT_serializer("out/"), scheduler);
 
     return 0;
 }
