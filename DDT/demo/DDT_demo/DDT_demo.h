@@ -112,12 +112,12 @@ int DDT_demo(int argc, char **argv)
   Distributed_point_set points(generator, NP, partitioner);
 
   log.step("insertion       ");
-  std::size_t count = tri.insert(scheduler, points);
+  std::size_t count = tri.insert(points, scheduler);
 
   if ( vm.count("vrt")  )
   {
       log.step("write_vrt       ");
-      tri.write(scheduler, CGAL::DDT::VRT_serializer(vrt));
+      tri.write(CGAL::DDT::VRT_serializer(vrt), scheduler);
   }
 
   if ( vm.count("ply")  )

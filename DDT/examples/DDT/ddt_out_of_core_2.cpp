@@ -1,13 +1,12 @@
-#include <CGAL/DDT/traits/Triangulation_traits_2.h>
+#include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
+#include <CGAL/Triangulation_vertex_base_with_info_2.h>
+#include <CGAL/DDT/Delaunay_triangulation_2.h>
+#include <CGAL/DDT/traits/Vertex_info_property_map.h>
 #include <CGAL/DDT/partitioner/Grid_partitioner.h>
 #include <CGAL/DDT/scheduler/Sequential_scheduler.h>
 #include <CGAL/DDT/serializer/File_points_serializer.h>
-#include <CGAL/Distributed_triangulation.h>
 #include <CGAL/DDT/serializer/VRT_file_serializer.h>
-#include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
-#include <CGAL/Triangulation_vertex_base_with_info_2.h>
-#include <CGAL/DDT/traits/Vertex_info_property_map.h>
-#include <CGAL/Delaunay_triangulation_2.h>
+#include <CGAL/Distributed_triangulation.h>
 
 typedef int Tile_index;
 typedef CGAL::Exact_predicates_inexact_constructions_kernel                  Geom_traits;

@@ -9,30 +9,30 @@
 //
 // Author(s)     : Mathieu Brédif and Laurent Caraffa
 
-#ifndef CGAL_DDT_TRIANGULATION_TRAITS_2_H
-#define CGAL_DDT_TRIANGULATION_TRAITS_2_H
+#ifndef CGAL_DDT_DELAUNAY_TRIANGULATION_3_H
+#define CGAL_DDT_DELAUNAY_TRIANGULATION_3_H
 
 #include <CGAL/DDT/traits/Triangulation_traits.h>
-#include <CGAL/Delaunay_triangulation_2.h>
-#include <CGAL/point_generators_2.h>
-#include <CGAL/Spatial_sort_traits_adapter_2.h>
+#include <CGAL/Delaunay_triangulation_3.h>
+#include <CGAL/point_generators_3.h>
+#include <CGAL/Spatial_sort_traits_adapter_3.h>
 #include <CGAL/spatial_sort.h>
-#include <CGAL/Bbox_2.h>
+#include <CGAL/Bbox_3.h>
 #include <CGAL/DDT/traits/Facet_index.h>
 
 namespace CGAL {
 namespace DDT {
 
 template<typename GT, typename TDS>
-struct Triangulation_traits<CGAL::Delaunay_triangulation_2<GT, TDS>>
+struct Triangulation_traits<CGAL::Delaunay_triangulation_3<GT, TDS>>
 {
-    using Triangulation = CGAL::Delaunay_triangulation_2<GT, TDS>;
-    typedef typename GT::Point_2                            Point;
+    using Triangulation = CGAL::Delaunay_triangulation_3<GT, TDS>;
+    typedef typename GT::Point_3                            Point;
 
     typedef typename TDS::Vertex_iterator                            Vertex_index;
-    typedef typename TDS::Face_iterator                              Cell_index;
+    typedef typename TDS::Cell_iterator                              Cell_index;
 
-    static constexpr int D = 2;
+    static constexpr int D = 3;
     typedef CGAL::DDT::Facet_index<D, Cell_index>                    Facet_index;
 
     static inline Triangulation triangulation(int dim)
@@ -40,7 +40,6 @@ struct Triangulation_traits<CGAL::Delaunay_triangulation_2<GT, TDS>>
         CGAL_assertion(dim==D);
         return Triangulation();
     }
-
     static inline int current_dimension(const Triangulation& tri)
     {
         return tri.dimension();
@@ -51,7 +50,7 @@ struct Triangulation_traits<CGAL::Delaunay_triangulation_2<GT, TDS>>
     }
     static inline std::size_t number_of_cells(const Triangulation& tri)
     {
-        return tri.number_of_faces();
+        return tri.number_of_cells();
     }
     static inline std::size_t number_of_vertices(const Triangulation& tri)
     {
@@ -79,11 +78,11 @@ struct Triangulation_traits<CGAL::Delaunay_triangulation_2<GT, TDS>>
     }
     static inline Cell_index cells_begin(const Triangulation& tri)
     {
-        return tri.all_faces_begin();
+        return tri.all_cells_begin();
     }
     static inline Cell_index cells_end(const Triangulation& tri)
     {
-        return tri.all_faces_end();
+        return tri.all_cells_end();
     }
 
     static inline Vertex_index infinite_vertex(const Triangulation& tri)
@@ -99,52 +98,40 @@ struct Triangulation_traits<CGAL::Delaunay_triangulation_2<GT, TDS>>
     static void spatial_sort(const Triangulation& tri, std::vector<std::size_t>& indices, const std::vector<Point>& points)
     {
         typedef typename Pointer_property_map<Point>::const_type Pmap;
-        typedef Spatial_sort_traits_adapter_2<GT,Pmap> Search_traits;
+        typedef Spatial_sort_traits_adapter_3<GT,Pmap> Search_traits;
         CGAL::spatial_sort(indices.begin(), indices.end(), Search_traits(make_property_map(points), tri.geom_traits()));
     }
 
     template<typename OutputIterator>
     static OutputIterator incident_cells(const Triangulation& tri, Vertex_index v, OutputIterator out)
     {
-        typename TDS::Face_circulator c = tri.incident_faces(v), done = c;
-        if ( ! c.is_empty()) {
-          do {
-              *out++ = c;
-          } while (++c != done);
-        }
-        return out;
+        return tri.incident_cells(v, out);
     }
 
     template<typename OutputIterator>
     static OutputIterator adjacent_vertices(const Triangulation& tri, Vertex_index v, OutputIterator out)
     {
-        typename TDS::Vertex_circulator c = tri.incident_vertices(v), done = c;
-        if ( ! c.is_empty()) {
-          do {
-            *out++ = c;
-          } while (++c != done);
-        }
-        return out;
+        return tri.adjacent_vertices(v, out);
     }
 
     static Vertex_index locate_vertex(const Triangulation& tri, const Point& p, Vertex_index hint = Vertex_index())
     {
         typename Triangulation::Locate_type  lt;
-        int li;
-        Cell_index c = tri.locate(p, lt, li, hint == Vertex_index() ? Cell_index() : hint->face());
+        int li, lj;
+        Cell_index c = tri.locate(p, lt, li, lj, hint);
         return (lt==Triangulation::VERTEX) ? vertex(tri, c, li) : vertices_end(tri);
     }
 
     static std::pair<Vertex_index, bool> insert(Triangulation& tri, const Point& p, Vertex_index hint = Vertex_index())
     {
         typename Triangulation::Locate_type lt;
-        int li;
-        Cell_index c = tri.locate(p, lt, li, hint == Vertex_index() ? Cell_index() : hint->face());
+        int li, lj;
+        Cell_index c = tri.locate(p, lt, li, lj, hint);
         if(lt == Triangulation::VERTEX) {
             Vertex_index v = c->vertex(li);
             return std::make_pair(v, false);
         }
-        Vertex_index v = tri.insert(p, lt, c, li);
+        Vertex_index v = tri.insert(p, lt, c, li, lj);
         return std::make_pair(v, true);
     }
 
@@ -263,7 +250,7 @@ struct Triangulation_traits<CGAL::Delaunay_triangulation_2<GT, TDS>>
     {
         Cell_index c = f.cell();
         Cell_index n = c->neighbor(f.index_of_covertex());
-        return vertex(tri, n, n->index(c));
+        return vertex(tri, n, mirror_index(tri, c, f.index_of_covertex()));
     }
 
     static inline Cell_index cell(const Triangulation& tri, Facet_index f)
@@ -273,14 +260,14 @@ struct Triangulation_traits<CGAL::Delaunay_triangulation_2<GT, TDS>>
 
     static inline Cell_index cell(const Triangulation& tri, Vertex_index v)
     {
-        return v->face();
+        return v->cell();
     }
 
     static Facet_index mirror_facet(const Triangulation& tri, Facet_index f)
     {
         Cell_index c = f.cell();
         Cell_index n = c->neighbor(f.index_of_covertex());
-        return facet(tri, n, n->index(c));
+        return facet(tri, n, tri.mirror_index(c, f.index_of_covertex()));
     }
 
     static inline int mirror_index(const Triangulation& tri, Facet_index f)
@@ -290,7 +277,7 @@ struct Triangulation_traits<CGAL::Delaunay_triangulation_2<GT, TDS>>
 
     static inline int mirror_index(const Triangulation& tri, Cell_index c, int i)
     {
-        return c->neighbor(i)->index(c);
+        return tri.mirror_index(c, i);
     }
 
     static inline Cell_index neighbor(const Triangulation& tri, Cell_index c, int i)
@@ -315,15 +302,16 @@ struct Triangulation_traits<CGAL::Delaunay_triangulation_2<GT, TDS>>
     static inline std::ostream& write(std::ostream& out, const Triangulation& tri) { return out << tri; }
     static inline std::istream& read(std::istream& in, Triangulation& tri) { return in >> tri; }
 
-    typedef CGAL::Bbox_2 Bbox;
+    /// Bbox type
+    typedef CGAL::Bbox_3 Bbox;
 
     static inline Bbox bbox(const Point& p) {
-        return Bbox(p.x(), p.y(), p.x(), p.y());
+        return Bbox(p.x(), p.y(), p.z(), p.x(), p.y(), p.z());
     }
 
     static inline Bbox bbox(int dim, double range) {
       CGAL_assertion(dim==D);
-      return Bbox(-range, -range, range, range);
+      return Bbox(-range, -range, -range, range, range, range);
     }
 
     static inline Bbox bbox(int dim) {
@@ -331,15 +319,15 @@ struct Triangulation_traits<CGAL::Delaunay_triangulation_2<GT, TDS>>
       return Bbox();
     }
 
-    typedef CGAL::Random_points_in_disc_2<Point>                     Random_points_in_ball;
+    typedef CGAL::Random_points_in_sphere_3<Point>                   Random_points_in_ball;
 
-    struct Random_points_in_box : CGAL::Random_points_in_square_2<Point>
+    struct Random_points_in_box : CGAL::Random_points_in_cube_3<Point>
     {
-        Random_points_in_box(int dim, double g) : CGAL::Random_points_in_square_2<Point>(g)
+        Random_points_in_box(int dim, double g) : CGAL::Random_points_in_cube_3<Point>(g)
         {
             CGAL_assertion(dim==D);
         }
-        Random_points_in_box(double g) : CGAL::Random_points_in_square_2<Point>(g) {}
+        Random_points_in_box(double g) : CGAL::Random_points_in_cube_3<Point>(g) {}
     };
 
 };
@@ -347,4 +335,4 @@ struct Triangulation_traits<CGAL::Delaunay_triangulation_2<GT, TDS>>
 }
 }
 
-#endif // CGAL_DDT_TRIANGULATION_TRAITS_2_H
+#endif // CGAL_DDT_DELAUNAY_TRIANGULATION_3_H

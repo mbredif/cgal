@@ -9,8 +9,8 @@
 //
 // Author(s)     : Mathieu Brédif and Laurent Caraffa
 
-#ifndef CGAL_DDT_TRIANGULATION_TRAITS_D_H
-#define CGAL_DDT_TRIANGULATION_TRAITS_D_H
+#ifndef CGAL_DDT_DELAUNAY_TRIANGULATION_D_H
+#define CGAL_DDT_DELAUNAY_TRIANGULATION_D_H
 
 #include <CGAL/DDT/traits/Triangulation_traits.h>
 #include <CGAL/Delaunay_triangulation.h>
@@ -377,4 +377,4 @@ public:
 }
 }
 
-#endif // CGAL_DDT_TRIANGULATION_TRAITS_D_H
+#endif // CGAL_DDT_DELAUNAY_TRIANGULATION_D_H

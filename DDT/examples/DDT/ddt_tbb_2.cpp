@@ -1,21 +1,20 @@
-#include <CGAL/DDT/traits/Triangulation_traits_2.h>
+#include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
+#include <CGAL/Triangulation_vertex_base_with_info_2.h>
+#include <CGAL/DDT/Delaunay_triangulation_2.h>
+#include <CGAL/DDT/traits/Vertex_info_property_map.h>
 #include <CGAL/DDT/partitioner/Grid_partitioner.h>
 #include <CGAL/DDT/scheduler/TBB_scheduler.h>
 #include <CGAL/DDT/serializer/File_serializer.h>
 #include <CGAL/DDT/serializer/VRT_file_serializer.h>
 #include <CGAL/Distributed_triangulation.h>
-#include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
-#include <CGAL/Triangulation_vertex_base_with_info_2.h>
-#include <CGAL/DDT/traits/Vertex_info_property_map.h>
-#include <CGAL/Delaunay_triangulation_2.h>
 
 typedef int Tile_index;
 typedef CGAL::Exact_predicates_inexact_constructions_kernel                  Geom_traits;
 typedef CGAL::Triangulation_vertex_base_with_info_2<Tile_index, Geom_traits> Vb;
 typedef CGAL::Triangulation_data_structure_2<Vb>                             TDS;
 typedef CGAL::Delaunay_triangulation_2<Geom_traits, TDS>                     Triangulation;
-typedef CGAL::DDT::Vertex_info_property_map<Triangulation>                   TileIndexProperty;
 typedef typename Triangulation::Point_2                                      Point;
+typedef CGAL::DDT::Vertex_info_property_map<Triangulation>                   TileIndexProperty;
 
 typedef CGAL::Random_points_in_square_2<typename Triangulation::Point>       Random_points;
 typedef CGAL::DDT::TBB_scheduler                                             Scheduler;

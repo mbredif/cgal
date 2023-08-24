@@ -1,7 +1,6 @@
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
 #include <CGAL/Triangulation_vertex_base_with_info_2.h>
-#include <CGAL/Delaunay_triangulation_2.h>
-#include <CGAL/DDT/traits/Triangulation_traits_2.h>
+#include <CGAL/DDT/Delaunay_triangulation_2.h>
 #include <CGAL/DDT/traits/Vertex_info_property_map.h>
 #include <CGAL/DDT/serializer/File_points_serializer.h>
 
@@ -17,12 +16,6 @@ typedef CGAL::Bbox_2 Bbox;
 
 #include <CGAL/DDT/scheduler/Sequential_scheduler.h>
 typedef CGAL::DDT::Sequential_scheduler Scheduler;
-//#include <CGAL/DDT/scheduler/Multithread_scheduler.h>
-//typedef CGAL::DDT::Multithread_scheduler Scheduler;
-//#include <CGAL/DDT/scheduler/TBB_scheduler.h>
-//typedef CGAL::DDT::TBB_scheduler Scheduler;
-//#include <CGAL/DDT/scheduler/MPI_scheduler.h>
-//typedef CGAL::DDT::MPI_scheduler Scheduler;
 
 #include <CGAL/DDT/partitioner/Grid_partitioner.h>
 typedef CGAL::DDT::Grid_partitioner<Triangulation, TileIndexProperty> Partitioner;

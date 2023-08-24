@@ -1,7 +1,6 @@
 #include <CGAL/Epick_d.h>
 #include <CGAL/Triangulation_ds_vertex.h>
-#include <CGAL/Delaunay_triangulation.h>
-#include <CGAL/DDT/traits/Triangulation_traits_d.h>
+#include <CGAL/DDT/Delaunay_triangulation.h>
 #include <CGAL/DDT/traits/Vertex_data_property_map.h>
 
 typedef int                                                       Tile_index;

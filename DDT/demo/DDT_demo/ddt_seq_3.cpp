@@ -1,6 +1,6 @@
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
 #include <CGAL/Triangulation_vertex_base_with_info_3.h>
-#include <CGAL/DDT/traits/Triangulation_traits_3.h>
+#include <CGAL/DDT/Delaunay_triangulation_3.h>
 #include <CGAL/DDT/traits/Vertex_info_property_map.h>
 #include <CGAL/DDT/partitioner/Grid_partitioner.h>
 #include <CGAL/DDT/scheduler/Sequential_scheduler.h>
