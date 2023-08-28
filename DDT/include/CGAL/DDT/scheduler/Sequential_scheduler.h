@@ -27,7 +27,8 @@ struct Sequential_scheduler
 
     inline int max_concurrency() const { return 1; }
 
-    template<typename Container,
+    template<typename OutputValue,
+             typename Container,
              typename OutputIterator,
              typename Transform>
     OutputIterator flat_map(Container& c, OutputIterator out, Transform transform)
@@ -37,7 +38,8 @@ struct Sequential_scheduler
         return out;
     }
 
-    template<typename Container,
+    template<typename OutputValue,
+             typename Container,
              typename OutputIterator,
              typename V,
              typename Reduce,
@@ -66,16 +68,13 @@ struct Sequential_scheduler
             value = reduce(value, transform(it->first, it->second));
         return value;
     }
-
     template<typename Container1,
              typename Container2,
              typename OutputIterator,
-             typename V,
-             typename Reduce,
              typename Transform,
              typename... Args>
-    std::pair<V,OutputIterator>
-    join_transform_reduce(Container1& c1, Container2& c2, OutputIterator out, V value, Reduce reduce, Transform transform, Args&&... args)
+    OutputIterator
+    join_transform_reduce(Container1& c1, Container2& c2, OutputIterator out, Transform transform, Args&&... args)
     {
         typedef typename Container1::iterator iterator1;
         typedef typename Container2::iterator iterator2;
@@ -85,21 +84,17 @@ struct Sequential_scheduler
             iterator1 it1 = c1.emplace(std::piecewise_construct,
                 std::forward_as_tuple(k),
                 std::forward_as_tuple(k, std::forward<Args>(args)...)).first;
-            auto res = transform(k, it1->second, it2->second, out);
-            out = res.second;
-            value = reduce(value, res.first);
+            out = transform(k, it1->second, it2->second, out);
         }
-        return { value, out };
+        return out;
     }
 
     template<typename Container1,
              typename Container2,
              typename OutputIterator2,
-             typename V,
-             typename Reduce,
              typename Transform,
              typename... Args>
-    V join_transform_reduce_loop(Container1& c1, Container2& c2, OutputIterator2 out2, V value, Reduce reduce, Transform transform, Args&&... args)
+    void join_transform_reduce_loop(Container1& c1, Container2& c2, OutputIterator2 out2, Transform transform, Args&&... args)
     {
         typedef typename Container1::iterator iterator1;
         typedef typename Container2::iterator iterator2;
@@ -110,12 +105,9 @@ struct Sequential_scheduler
             iterator1 it1 = c1.emplace(std::piecewise_construct,
                 std::forward_as_tuple(k),
                 std::forward_as_tuple(k, std::forward<Args>(args)...)).first;
-            auto res = transform(k, it1->second, it2->second, out2);
-            value = reduce(value, res.first);
-            out2 = res.second;
+            out2 = transform(k, it1->second, it2->second, out2);
             c2.erase(it2);
         }
-        return value;
     }
 };
 

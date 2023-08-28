@@ -74,11 +74,11 @@ struct TBB_scheduler
                 {
                     auto it = c.find(k);
                     std::vector<std::pair<key_type,OutputValue>> tmp;
-                    CGAL_DDT_TRACE1_LOCK("PERF", "transform", 0, "B", k, k);
+                    CGAL_DDT_TRACE1_LOCK("PERF", "transform", 0, "B", k, to_string(k));
                     transform(it->first, it->second, std::back_inserter(tmp));
                     std::unique_lock<std::mutex> lock(mutex);
                     CGAL_DDT_TRACE0("PERF", "transform", 0, "E");
-                    CGAL_DDT_TRACE1("LOCK", "mutex", "bad", "B", k, k);
+                    CGAL_DDT_TRACE1("LOCK", "mutex", "bad", "B", k, to_string(k));
                     out = std::move(tmp.begin(), tmp.end(), out);
                     CGAL_DDT_TRACE0("LOCK", "mutex", "bad", "E");
                 }
@@ -115,12 +115,12 @@ struct TBB_scheduler
                         key_type k = keys[i];
                         auto range = c.equal_range(k);
                         std::vector<std::pair<key_type,OutputValue>> tmp;
-                        CGAL_DDT_TRACE1_LOCK("PERF", "transform", 0, "B", k, k);
+                        CGAL_DDT_TRACE1_LOCK("PERF", "transform", 0, "B", k, to_string(k));
                         auto res = transform(range, std::back_inserter(tmp));
                         val = reduce(val, res.first);
                         std::unique_lock<std::mutex> lock(mutex);
                         CGAL_DDT_TRACE1("PERF", "transform", 0, "E", value, res.first);
-                        CGAL_DDT_TRACE1("LOCK", "mutex", "bad", "B", k, k);
+                        CGAL_DDT_TRACE1("LOCK", "mutex", "bad", "B", k, to_string(k));
                         out = std::move(tmp.begin(), tmp.end(), out);
                         CGAL_DDT_TRACE0("LOCK", "mutex", "bad", "E");
                     }
@@ -156,7 +156,7 @@ struct TBB_scheduler
                     for (int i=r.begin(); i<r.end(); ++i) {
                         key_type k = keys[i];
                         auto it = c.find(k);
-                        CGAL_DDT_TRACE1_LOCK("PERF", "transform", 0, "B", k, k);
+                        CGAL_DDT_TRACE1_LOCK("PERF", "transform", 0, "B", k, to_string(k));
                         V v = transform(it->first, it->second);
                         CGAL_DDT_TRACE1_LOCK("PERF", "transform", 0, "E", value, v);
                         val = reduce(val, v);
@@ -193,13 +193,13 @@ struct TBB_scheduler
                     for (int i=r.begin(); i<r.end(); ++i)
                     {
                         key_type k = keys[i];
-                        CGAL_DDT_TRACE1("LOCK", "mutex", "bad", "B", k, k);
+                        CGAL_DDT_TRACE1("LOCK", "mutex", "bad", "B", k, to_string(k));
                         typename Container1::iterator it1 = c1.emplace(std::piecewise_construct,
                             std::forward_as_tuple(k),
                             std::forward_as_tuple(k, std::forward<Args>(args)...)).first;
                         typename Container2::iterator it2 = c2.find(k);
                         CGAL_DDT_TRACE0("LOCK", "mutex", "bad", "E");
-                        CGAL_DDT_TRACE1("PERF", "transform", 0, "B", k, k);
+                        CGAL_DDT_TRACE1("PERF", "transform", 0, "B", k, to_string(k));
                         lock.unlock();
 
                         std::vector<typename Container2::value_type> c3;
@@ -207,7 +207,7 @@ struct TBB_scheduler
 
                         lock.lock();
                         CGAL_DDT_TRACE0("PERF", "transform", 0, "E");
-                        CGAL_DDT_TRACE1("LOCK", "mutex", "bad", "B", k, k);
+                        CGAL_DDT_TRACE1("LOCK", "mutex", "bad", "B", k, to_string(k));
                         out = std::move(c3.begin(), c3.end(), out);
                         CGAL_DDT_TRACE0("LOCK", "mutex", "bad", "E");
                     }
@@ -238,8 +238,8 @@ struct TBB_scheduler
         arena.execute([&, &c1, &c2, &out2, &transform, &args..., &keys]{
             tbb::parallel_for_each(keys, [&, &c1, &c2, &out2, &transform, &args..., &keys](key_type k, tbb::feeder<key_type>& feeder){
                 std::unique_lock<std::mutex> lock(mutex);
-                CGAL_DDT_TRACE1("PERF", "item", "generic_work", "B", k, k);
-                CGAL_DDT_TRACE1("LOCK", "mutex", "bad", "B", k, k);
+                CGAL_DDT_TRACE1("PERF", "item", "generic_work", "B", k, to_string(k));
+                CGAL_DDT_TRACE1("LOCK", "mutex", "bad", "B", k, to_string(k));
                 typename Container1::iterator it1 = c1.emplace(std::piecewise_construct,
                             std::forward_as_tuple(k),
                             std::forward_as_tuple(k, std::forward<Args>(args)...)).first;
@@ -253,7 +253,7 @@ struct TBB_scheduler
                     std::swap(it2->second, v2);
                     c2.erase(it2);
                     CGAL_DDT_TRACE0("LOCK", "mutex", "bad", "E");
-                    CGAL_DDT_TRACE1("PERF", "transform", 0, "B", k, k);
+                    CGAL_DDT_TRACE1("PERF", "transform", 0, "B", k, to_string(k));
                     lock.unlock();
 
                     std::vector<value_type2> c3;
@@ -261,7 +261,7 @@ struct TBB_scheduler
 
                     lock.lock();
                     CGAL_DDT_TRACE0("PERF", "transform", 0, "E");
-                    CGAL_DDT_TRACE1("LOCK", "mutex", "bad", "B", k, k);
+                    CGAL_DDT_TRACE1("LOCK", "mutex", "bad", "B", k, to_string(k));
                     for (const auto& kv : c3)
                     {
                         key_type k3 = kv.first;
