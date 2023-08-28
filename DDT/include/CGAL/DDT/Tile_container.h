@@ -109,6 +109,7 @@ public:
                 }
 */
 
+#ifdef CGAL_DDT_TILE_CONTAINER_VERBOSE
     std::ostream& write(std::ostream& out, key_type green_key, key_type red_key) const {
         for(const auto& [k, u] : usages) {
             if(u.use_count      ) out << "\x1b[1m\x1b[4m"  ; // bold, underscore
@@ -120,18 +121,23 @@ public:
         out << std::setfill(' ') << " (" << number_of_values_mem_ << " in mem)";
         return out;
     }
+#endif
 
     // load a tile to memory, automatically saving it.
     bool prepare_load(Usage& usage) const {
         key_type key = usage->first;
         if(usage.in_mem) {
+#ifdef CGAL_DDT_TILE_CONTAINER_VERBOSE
             write(std::cout << std::endl << "in mem ", key, key);
+#endif
             return true;
         }
 
         if (number_of_values_mem_ < number_of_values_mem_max_) {
             ++number_of_values_mem_;
+#ifdef CGAL_DDT_TILE_CONTAINER_VERBOSE
             write(std::cout << std::endl << "       ", key, key);
+#endif
             return true;
         }
 
@@ -143,7 +149,9 @@ public:
                 if(u.in_mem) {
                     if (n == 0) {
                         if (u.use_count==0 && u.unload(serializer_)) {
+#ifdef CGAL_DDT_TILE_CONTAINER_VERBOSE
                             write(std::cout << std::endl << "unload ", key, k);
+#endif
                             return true;
                         }
                         break;
@@ -153,7 +161,9 @@ public:
             }
         }
 
+#ifdef CGAL_DDT_TILE_CONTAINER_VERBOSE
 		write(std::cout << std::endl << "failed ", key, key) << std::endl;
+#endif
 		return false;
 	}
 

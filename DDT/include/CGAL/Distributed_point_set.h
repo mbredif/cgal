@@ -31,6 +31,8 @@ struct Distributed_point_set {
     typedef typename Container::mapped_type mapped_type;
     typedef typename Container::reference reference;
     typedef typename Container::key_type key_type;
+    typedef typename Container::const_iterator const_iterator;
+    typedef typename Container::node_type node_type;
 
     Distributed_point_set() {}
 

@@ -17,6 +17,9 @@
 namespace CGAL {
 namespace DDT {
 
+struct File_points_serializer;
+std::ostream& operator<<(std::ostream& out, const File_points_serializer& serializer);
+
 /// \ingroup PkgDDTSerializerClasses
 /// This serializer saves and loads the point set of each tile to the filesystem.
 /// It contains the iostream serialization of the point set of the tile triangulation.
@@ -99,7 +102,7 @@ struct File_points_serializer
     }
     tri.spatial_sort(indices, points);
     for (std::size_t index : indices)
-      out << points[index] << " " << tri.vertex_id(vertices[index]) << "\n";
+      out << points[index] << " " << std::to_string(tri.vertex_id(vertices[index])) << "\n";
     return !out.fail();
   }
 

@@ -52,6 +52,22 @@ struct Statistics {
     }
 };
 
+std::ostream& operator<<(std::ostream& out, const Statistics& stats)
+{
+    return out << "{ \"finite_vertices\": " << stats.number_of_finite_vertices
+        << ", \"finite_facets\": " << stats.number_of_finite_facets
+        << ", \"finite_cells\": " << stats.number_of_finite_cells
+        << ", \"facets\": " << stats.number_of_facets
+        << ", \"cells\": " << stats.number_of_cells
+        << " }";
+}
+
+std::string to_string(const Statistics& stats) {
+    std::ostringstream oss;
+    oss << stats;
+    return oss.str();
+}
+
 // \tparam T is a model of the Triangulation concept
 // \tparam Selector is a template for a model of the Selector concept (defaults to Median_selector)
 // The Tile_triangulation stores a local Delaunay triangulation.
