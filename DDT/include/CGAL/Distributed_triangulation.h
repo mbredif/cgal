@@ -584,7 +584,10 @@ public:
         std::pair<Tile_vertex_index, bool> p = tri.insert(point, id);
         Tile_vertex_index v = p.first;
         Vertex_iterator res(&tiles, tile, v);
-        if (!p.second) return std::make_pair(res, false);
+        if (!p.second) {
+            CGAL_DDT_TRACE1(sch, "DDT", "insert1", 0, "E", new, 0);
+            return std::make_pair(res, false);
+        }
 
         CGAL::Distributed_point_set<Tile_index, Point> point_sets;
 
@@ -613,7 +616,7 @@ public:
         }
 
         insert(point_sets, sch);
-        CGAL_DDT_TRACE0(sch, "DDT", "insert1", 0, "E");
+        CGAL_DDT_TRACE1(sch, "DDT", "insert1", 0, "E", new, 1);
         return std::make_pair(res, true);
     }
 

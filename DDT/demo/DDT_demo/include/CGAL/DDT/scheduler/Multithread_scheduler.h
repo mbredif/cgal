@@ -14,40 +14,12 @@
 
 #include <CGAL/DDT/scheduler/multithread_scheduler/thread_pool.h>
 #include <functional>
+#include <chrono>
+
+#include <CGAL/DDT/IO/trace_logger.h>
 
 namespace CGAL {
 namespace DDT {
-
-namespace Impl {
-
-template< typename Container, typename Transform, typename V, typename Key>
-V transform_id(Container& c, V value, Transform transform, Key k, std::mutex& mutex)
-{
-    std::unique_lock<std::mutex> lock(mutex);
-    typename Container::iterator it = c.find(k);
-    lock.unlock();
-
-    return transform(k, it->second);
-}
-
-
-template< typename Container1, typename Container2, typename Transform, typename V, typename Key, typename... Args>
-V transform_zip_id(Container1& c1, Container2& c2, V value, Transform transform, Key k, std::mutex& mutex, Args&&... args)
-{
-    std::unique_lock<std::mutex> lock(mutex);
-    typename Container1::iterator it1 = c1.try_emplace(k, k, std::forward<Args>(args)...).first;
-    typename Container2::iterator it2 = c2.find(k);
-    lock.unlock();
-
-    value = transform(k, it1->second, it2->second);
-
-    lock.lock();
-    c2.send_points(k);
-
-    return value;
-}
-
-}
 
 // \ingroup PkgDDTSchedulerClasses
 // \cgalModels Scheduler
@@ -58,135 +30,237 @@ struct Multithread_scheduler
     {
         pool.init();
     }
+
     template<class Duration>
     Multithread_scheduler(int max_concurrency, Duration timeout) : pool(max_concurrency), timeout_(timeout)
     {
         pool.init();
     }
-    inline int max_concurrency() const
-    {
-        return pool.max_concurrency();
-    }
+
     ~Multithread_scheduler()
     {
         pool.shutdown();
     }
 
-    template<typename Container,
-             typename Iterator,
-             typename Transform>
-    void flat_map(Container& c, Iterator out, Transform transform)
+    inline int max_concurrency() const
     {
-        using value_type = typename Iterator::container_type::value_type;
-        using key_type   = typename Container::key_type;
+        return pool.max_concurrency();
+    }
+
+    template<typename Container, typename Key>
+    void get_unique_keys(Container& c, std::vector<Key>& keys) const { // TODO const Container&
+        for(const auto& [k,v] : c)
+            keys.push_back(k);
+        keys.erase(std::unique(keys.begin(), keys.end()), keys.end());
+    }
+
+    template<typename Container, typename Key>
+    void get_unique_keys(Container& c, std::set<Key>& keys) const { // TODO const Container&
+        for(const auto& [k,v] : c)
+            keys.insert(k);
+    }
+
+    template<typename OutputValue,
+             typename Container,
+             typename Transform,
+             typename OutputIterator>
+    OutputIterator for_each(Container& c, Transform transform, OutputIterator out)
+    {
+        CGAL_DDT_TRACE0(*this, "PERF", "for_each", "generic_work", "B");
+        typedef typename Container::key_type key_type;
+        std::vector<key_type> keys;
+        get_unique_keys(c, keys);
+
         std::vector<std::future<void>> futures;
         {
             std::unique_lock<std::mutex> lock(mutex);
-            for(const auto& [k, _] : c)
-                futures.push_back(pool.submit([this, &c, &out, &transform](key_type k){
-                    std::vector<value_type> tmp;
+            for(key_type k : keys)
+                futures.push_back(pool.submit([this, &c, &out, &transform](key_type k) {
+                    auto range = c.equal_range(k);
+                    std::vector<OutputValue> output;
+                    CGAL_DDT_TRACE1_LOCK(*this, "PERF", "transform", 0, "B", k, to_string(k));
+                    transform(range.first, range.second, std::back_inserter(output));
                     std::unique_lock<std::mutex> lock(mutex);
-                    auto it = c.find(k);
-                    lock.unlock();
-                    transform(k, it->second, std::back_inserter(tmp));
-                    lock.lock();
-                    std::move(tmp.begin(), tmp.end(), out);
+                    CGAL_DDT_TRACE1(*this, "PERF", "transform", 0, "E", sizes, to_summary(output.begin(), output.end()));
+                    CGAL_DDT_TRACE1(*this, "LOCK", "mutex", "bad", "B", k, to_string(k));
+                    out = std::move(output.begin(), output.end(), out);
+                    CGAL_DDT_TRACE0(*this, "LOCK", "mutex", "bad", "E");
                 }, k));
         }
         for(auto& f: futures) f.get();
+        CGAL_DDT_TRACE0(*this, "PERF", "for_each", "generic_work", "E");
+        return out;
+    }
+
+    template<typename OutputValue,
+             typename Container,
+             typename Transform,
+             typename V,
+             typename Reduce,
+             typename OutputIterator>
+    std::pair<V,OutputIterator>
+    for_each(Container& c, Transform transform, V value, Reduce reduce, OutputIterator out)
+    {
+        CGAL_DDT_TRACE0(*this, "PERF", "for_each", "generic_work", "B");
+        typedef typename Container::key_type key_type;
+        std::vector<key_type> keys;
+        get_unique_keys(c, keys);
+
+        std::vector<std::future<V>> futures;
+        {
+            std::unique_lock<std::mutex> lock(mutex);
+            for(key_type k : keys)
+                futures.push_back(pool.submit([this, &c, &transform, &out](key_type k) {
+                    auto range = c.equal_range(k);
+                    std::vector<OutputValue> output;
+                    CGAL_DDT_TRACE1_LOCK(*this, "PERF", "transform", 0, "B", k, to_string(k));
+                    auto res = transform(range.first, range.second, std::back_inserter(output));
+                    std::unique_lock<std::mutex> lock(mutex);
+                    CGAL_DDT_TRACE2(*this, "PERF", "transform", 0, "E", value, res.first, sizes, to_summary(output.begin(), output.end()));
+                    CGAL_DDT_TRACE1(*this, "LOCK", "mutex", "bad", "B", k, to_string(k));
+                    out = std::move(output.begin(), output.end(), out);
+                    CGAL_DDT_TRACE0(*this, "LOCK", "mutex", "bad", "E");
+                    return res.first;
+                }, k));
+        }
+        for(auto& f: futures) value = reduce(value, f.get());
+
+        CGAL_DDT_TRACE1(*this, "PERF", "for_each", "generic_work", "E", value, value);
+        return { value, out };
     }
 
     template<typename Container,
-             typename Iterator,
              typename Transform,
              typename V,
-             typename Reduce = std::plus<>>
-    V reduce_by_key(Container& c, Iterator out, V init, Transform transform, Reduce reduce = {})
+             typename Reduce>
+    V for_each(Container& c, Transform transform, V value, Reduce reduce)
     {
-        using value_type = typename Iterator::container_type::value_type;
+        CGAL_DDT_TRACE0(*this, "PERF", "for_each", "generic_work", "B");
         typedef typename Container::key_type key_type;
+        std::vector<key_type> keys;
+        get_unique_keys(c, keys);
+
         std::vector<std::future<V>> futures;
-        for(auto it = c.begin(); it != c.end();)
         {
-            auto range = c.equal_range(it->first);
-            futures.push_back(pool.submit([this, &c, &out, &init, &transform](key_type k){
-                std::vector<value_type> tmp;
-                std::unique_lock<std::mutex> lock(mutex);
-                auto range = c.equal_range(k);
+            std::unique_lock<std::mutex> lock(mutex);
+            for(key_type k : keys)
+                futures.push_back(pool.submit([this, &c, &transform](key_type k){
+                    auto range = c.equal_range(k);
+                    CGAL_DDT_TRACE1_LOCK(*this, "PERF", "transform", 0, "B", k, to_string(k));
+                    V val = transform(range.first, range.second);
+                    CGAL_DDT_TRACE1_LOCK(*this, "PERF", "transform", 0, "E", value, val);
+                    return val;
+                }, k));
+        }
+        for(auto& f: futures) value = reduce(value, f.get());
+
+        CGAL_DDT_TRACE1(*this, "PERF", "for_each", "generic_work", "E", value, value);
+        return value;
+    }
+
+    template<typename OutputValue,
+             typename Container1,
+             typename Container2,
+             typename Transform,
+             typename OutputIterator,
+             typename... Args2>
+    OutputIterator
+    left_join(Container1& c1, Container2& c2, Transform transform, OutputIterator out, Args2&&... args2)
+    {
+        CGAL_DDT_TRACE0(*this, "PERF", "left_join", "generic_work", "B");
+        typedef typename Container1::key_type key_type;
+        std::vector<key_type> keys;
+        get_unique_keys(c1, keys);
+
+        std::vector<std::future<void>> futures;
+        {
+            std::unique_lock<std::mutex> lock(mutex);
+            for(key_type k : keys)
+                futures.push_back(pool.submit([this, &c1, &c2, &transform, &out, &args2...](key_type k){
+                    std::unique_lock<std::mutex> lock(mutex);
+                    CGAL_DDT_TRACE1(*this, "LOCK", "mutex", "bad", "B", k, to_string(k));
+                    typename Container2::iterator it2 = c2.emplace(std::piecewise_construct,
+                        std::forward_as_tuple(k),
+                        std::forward_as_tuple(k, std::forward<Args2>(args2)...)).first;
+                    auto range1 = c1.equal_range(k);
+                    CGAL_DDT_TRACE0(*this, "LOCK", "mutex", "bad", "E");
+                    CGAL_DDT_TRACE2(*this, "PERF", "transform", 0, "B", k, to_string(k), in, to_summary(range1.first, range1.second));
+                    lock.unlock();
+
+                    std::vector<OutputValue> output;
+                    transform(range1.first, range1.second, it2->second, std::back_inserter(output));
+
+                    lock.lock();
+                    CGAL_DDT_TRACE2(*this, "PERF", "transform", 0, "E", inout, to_summary(range1.first, range1.second), out, to_summary(output.begin(), output.end()));
+                    CGAL_DDT_TRACE1(*this, "LOCK", "mutex", "bad", "B", k, to_string(k));
+                    out = std::move(output.begin(), output.end(), out);
+                    CGAL_DDT_TRACE0(*this, "LOCK", "mutex", "bad", "E");
+                }, k));
+        }
+        for(auto& f: futures) f.get();
+        CGAL_DDT_TRACE0(*this, "PERF", "left_join", "generic_work", "E");
+        return out;
+    }
+
+    template<typename Container1,
+             typename Container2,
+             typename Transform,
+             typename OutputIterator1,
+             typename... Args2>
+    void left_join_loop(Container1& c1, Container2& c2, Transform transform, OutputIterator1 out1, Args2&&... args2)
+    {
+        CGAL_DDT_TRACE0(*this, "PERF", "left_join_loop", "generic_work", "B");
+        typedef typename Container1::key_type    key_type;
+        typedef typename Container1::value_type  value_type1;
+        typedef typename Container2::mapped_type mapped_type2;
+        std::set<key_type> keys;
+        get_unique_keys(c1, keys);
+
+        std::map<key_type, std::future<void>> futures;
+        auto task = [this, &c1, &c2, &transform, &out1, &args2..., &keys](key_type k){
+            std::unique_lock<std::mutex> lock(mutex);
+            CGAL_DDT_TRACE1(*this, "PERF", "item", "generic_work", "B", k, to_string(k));
+            CGAL_DDT_TRACE1(*this, "LOCK", "mutex", "bad", "B", k, to_string(k));
+            typename Container2::iterator it2 = c2.emplace(std::piecewise_construct,
+                        std::forward_as_tuple(k),
+                        std::forward_as_tuple(k, std::forward<Args2>(args2)...)).first;
+
+            mapped_type2& v2 = it2->second;
+            while(true)
+            {
+                auto range1 = c1.equal_range(k);
+                if (range1.first == range1.second) break;
+                std::vector<value_type1> input1;
+                for(auto it1 = range1.first; it1 != range1.second; ++it1)
+                    input1.emplace_back(it1->first, std::move(it1->second));
+                c1.erase(range1.first, range1.second);
+                CGAL_DDT_TRACE0(*this, "LOCK", "mutex", "bad", "E");
+                CGAL_DDT_TRACE2(*this, "PERF", "transform", 0, "B", k, to_string(k), in, to_summary(input1.begin(), input1.end()));
                 lock.unlock();
-                V value = transform(range, std::back_inserter(tmp));
+
+                std::vector<value_type1> output1;
+                transform(input1.begin(), input1.end(), v2, std::back_inserter(output1));
+
                 lock.lock();
-                std::move(tmp.begin(), tmp.end(), out);
-                return value;
-            }, it->first));
-            it = range.second;
-        }
-        V value = init;
-        for(auto& f: futures) value = reduce(value, f.get());
-        return value;
-    }
+                CGAL_DDT_TRACE2(*this, "PERF", "transform", 0, "E", inout, to_summary(input1.begin(), input1.end()), out, to_summary(output1.begin(), output1.end()));
+                CGAL_DDT_TRACE1(*this, "LOCK", "mutex", "bad", "B", k, to_string(k));
+                for (const auto& kv : output1)
+                {
+                    keys.insert(kv.first);
+                    *out1++ = std::move(kv);
+                }
+            }
+            keys.erase(k);
+            CGAL_DDT_TRACE0(*this, "LOCK", "mutex", "bad", "E");
+            CGAL_DDT_TRACE0(*this, "PERF", "item", "generic_work", "E");
+        };
 
-    template<typename Container,
-             typename V,
-             typename Transform,
-             typename Reduce = std::plus<>>
-    V transform_reduce(Container& c, V init, Transform transform, Reduce reduce = {})
-    {
-        typedef typename Container::key_type key_type;
-        std::vector<std::future<V>> futures;
         {
             std::unique_lock<std::mutex> lock(mutex);
-            for(const auto& [k, _] : c)
-                futures.push_back(pool.submit([this, &c, &init, &transform](key_type k){
-                    return Impl::transform_id(c, init, transform, k, mutex);
-                }, k));
-        }
-        V value = init;
-        for(auto& f: futures) value = reduce(value, f.get());
-        return value;
-    }
-
-    template<typename Container1,
-             typename Container2,
-             typename V,
-             typename Transform,
-             typename Reduce = std::plus<>,
-             typename... Args>
-    V join_transform_reduce(Container1& c1, Container2& c2, V init, Transform transform, Reduce reduce = {}, Args&&... args)
-    {
-        typedef typename Container1::key_type key_type;
-        std::vector<std::future<V>> futures;
-        {
-            std::unique_lock<std::mutex> lock(mutex);
-            for(const auto& [k, _] : c2)
-                futures.push_back(pool.submit([this, &c1, &c2, &init, &transform, &args...](key_type k){
-                    return Impl::transform_zip_id(c1, c2, init, transform, k, mutex, std::forward<Args>(args)...);
-                }, k));
-        }
-        V value = init;
-        for(auto& f: futures) value = reduce(value, f.get());
-        return value;
-    }
-
-    template<typename Container1,
-             typename Container2,
-             typename V,
-             typename Transform,
-             typename Reduce = std::plus<>,
-             typename... Args>
-    V join_transform_reduce_loop(Container1& c1, Container2& c2, V init, Transform transform, Reduce reduce = {}, Args&&... args)
-    {
-        typedef typename Container1::key_type key_type;
-        std::map<key_type, std::future<V>> futures;
-        {
-            std::unique_lock<std::mutex> lock(mutex);
-            for(const auto& [k, _] : c2)
-                futures.emplace(k, pool.submit([this, &c1, &c2, &init, &transform, &args...](key_type k){
-                    return Impl::transform_zip_id(c1, c2, init, transform, k, mutex, std::forward<Args>(args)...);
-                }, k));
+            for(key_type k : keys)
+                futures.emplace(k, pool.submit(task, k));
         }
 
-        V value = init;
         while (!futures.empty()) {
             auto fit = futures.begin();
             while(fit!=futures.end())
@@ -195,27 +269,31 @@ struct Multithread_scheduler
                     ++fit;
                 } else {
                     std::unique_lock<std::mutex> lock(mutex);
-                    value = reduce(value, fit->second.get());
+                    fit->second.get();
                     futures.erase(fit++);
-                    std::vector<key_type> keys;
-                    for(const auto& [k, v2] : c2)
-                        if (!v2.points().at(k).empty())
-                            keys.push_back(k);
                     for(auto k : keys)
                         if (futures.count(k) == 0)
-                            futures.emplace(k, pool.submit([this, &c1, &c2, &init, &transform, &args...](key_type k){
-                                return Impl::transform_zip_id(c1, c2, init, transform, k, mutex, std::forward<Args>(args)...);
-                            }, k));
+                            futures.emplace(k, pool.submit(task, k));
                 }
             }
         }
-        return value;
+
+        CGAL_DDT_TRACE0(*this, "PERF", "left_join_loop", "generic_work", "E");
     }
 
 private:
     thread_pool pool;
     std::chrono::milliseconds timeout_;
     std::mutex mutex;
+
+#ifdef CGAL_DDT_TRACING
+public:
+    typedef std::chrono::time_point<std::chrono::high_resolution_clock> clock_type;
+    std::thread::id thread_index() { return std::this_thread::get_id(); }
+    std::size_t clock_microsec() const { return std::chrono::duration<double, std::micro>(clock_now() - trace.t0).count(); }
+    clock_type clock_now() const { return std::chrono::high_resolution_clock::now(); }
+    trace_logger<clock_type> trace;
+#endif
 };
 
 }

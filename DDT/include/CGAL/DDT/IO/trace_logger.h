@@ -17,16 +17,14 @@
 #define CGAL_DDT_TRACE_(sch, cat, name, cname, ph, args) \
     do { \
         using std::to_string; \
-        std::size_t ts = (sch).clock_microsec(); \
-        int tid = (sch).thread_index(); \
         (sch).trace.out \
             << "{\"name\": \"" << name << "\"" \
             << ", \"cat\": \"" << cat << "\"" \
             << ", \"ph\": \"" << ph << "\"" \
             << ", \"pid\": 0" \
-            << ", \"tid\": " << tid \
+            << ", \"tid\": " << (sch).thread_index() \
             << ", \"args\": {" << args << "}" \
-            << ", \"ts\": " << ts; \
+            << ", \"ts\": " << (sch).clock_microsec(); \
         if (cname) (sch).trace.out << ", \"cname\": \"" << cname << "\""; \
         (sch).trace.out << "},\n"; \
     } while(0)
@@ -100,6 +98,13 @@ std::ostream& write_summary(std::ostream& out, Iterator begin, Iterator end)
     for(Iterator it = begin; it != end; ++it)
         write_summary(out << (it==begin?" ":", "), *it);
     return out << " ]";
+}
+
+template<typename Iterator>
+std::string to_summary(Iterator begin, Iterator end) {
+    std::ostringstream oss;
+    write_summary(oss, begin, end);
+    return oss.str();
 }
 
 }

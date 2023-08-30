@@ -42,13 +42,6 @@ std::string to_summary(const tbb::blocked_range<T>& r, const Keys& keys) {
     return s;
 }
 
-template<typename Iterator>
-std::string to_summary(Iterator begin, Iterator end) {
-    std::ostringstream oss;
-    write_summary(oss, begin, end);
-    return oss.str();
-}
-
 /// \ingroup PkgDDTSchedulerClasses
 /// \cgalModels Scheduler
 struct TBB_scheduler
@@ -63,14 +56,14 @@ struct TBB_scheduler
     inline int max_concurrency() const { return arena.max_concurrency(); }
 
     template<typename Container, typename Key>
-    void get_keys(Container& c, std::vector<Key>& keys) const { // TODO const Container&
+    void get_unique_keys(Container& c, std::vector<Key>& keys) const { // TODO const Container&
         for(const auto& [k,v] : c)
             keys.push_back(k);
         keys.erase(std::unique(keys.begin(), keys.end()), keys.end());
     }
 
     template<typename Container, typename Key>
-    void get_keys(Container& c, std::set<Key>& keys) const { // TODO const Container&
+    void get_unique_keys(Container& c, std::set<Key>& keys) const { // TODO const Container&
         for(const auto& [k,v] : c)
             keys.insert(k);
     }
@@ -84,12 +77,12 @@ struct TBB_scheduler
         CGAL_DDT_TRACE0(*this, "PERF", "for_each", "generic_work", "B");
         typedef typename Container::key_type key_type;
         std::vector<key_type> keys;
-        get_keys(c, keys);
+        get_unique_keys(c, keys);
 
-        arena.execute([&, &c, &out, &transform, &keys]{
+        arena.execute([this, &c, &out, &transform, &keys]{
             tbb::parallel_for_each(
                 keys,
-                [&, &c, &out, &transform](key_type k)
+                [this, &c, &out, &transform](key_type k)
                 {
                     auto range = c.equal_range(k);
                     std::vector<OutputValue> output;
@@ -119,13 +112,13 @@ struct TBB_scheduler
         CGAL_DDT_TRACE0(*this, "PERF", "for_each", "generic_work", "B");
         typedef typename Container::key_type key_type;
         std::vector<key_type> keys;
-        get_keys(c, keys);
+        get_unique_keys(c, keys);
 
-        value = arena.execute([&, &c, &out, &value, &reduce, &transform, &keys]{
+        value = arena.execute([this, &c, &out, &value, &reduce, &transform, &keys]{
             return tbb::parallel_reduce(
                 tbb::blocked_range<int>(0,keys.size()),
                 value,
-                [&, &c, &out, &value, &reduce, &transform, &keys](tbb::blocked_range<int> r, V val)
+                [this, &c, &out, &value, &reduce, &transform, &keys](tbb::blocked_range<int> r, V val)
                 {
                     CGAL_DDT_TRACE1_LOCK(*this, "PERF", "range", 0, "B", range, CGAL::DDT::to_string(r, keys));
                     for (int i=r.begin(); i<r.end(); ++i)
@@ -162,13 +155,13 @@ struct TBB_scheduler
         CGAL_DDT_TRACE0(*this, "PERF", "for_each", "generic_work", "B");
         typedef typename Container::key_type key_type;
         std::vector<key_type> keys;
-        get_keys(c, keys);
+        get_unique_keys(c, keys);
 
-        value = arena.execute([&, &c, &value, &transform, &reduce, &keys]{
+        value = arena.execute([this, &c, &value, &transform, &reduce, &keys]{
             return tbb::parallel_reduce(
                 tbb::blocked_range<int>(0,keys.size()),
                 value,
-                [&, &c, &transform, &reduce, &keys](tbb::blocked_range<int> r, V val)
+                [this, &c, &transform, &reduce, &keys](tbb::blocked_range<int> r, V val)
                 {
                     CGAL_DDT_TRACE1_LOCK(*this, "PERF", "range", 0, "B", range, CGAL::DDT::to_string(r, keys));
                     for (int i=r.begin(); i<r.end(); ++i) {
@@ -194,25 +187,25 @@ struct TBB_scheduler
              typename Container2,
              typename OutputIterator,
              typename Transform,
-             typename... Args>
+             typename... Args2>
     OutputIterator
-    left_join(Container1& c1, Container2& c2, Transform transform, OutputIterator out, Args&&... args)
+    left_join(Container1& c1, Container2& c2, Transform transform, OutputIterator out, Args2&&... args2)
     {
         CGAL_DDT_TRACE0(*this, "PERF", "left_join", "generic_work", "B");
         typedef typename Container1::key_type key_type;
         std::vector<key_type> keys;
-        get_keys(c1, keys);
+        get_unique_keys(c1, keys);
 
-        arena.execute([&, &c1, &c2, &transform, &out, &args..., &keys]{
+        arena.execute([this, &c1, &c2, &transform, &out, &args2..., &keys]{
             tbb::parallel_for_each(
                 keys,
-                [&, &c1, &c2, &transform, &out, &args...](key_type k)
+                [this, &c1, &c2, &transform, &out, &args2...](key_type k)
                 {
                     std::unique_lock<std::mutex> lock(mutex);
                     CGAL_DDT_TRACE1(*this, "LOCK", "mutex", "bad", "B", k, to_string(k));
                     typename Container2::iterator it2 = c2.emplace(std::piecewise_construct,
                         std::forward_as_tuple(k),
-                        std::forward_as_tuple(k, std::forward<Args>(args)...)).first;
+                        std::forward_as_tuple(k, std::forward<Args2>(args2)...)).first;
                     auto range1 = c1.equal_range(k);
                     CGAL_DDT_TRACE0(*this, "LOCK", "mutex", "bad", "E");
                     CGAL_DDT_TRACE2(*this, "PERF", "transform", 0, "B", k, to_string(k), in, to_summary(range1.first, range1.second));
@@ -238,24 +231,24 @@ struct TBB_scheduler
              typename Container2,
              typename OutputIterator2,
              typename Transform,
-             typename... Args>
-    void left_join_loop(Container1& c1, Container2& c2, Transform transform, OutputIterator2 out1, Args&&... args)
+             typename... Args2>
+    void left_join_loop(Container1& c1, Container2& c2, Transform transform, OutputIterator2 out1, Args2&&... args2)
     {
         CGAL_DDT_TRACE0(*this, "PERF", "left_join_loop", "generic_work", "B");
         typedef typename Container1::key_type    key_type;
         typedef typename Container1::value_type  value_type1;
         typedef typename Container2::mapped_type mapped_type2;
         std::set<key_type> keys;
-        get_keys(c1, keys);
+        get_unique_keys(c1, keys);
 
-        arena.execute([&, &c1, &c2, &transform, &out1, &args..., &keys]{
-            tbb::parallel_for_each(keys, [&, &c1, &c2, &transform, &out1, &args..., &keys](key_type k, tbb::feeder<key_type>& feeder){
+        arena.execute([this, &c1, &c2, &transform, &out1, &args2..., &keys]{
+            tbb::parallel_for_each(keys, [this, &c1, &c2, &transform, &out1, &args2..., &keys](key_type k, tbb::feeder<key_type>& feeder){
                 std::unique_lock<std::mutex> lock(mutex);
                 CGAL_DDT_TRACE1(*this, "PERF", "item", "generic_work", "B", k, to_string(k));
                 CGAL_DDT_TRACE1(*this, "LOCK", "mutex", "bad", "B", k, to_string(k));
                 typename Container2::iterator it2 = c2.emplace(std::piecewise_construct,
                             std::forward_as_tuple(k),
-                            std::forward_as_tuple(k, std::forward<Args>(args)...)).first;
+                            std::forward_as_tuple(k, std::forward<Args2>(args2)...)).first;
 
                 mapped_type2& v2 = it2->second;
                 while(true)

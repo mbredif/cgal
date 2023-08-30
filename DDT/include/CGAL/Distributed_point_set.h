@@ -42,6 +42,7 @@ struct Distributed_point_set {
         std::move(value.second.begin(), value.second.end(), std::back_inserter(point_sets[key]));
     }
 
+    void clear() { point_sets.clear(); }
     mapped_type& operator[](key_type key) { return point_sets[key]; }
     iterator find(key_type key) { return point_sets.find(key); }
     std::pair<iterator, iterator> equal_range(key_type k) { return point_sets.equal_range(k); }
