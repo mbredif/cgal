@@ -28,7 +28,7 @@ typedef CGAL::Distributed_point_set<Tile_index, Point> Distributed_point_set;
 
 #define ddt_assert(x) if (!(x)) { std::cerr << "Assertion failed [" << __LINE__ << "] : " << #x << std::endl; ++errors; }
 #define ddt_assert_eq(x, y) if ((x)!=(y)) { ddt_assert((x)==(y)); std::cerr << #x << " = " << x << std::endl << #y << " = " << y << std::endl; }
-#define ddt_assert_neq(x, y) if ((x)==(y)) { ddt_assert((x)!=(y)); std::cerr << x << std::endl << y << std::endl; }
+#define ddt_assert_neq(x, y) if ((x)==(y)) { ddt_assert((x)!=(y)); std::cerr << #x << " = " << x << std::endl << #y << " = " << y << std::endl; }
 
 std::ostream& operator<<(std::ostream& out, const Point& p)
 {

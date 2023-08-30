@@ -13,6 +13,7 @@
 #define CGAL_DDT_TILE_TRIANGULATION_H
 
 #include <CGAL/DDT/selector/Median_selector.h>
+#include <CGAL/DDT/IO/trace_logger.h>
 
 #include <vector>
 #include <set>
@@ -650,6 +651,7 @@ public:
 
     Statistics& statistics() { if (!statistics_.valid) finalize(); return statistics_; }
     const Statistics& statistics() const { if (!statistics_.valid) finalize(); return statistics_; }
+
 private:
     Tile_index id_;
     Triangulation tri_;
@@ -669,6 +671,12 @@ template<class T, class Pmap, template <class> class Selector>
 std::istream& operator>>(std::istream& in, Tile_triangulation<T, Pmap, Selector>& tt)
 {
     return CGAL::DDT::Triangulation_traits<T>::read(in, tt.triangulation());
+}
+
+template<class T, class Pmap, template <class> class Selector>
+std::ostream& write_summary(std::ostream& out, const Tile_triangulation<T, Pmap, Selector>& t)
+{
+    return out << t.statistics();
 }
 
 }

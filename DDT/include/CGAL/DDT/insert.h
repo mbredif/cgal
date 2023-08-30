@@ -26,18 +26,23 @@ namespace impl {
 
 // inserts as many points as possible from received into tri
 // on exit, received contains the uninserted points
-template<typename Index, typename TileTriangulation, typename PointSet, typename OutputIterator>
-OutputIterator splay_tile(Index id, TileTriangulation& tri, PointSet& received, OutputIterator out)
+template<typename TileTriangulation, typename InputIterator, typename OutputIterator>
+OutputIterator splay_tile(TileTriangulation& tri, InputIterator first, InputIterator last, OutputIterator out)
 {
     typedef typename TileTriangulation::Tile_index   Tile_index;
     typedef typename TileTriangulation::Vertex_index Vertex_index;
-    if (received.empty()) return out;
+    typedef typename InputIterator::value_type::second_type  PointSet;
+    if (first == last) return out;
 
     // insert them into the current tile triangulation and get the new foreign points
     std::set<Vertex_index> inserted;
-    tri.insert(received, inserted, true);
-    // TODO: For now, all points are inserted, disregarding memory constraints
-    received.clear();
+    for(InputIterator it = first; it != last; ++it) {
+        tri.insert(it->second, inserted, true);
+        // TODO: For now, all points are inserted, disregarding memory constraints
+        it->second.clear();
+        // TODO: if some points are not inserted, they should be transferred to out
+        //  *out++ = { it->first, std::move(it->second) };
+    }
     if (inserted.empty()) return out;
 
     // get the relevant neighbor points
@@ -47,46 +52,40 @@ OutputIterator splay_tile(Index id, TileTriangulation& tri, PointSet& received, 
     // send them to the relevant neighboring tiles
     for(auto& vi : vertices)
     {
-        PointSet res;
+        PointSet ps;
         for(auto v : vi.second)
-            res.emplace_back(tri.vertex_id(v), tri.point(v));
-        *out++ = { vi.first, res };
+            ps.emplace_back(tri.vertex_id(v), tri.point(v));
+        *out++ = { vi.first, ps };
     }
-    if(!received.empty()) {
-        *out++ = { id, std::move(received) };
-    }
-
     return out;
 }
 
-template<typename TileContainer, typename PointSetContainer, typename OutputIterator, typename Scheduler>
+template<typename TriangulationContainer, typename PointSetContainer, typename OutputIterator, typename Scheduler>
 OutputIterator
-insert_and_get_axis_extreme_points(TileContainer& tiles, PointSetContainer& point_sets, OutputIterator out, Scheduler& sch, int dim)
+insert_and_get_axis_extreme_points(TriangulationContainer& tiles, PointSetContainer& point_sets, OutputIterator out, Scheduler& sch, int dim)
 {
-    typedef typename TileContainer::key_type         Index;
-    typedef typename TileContainer::mapped_type      Triangulation;
-    typedef typename PointSetContainer::mapped_type  PointSet;
-    return sch.join_transform_reduce(tiles, point_sets, out, [](Index id, Triangulation& tri, PointSet& point_set, auto out_)
+    typedef typename TriangulationContainer::mapped_type TileTriangulation;
+    typedef typename PointSetContainer::value_type PointSetContainerValue;
+    return sch.template left_join<PointSetContainerValue>(point_sets, tiles, [](auto first, auto last, TileTriangulation& tri, auto out_)
     {
-        typedef typename Triangulation::Vertex_index Vertex_index;
-        out_ = splay_tile(id, tri, point_set, out_);
+        typedef typename TileTriangulation::Vertex_index Vertex_index;
+        out_ = splay_tile(tri, first, last, out_);
         // send the extreme points along each axis to all tiles to initialize the star splaying
         std::vector<Vertex_index> vertices;
         tri.get_axis_extreme_points(vertices);
         for(auto v : vertices)
-            point_set.emplace_back(tri.vertex_id(v), tri.point(v));
+            first->second.emplace_back(tri.vertex_id(v), tri.point(v));
         return out_;
-    }, dim);
+    }, out, dim);
 }
 
-template<typename TileContainer, typename PointSetContainer, typename Scheduler>
-void splay_stars(TileContainer& tiles, PointSetContainer& point_sets, Scheduler& sch, int dim)
+template<typename TriangulationContainer, typename PointSetContainer, typename Scheduler>
+void splay_stars(TriangulationContainer& tiles, PointSetContainer& point_sets, Scheduler& sch, int dim)
 {
-    typedef typename TileContainer::key_type             TileIndex;
-    typedef typename TileContainer::mapped_type          TileTriangulation;
-    typedef typename PointSetContainer::mapped_type      PointSet;
-    sch.join_transform_reduce_loop(tiles, point_sets, std::back_inserter(point_sets),
-        [](TileIndex id, TileTriangulation& tri, PointSet& ps, auto out) { return splay_tile(id, tri, ps, out); }, dim);
+    typedef typename TriangulationContainer::mapped_type TileTriangulation;
+    sch.left_join_loop(point_sets, tiles,
+        [](auto first, auto last, TileTriangulation& tri, auto out) { return splay_tile(tri, first, last, out); },
+        std::back_inserter(point_sets), dim);
 }
 
 template<typename TileTriangulation, typename PointSetContainer>

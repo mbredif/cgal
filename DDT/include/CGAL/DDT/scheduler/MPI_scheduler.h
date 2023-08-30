@@ -118,7 +118,7 @@ struct MPI_scheduler
              typename V,
              typename Transform,
              typename Reduce = std::plus<>>
-    V transform_reduce(Container& c, V value, Transform transform, Reduce reduce = {})
+    V for_each(Container& c, V value, Transform transform, Reduce reduce = {})
     {
         typedef typename Container::iterator iterator;
         for(iterator it = c.begin(); it != c.end(); ++it)
@@ -135,7 +135,7 @@ struct MPI_scheduler
              typename Transform,
              typename Reduce = std::plus<>,
              typename... Args>
-    V join_transform_reduce(Container1& c1, Container2& c2, V value, Transform transform, Reduce reduce = {}, Args&&... args)
+    V left_join(Container1& c1, Container2& c2, V value, Transform transform, Reduce reduce = {}, Args&&... args)
     {
         typedef typename Container1::iterator iterator1;
         typedef typename Container2::iterator iterator2;
@@ -166,7 +166,7 @@ struct MPI_scheduler
              typename Transform,
              typename Reduce = std::plus<>,
              typename... Args>
-    V join_transform_reduce_loop(Container1& c1, Container2& c2, V init, Transform transform, Reduce reduce = {}, Args&&... args)
+    V left_join_loop(Container1& c1, Container2& c2, V init, Transform transform, Reduce reduce = {}, Args&&... args)
     {
         // for now, let's assume that c2 is replicated on all processes, so that its non-local keys may be ignored
         // @todo : copartitioning of c1 and c2 ?
@@ -177,7 +177,7 @@ struct MPI_scheduler
         V value = init, v;
         do {
             do {
-                v = join_transform_reduce(c1, c2, init, transform, reduce, std::forward<Args>(args)...);
+                v = left_join(c1, c2, init, transform, reduce, std::forward<Args>(args)...);
                 value = reduce(value, v);
             } while (v != init);
         } while (send_all_to_all(c2));

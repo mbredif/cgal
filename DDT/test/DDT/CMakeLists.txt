@@ -17,6 +17,16 @@ if (USE_TBB)
   find_package(TBB QUIET)
 endif()
 
+option(USE_TRACING "Tracing data written to perf.json" OFF)
+if (USE_TRACING)
+  add_definitions("-DCGAL_DDT_TRACING")
+endif()
+
+option (USE_VALGRIND "Slower mode that is compatible with valgrind, as described in https://github.com/CGAL/cgal/issues/3180 " OFF)
+if (USE_VALGRIND)
+  add_definitions("-DCGAL_ALWAYS_ROUND_TO_NEAREST")
+endif()
+
 include(CGAL_TBB_support)
 if(TARGET CGAL::TBB_support)
   set(DDT_LIBRARIES ${DDT_LIBRARIES} PUBLIC CGAL::TBB_support)

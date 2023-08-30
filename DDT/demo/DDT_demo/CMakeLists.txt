@@ -20,6 +20,11 @@ if (USE_TBB)
   include(CGAL_TBB_support)
 endif()
 
+option(USE_TRACING "Tracing data written to perf.json" OFF)
+if (USE_TRACING)
+  add_definitions("-DCGAL_DDT_TRACING")
+endif()
+
 option (USE_MPI "Use MPI " OFF)
 if (USE_MPI)
   find_package(MPI)

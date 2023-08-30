@@ -44,7 +44,9 @@ struct Distributed_point_set {
 
     mapped_type& operator[](key_type key) { return point_sets[key]; }
     iterator find(key_type key) { return point_sets.find(key); }
-    iterator erase(iterator pos) { return point_sets.erase(pos); }
+    std::pair<iterator, iterator> equal_range(key_type k) { return point_sets.equal_range(k); }
+    std::pair<const_iterator, const_iterator> equal_range(key_type k) const { return point_sets.equal_range(k); }
+    iterator erase(iterator first, iterator last) { return point_sets.erase(first, last); }
     iterator begin  () { return point_sets.begin (); }
     iterator end    () { return point_sets.end   (); }
     bool empty() const { return point_sets.empty(); }

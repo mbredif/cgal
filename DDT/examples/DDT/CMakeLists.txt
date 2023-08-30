@@ -18,6 +18,11 @@ if (USE_TBB)
 endif()
 include(CGAL_TBB_support)
 
+option(USE_TRACING "Tracing data written to perf.json" OFF)
+if (USE_TRACING)
+  add_definitions("-DCGAL_DDT_TRACING")
+endif()
+
 find_package(LASLIB)
 include(CGAL_LASLIB_support)
 

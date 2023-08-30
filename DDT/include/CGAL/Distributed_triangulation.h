@@ -20,6 +20,8 @@
 #include <CGAL/DDT/Tile_container.h>
 #include <CGAL/Distributed_point_set.h>
 #include <CGAL/DDT/serializer/No_serializer.h>
+#include <CGAL/DDT/IO/trace_logger.h>
+#include <CGAL/assertions.h>
 
 namespace CGAL {
 
@@ -142,7 +144,7 @@ public:
             const Tile_triangulation& tri = tile;
             for(Tile_vertex_index v = tri.vertices_begin(); v != tri.vertices_end(); ++v)
             {
-                assert(tri.vertex_is_infinite(v) || (tri.vertex_is_local(v) + tri.vertex_is_foreign(v) == 1));
+                CGAL_assertion(tri.vertex_is_infinite(v) || (tri.vertex_is_local(v) + tri.vertex_is_foreign(v) == 1));
                 if(tri.vertex_is_infinite(v)) continue;
                 Tile_index tid = tri.vertex_id(v);
                 if(tid == tri.id()) continue;
@@ -150,13 +152,13 @@ public:
                 const Tile_triangulation& tri2 = t->second;
                 if(tri2.relocate_vertex(tri, v) == tri2.vertices_end())
                 {
-                    assert(! "relocate_vertex failed" );
+                    CGAL_assertion(! "relocate_vertex failed" );
                     return false;
                 }
             }
             for(Tile_facet_index f = tri.facets_begin(); f != tri.facets_end(); ++f)
             {
-                assert(tri.facet_is_local(f) + tri.facet_is_mixed(f) + tri.facet_is_foreign(f) == 1);
+                CGAL_assertion(tri.facet_is_local(f) + tri.facet_is_mixed(f) + tri.facet_is_foreign(f) == 1);
                 if(!tri.facet_is_mixed(f)) continue;
                 std::set<Tile_index> tids;
                 for(int d = 0; d <= tri.current_dimension(); ++d)
@@ -175,7 +177,7 @@ public:
                     const Tile_triangulation& tri2 = t->second;
                     if(tri2.relocate_facet(tri, f) == tri2.facets_end())
                     {
-                      assert(! "relocate_facet failed" );
+                      CGAL_assertion(! "relocate_facet failed" );
                       return false;
                     }
                 }
@@ -183,7 +185,7 @@ public:
             }
             for(Tile_cell_index c = tri.cells_begin(); c != tri.cells_end(); ++c)
             {
-                assert(tri.cell_is_local(c) + tri.cell_is_mixed(c) + tri.cell_is_foreign(c) == 1);
+                CGAL_assertion(tri.cell_is_local(c) + tri.cell_is_mixed(c) + tri.cell_is_foreign(c) == 1);
                 if(!tri.cell_is_mixed(c)) continue;
                 std::set<Tile_index> tids;
                 for(int d = 0; d <= tri.current_dimension(); ++d)
@@ -200,7 +202,7 @@ public:
                     const Tile_triangulation& tri2 = t->second;
                     if(tri2.relocate_cell(tri, c) == tri2.cells_end())
                     {
-                      assert(! "relocate_facet failed" );
+                      CGAL_assertion(! "relocate_facet failed" );
                         return false;
                     }
                 }
@@ -209,7 +211,7 @@ public:
             if(!tri.is_valid(verbose, level))
             {
                 std::cerr << "Tile " << std::to_string(id) << " is invalid" << std::endl;
-                //assert(! "CGAL tile not valid" );
+                //CGAL_assertion(! "CGAL tile not valid" );
                 return false;
             }
         }
@@ -264,7 +266,7 @@ public:
     /// returns a vertex iterator equivalent to v in tile id. They represent the same vertex of the global triangulation.
     Vertex_iterator relocate(const Vertex_iterator& v, Tile_index id) const
     {
-        assert(is_valid(v));
+        CGAL_assertion(is_valid(v));
         if (id == tile_id(v)) return v; // v is already in tile id
         Tile_const_iterator tile = tiles.find(id);
         if (tile == tiles.end()) return vertices_end();
@@ -277,7 +279,7 @@ public:
     /// returns a facet iterator equivalent to f in tile id. They represent the same facet of the global triangulation.
     Facet_iterator relocate(const Facet_iterator& f, Tile_index id) const
     {
-        assert(is_valid(f));
+        CGAL_assertion(is_valid(f));
         if (id == tile_id(f)) return f; // f is already in tile id
         Tile_const_iterator tile = tiles.find(id);
         if (tile == tiles.end()) return facets_end();
@@ -290,7 +292,7 @@ public:
     /// returns a cell iterator equivalent to c in tile id. They represent the same cell of the global triangulation.
     Cell_iterator relocate(const Cell_iterator& c, Tile_index id) const
     {
-        assert(is_valid(c));
+        CGAL_assertion(is_valid(c));
         if (id == tile_id(c)) return c; // c is already in tile id
         Tile_const_iterator tile = tiles.find(id);
         if (tile == tiles.end()) return cells_end();
@@ -317,7 +319,7 @@ public:
     /// precondition : at least one tile is loaded.
     inline Vertex_iterator infinite_vertex() const
     {
-        assert(!tiles.empty());
+        CGAL_assertion(!tiles.empty());
         Tile_const_iterator tile = tiles.cbegin();
         const Tile_triangulation& tri = tile->second;
         return Vertex_iterator(&tiles, tile, tri.infinite_vertex());
@@ -327,7 +329,7 @@ public:
     /// Indexing by i is consistent over all representatives of cell c, as its main representative is looked up.
     Vertex_iterator vertex (const Cell_iterator& c, const int i) const
     {
-        assert(is_valid(c));
+        CGAL_assertion(is_valid(c));
         return local_vertex(main(c), i); // i is defined wrt the main representative
     }
 
@@ -336,7 +338,7 @@ public:
     /// are replicated in all tiles.
     const Point& point(Vertex_iterator v) const
     {
-        assert(is_valid(v));
+        CGAL_assertion(is_valid(v));
         return v.triangulation().point(*v);
     }
 
@@ -345,7 +347,7 @@ public:
     /// Precondition: the facet f is valid (ie: at least one vertex is local among the covertex and the mirror vertex and the facet points)
     Facet_iterator mirror_facet(const Facet_iterator& f) const
     {
-        assert(is_valid(f));
+        CGAL_assertion(is_valid(f));
         return Facet_iterator(&tiles, f.tile(), f.triangulation().mirror_facet(*f));
     }
 
@@ -354,7 +356,7 @@ public:
     /// the representatives of mirror facet in other tiles.
     inline int mirror_index(const Facet_iterator& f) const
     {
-        assert(is_valid(f));
+        CGAL_assertion(is_valid(f));
         return index_of_covertex(mirror_facet(f));
     }
 
@@ -362,7 +364,7 @@ public:
     /// The operation is local iff the local cell of f is not foreign.
     Cell_iterator cell(const Facet_iterator& f) const
     {
-        assert(is_valid(f));
+        CGAL_assertion(is_valid(f));
         const Tile_triangulation& tri = f.triangulation();
         Tile_cell_index c = tri.cell(*f);
         if(tri.cell_is_foreign(c)) return local_cell(main(f)); // any non foreign representative could do
@@ -383,7 +385,7 @@ public:
         for(Tile_cell_index c: cells)
             if(!triangulation.cell_is_foreign(c))
                 return Cell_iterator(&tiles, v.tile(), c);
-        assert(false); // all incident cells are foreign, v should have been simplified !
+        CGAL_assertion(false); // all incident cells are foreign, v should have been simplified !
         return cells_end();
     }
 
@@ -408,7 +410,7 @@ public:
     /// The operation is local iff the local cell of f is main
     inline int index_of_covertex(const Facet_iterator& f) const
     {
-        assert(is_valid(f));
+        CGAL_assertion(is_valid(f));
         const Tile_triangulation& tri = f.triangulation();
         if (tri.cell_is_main(tri.cell(*f)))
             return local_index_of_covertex(f);
@@ -419,7 +421,7 @@ public:
     /// The operation is local iff the local cell of f is not foreign
     Vertex_iterator covertex(const Facet_iterator& f) const
     {
-        assert(is_valid(f));
+        CGAL_assertion(is_valid(f));
         const Tile_triangulation& tri = f.triangulation();
         Tile_cell_index c = tri.cell(*f);
         if(tri.cell_is_foreign(c)) return local_covertex(main(f)); // any non foreign representative could do
@@ -438,7 +440,7 @@ public:
     /// The operation is local iff the given cell is main, to ensure consistency across representatives of the cell.
     inline Facet_iterator facet(const Cell_iterator& c, int i) const
     {
-        assert(is_valid(c));
+        CGAL_assertion(is_valid(c));
         return local_facet(main(c),i); // i is defined wrt the main representative
     }
 
@@ -446,7 +448,7 @@ public:
     /// The operation may require to change tile twice : once if the given cell c is not main, and once if the mirror_facet of facet(main(c),i) is foreign.
     inline Cell_iterator neighbor(const Cell_iterator& c, int i) const
     {
-        assert(is_valid(c));
+        CGAL_assertion(is_valid(c));
         return cell(mirror_facet(facet(c, i)));
     }
 
@@ -454,7 +456,7 @@ public:
     /// The operation is local if may require to change tile twice : once if the given cell c is not main, and once if the cell of mirror_facet of facet(main(c),i) is not main.
     inline int mirror_index(const Cell_iterator& c, int i) const
     {
-        assert(is_valid(c));
+        CGAL_assertion(is_valid(c));
         return mirror_index(facet(c,i));
     }
     /// @}
@@ -476,7 +478,7 @@ public:
     /// the vertex ordering in its main representative.
     Vertex_iterator local_vertex (const Cell_iterator& c, const int i) const
     {
-        assert(is_valid(c));
+        CGAL_assertion(is_valid(c));
         return Vertex_iterator(&tiles, c.tile(), c.triangulation().vertex(*c, i));
     }
 
@@ -487,7 +489,7 @@ public:
     /// Precondition: the local cell of f is not foreign.
     inline int local_index_of_covertex(const Facet_iterator& f) const
     {
-        assert(is_valid(f));
+        CGAL_assertion(is_valid(f));
         return f.triangulation().index_of_covertex(*f);
     }
 
@@ -496,7 +498,7 @@ public:
     /// which may indexing of the main representative of the cell c.
     Facet_iterator local_facet(const Cell_iterator& c, int i) const
     {
-        assert(is_valid(c));
+        CGAL_assertion(is_valid(c));
         return Facet_iterator(&tiles, c.tile(), c.triangulation().facet(*c, i));
     }
 
@@ -505,10 +507,10 @@ public:
     /// Precondition : the local cell of the mirror of f should not be foreign
     inline int local_mirror_index(const Facet_iterator& f) const
     {
-        assert(is_valid(f));
+        CGAL_assertion(is_valid(f));
         const Tile_triangulation& tri= f.triangulation();
         Tile_cell_index c = tri.cell(*f);
-        assert(!tri.cell_is_foreign(c));
+        CGAL_assertion(!tri.cell_is_foreign(c));
         return tri.mirror_index(c,tri.index_of_covertex(*f));
     }
 
@@ -516,10 +518,10 @@ public:
     /// Advanced use: Access is local, thus more more effective, but assumes that the local cell of f is not foreign.
     Cell_iterator local_cell(const Facet_iterator& f) const
     {
-        assert(is_valid(f));
+        CGAL_assertion(is_valid(f));
         const Tile_triangulation& tri= f.triangulation();
         Tile_cell_index c = tri.cell(*f);
-        assert(!tri.cell_is_foreign(c));
+        CGAL_assertion(!tri.cell_is_foreign(c));
         return Cell_iterator(&tiles, f.tile(), c);
     }
 
@@ -527,10 +529,10 @@ public:
     /// Advanced use: Access is local, thus more more effective, but assumes that the local cell of f is not foreign.
     Vertex_iterator local_covertex(const Facet_iterator& f) const
     {
-        assert(is_valid(f));
+        CGAL_assertion(is_valid(f));
         const Tile_triangulation& tri = f.triangulation();
         Tile_cell_index c = tri.cell(*f);
-        assert(!tri.cell_is_foreign(c));
+        CGAL_assertion(!tri.cell_is_foreign(c));
         return Vertex_iterator(&tiles, f.tile(), tri.covertex(*f));
     }
     /// @}
@@ -544,29 +546,22 @@ public:
     template<typename TileIndex, typename Point, typename TilePoints, typename Scheduler>
     std::size_t insert(CGAL::Distributed_point_set<TileIndex, Point, TilePoints>& point_sets, Scheduler& sch)
     {
+        CGAL_DDT_TRACE0(sch, "DDT", "insert", 0, "B");
         typedef CGAL::Distributed_point_set<TileIndex, Point, TilePoints> Distributed_point_set;
         std::size_t n = number_of_finite_vertices();
-#ifdef CGAL_DEBUG_DDT
-        std::cout << std::endl << "---insert_and_send_all_axis_extreme_points---" << std::endl;
-#endif
+        CGAL_DDT_TRACE0(sch, "DDT", "insert_and_send_all_axis_extreme_points", 0, "B");
         Distributed_point_set points;
         CGAL::DDT::impl::insert_and_get_axis_extreme_points(tiles, point_sets, std::back_inserter(points), sch, maximal_dimension());
-#ifdef CGAL_DEBUG_DDT
-        std::cout << std::endl << "---splay_root_triangulation---" << std::endl;
-#endif
+        CGAL_DDT_TRACE0(sch, "DDT", "insert_and_send_all_axis_extreme_points", 0, "E");
+        CGAL_DDT_TRACE0(sch, "DDT", "splay_root_triangulation", 0, "B");
         Tile_triangulation tri(-1, maximal_dimension());
         CGAL::DDT::impl::splay_root_triangulation(tri, point_sets, points);
-#ifdef CGAL_DEBUG_DDT
-        std::cout << std::endl << "---splay_stars---" << std::endl;
-#endif
+        CGAL_DDT_TRACE0(sch, "DDT", "splay_root_triangulation", 0, "E");
+        CGAL_DDT_TRACE0(sch, "DDT", "splay_stars", 0, "B");
         CGAL::DDT::impl::splay_stars(tiles, points, sch, maximal_dimension());
-#ifdef CGAL_DEBUG_DDT
-        std::cout << std::endl << "---finalize---" << std::endl;
-#endif
+        CGAL_DDT_TRACE0(sch, "DDT", "splay_stars", 0, "E");
         finalize(sch);
-#ifdef CGAL_DEBUG_DDT
-        std::cout << std::endl << "---inserted---" << std::endl;
-#endif
+        CGAL_DDT_TRACE0(sch, "DDT", "insert", 0, "E");
         return number_of_finite_vertices() - n;
     }
 
@@ -578,6 +573,7 @@ public:
     template<typename Point, typename Tile_index, typename Scheduler>
     std::pair<Vertex_iterator, bool> insert(const Point& point, Tile_index id, Scheduler& sch)
     {
+        CGAL_DDT_TRACE0(sch, "DDT", "insert1", 0, "B");
         auto emplaced = tiles.emplace(std::piecewise_construct,
                 std::forward_as_tuple(id),
                 std::forward_as_tuple(id, maximal_dimension()));
@@ -617,97 +613,126 @@ public:
         }
 
         insert(point_sets, sch);
+        CGAL_DDT_TRACE0(sch, "DDT", "insert1", 0, "E");
         return std::make_pair(res, true);
     }
 
     template <typename Scheduler>
     void finalize(Scheduler& sch)
     {
+        CGAL_DDT_TRACE0(sch, "DDT", "finalize", 0, "B");
         Statistics stats;
-        statistics_ = sch.transform_reduce(tiles, stats, std::plus<>(),
-            [](Tile_index id, const Tile_triangulation& tri) { return tri.statistics();});
+        statistics_ = sch.for_each(tiles, [](Tile_const_iterator first, Tile_const_iterator last) {
+            return first->second.statistics();
+        }, stats, std::plus<>());
+        CGAL_DDT_TRACE0(sch, "DDT", "finalize", 0, "E");
     }
 
     template <typename Writer, typename Scheduler>
-    bool write(const Writer& writer, Scheduler& sch) // TODO: const ?
+    bool write(const Writer& writer, Scheduler& sch) const
     {
-        if (!writer.write_begin(*this)) return false;
-        if (!sch.transform_reduce(tiles, true, std::logical_and<>(),
-            [&writer](Tile_index id, const Tile_triangulation& tri) { return writer.write(tri);}))
-            return false;
-        return writer.write_end(*this);
+        CGAL_DDT_TRACE0(sch, "DDT", "write", 0, "B");
+        bool ok =
+            writer.write_begin(*this) &&
+            sch.for_each(tiles, [&writer](Tile_const_iterator first, Tile_const_iterator last) {
+                CGAL_assertion(std::distance(first, last) == 1);
+                return writer.write(first->second);
+            }, true, std::logical_and<>()) &&
+            writer.write_end(*this);
+        CGAL_DDT_TRACE0(sch, "DDT", "write", 0, "E");
+        return ok;
     }
 
     template <typename Reader, typename Scheduler>
-    bool read(const Reader& reader, Scheduler& sch) {
-        if (!reader.read_begin(*this)) return false;
-        if (!sch.transform_reduce(tiles, true, std::logical_and<>(),
-            [&reader](Tile_index id, Tile_triangulation& tri) { return reader.read(tri);}))
-            return false;
-        return reader.read_end(*this);
+    bool read(const Reader& reader, Scheduler& sch)
+    {
+        CGAL_DDT_TRACE0(sch, "DDT", "read", 0, "B");
+        bool ok =
+            reader.read_begin(*this) &&
+            sch.for_each(tiles, [&reader](Tile_iterator first, Tile_iterator last) {
+                CGAL_assertion(std::distance(first, last) == 1);
+                return reader.read(first->second);
+            }, true, std::logical_and<>()) &&
+            reader.read_end(*this);
+        CGAL_DDT_TRACE0(sch, "DDT", "read", 0, "E");
+        return ok;
     }
 
     template <typename Reader, typename Writer, typename Scheduler>
-    bool read_write(const Reader& reader, const Writer& writer, Scheduler& sch) {
-        if (!(reader.read_begin(*this) && writer.write_begin(*this))) return false;
-        if (!sch.transform_reduce(tiles, true, std::logical_and<>(),
-            [&reader,&writer](Tile_index id, Tile_triangulation& tri) { return reader.read(tri) && writer.write(tri);}))
-            return false;
-        return reader.read_end(*this) && writer.write_end(*this);
+    bool read_write(const Reader& reader, const Writer& writer, Scheduler& sch)
+    {
+        CGAL_DDT_TRACE0(sch, "DDT", "read_write", 0, "B");
+        bool ok =
+            reader.read_begin(*this) &&
+            writer.write_begin(*this) &&
+            sch.for_each(tiles, [&reader,&writer](Tile_iterator first, Tile_iterator last) {
+                CGAL_assertion(std::distance(first, last) == 1);
+                return reader.read(first->second) && writer.write(first->second);
+            }, true, std::logical_and<>()) &&
+            reader.read_end(*this) &&
+            writer.write_end(*this);
+        CGAL_DDT_TRACE0(sch, "DDT", "read_write", 0, "E");
+        return ok;
     }
 
     template <typename DistributedTriangulation, typename Partitioner, typename Scheduler>
     void partition(const Partitioner& part, const DistributedTriangulation& that, Scheduler& sch) {
+        CGAL_DDT_TRACE0(sch, "DDT", "partition", 0, "B");
         typedef typename Tile_triangulation::Vertex_index Vertex_index;
         typedef std::vector<std::pair<Tile_index, Point>> PointSet;
         typedef std::multimap<Tile_index, PointSet> PointSetContainer;
         PointSetContainer point_sets;
-        sch.template flat_map<PointSet>(that.tiles, std::inserter(point_sets, point_sets.begin()),
-            [&part](Tile_index /* unused */, const Tile_triangulation& tri, auto out) {
-                std::map<Tile_index, std::set<Vertex_index>> vertex_set_map;
-                for(Vertex_index v = tri.vertices_begin(); v != tri.vertices_end(); ++v)
-                {
-                    if (tri.vertex_is_infinite(v)) continue;
-                    Tile_index key = part(tri.point(v));
-                    std::set<Vertex_index>& vertex_set = vertex_set_map[key];
-                    vertex_set.insert(v);
-                    tri.adjacent_vertices(v, std::inserter(vertex_set, vertex_set.end()));
-                }
-                for(const auto& p : vertex_set_map)
-                {
-                    PointSet points;
-                    Tile_index key = p.first;
-                    const std::set<Vertex_index>& vertex_set = p.second;
-                    for(const auto& v : vertex_set)
+        sch.template for_each<typename PointSetContainer::value_type>(that.tiles,
+            [&part](auto first, auto last, auto out) {
+                for(auto it = first; it != last; ++it) {
+                    auto& tri = it->second;
+                    std::map<Tile_index, std::set<Vertex_index>> vertex_set_map;
+                    for(Vertex_index v = tri.vertices_begin(); v != tri.vertices_end(); ++v)
                     {
                         if (tri.vertex_is_infinite(v)) continue;
-                        const Point& p = tri.point(v);
-                        points.emplace_back(part(p), p);
+                        Tile_index key = part(tri.point(v));
+                        std::set<Vertex_index>& vertex_set = vertex_set_map[key];
+                        vertex_set.insert(v);
+                        tri.adjacent_vertices(v, std::inserter(vertex_set, vertex_set.end()));
                     }
-                    *out++ = {key, points};
+                    for(const auto& p : vertex_set_map)
+                    {
+                        PointSet points;
+                        Tile_index key = p.first;
+                        const std::set<Vertex_index>& vertex_set = p.second;
+                        for(const auto& v : vertex_set)
+                        {
+                            if (tri.vertex_is_infinite(v)) continue;
+                            const Point& p = tri.point(v);
+                            points.emplace_back(part(p), p);
+                        }
+                        *out++ = {key, points};
+                    }
                 }
                 return out;
-            }
+            }, std::inserter(point_sets, point_sets.begin())
         );
         int dim = that.maximal_dimension();
         maximal_dimension_ = dim;
         Statistics stats;
-        statistics_ = sch.template reduce_by_key<Tile_triangulation>(point_sets, std::inserter(tiles, tiles.begin()), stats, std::plus<>(),
-            [&dim](auto& range, auto out) {
-                Tile_index key = range.first->first;
+        tiles.clear();
+        statistics_ = sch.template for_each<typename AssociativeContainer::value_type>(point_sets,
+            [&dim](auto first, auto last, auto out) {
+                Tile_index key = first->first;
                 Tile_triangulation tri(key, dim);
                 Vertex_index hint;
                 // simplification is not needed (local and adjacent to local points only are received)
                 // simplification would be incorrect, as foreign vertices may come first and be simplified before their local neighbor is inserted
                 // should we spatial sort ?
-                for(auto it = range.first; it != range.second; ++it)
+                for(auto it = first; it != last; ++it)
                     for(const auto& p : it->second)
                         hint = tri.insert(p.second, p.first, hint).first;
                 Statistics stats = tri.statistics();
                 *out++ = { key, std::move(tri) };
                 return std::make_pair(stats, out);
-            }
+            }, stats, std::plus<>(), std::inserter(tiles, tiles.begin())
         ).first;
+        CGAL_DDT_TRACE0(sch, "DDT", "partition", 0, "E");
     }
 
     const Statistics& statistics() const { return statistics_; }

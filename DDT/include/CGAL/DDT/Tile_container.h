@@ -56,6 +56,12 @@ public:
     inline std::size_t number_of_values_mem_max() const { return number_of_values_mem_max_; }
     inline std::size_t number_of_values_mem() const { return number_of_values_mem_; }
 
+    void clear() {
+        usages.clear();
+        values.clear();
+        number_of_values_mem_ = 0;
+    }
+
     inline std::size_t size() const { return values.size(); }
     inline bool empty() const { return values.empty(); }
     const_iterator cbegin () const { return {this, usages.begin()}; }
@@ -66,6 +72,8 @@ public:
     iterator begin  () { return {this, usages.begin()}; }
     iterator end    () { return {this, usages.end()}; }
     iterator find(key_type key) { return {this, usages.find(key)}; }
+    std::pair<iterator, iterator> equal_range(key_type k) { auto r = usages.equal_range(k); return {{this, r.first}, {this, r.second}}; }
+    std::pair<const_iterator, const_iterator> equal_range(key_type k) const { auto r = usages.equal_range(k); return {{this, r.first}, {this, r.second}}; }
 
     value_iterator values_end    () { return values.end   (); }
     value_const_iterator values_end () const { return values.end   (); }
