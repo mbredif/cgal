@@ -625,7 +625,7 @@ public:
     {
         CGAL_DDT_TRACE0(sch, "DDT", "finalize", 0, "B");
         Statistics stats;
-        statistics_ = sch.for_each(tiles, [](Tile_const_iterator first, Tile_const_iterator last) {
+        statistics_ = sch.ranges_reduce(tiles, [](Tile_const_iterator first, Tile_const_iterator last) {
             return first->second.statistics();
         }, stats, std::plus<>());
         CGAL_DDT_TRACE0(sch, "DDT", "finalize", 0, "E");
@@ -637,7 +637,7 @@ public:
         CGAL_DDT_TRACE0(sch, "DDT", "write", 0, "B");
         bool ok =
             writer.write_begin(*this) &&
-            sch.for_each(tiles, [&writer](Tile_const_iterator first, Tile_const_iterator last) {
+            sch.ranges_reduce(tiles, [&writer](Tile_const_iterator first, Tile_const_iterator last) {
                 CGAL_assertion(std::distance(first, last) == 1);
                 return writer.write(first->second);
             }, true, std::logical_and<>()) &&
@@ -652,7 +652,7 @@ public:
         CGAL_DDT_TRACE0(sch, "DDT", "read", 0, "B");
         bool ok =
             reader.read_begin(*this) &&
-            sch.for_each(tiles, [&reader](Tile_iterator first, Tile_iterator last) {
+            sch.ranges_reduce(tiles, [&reader](Tile_iterator first, Tile_iterator last) {
                 CGAL_assertion(std::distance(first, last) == 1);
                 return reader.read(first->second);
             }, true, std::logical_and<>()) &&
@@ -668,7 +668,7 @@ public:
         bool ok =
             reader.read_begin(*this) &&
             writer.write_begin(*this) &&
-            sch.for_each(tiles, [&reader,&writer](Tile_iterator first, Tile_iterator last) {
+            sch.ranges_reduce(tiles, [&reader,&writer](Tile_iterator first, Tile_iterator last) {
                 CGAL_assertion(std::distance(first, last) == 1);
                 return reader.read(first->second) && writer.write(first->second);
             }, true, std::logical_and<>()) &&
@@ -685,7 +685,7 @@ public:
         typedef std::vector<std::pair<Tile_index, Point>> PointSet;
         typedef std::multimap<Tile_index, PointSet> PointSetContainer;
         PointSetContainer point_sets;
-        sch.template for_each<typename PointSetContainer::value_type>(that.tiles,
+        sch.template ranges_transform<typename PointSetContainer::value_type>(that.tiles,
             [&part](auto first, auto last, auto out) {
                 for(auto it = first; it != last; ++it) {
                     auto& tri = it->second;
@@ -719,7 +719,7 @@ public:
         maximal_dimension_ = dim;
         Statistics stats;
         tiles.clear();
-        statistics_ = sch.template for_each<typename AssociativeContainer::value_type>(point_sets,
+        statistics_ = sch.template ranges_transform_reduce<typename AssociativeContainer::value_type>(point_sets,
             [&dim](auto first, auto last, auto out) {
                 Tile_index key = first->first;
                 Tile_triangulation tri(key, dim);

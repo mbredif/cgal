@@ -64,9 +64,9 @@ struct Multithread_scheduler
              typename Container,
              typename Transform,
              typename OutputIterator>
-    OutputIterator for_each(Container& c, Transform transform, OutputIterator out)
+    OutputIterator ranges_transform(Container& c, Transform transform, OutputIterator out)
     {
-        CGAL_DDT_TRACE0(*this, "PERF", "for_each", "generic_work", "B");
+        CGAL_DDT_TRACE0(*this, "PERF", "transform", "generic_work", "B");
         typedef typename Container::key_type key_type;
         std::vector<key_type> keys;
         get_unique_keys(c, keys);
@@ -88,7 +88,7 @@ struct Multithread_scheduler
                 }, k));
         }
         for(auto& f: futures) f.get();
-        CGAL_DDT_TRACE0(*this, "PERF", "for_each", "generic_work", "E");
+        CGAL_DDT_TRACE0(*this, "PERF", "transform", "generic_work", "E");
         return out;
     }
 
@@ -99,9 +99,9 @@ struct Multithread_scheduler
              typename Reduce,
              typename OutputIterator>
     std::pair<V,OutputIterator>
-    for_each(Container& c, Transform transform, V value, Reduce reduce, OutputIterator out)
+    ranges_transform_reduce(Container& c, Transform transform, V value, Reduce reduce, OutputIterator out)
     {
-        CGAL_DDT_TRACE0(*this, "PERF", "for_each", "generic_work", "B");
+        CGAL_DDT_TRACE0(*this, "PERF", "transform_reduce", "generic_work", "B");
         typedef typename Container::key_type key_type;
         std::vector<key_type> keys;
         get_unique_keys(c, keys);
@@ -125,7 +125,7 @@ struct Multithread_scheduler
         }
         for(auto& f: futures) value = reduce(value, f.get());
 
-        CGAL_DDT_TRACE1(*this, "PERF", "for_each", "generic_work", "E", value, value);
+        CGAL_DDT_TRACE1(*this, "PERF", "transform_reduce", "generic_work", "E", value, value);
         return { value, out };
     }
 
@@ -133,9 +133,9 @@ struct Multithread_scheduler
              typename Transform,
              typename V,
              typename Reduce>
-    V for_each(Container& c, Transform transform, V value, Reduce reduce)
+    V ranges_reduce(Container& c, Transform transform, V value, Reduce reduce)
     {
-        CGAL_DDT_TRACE0(*this, "PERF", "for_each", "generic_work", "B");
+        CGAL_DDT_TRACE0(*this, "PERF", "reduce", "generic_work", "B");
         typedef typename Container::key_type key_type;
         std::vector<key_type> keys;
         get_unique_keys(c, keys);
@@ -154,7 +154,7 @@ struct Multithread_scheduler
         }
         for(auto& f: futures) value = reduce(value, f.get());
 
-        CGAL_DDT_TRACE1(*this, "PERF", "for_each", "generic_work", "E", value, value);
+        CGAL_DDT_TRACE1(*this, "PERF", "reduce", "generic_work", "E", value, value);
         return value;
     }
 
@@ -165,9 +165,9 @@ struct Multithread_scheduler
              typename OutputIterator,
              typename... Args2>
     OutputIterator
-    left_join(Container1& c1, Container2& c2, Transform transform, OutputIterator out, Args2&&... args2)
+    ranges_transform(Container1& c1, Container2& c2, Transform transform, OutputIterator out, Args2&&... args2)
     {
-        CGAL_DDT_TRACE0(*this, "PERF", "left_join", "generic_work", "B");
+        CGAL_DDT_TRACE0(*this, "PERF", "transform", "generic_work", "B");
         typedef typename Container1::key_type key_type;
         std::vector<key_type> keys;
         get_unique_keys(c1, keys);
@@ -198,7 +198,7 @@ struct Multithread_scheduler
                 }, k));
         }
         for(auto& f: futures) f.get();
-        CGAL_DDT_TRACE0(*this, "PERF", "left_join", "generic_work", "E");
+        CGAL_DDT_TRACE0(*this, "PERF", "transform", "generic_work", "E");
         return out;
     }
 
@@ -207,9 +207,9 @@ struct Multithread_scheduler
              typename Transform,
              typename OutputIterator1,
              typename... Args2>
-    void left_join_loop(Container1& c1, Container2& c2, Transform transform, OutputIterator1 out1, Args2&&... args2)
+    void ranges_for_each(Container1& c1, Container2& c2, Transform transform, OutputIterator1 out1, Args2&&... args2)
     {
-        CGAL_DDT_TRACE0(*this, "PERF", "left_join_loop", "generic_work", "B");
+        CGAL_DDT_TRACE0(*this, "PERF", "for_each", "generic_work", "B");
         typedef typename Container1::key_type    key_type;
         typedef typename Container1::value_type  value_type1;
         typedef typename Container2::mapped_type mapped_type2;
@@ -278,7 +278,7 @@ struct Multithread_scheduler
             }
         }
 
-        CGAL_DDT_TRACE0(*this, "PERF", "left_join_loop", "generic_work", "E");
+        CGAL_DDT_TRACE0(*this, "PERF", "for_each", "generic_work", "E");
     }
 
 private:
@@ -289,6 +289,7 @@ private:
 #ifdef CGAL_DDT_TRACING
 public:
     typedef std::chrono::time_point<std::chrono::high_resolution_clock> clock_type;
+    static constexpr int process_index() { return 0; }
     std::thread::id thread_index() { return std::this_thread::get_id(); }
     std::size_t clock_microsec() const { return std::chrono::duration<double, std::micro>(clock_now() - trace.t0).count(); }
     clock_type clock_now() const { return std::chrono::high_resolution_clock::now(); }

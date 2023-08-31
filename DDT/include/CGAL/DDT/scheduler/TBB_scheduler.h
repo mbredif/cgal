@@ -72,9 +72,9 @@ struct TBB_scheduler
              typename Container,
              typename OutputIterator,
              typename Transform>
-    OutputIterator for_each(Container& c, Transform transform, OutputIterator out)
+    OutputIterator ranges_transform(Container& c, Transform transform, OutputIterator out)
     {
-        CGAL_DDT_TRACE0(*this, "PERF", "for_each", "generic_work", "B");
+        CGAL_DDT_TRACE0(*this, "PERF", "transform", "generic_work", "B");
         typedef typename Container::key_type key_type;
         std::vector<key_type> keys;
         get_unique_keys(c, keys);
@@ -96,7 +96,7 @@ struct TBB_scheduler
                 }
             );
         });
-        CGAL_DDT_TRACE0(*this, "PERF", "for_each", "generic_work", "E");
+        CGAL_DDT_TRACE0(*this, "PERF", "transform", "generic_work", "E");
         return out;
     }
 
@@ -107,9 +107,9 @@ struct TBB_scheduler
              typename Reduce,
              typename Transform>
     std::pair<V,OutputIterator>
-    for_each(Container& c, Transform transform, V value, Reduce reduce, OutputIterator out)
+    ranges_transform_reduce(Container& c, Transform transform, V value, Reduce reduce, OutputIterator out)
     {
-        CGAL_DDT_TRACE0(*this, "PERF", "for_each", "generic_work", "B");
+        CGAL_DDT_TRACE0(*this, "PERF", "transform_reduce", "generic_work", "B");
         typedef typename Container::key_type key_type;
         std::vector<key_type> keys;
         get_unique_keys(c, keys);
@@ -120,7 +120,7 @@ struct TBB_scheduler
                 value,
                 [this, &c, &out, &value, &reduce, &transform, &keys](tbb::blocked_range<int> r, V val)
                 {
-                    CGAL_DDT_TRACE1_LOCK(*this, "PERF", "range", 0, "B", range, CGAL::DDT::to_string(r, keys));
+                    CGAL_DDT_TRACE1_LOCK(*this, "PERF", "range", 0, "B", range, to_summary(r, keys));
                     for (int i=r.begin(); i<r.end(); ++i)
                     {
                         key_type k = keys[i];
@@ -142,7 +142,7 @@ struct TBB_scheduler
                 reduce
             );
         });
-        CGAL_DDT_TRACE1(*this, "PERF", "for_each", "generic_work", "E", value, value);
+        CGAL_DDT_TRACE1(*this, "PERF", "transform_reduce", "generic_work", "E", value, value);
         return { value, out };
     }
 
@@ -150,9 +150,9 @@ struct TBB_scheduler
              typename V,
              typename Reduce,
              typename Transform>
-    V for_each(Container& c, Transform transform, V value, Reduce reduce)
+    V ranges_reduce(Container& c, Transform transform, V value, Reduce reduce)
     {
-        CGAL_DDT_TRACE0(*this, "PERF", "for_each", "generic_work", "B");
+        CGAL_DDT_TRACE0(*this, "PERF", "reduce", "generic_work", "B");
         typedef typename Container::key_type key_type;
         std::vector<key_type> keys;
         get_unique_keys(c, keys);
@@ -163,7 +163,7 @@ struct TBB_scheduler
                 value,
                 [this, &c, &transform, &reduce, &keys](tbb::blocked_range<int> r, V val)
                 {
-                    CGAL_DDT_TRACE1_LOCK(*this, "PERF", "range", 0, "B", range, CGAL::DDT::to_string(r, keys));
+                    CGAL_DDT_TRACE1_LOCK(*this, "PERF", "range", 0, "B", range, to_summary(r, keys));
                     for (int i=r.begin(); i<r.end(); ++i) {
                         key_type k = keys[i];
                         auto range = c.equal_range(k);
@@ -178,7 +178,7 @@ struct TBB_scheduler
                 reduce
             );
         });
-        CGAL_DDT_TRACE1(*this, "PERF", "for_each", "generic_work", "E", value, value);
+        CGAL_DDT_TRACE1(*this, "PERF", "reduce", "generic_work", "E", value, value);
         return value;
     }
 
@@ -189,9 +189,9 @@ struct TBB_scheduler
              typename Transform,
              typename... Args2>
     OutputIterator
-    left_join(Container1& c1, Container2& c2, Transform transform, OutputIterator out, Args2&&... args2)
+    ranges_transform(Container1& c1, Container2& c2, Transform transform, OutputIterator out, Args2&&... args2)
     {
-        CGAL_DDT_TRACE0(*this, "PERF", "left_join", "generic_work", "B");
+        CGAL_DDT_TRACE0(*this, "PERF", "transform", "generic_work", "B");
         typedef typename Container1::key_type key_type;
         std::vector<key_type> keys;
         get_unique_keys(c1, keys);
@@ -222,7 +222,7 @@ struct TBB_scheduler
                 }
             );
         });
-        CGAL_DDT_TRACE0(*this, "PERF", "left_join", "generic_work", "E");
+        CGAL_DDT_TRACE0(*this, "PERF", "transform", "generic_work", "E");
         return out;
     }
 
@@ -232,9 +232,9 @@ struct TBB_scheduler
              typename OutputIterator2,
              typename Transform,
              typename... Args2>
-    void left_join_loop(Container1& c1, Container2& c2, Transform transform, OutputIterator2 out1, Args2&&... args2)
+    void ranges_for_each(Container1& c1, Container2& c2, Transform transform, OutputIterator2 out1, Args2&&... args2)
     {
-        CGAL_DDT_TRACE0(*this, "PERF", "left_join_loop", "generic_work", "B");
+        CGAL_DDT_TRACE0(*this, "PERF", "for_each", "generic_work", "B");
         typedef typename Container1::key_type    key_type;
         typedef typename Container1::value_type  value_type1;
         typedef typename Container2::mapped_type mapped_type2;
@@ -285,7 +285,7 @@ struct TBB_scheduler
             });
         });
 
-        CGAL_DDT_TRACE0(*this, "PERF", "left_join_loop", "generic_work", "E");
+        CGAL_DDT_TRACE0(*this, "PERF", "for_each", "generic_work", "E");
     }
 
 private:
@@ -295,6 +295,7 @@ private:
 #ifdef CGAL_DDT_TRACING
 public:
     typedef tbb::tick_count clock_type;
+    static constexpr int process_index() { return 0; }
     int thread_index() const { return tbb::this_task_arena::current_thread_index(); }
     std::size_t clock_microsec() const { return 1e6*(clock_now() - trace.t0).seconds(); }
     clock_type clock_now() const { return tbb::tick_count::now(); }

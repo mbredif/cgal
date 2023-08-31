@@ -20,6 +20,7 @@
 #include <map>
 #include <vector>
 #include <functional>
+#include <CGAL/DDT/IO/trace_logger.h>
 
 namespace CGAL {
 namespace DDT {
@@ -72,7 +73,11 @@ struct MPI_scheduler
 {
 
     /// constructor
-    MPI_scheduler(int max_concurrency = 0) {
+    MPI_scheduler(int max_concurrency = 0)
+#if CGAL_DDT_TRACING
+        : trace("")
+#endif
+    {
         // Initialize the MPI environment
         MPI_Init(NULL, NULL);
 
@@ -81,6 +86,7 @@ struct MPI_scheduler
 
         // Get the rank of the process
         MPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
+        root_rank = 0;
 
         // Get the name of the processor
         int name_len;
@@ -88,11 +94,43 @@ struct MPI_scheduler
 
         pid = getpid();
 
+#if CGAL_DDT_TRACING
+        std::ostringstream oss;
+        oss << "perf-" << world_rank << ".json";
+        trace.open(oss.str());
+#endif
+
         // Print off a hello world message
         printf("Processor %s:%d [ %d / %d ]\n", processor_name, pid, world_rank+1, world_size);
     }
 
     ~MPI_scheduler() {
+#if CGAL_DDT_TRACING
+        // collect all traces "perf-*.json" to "perf.json"
+        trace.out.seekg(0);
+        std::ostringstream oss;
+        oss << trace.out.rdbuf();
+        std::string s(oss.str());
+
+        int sendcount = s.size()-1;
+        std::vector<int> recvcounts(world_size, 0);
+        MPI_Gather(&sendcount, 1, MPI_INT, recvcounts.data(), 1, MPI_INT, root_rank, MPI_COMM_WORLD );
+
+        std::vector<int> displs(world_size+1, 0);
+        for(int i=0; i<world_size; ++i) displs[i+1] = displs[i] + recvcounts[i];
+        int recv_size = displs[world_size];
+        std::vector<char> text(recv_size+2, 0);
+        MPI_Gatherv(s.c_str()+1, sendcount, MPI_CHAR, text.data()+1, recvcounts.data(), displs.data(), MPI_CHAR, root_rank, MPI_COMM_WORLD );
+
+        if (world_rank == root_rank) {
+            std::ofstream out("perf.json");
+            text[0] = '[';
+            text[recv_size-1] = '\n';
+            text[recv_size  ] = ']';
+            out << text.data();
+        }
+#endif
+
         // Finalize the MPI environment.
         MPI_Finalize();
     }
@@ -114,74 +152,96 @@ struct MPI_scheduler
         return rank(id) == world_rank;
     }
 
+    template<typename OutputValue,
+             typename Container,
+             typename OutputIterator,
+             typename Transform>
+    OutputIterator ranges_transform(Container& c, Transform transform, OutputIterator out)
+    {
+        CGAL_DDT_TRACE0(*this, "PERF", "transform", "generic_work", "B");
+        std::cerr << "todo : implement ranges_transform 1" << std::endl;
+        CGAL_DDT_TRACE0(*this, "PERF", "transform", "generic_work", "E");
+        return out;
+    }
+
     template<typename Container,
              typename V,
-             typename Transform,
-             typename Reduce = std::plus<>>
-    V for_each(Container& c, V value, Transform transform, Reduce reduce = {})
+             typename Reduce,
+             typename Transform>
+    V ranges_reduce(Container& c, Transform transform, V value, Reduce reduce)
     {
-        typedef typename Container::iterator iterator;
-        for(iterator it = c.begin(); it != c.end(); ++it)
-            if (is_local(it->first))
-                value = reduce(value, transform(it->first, it->second));
+        CGAL_DDT_TRACE0(*this, "PERF", "reduce", "generic_work", "B");
+        auto first = std::begin(c), end = std::end(c), last = first;
+        while(first != end) {
+            if (++last == end || first->first != last->first) {
+                if (is_local(first->first)) {
+                    CGAL_DDT_TRACE2(*this, "PERF", "transform", 0, "B", k, to_string(first->first), in, to_summary(first, last));
+                    V val = transform(first, last);
+                    CGAL_DDT_TRACE1(*this, "PERF", "transform", 0, "E", value, val);
+                    value = reduce(value, val);
+                }
+                first = last;
+            }
+        }
+        std::cerr << "todo : aggregate the values of all processors" << std::endl;
 
-        // @todo : aggregate the values of all processors
+        CGAL_DDT_TRACE1(*this, "PERF", "reduce", "generic_work", "E", value, value);
         return value;
+    }
+
+
+    template<typename OutputValue,
+             typename Container,
+             typename Transform,
+             typename V,
+             typename Reduce,
+             typename OutputIterator>
+    std::pair<V,OutputIterator>
+    ranges_transform_reduce(Container& c, Transform transform, V value, Reduce reduce, OutputIterator out)
+    {
+        CGAL_DDT_TRACE0(*this, "PERF", "transform_reduce", "generic_work", "B");
+        std::cerr << "todo : implement ranges_transform_reduce" << std::endl;
+        CGAL_DDT_TRACE1(*this, "PERF", "transform_reduce", "generic_work", "E", value, value);
+        return { value, out };
+    }
+
+    template<typename OutputValue,
+             typename Container1,
+             typename Container2,
+             typename Transform,
+             typename OutputIterator3,
+             typename... Args2>
+    OutputIterator3 ranges_transform(Container1& c1, Container2& c2, Transform transform, OutputIterator3 out3, Args2&&... args2)
+    {
+        CGAL_DDT_TRACE0(*this, "PERF", "transform", "generic_work", "B");
+        std::cerr << "todo : implement ranges_transform 2" << std::endl;
+        CGAL_DDT_TRACE0(*this, "PERF", "transform", "generic_work", "E");
+        return out3;
     }
 
     template<typename Container1,
              typename Container2,
-             typename V,
+             typename OutputIterator1,
              typename Transform,
-             typename Reduce = std::plus<>,
-             typename... Args>
-    V left_join(Container1& c1, Container2& c2, V value, Transform transform, Reduce reduce = {}, Args&&... args)
+             typename... Args2>
+    void ranges_for_each(Container1& c1, Container2& c2, Transform transform, OutputIterator1, Args2&&... args2)
     {
-        typedef typename Container1::iterator iterator1;
-        typedef typename Container2::iterator iterator2;
-        typedef typename Container1::key_type key_type;
-
+        CGAL_DDT_TRACE0(*this, "PERF", "for_each", "generic_work", "B");
+        /*
         // for now, let's assume that c2 is replicated on all processes, so that its non-local keys may be ignored
         // @todo : copartitioning of c1 and c2 ?
         for( auto it = c2.begin(); it != c2.end(); ) {
             if(!is_local(it->first)) it = c2.erase(it);
             else ++it;
         }
+
         for(iterator2 it2 = c2.begin(); it2 != c2.end(); ++it2) {
             key_type k = it2->first;
             if (!is_local(k)) continue;
-            iterator1 it1 = c1.try_emplace(k, k, std::forward<Args>(args)...).first;
-
-            value = reduce(value, transform(k, it1->second, it2->second));
-
-            c2.send_points(k);
-        }
-        // @todo : aggregate the values of all processors
-        return value;
-    }
-
-    template<typename Container1,
-             typename Container2,
-             typename V,
-             typename Transform,
-             typename Reduce = std::plus<>,
-             typename... Args>
-    V left_join_loop(Container1& c1, Container2& c2, V init, Transform transform, Reduce reduce = {}, Args&&... args)
-    {
-        // for now, let's assume that c2 is replicated on all processes, so that its non-local keys may be ignored
-        // @todo : copartitioning of c1 and c2 ?
-        for( auto it = c2.begin(); it != c2.end(); ) {
-            if(!is_local(it->first)) it = c2.erase(it);
-            else ++it;
-        }
-        V value = init, v;
-        do {
-            do {
-                v = left_join(c1, c2, init, transform, reduce, std::forward<Args>(args)...);
-                value = reduce(value, v);
-            } while (v != init);
-        } while (send_all_to_all(c2));
-        return value;
+            ...
+        */
+        std::cerr << "todo : implement ranges_for_each" << std::endl;
+        CGAL_DDT_TRACE0(*this, "PERF", "for_each", "generic_work", "E");
     }
 
     template<typename Point_id>
@@ -365,9 +425,19 @@ struct MPI_scheduler
 
 private:
     int world_size;
-    int world_rank;
+    int world_rank, root_rank;
     int pid;
     char processor_name[MPI_MAX_PROCESSOR_NAME];
+
+#ifdef CGAL_DDT_TRACING
+public:
+    typedef std::chrono::time_point<std::chrono::high_resolution_clock> clock_type;
+    int process_index() const { return pid; }
+    int thread_index() const { return world_rank; }
+    std::size_t clock_microsec() const { return std::chrono::duration<double, std::micro>(clock_now() - trace.t0).count(); }
+    clock_type clock_now() const { return std::chrono::high_resolution_clock::now(); }
+    trace_logger<clock_type> trace;
+#endif
 };
 
 }

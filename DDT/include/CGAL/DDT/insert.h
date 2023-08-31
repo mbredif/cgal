@@ -66,7 +66,7 @@ insert_and_get_axis_extreme_points(TriangulationContainer& tiles, PointSetContai
 {
     typedef typename TriangulationContainer::mapped_type TileTriangulation;
     typedef typename PointSetContainer::value_type PointSetContainerValue;
-    return sch.template left_join<PointSetContainerValue>(point_sets, tiles, [](auto first, auto last, TileTriangulation& tri, auto out_)
+    return sch.template ranges_transform<PointSetContainerValue>(point_sets, tiles, [](auto first, auto last, TileTriangulation& tri, auto out_)
     {
         typedef typename TileTriangulation::Vertex_index Vertex_index;
         out_ = splay_tile(tri, first, last, out_);
@@ -83,7 +83,7 @@ template<typename TriangulationContainer, typename PointSetContainer, typename S
 void splay_stars(TriangulationContainer& tiles, PointSetContainer& point_sets, Scheduler& sch, int dim)
 {
     typedef typename TriangulationContainer::mapped_type TileTriangulation;
-    sch.left_join_loop(point_sets, tiles,
+    sch.ranges_for_each(point_sets, tiles,
         [](auto first, auto last, TileTriangulation& tri, auto out) { return splay_tile(tri, first, last, out); },
         std::back_inserter(point_sets), dim);
 }

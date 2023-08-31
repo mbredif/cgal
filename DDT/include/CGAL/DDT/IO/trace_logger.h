@@ -21,7 +21,7 @@
             << "{\"name\": \"" << name << "\"" \
             << ", \"cat\": \"" << cat << "\"" \
             << ", \"ph\": \"" << ph << "\"" \
-            << ", \"pid\": 0" \
+            << ", \"pid\": " << (sch).process_index() \
             << ", \"tid\": " << (sch).thread_index() \
             << ", \"args\": {" << args << "}" \
             << ", \"ts\": " << (sch).clock_microsec(); \
@@ -38,9 +38,14 @@ namespace DDT {
 
 template<typename clock_type> struct trace_logger {
     clock_type t0;
-    std::ofstream out;
+    std::fstream out;
 
-    trace_logger(const std::string& filename = "perf.json") : out(filename), t0() {
+    trace_logger(const std::string& filename = "perf.json") : t0() {
+        if (!filename.empty()) open(filename);
+    }
+
+    void open(const std::string& filename) {
+        out.open(filename);
         out << "[";
     }
 

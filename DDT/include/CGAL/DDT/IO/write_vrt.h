@@ -209,68 +209,6 @@ bool write_tile_vrt_tins(const std::string& filename, const TileTriangulation& t
     return write_vrt_header(filename, "wkbTIN", false) && write_csv_tin(filename, triangulation);
 }
 
-// VRT+CSV writers
-
-template<typename DistributedTriangulation, typename Scheduler>
-void write_vrt_verts(DistributedTriangulation& tri, Scheduler& sch, const std::string& dirname)
-{
-    typedef typename DistributedTriangulation::Tile_triangulation Tile_triangulation;
-    typedef typename DistributedTriangulation::Tile_index         Tile_index;
-    boost::filesystem::path p(dirname);
-    boost::filesystem::create_directories(p);
-    sch.for_each(tri.tiles, 0, std::plus<>(), [&dirname](Tile_index id, const Tile_triangulation& triangulation) {
-        std::string filename(dirname + "/" + std::to_string(id));
-        write_tile_vrt_verts(filename, triangulation);
-        return 1;
-    });
-    write_vrt_header(dirname, "wkbPoint", "vertices", tri, false);
-}
-
-template<typename DistributedTriangulation, typename Scheduler>
-void write_vrt_facets(DistributedTriangulation& tri, Scheduler& sch, const std::string& dirname)
-{
-    typedef typename DistributedTriangulation::Tile_triangulation Tile_triangulation;
-    typedef typename DistributedTriangulation::Tile_index         Tile_index;
-    boost::filesystem::path p(dirname);
-    boost::filesystem::create_directories(p);
-    sch.for_each(tri.tiles, 0, std::plus<>(), [&dirname](Tile_index id, const Tile_triangulation& triangulation) {
-        std::string filename(dirname + "/" + std::to_string(id));
-        write_tile_vrt_facets(filename, triangulation);
-        return 1;
-    });
-    write_vrt_header(dirname, "wkbLineString", "facets", tri, true);
-}
-
-template<typename DistributedTriangulation, typename Scheduler>
-void write_vrt_cells(DistributedTriangulation& tri, Scheduler& sch, const std::string& dirname)
-{
-    typedef typename DistributedTriangulation::Tile_triangulation Tile_triangulation;
-    typedef typename DistributedTriangulation::Tile_index         Tile_index;
-    boost::filesystem::path p(dirname);
-    boost::filesystem::create_directories(p);
-    sch.for_each(tri.tiles, 0, std::plus<>(), [&dirname](Tile_index id, const Tile_triangulation& triangulation) {
-        std::string filename(dirname + "/" + std::to_string(id));
-        write_tile_vrt_cells(filename, triangulation);
-        return 1;
-    });
-    write_vrt_header(dirname, "wkbPolygon", "cells", tri, true);
-}
-
-template<typename DistributedTriangulation, typename Scheduler>
-void write_vrt_tins(DistributedTriangulation& tri, Scheduler& sch, const std::string& dirname)
-{
-    typedef typename DistributedTriangulation::Tile_triangulation Tile_triangulation;
-    typedef typename DistributedTriangulation::Tile_index         Tile_index;
-    boost::filesystem::path p(dirname);
-    boost::filesystem::create_directories(p);
-    sch.for_each(tri.tiles, 0, std::plus<>(), [&dirname](Tile_index id, const Tile_triangulation& triangulation) {
-        std::string filename(dirname + "/" + std::to_string(id));
-        write_tile_vrt_tins(filename, triangulation);
-        return 1;
-    });
-    write_vrt_header(dirname, "wkbTIN", "tins", tri, false);
-}
-
 }
 }
 
