@@ -19,7 +19,7 @@
 #include <set>
 #include <map>
 #include <iostream>
-#include <assert.h>
+#include <CGAL/assertions.h>
 
 namespace CGAL {
 namespace DDT {
@@ -42,7 +42,7 @@ struct Statistics {
     {}
 
     Statistics operator+(const Statistics& stats) const {
-        assert(valid && stats.valid);
+        CGAL_assertion(valid && stats.valid);
         Statistics res;
         res.number_of_finite_vertices = number_of_finite_vertices + stats.number_of_finite_vertices;
         res.number_of_finite_facets   = number_of_finite_facets   + stats.number_of_finite_facets;
@@ -124,7 +124,7 @@ public:
     inline std::size_t number_of_main_finite_cells   () const { return statistics_.number_of_finite_cells;    }
 
     inline Tile_index vertex_id(Vertex_index v) const {
-        assert(!vertex_is_infinite(v));
+        CGAL_assertion(!vertex_is_infinite(v));
         return get(tile_indices, v);
     }
 
@@ -224,7 +224,7 @@ public:
 
     /// checks if a finite vertex is local : tile.vertex_id(vertex) == tile.id()
     /// precondition : the vertex is finite.
-    inline bool vertex_is_local(Vertex_index v) const { assert(!vertex_is_infinite(v)); return vertex_id(v) == id(); }
+    inline bool vertex_is_local(Vertex_index v) const { CGAL_assertion(!vertex_is_infinite(v)); return vertex_id(v) == id(); }
 
     /// checks if a finite vertex is foreign : tile.vertex_id(vertex) != tile.id()
     /// precondition : the vertex is finite.
@@ -402,7 +402,7 @@ public:
     /// returns whether simplification occured
     bool simplify(Vertex_index v)
     {
-        assert(!vertex_is_infinite(v));
+        CGAL_assertion(!vertex_is_infinite(v));
         if (!vertex_is_foreign(v)) return false;
         std::vector<Vertex_index> adj;
         adjacent_vertices(v, std::back_inserter(adj));
@@ -565,19 +565,19 @@ public:
 
     Facet_index relocate_facet(const Tile_triangulation& t, Facet_index f) const
     {
-        assert(t.facet_is_valid(f));
+        CGAL_assertion(t.facet_is_valid(f));
         Cell_index c = t.cell(f);
         if(t.cell_is_foreign(c)) {
             Facet_index g = t.mirror_facet(f);
             Facet_index h = relocate_facet(t, g);
-            assert(h != facets_end());
+            CGAL_assertion(h != facets_end());
             return mirror_facet(h);
         }
         int icv = t.index_of_covertex(f);
         int iv  = !icv;
         // v is a relocated vertex on the facet (!=covertex)
         Vertex_index v = relocate_vertex(t, t.vertex(c, iv));
-        assert(v!=vertices_end());
+        CGAL_assertion(v!=vertices_end());
         if (v == vertices_end()) return facets_end();
         std::vector<Cell_index> cells;
         incident_cells(v, std::back_inserter(cells));
@@ -591,7 +591,7 @@ public:
                     return f2;
             }
         }
-        assert(false);
+        CGAL_assertion(false);
         return facets_end();
     }
 
