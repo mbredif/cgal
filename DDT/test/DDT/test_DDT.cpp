@@ -222,5 +222,7 @@ int main(int argc, char **argv)
 
     if (errors)
         std::cerr << errors << " errors occured !" << std::endl;
+    else
+        std::cout << "No errors !" << std::endl;
     return -errors;
 }

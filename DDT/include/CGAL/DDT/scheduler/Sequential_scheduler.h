@@ -43,12 +43,12 @@ struct Sequential_scheduler
         CGAL_DDT_TRACE0(*this, "PERF", "for_each", "generic_work", "B");
         auto first = std::begin(c), end = std::end(c), last = first;
         while(first != end) {
-            ++last;
-            if (last != end && first->first == last->first) continue;
-            CGAL_DDT_TRACE1(*this, "PERF", "transform", 0, "B", k, to_string(first->first));
-            out = transform(first, last, out);
-            CGAL_DDT_TRACE0(*this, "PERF", "transform", 0, "E");
-            first = last;
+            if (++last == end || first->first != last->first) {
+                CGAL_DDT_TRACE2(*this, "PERF", "transform", 0, "B", k, to_string(first->first), in, to_summary(first, last));
+                out = transform(first, last, out);
+                CGAL_DDT_TRACE0(*this, "PERF", "transform", 0, "E");
+                first = last;
+            }
         }
         CGAL_DDT_TRACE0(*this, "PERF", "for_each", "generic_work", "E");
         return out;
@@ -63,13 +63,13 @@ struct Sequential_scheduler
         CGAL_DDT_TRACE0(*this, "PERF", "for_each", "generic_work", "B");
         auto first = std::begin(c), end = std::end(c), last = first;
         while(first != end) {
-            ++last;
-            if (last != end && first->first == last->first) continue;
-            CGAL_DDT_TRACE1(*this, "PERF", "transform", 0, "B", k, to_string(first->first));
-            V val = transform(first, last);
-            CGAL_DDT_TRACE1(*this, "PERF", "transform", 0, "E", value, val);
-            value = reduce(value, val);
-            first = last;
+            if (++last == end || first->first != last->first) {
+                CGAL_DDT_TRACE2(*this, "PERF", "transform", 0, "B", k, to_string(first->first), in, to_summary(first, last));
+                V val = transform(first, last);
+                CGAL_DDT_TRACE1(*this, "PERF", "transform", 0, "E", value, val);
+                value = reduce(value, val);
+                first = last;
+            }
         }
         CGAL_DDT_TRACE1(*this, "PERF", "for_each", "generic_work", "E", value, value);
         return value;
@@ -87,17 +87,30 @@ struct Sequential_scheduler
         CGAL_DDT_TRACE0(*this, "PERF", "for_each", "generic_work", "B");
         auto first = std::begin(c), end = std::end(c), last = first;
         while(first != end) {
-            ++last;
-            if (last != end && first->first == last->first) continue;
-            CGAL_DDT_TRACE1(*this, "PERF", "transform", 0, "B", k, to_string(first->first));
-            auto res = transform(first, last, out);
-            CGAL_DDT_TRACE1(*this, "PERF", "transform", 0, "E", value, to_string(res.first));
-            value = reduce(value, res.first);
-            out = res.second;
-            first = last;
+            if (++last == end || first->first != last->first) {
+                CGAL_DDT_TRACE2(*this, "PERF", "transform", 0, "B", k, to_string(first->first), in, to_summary(first, last));
+                auto res = transform(first, last, out);
+                CGAL_DDT_TRACE1(*this, "PERF", "transform", 0, "E", value, to_string(res.first));
+                value = reduce(value, res.first);
+                out = res.second;
+                first = last;
+            }
         }
         CGAL_DDT_TRACE1(*this, "PERF", "for_each", "generic_work", "E", value, value);
         return { value, out };
+    }
+
+    template<typename InputIterator1, typename Container2, typename Transform, typename OutputIterator3, typename... Args2>
+    OutputIterator3 transform_range(InputIterator1 first1, InputIterator1 last1, Container2& c2, Transform transform, OutputIterator3 out3, Args2&&... args2)
+    {
+        auto k = first1->first;
+        auto it2 = c2.emplace(std::piecewise_construct,
+            std::forward_as_tuple(k),
+            std::forward_as_tuple(k, std::forward<Args2>(args2)...)).first;
+        CGAL_DDT_TRACE2(*this, "PERF", "transform", 0, "B", k, to_string(k), in, to_summary(first1, last1));
+        out3 = transform(first1, last1, it2->second, out3);
+        CGAL_DDT_TRACE1(*this, "PERF", "transform", 0, "E", inout, to_summary(first1, last1));
+        return out3;
     }
 
     template<typename OutputValue,
@@ -111,16 +124,10 @@ struct Sequential_scheduler
         CGAL_DDT_TRACE0(*this, "PERF", "left_join", "generic_work", "B");
         auto first1 = std::begin(c1), end1 = std::end(c1), last1 = first1;
         while(first1 != end1) {
-            ++last1;
-            if (last1 != end1 && first1->first == last1->first) continue;
-            auto k = first1->first;
-            auto it2 = c2.emplace(std::piecewise_construct,
-                std::forward_as_tuple(k),
-                std::forward_as_tuple(k, std::forward<Args2>(args2)...)).first;
-            CGAL_DDT_TRACE1(*this, "PERF", "transform", 0, "B", k, to_string(k));
-            out3 = transform(first1, last1, it2->second, out3);
-            CGAL_DDT_TRACE0(*this, "PERF", "transform", 0, "E");
-            first1 = last1;
+            if (++last1 == end1 || first1->first != last1->first) {
+                out3 = transform_range(first1, last1, c2, transform, out3, std::forward<Args2>(args2)...);
+                first1 = last1;
+            }
         }
         CGAL_DDT_TRACE0(*this, "PERF", "left_join", "generic_work", "E");
         return out3;
@@ -131,23 +138,32 @@ struct Sequential_scheduler
              typename OutputIterator1,
              typename Transform,
              typename... Args2>
-    void left_join_loop(Container1& c1, Container2& c2, Transform transform, OutputIterator1 out1, Args2&&... args2)
+    void left_join_loop(Container1& c1, Container2& c2, Transform transform, OutputIterator1, Args2&&... args2)
     {
         CGAL_DDT_TRACE0(*this, "PERF", "left_join_loop", "generic_work", "B");
-        while(!c1.empty())
-        {
-            auto first1 = std::begin(c1), end1 = std::end(c1), last1 = first1;
-            auto k = last1->first;
-            while(last1 != end1 && last1->first == k) ++last1;
-            auto it2 = c2.emplace(std::piecewise_construct,
-                std::forward_as_tuple(k),
-                std::forward_as_tuple(k, std::forward<Args2>(args2)...)).first;
-            CGAL_DDT_TRACE1(*this, "PERF", "transform", 0, "B", k, to_string(k));
-            std::vector<typename Container1::value_type> output1;
-            transform(first1, last1, it2->second, std::back_inserter(output1));
-            CGAL_DDT_TRACE0(*this, "PERF", "transform", 0, "E");
-            c1.erase(first1, last1);
-            out1 = std::move(output1.begin(), output1.end(), out1);
+        typedef typename Container1::key_type    key_type;
+        typedef typename Container1::mapped_type mapped_type1;
+        std::multimap<key_type, mapped_type1> m3;
+
+        auto first1 = std::begin(c1), end1 = std::end(c1), last1 = first1;
+        while(first1 != end1) {
+            if (++last1 == end1 || first1->first != last1->first) {
+                CGAL_DDT_TRACE1(*this, "PERF", "item", "generic_work", "B", k, to_string(first1->first));
+                transform_range(first1, last1, c2, transform, std::inserter(m3, m3.begin()), std::forward<Args2>(args2)...);
+                first1 = last1;
+
+                while(!m3.empty()) {
+                    auto first3 = m3.begin(), end3 = m3.end(), last3 = first3;
+                    do { ++last3; } while (last3!=end3 && last3->first == first3->first);
+                    std::vector<std::pair<key_type,mapped_type1>> output3;
+                    transform_range(first3, last3, c2, transform, std::back_inserter(output3), std::forward<Args2>(args2)...);
+                    CGAL_DDT_TRACE2(*this, "PERF", "send", 0, "B", k, to_string(first3->first), out, to_summary(output3.begin(), output3.end()));
+                    m3.erase(first3, last3);
+                    std::move(output3.begin(), output3.end(), std::inserter(m3, m3.begin()));
+                    CGAL_DDT_TRACE0(*this, "PERF", "send", 0, "E");
+                }
+                CGAL_DDT_TRACE0(*this, "PERF", "item", "generic_work", "E");
+            }
         }
         CGAL_DDT_TRACE0(*this, "PERF", "left_join_loop", "generic_work", "E");
     }

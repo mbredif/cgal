@@ -140,7 +140,7 @@ struct STD_scheduler
     left_join(Container1& c1, Container2& c2, Transform transform, OutputIterator out, Args2&&... args2)
     {
         CGAL_DDT_TRACE0(*this, "PERF", "left_join", "generic_work", "B");
-        typedef typename Container1::key_type key_type;
+        typedef typename Container2::key_type key_type;
         std::vector<key_type> keys;
         get_unique_keys(c1, keys);
 
@@ -175,14 +175,16 @@ struct STD_scheduler
              typename Transform,
              typename OutputIterator1,
              typename... Args2>
-    void left_join_loop(Container1& c1, Container2& c2, Transform transform, OutputIterator1 out1, Args2&&... args2)
+    void left_join_loop(Container1& c1, Container2& c2, Transform transform, OutputIterator1, Args2&&... args2)
     {
-        typedef typename Container1::value_type value_type1;
-        Container1 d1;
-        while(!c1.empty()) {
-            left_join<value_type1>(c1, c2, transform, OutputIterator1(d1), std::forward<Args2>(args2)...);
-            c1.clear();
-            std::swap(c1, d1);
+        typedef typename Container1::key_type    key_type;
+        typedef typename Container1::mapped_type mapped_type1;
+        typedef typename Container1::value_type  value_type1;
+        std::multimap<key_type, mapped_type1> m1[2];
+        left_join<value_type1>(c1, c2, transform, std::inserter(m1[0], m1[0].begin()), std::forward<Args2>(args2)...);
+        for(int i = 0, j = 1; !m1[i].empty(); i = j, j = 1-i) {
+            left_join<value_type1>(m1[i], c2, transform, std::inserter(m1[j], m1[j].begin()), std::forward<Args2>(args2)...);
+            m1[i].clear();
         }
     }
 
