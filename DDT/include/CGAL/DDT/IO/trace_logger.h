@@ -38,7 +38,7 @@ namespace DDT {
 
 template<typename clock_type> struct trace_logger {
     clock_type t0;
-    std::fstream out;
+    std::ofstream out;
 
     trace_logger(const std::string& filename = "perf.json") : t0() {
         if (!filename.empty()) open(filename);
@@ -78,11 +78,21 @@ template<typename clock_type> struct trace_logger {
 namespace CGAL {
 namespace DDT {
 
+std::ostream& write_summary(std::ostream& out, const std::string& s)
+{
+    return out << s;
+}
+
 template<typename T>
 std::ostream& write_summary(std::ostream& out, const T& t)
 {
     return out << std::to_string(t);
 }
+
+template<typename T, typename Alloc>
+std::ostream& write_summary(std::ostream& out, const std::vector<T, Alloc>& v);
+template<class T, class U>
+std::ostream& write_summary(std::ostream& out, const std::pair<T, U>& p);
 
 template<typename T, typename Alloc>
 std::ostream& write_summary(std::ostream& out, const std::vector<T, Alloc>& v)

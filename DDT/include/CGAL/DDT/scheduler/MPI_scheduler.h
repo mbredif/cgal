@@ -106,10 +106,13 @@ struct MPI_scheduler
 
     ~MPI_scheduler() {
 #if CGAL_DDT_TRACING
+        trace.out.close();
         // collect all traces "perf-*.json" to "perf.json"
-        trace.out.seekg(0);
+        std::ostringstream filename;
+        filename << "perf-" << world_rank << ".json";
+        std::ifstream f(filename.str());
         std::ostringstream oss;
-        oss << trace.out.rdbuf();
+        oss << f.rdbuf();
         std::string s(oss.str());
 
         int sendcount = s.size()-1;
@@ -205,7 +208,7 @@ struct MPI_scheduler
         return { value, out };
     }
 
-    template<typename OutputValue,
+    template<typename OutputValue3,
              typename Container1,
              typename Container2,
              typename Transform,
@@ -221,10 +224,9 @@ struct MPI_scheduler
 
     template<typename Container1,
              typename Container2,
-             typename OutputIterator1,
              typename Transform,
              typename... Args2>
-    void ranges_for_each(Container1& c1, Container2& c2, Transform transform, OutputIterator1, Args2&&... args2)
+    void ranges_for_each(Container1& c1, Container2& c2, Transform transform, Args2&&... args2)
     {
         CGAL_DDT_TRACE0(*this, "PERF", "for_each", "generic_work", "B");
         /*

@@ -158,14 +158,14 @@ struct Multithread_scheduler
         return value;
     }
 
-    template<typename OutputValue,
+    template<typename OutputValue3,
              typename Container1,
              typename Container2,
              typename Transform,
-             typename OutputIterator,
+             typename OutputIterator3,
              typename... Args2>
-    OutputIterator
-    ranges_transform(Container1& c1, Container2& c2, Transform transform, OutputIterator out, Args2&&... args2)
+    OutputIterator3
+    ranges_transform(Container1& c1, Container2& c2, Transform transform, OutputIterator3 out3, Args2&&... args2)
     {
         CGAL_DDT_TRACE0(*this, "PERF", "transform", "generic_work", "B");
         typedef typename Container1::key_type key_type;
@@ -176,7 +176,7 @@ struct Multithread_scheduler
         {
             std::unique_lock<std::mutex> lock(mutex);
             for(key_type k : keys)
-                futures.push_back(pool.submit([this, &c1, &c2, &transform, &out, &args2...](key_type k){
+                futures.push_back(pool.submit([this, &c1, &c2, &transform, &out3, &args2...](key_type k){
                     std::unique_lock<std::mutex> lock(mutex);
                     CGAL_DDT_TRACE1(*this, "LOCK", "mutex", "bad", "B", k, to_string(k));
                     typename Container2::iterator it2 = c2.emplace(std::piecewise_construct,
@@ -187,28 +187,39 @@ struct Multithread_scheduler
                     CGAL_DDT_TRACE2(*this, "PERF", "transform", 0, "B", k, to_string(k), in, to_summary(range1.first, range1.second));
                     lock.unlock();
 
-                    std::vector<OutputValue> output;
-                    transform(range1.first, range1.second, it2->second, std::back_inserter(output));
+                    std::vector<OutputValue3> v3;
+                    transform(range1.first, range1.second, it2->second, std::back_inserter(v3));
 
                     lock.lock();
-                    CGAL_DDT_TRACE2(*this, "PERF", "transform", 0, "E", inout, to_summary(range1.first, range1.second), out, to_summary(output.begin(), output.end()));
+                    CGAL_DDT_TRACE2(*this, "PERF", "transform", 0, "E", inout, to_summary(range1.first, range1.second), out, to_summary(v3.begin(), v3.end()));
                     CGAL_DDT_TRACE1(*this, "LOCK", "mutex", "bad", "B", k, to_string(k));
-                    out = std::move(output.begin(), output.end(), out);
+                    out3 = std::move(v3.begin(), v3.end(), out3);
                     CGAL_DDT_TRACE0(*this, "LOCK", "mutex", "bad", "E");
                 }, k));
         }
         for(auto& f: futures) f.get();
         CGAL_DDT_TRACE0(*this, "PERF", "transform", "generic_work", "E");
-        return out;
+        return out3;
     }
 
     template<typename Container1,
              typename Container2,
              typename Transform,
-             typename OutputIterator1,
              typename... Args2>
-    void ranges_for_each(Container1& c1, Container2& c2, Transform transform, OutputIterator1 out1, Args2&&... args2)
+    void ranges_for_each(Container1& c1, Container2& c2, Transform transform, Args2&&... args2)
     {
+        CGAL_DDT_TRACE0(*this, "PERF", "for_each", "generic_work", "B");
+        typedef typename Container1::key_type    key_type;
+        typedef typename Container1::mapped_type mapped_type1;
+        typedef typename Container1::value_type  value_type1;
+        std::multimap<key_type, mapped_type1> m1[2];
+        ranges_transform<value_type1>(c1, c2, transform, std::inserter(m1[0], m1[0].begin()), std::forward<Args2>(args2)...);
+        for(int i = 0, j = 1; !m1[i].empty(); i = j, j = 1-i) {
+            ranges_transform<value_type1>(m1[i], c2, transform, std::inserter(m1[j], m1[j].begin()), std::forward<Args2>(args2)...);
+            m1[i].clear();
+        }
+        CGAL_DDT_TRACE0(*this, "PERF", "for_each", "generic_work", "E");
+        /*
         CGAL_DDT_TRACE0(*this, "PERF", "for_each", "generic_work", "B");
         typedef typename Container1::key_type    key_type;
         typedef typename Container1::value_type  value_type1;
@@ -279,6 +290,7 @@ struct Multithread_scheduler
         }
 
         CGAL_DDT_TRACE0(*this, "PERF", "for_each", "generic_work", "E");
+        */
     }
 
 private:

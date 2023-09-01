@@ -100,20 +100,27 @@ struct Sequential_scheduler
         return { value, out };
     }
 
-    template<typename InputIterator1, typename Container2, typename Transform, typename OutputIterator3, typename... Args2>
+    template<typename OutputValue3,
+             typename InputIterator1,
+             typename Container2,
+             typename Transform,
+             typename OutputIterator3,
+             typename... Args2>
     OutputIterator3 transform_range(InputIterator1 first1, InputIterator1 last1, Container2& c2, Transform transform, OutputIterator3 out3, Args2&&... args2)
     {
-        auto k = first1->first;
+        typedef typename Container2::key_type key_type;
+        key_type k = first1->first;
         auto it2 = c2.emplace(std::piecewise_construct,
             std::forward_as_tuple(k),
             std::forward_as_tuple(k, std::forward<Args2>(args2)...)).first;
+        std::vector<OutputValue3> v3;
         CGAL_DDT_TRACE2(*this, "PERF", "transform", 0, "B", k, to_string(k), in, to_summary(first1, last1));
-        out3 = transform(first1, last1, it2->second, out3);
-        CGAL_DDT_TRACE1(*this, "PERF", "transform", 0, "E", inout, to_summary(first1, last1));
-        return out3;
+        transform(first1, last1, it2->second, std::back_inserter(v3));
+        CGAL_DDT_TRACE2(*this, "PERF", "transform", 0, "E", inout, to_summary(first1, last1), out, to_summary(v3.begin(), v3.end()));
+        return std::move(v3.begin(), v3.end(), out3);
     }
 
-    template<typename OutputValue,
+    template<typename OutputValue3,
              typename Container1,
              typename Container2,
              typename Transform,
@@ -125,7 +132,7 @@ struct Sequential_scheduler
         auto first1 = std::begin(c1), end1 = std::end(c1), last1 = first1;
         while(first1 != end1) {
             if (++last1 == end1 || first1->first != last1->first) {
-                out3 = transform_range(first1, last1, c2, transform, out3, std::forward<Args2>(args2)...);
+                out3 = transform_range<OutputValue3>(first1, last1, c2, transform, out3, std::forward<Args2>(args2)...);
                 first1 = last1;
             }
         }
@@ -135,32 +142,37 @@ struct Sequential_scheduler
 
     template<typename Container1,
              typename Container2,
-             typename OutputIterator1,
              typename Transform,
              typename... Args2>
-    void ranges_for_each(Container1& c1, Container2& c2, Transform transform, OutputIterator1, Args2&&... args2)
+    void ranges_for_each(Container1& c1, Container2& c2, Transform transform, Args2&&... args2)
     {
         CGAL_DDT_TRACE0(*this, "PERF", "for_each", "generic_work", "B");
         typedef typename Container1::key_type    key_type;
-        typedef typename Container1::mapped_type mapped_type1;
-        std::multimap<key_type, mapped_type1> m3;
+        typedef typename Container1::value_type  value_type1;
+        std::multimap<key_type, typename value_type1::second_type> m1;
 
         auto first1 = std::begin(c1), end1 = std::end(c1), last1 = first1;
         while(first1 != end1) {
             if (++last1 == end1 || first1->first != last1->first) {
                 CGAL_DDT_TRACE1(*this, "PERF", "item", "generic_work", "B", k, to_string(first1->first));
-                transform_range(first1, last1, c2, transform, std::inserter(m3, m3.begin()), std::forward<Args2>(args2)...);
+                transform_range<value_type1>(first1, last1, c2, transform, std::inserter(m1, m1.begin()), std::forward<Args2>(args2)...);
                 first1 = last1;
 
-                while(!m3.empty()) {
-                    auto first3 = m3.begin(), end3 = m3.end(), last3 = first3;
+                while(!m1.empty()) {
+                    auto first3 = m1.begin(), end3 = m1.end(), last3 = first3;
                     do { ++last3; } while (last3!=end3 && last3->first == first3->first);
-                    std::vector<std::pair<key_type,mapped_type1>> output3;
-                    transform_range(first3, last3, c2, transform, std::back_inserter(output3), std::forward<Args2>(args2)...);
-                    CGAL_DDT_TRACE2(*this, "PERF", "send", 0, "B", k, to_string(first3->first), out, to_summary(output3.begin(), output3.end()));
-                    m3.erase(first3, last3);
-                    std::move(output3.begin(), output3.end(), std::inserter(m3, m3.begin()));
-                    CGAL_DDT_TRACE0(*this, "PERF", "send", 0, "E");
+
+                    key_type k = first3->first;
+                    auto it2 = c2.emplace(std::piecewise_construct,
+                        std::forward_as_tuple(k),
+                        std::forward_as_tuple(k, std::forward<Args2>(args2)...)).first;
+                    std::vector<value_type1> v3;
+                    CGAL_DDT_TRACE2(*this, "PERF", "transform", 0, "B", k, to_string(k), in, to_summary(first3, last3));
+                    transform(first3, last3, it2->second, std::back_inserter(v3));
+                    CGAL_DDT_TRACE2(*this, "PERF", "transform", 0, "E", inout, to_summary(first3, last3), out, to_summary(v3.begin(), v3.end()));
+                    m1.erase(first3, last3);
+                    std::move(v3.begin(), v3.end(), std::inserter(m1, m1.begin()));
+                    CGAL_DDT_TRACE1(*this, "PERF", "m1", 0, "i", value, to_summary(m1.begin(), m1.end()));
                 }
                 CGAL_DDT_TRACE0(*this, "PERF", "item", "generic_work", "E");
             }

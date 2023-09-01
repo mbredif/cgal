@@ -103,7 +103,7 @@ public:
     /// \param transform function called on each joined values: `transform(first1,last1,v2,out3)`
     /// \param args2 extra arguments passed to const.ruct `Container2::mapped_type(k,args2...)` when a key `k` in `c1` is not found in `c2`
     ///
-    /// \tparam OutputValue a value type that may be output to `out3`
+    /// \tparam OutputValue3 a value type that may be output to `out3`
     /// \tparam Container1 a model of an `AssociativeContainer` that supports equivalent keys
     /// \tparam Container2 a model of an `AssociativeContainer` that supports unique keys, `Container1` and `Container2` share a common `key_type`
     /// \tparam Transform a model of `Callable` with 2 `Container1::(const_)iterator`s as argument types `Container2::mapped_type`
@@ -111,15 +111,15 @@ public:
     /// \tparam OutputIterator3 a model of `OutputIterator` used by `transform`
     /// \tparam Args2 types for the extra constructor arguments
     /// \return the output iterator `out3`.
-    template<typename OutputValue,
+    template<typename OutputValue3,
              typename Container1,
              typename Container2,
              typename Transform,
              typename OutputIterator3,
              typename... Args2>
-    OutputIterator
+    OutputIterator3
     ranges_transform(Container1& c1, Container2& c2, Transform transform, OutputIterator3 out3, Args2&&... args2)
-    { return out; }
+    { return out3; }
 
     /// \brief executes a function on all ranges of values with equivalent keys in the associative container `c1`,
     ///        calling `transform(first1,last1,v2,out)` on each such range `(first1,last1)` in `c1`,
@@ -134,7 +134,6 @@ public:
     ///        If `Container2` is non-const, then a non-const reference is passed to `transform` and its values may be modified.
     /// \param c1 an associative container.
     /// \param c2 an associative container.
-    /// \param out1 an output iterator (unused)
     /// \param transform function called on each joined values: `transform(first1,last1,v2,out)`
     /// \param args2 extra arguments passed to construct `Container2::mapped_type(k,args2...)` when a key `k` in `c1` is not found in `c2`
     ///
@@ -142,15 +141,25 @@ public:
     /// \tparam Container2 a model of an `AssociativeContainer` that supports unique keys, `Container1` and `Container2` share a common `key_type`
     /// \tparam Transform a model of `Callable` with 2 `Container1::(const_)iterator`s as argument types `Container2::mapped_type`
     ///         and a model of `OutputIterator` as argument types, and `OutputIterator` as return type.
-    /// \tparam OutputIterator a model of `OutputIterator` used by `transform` (unused)
     /// \tparam Args2 types for the extra constructor arguments
     template<typename Container1,
              typename Container2,
              typename Transform,
-             typename OutputIterator1,
              typename... Args2>
-    void ranges_for_each(Container1& c1, Container2& c2, Transform transform, OutputIterator1 out1, Args2&&... args2) { }
+    void ranges_for_each(Container1& c1, Container2& c2, Transform transform, Args2&&... args2) { }
 /// @}
+
+#ifdef CGAL_DDT_TRACING
+    struct unspecified_type {};
+    struct {
+        struct {
+            template<typename T> auto operator<<(const T&) { return *this; }
+        } out;
+    } trace;
+    unspecified_type process_index() { return {}; }
+    unspecified_type thread_index() { return {}; }
+    unspecified_type clock_microsec() { return {}; }
+#endif
 
 };
 /* end Scheduler */

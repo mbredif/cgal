@@ -37,11 +37,12 @@ OutputIterator splay_tile(TileTriangulation& tri, InputIterator first, InputIter
     // insert them into the current tile triangulation and get the new foreign points
     std::set<Vertex_index> inserted;
     for(InputIterator it = first; it != last; ++it) {
-        tri.insert(it->second, inserted, true);
         // TODO: For now, all points are inserted, disregarding memory constraints
+        tri.insert(it->second, inserted, true);
         it->second.clear();
-        // TODO: if some points are not inserted, they should be transferred to out
-        //  *out++ = { it->first, std::move(it->second) };
+        // if some remain, reschedule them !
+        if(!it->second.empty())
+            *out++ = { it->first, std::move(it->second) };
     }
     if (inserted.empty()) return out;
 
@@ -52,10 +53,10 @@ OutputIterator splay_tile(TileTriangulation& tri, InputIterator first, InputIter
     // send them to the relevant neighboring tiles
     for(auto& vi : vertices)
     {
-        PointSet ps;
+        PointSet points;
         for(auto v : vi.second)
-            ps.emplace_back(tri.vertex_id(v), tri.point(v));
-        *out++ = { vi.first, ps };
+            points.emplace_back(tri.vertex_id(v), tri.point(v));
+        *out++ = { vi.first, std::move(points) };
     }
     return out;
 }
@@ -85,11 +86,11 @@ void splay_stars(TriangulationContainer& tiles, PointSetContainer& point_sets, S
     typedef typename TriangulationContainer::mapped_type TileTriangulation;
     sch.ranges_for_each(point_sets, tiles,
         [](auto first, auto last, TileTriangulation& tri, auto out) { return splay_tile(tri, first, last, out); },
-        std::back_inserter(point_sets), dim);
+        dim);
 }
 
-template<typename TileTriangulation, typename PointSetContainer>
-std::size_t splay_root_triangulation(TileTriangulation& tri, PointSetContainer& input_points, PointSetContainer& output_points)
+template<typename TileTriangulation, typename PointSetContainer, typename OutputIterator>
+OutputIterator splay_root_triangulation(TileTriangulation& tri, PointSetContainer& input_points, OutputIterator out)
 {
     typedef typename PointSetContainer::key_type     TileIndex;
     typedef typename PointSetContainer::mapped_type  PointSet;
@@ -105,9 +106,9 @@ std::size_t splay_root_triangulation(TileTriangulation& tri, PointSetContainer& 
         PointSet points;
         for(auto v : vi.second)
             points.emplace_back(tri.vertex_id(v), tri.point(v));
-        output_points.push_back(std::make_pair(vi.first, std::move(points)));
+        *out++ = { vi.first, std::move(points) };
     }
-    return inserted.size();
+    return out;
 }
 
 } // namespace impl

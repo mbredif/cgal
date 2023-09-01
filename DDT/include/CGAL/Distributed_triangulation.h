@@ -555,7 +555,7 @@ public:
         CGAL_DDT_TRACE0(sch, "DDT", "insert_and_send_all_axis_extreme_points", 0, "E");
         CGAL_DDT_TRACE0(sch, "DDT", "splay_root_triangulation", 0, "B");
         Tile_triangulation tri(-1, maximal_dimension());
-        CGAL::DDT::impl::splay_root_triangulation(tri, point_sets, points);
+        CGAL::DDT::impl::splay_root_triangulation(tri, point_sets, std::back_inserter(points));
         CGAL_DDT_TRACE0(sch, "DDT", "splay_root_triangulation", 0, "E");
         CGAL_DDT_TRACE0(sch, "DDT", "splay_stars", 0, "B");
         CGAL::DDT::impl::splay_stars(tiles, points, sch, maximal_dimension());
