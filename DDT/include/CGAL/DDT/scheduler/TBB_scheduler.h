@@ -330,9 +330,9 @@ public:
     typedef tbb::tick_count clock_type;
     static constexpr int process_index() { return 0; }
     int thread_index() const { return tbb::this_task_arena::current_thread_index(); }
-    std::size_t clock_microsec() const { return 1e6*(clock_now() - trace.t0).seconds(); }
+    std::size_t clock_microsec() const { return 1e6*(clock_now()-trace.t0).seconds(); }
     clock_type clock_now() const { return tbb::tick_count::now(); }
-    trace_logger<clock_type> trace;
+    trace_logger<clock_type> trace = {"perf_tbb.json", clock_now()};
 #endif
 };
 

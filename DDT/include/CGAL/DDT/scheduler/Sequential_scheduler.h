@@ -172,7 +172,6 @@ struct Sequential_scheduler
                     CGAL_DDT_TRACE2(*this, "PERF", "transform", 0, "E", inout, to_summary(first3, last3), out, to_summary(v3.begin(), v3.end()));
                     m1.erase(first3, last3);
                     std::move(v3.begin(), v3.end(), std::inserter(m1, m1.begin()));
-                    CGAL_DDT_TRACE1(*this, "PERF", "m1", 0, "i", value, to_summary(m1.begin(), m1.end()));
                 }
                 CGAL_DDT_TRACE0(*this, "PERF", "item", "generic_work", "E");
             }
@@ -187,7 +186,7 @@ public:
     static constexpr int thread_index() { return 0; }
     std::size_t clock_microsec() const { return std::chrono::duration<double, std::micro>(clock_now() - trace.t0).count(); }
     clock_type clock_now() const { return std::chrono::high_resolution_clock::now(); }
-    trace_logger<clock_type> trace;
+    trace_logger<clock_type> trace = {"perf_seq.json", clock_now()};
 #endif
 };
 

@@ -40,7 +40,7 @@ template<typename clock_type> struct trace_logger {
     clock_type t0;
     std::ofstream out;
 
-    trace_logger(const std::string& filename = "perf.json") : t0() {
+    trace_logger(const std::string& filename = "perf.json", clock_type t = {}) : t0(t) {
         if (!filename.empty()) open(filename);
     }
 

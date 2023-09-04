@@ -74,9 +74,6 @@ struct MPI_scheduler
 
     /// constructor
     MPI_scheduler(int max_concurrency = 0)
-#if CGAL_DDT_TRACING
-        : trace("")
-#endif
     {
         // Initialize the MPI environment
         MPI_Init(NULL, NULL);
@@ -96,7 +93,7 @@ struct MPI_scheduler
 
 #if CGAL_DDT_TRACING
         std::ostringstream oss;
-        oss << "perf-" << world_rank << ".json";
+        oss << "perf_mpi." << world_rank << ".json";
         trace.open(oss.str());
 #endif
 
@@ -107,9 +104,9 @@ struct MPI_scheduler
     ~MPI_scheduler() {
 #if CGAL_DDT_TRACING
         trace.out.close();
-        // collect all traces "perf-*.json" to "perf.json"
+        // collect all traces "perf_mpi.*.json" to "perf_mpi.json"
         std::ostringstream filename;
-        filename << "perf-" << world_rank << ".json";
+        filename << "perf_mpi." << world_rank << ".json";
         std::ifstream f(filename.str());
         std::ostringstream oss;
         oss << f.rdbuf();
@@ -126,7 +123,7 @@ struct MPI_scheduler
         MPI_Gatherv(s.c_str()+1, sendcount, MPI_CHAR, text.data()+1, recvcounts.data(), displs.data(), MPI_CHAR, root_rank, MPI_COMM_WORLD );
 
         if (world_rank == root_rank) {
-            std::ofstream out("perf.json");
+            std::ofstream out("perf_mpi.json");
             text[0] = '[';
             text[recv_size-1] = '\n';
             text[recv_size  ] = ']';
@@ -438,7 +435,7 @@ public:
     int thread_index() const { return world_rank; }
     std::size_t clock_microsec() const { return std::chrono::duration<double, std::micro>(clock_now() - trace.t0).count(); }
     clock_type clock_now() const { return std::chrono::high_resolution_clock::now(); }
-    trace_logger<clock_type> trace;
+    trace_logger<clock_type> trace = {"", clock_now()};
 #endif
 };
 
