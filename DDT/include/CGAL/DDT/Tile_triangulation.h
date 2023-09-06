@@ -60,7 +60,21 @@ std::ostream& operator<<(std::ostream& out, const Statistics& stats)
         << ", \"finite_cells\": " << stats.number_of_finite_cells
         << ", \"facets\": " << stats.number_of_facets
         << ", \"cells\": " << stats.number_of_cells
+        << ", \"valid\": " << stats.valid
         << " }";
+}
+
+std::istream& operator>>(std::istream& in, Statistics& stats)
+{
+    std::string s;
+    return in
+        >> s /* { */ >> s /* \"finite_vertices\": */ >> stats.number_of_finite_vertices
+        >> s /* , */ >> s /* \"finite_facets\":   */ >> stats.number_of_finite_facets
+        >> s /* , */ >> s /* \"finite_cells\":    */ >> stats.number_of_finite_cells
+        >> s /* , */ >> s /* \"facets\":          */ >> stats.number_of_facets
+        >> s /* , */ >> s /* \"cells\":           */ >> stats.number_of_cells
+        >> s /* , */ >> s /* \"valid\":           */ >> stats.valid
+        >> s /* } */;
 }
 
 std::string to_string(const Statistics& stats) {

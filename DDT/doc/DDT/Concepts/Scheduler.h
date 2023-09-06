@@ -149,6 +149,12 @@ public:
     void ranges_for_each(Container1& c1, Container2& c2, Transform transform, Args2&&... args2) { }
 /// @}
 
+    /// todo
+    template<typename InputIterator, typename OutputIterator>
+    OutputIterator all_to_all(InputIterator begin, InputIterator end, OutputIterator out){ return out; }
+
+    int thread_index() { return 0; }
+
 #ifdef CGAL_DDT_TRACING
     struct unspecified_type {};
     struct {
@@ -156,8 +162,6 @@ public:
             template<typename T> auto operator<<(const T&) { return *this; }
         } out;
     } trace;
-    unspecified_type process_index() { return {}; }
-    unspecified_type thread_index() { return {}; }
     unspecified_type clock_microsec() { return {}; }
 #endif
 

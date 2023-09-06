@@ -34,43 +34,46 @@ public:
     template <class TileTriangulation>
     bool write(const TileTriangulation& tri) const
     {
-        return write_cgal_tile(tri, dirname_);
+        std::ofstream os(dirname_ + "/" + std::to_string(tri.id()) + ".txt");
+        return write_cgal_tile(os, tri);
     }
 
     template <typename DistributedTriangulation>
-    bool write_begin(const DistributedTriangulation& tri) const
+    bool write_begin(const DistributedTriangulation& tri, int) const
     {
         return true;
     }
 
     template <typename DistributedTriangulation>
-    bool write_end(const DistributedTriangulation& tri) const
+    bool write_end(const DistributedTriangulation& tri, int id) const
     {
-        return write_json_tiles(tri, dirname_);
+        std::ofstream os(dirname_ + "/" + std::to_string(id) + ".json");
+        return write_json_tiles(os, tri);
     }
 
     template <typename TileIndex>
     bool is_readable(TileIndex id) const
     {
-        const std::string fname = dirname_ + "/" + std::to_string(id) + ".txt";
-        std::ifstream in(fname, std::ios::in);
-        return in.is_open();
+        std::ifstream is(dirname_ + "/" + std::to_string(id) + ".txt", std::ios::in);
+        return is.is_open();
     }
 
     template<typename TileTriangulation>
     bool read(TileTriangulation& tri) const
     {
-        return read_cgal_tile(tri, dirname_);
+        std::ifstream is(dirname_ + "/" + std::to_string(tri.id()) + ".txt", std::ios::in);
+        return read_cgal_tile(is, tri);
     }
 
     template <typename DistributedTriangulation>
-    bool read_begin(DistributedTriangulation& tri) const
+    bool read_begin(DistributedTriangulation& tri, int id) const
     {
-        return read_json_tiles(tri, dirname_);
+        std::ifstream is(dirname_ + "/" + std::to_string(id) + ".json", std::ios::in);
+        return read_cgal_json(is, tri);
     }
 
     template <typename DistributedTriangulation>
-    bool read_end(DistributedTriangulation& tri) const
+    bool read_end(DistributedTriangulation& tri, int id) const
     {
         return true;
     }

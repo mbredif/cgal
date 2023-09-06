@@ -63,6 +63,7 @@ private:
     };
 
     std::vector<std::thread> m_threads;
+    std::map<std::thread::id, int> m_thread_ids;
     bool m_shutdown;
     safe<std::queue<std::function<void()>>> m_queue;
     std::mutex m_conditional_mutex;
@@ -84,12 +85,16 @@ public:
         return m_threads.size();
     }
 
+    int thread_index() const { return m_thread_ids.at(std::this_thread::get_id()); }
+
     // Inits thread pool
     void init()
     {
+        m_thread_ids[std::this_thread::get_id()] = 0;
         for (std::size_t i = 0; i < m_threads.size(); ++i)
         {
             m_threads[i] = std::thread(thread_worker(this, i));
+            m_thread_ids[m_threads[i].get_id()] = i+1;
         }
     }
 

@@ -12,12 +12,7 @@
 #ifndef CGAL_DDT_SCHEDULER_STD_SCHEDULER_H
 #define CGAL_DDT_SCHEDULER_STD_SCHEDULER_H
 
-#if __cplusplus >= 201703L
 #include <execution>
-#define CGAL_DDT_SCHEDULER_STD_SCHEDULER_PAR policy,
-#else
-#define CGAL_DDT_SCHEDULER_STD_SCHEDULER_PAR
-#endif
 #include <functional>
 #include <chrono>
 
@@ -26,16 +21,19 @@
 namespace CGAL {
 namespace DDT {
 
+namespace Impl {
+template<typename ExecutionPolicy> struct Execution_policy_traits {};
+template<> struct Execution_policy_traits<std::execution::parallel_policy>  { static constexpr const char *shortname = "par"; };
+template<> struct Execution_policy_traits<std::execution::sequenced_policy> { static constexpr const char *shortname = "seq"; };
+}
+
 // \ingroup PkgDDTSchedulerClasses
 // \cgalModels Scheduler
-#if __cplusplus >= 201703L
-template<typename ExecutionPolicy
->
-#endif
+template<typename ExecutionPolicy>
 struct STD_scheduler
 {
 
-    STD_scheduler(int max_concurrency = 0) {}
+    STD_scheduler(int /* max_concurrency */ = 0) {}
 
     inline int max_concurrency() const { return 0; }
 
@@ -57,8 +55,7 @@ struct STD_scheduler
         std::vector<key_type> keys;
         get_unique_keys(c, keys);
 
-        std::for_each(CGAL_DDT_SCHEDULER_STD_SCHEDULER_PAR
-            keys.begin(), keys.end(), [this, &c, &transform, &out](key_type k){
+        std::for_each(policy, keys.begin(), keys.end(), [this, &c, &transform, &out](key_type k){
                 auto range = c.equal_range(k);
                 std::vector<OutputValue> output;
                 CGAL_DDT_TRACE1_LOCK(*this, "PERF", "transform", 0, "B", k, to_string(k));
@@ -88,8 +85,7 @@ struct STD_scheduler
         std::vector<key_type> keys;
         get_unique_keys(c, keys);
 
-        value = std::transform_reduce(CGAL_DDT_SCHEDULER_STD_SCHEDULER_PAR
-            keys.begin(), keys.end(), value, reduce, [this, &c, &transform, &out](key_type k){
+        value = std::transform_reduce(policy, keys.begin(), keys.end(), value, reduce, [this, &c, &transform, &out](key_type k){
                 auto range = c.equal_range(k);
                 std::vector<OutputValue> output;
                 CGAL_DDT_TRACE1_LOCK(*this, "PERF", "transform", 0, "B", k, to_string(k));
@@ -117,8 +113,7 @@ struct STD_scheduler
         std::vector<key_type> keys;
         get_unique_keys(c, keys);
 
-        value = std::transform_reduce(CGAL_DDT_SCHEDULER_STD_SCHEDULER_PAR
-            keys.begin(), keys.end(), value, reduce, [this, &c, &transform](key_type k){
+        value = std::transform_reduce(policy, keys.begin(), keys.end(), value, reduce, [this, &c, &transform](key_type k){
                 auto range = c.equal_range(k);
                 CGAL_DDT_TRACE1_LOCK(*this, "PERF", "transform", 0, "B", k, to_string(k));
                 V val = transform(range.first, range.second);
@@ -144,8 +139,7 @@ struct STD_scheduler
         std::vector<key_type> keys;
         get_unique_keys(c1, keys);
 
-        std::for_each(CGAL_DDT_SCHEDULER_STD_SCHEDULER_PAR
-            keys.begin(), keys.end(), [this, &c1, &c2, &transform, &out3, &args2...](key_type k){
+        std::for_each(policy, keys.begin(), keys.end(), [this, &c1, &c2, &transform, &out3, &args2...](key_type k){
                 std::unique_lock<std::mutex> lock(mutex);
                 CGAL_DDT_TRACE1(*this, "LOCK", "mutex", "bad", "B", k, to_string(k));
                 typename Container2::iterator it2 = c2.emplace(std::piecewise_construct,
@@ -189,30 +183,28 @@ struct STD_scheduler
         CGAL_DDT_TRACE0(*this, "PERF", "for_each", "generic_work", "E");
     }
 
-#if __cplusplus >= 201703L
-    ExecutionPolicy policy;
-#endif
+    //std::thread::id thread_index() const { return std::this_thread::get_id(); }
+    int thread_index() const { return 0; }
+
+    template<typename InputIterator, typename OutputIterator>
+    OutputIterator all_to_all(InputIterator begin, InputIterator end, OutputIterator out)  { return out; }
 
 private:
+    ExecutionPolicy policy;
     std::mutex mutex;
 
 #ifdef CGAL_DDT_TRACING
 public:
     typedef std::chrono::time_point<std::chrono::high_resolution_clock> clock_type;
-    static constexpr int process_index() { return 0; }
-    std::thread::id thread_index() const { return std::this_thread::get_id(); }
     std::size_t clock_microsec() const { return std::chrono::duration<double, std::micro>(clock_now() - trace.t0).count(); }
     clock_type clock_now() const { return std::chrono::high_resolution_clock::now(); }
-    trace_logger<clock_type> trace;
+    const std::string shortname = Impl::Execution_policy_traits<ExecutionPolicy>::shortname;
+    trace_logger<clock_type> trace = {"perf_std_" + shortname + ".json", clock_now()};
 #endif
 };
 
-#if __cplusplus >= 201703L
 using STD_scheduler_par = CGAL::DDT::STD_scheduler<std::execution::parallel_policy>;
 using STD_scheduler_seq = CGAL::DDT::STD_scheduler<std::execution::sequenced_policy>;
-#else
-using STD_scheduler_seq = CGAL::DDT::STD_scheduler;
-#endif
 
 }
 }

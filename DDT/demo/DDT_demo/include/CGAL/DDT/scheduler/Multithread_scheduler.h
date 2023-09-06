@@ -292,6 +292,10 @@ struct Multithread_scheduler
         CGAL_DDT_TRACE0(*this, "PERF", "for_each", "generic_work", "E");
         */
     }
+    int thread_index() { return pool.thread_index(); }
+
+    template<typename InputIterator, typename OutputIterator>
+    OutputIterator all_to_all(InputIterator begin, InputIterator end, OutputIterator out)  { return out; }
 
 private:
     thread_pool pool;
@@ -301,11 +305,9 @@ private:
 #ifdef CGAL_DDT_TRACING
 public:
     typedef std::chrono::time_point<std::chrono::high_resolution_clock> clock_type;
-    static constexpr int process_index() { return 0; }
-    std::thread::id thread_index() { return std::this_thread::get_id(); }
     std::size_t clock_microsec() const { return std::chrono::duration<double, std::micro>(clock_now() - trace.t0).count(); }
     clock_type clock_now() const { return std::chrono::high_resolution_clock::now(); }
-    trace_logger<clock_type> trace;
+    trace_logger<clock_type> trace = {"perf_mt.json", clock_now()};
 #endif
 };
 

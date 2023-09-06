@@ -47,7 +47,10 @@ struct Distributed_point_set {
     iterator find(key_type key) { return point_sets.find(key); }
     std::pair<iterator, iterator> equal_range(key_type k) { return point_sets.equal_range(k); }
     std::pair<const_iterator, const_iterator> equal_range(key_type k) const { return point_sets.equal_range(k); }
+    iterator erase(iterator it) { return point_sets.erase(it); }
     iterator erase(iterator first, iterator last) { return point_sets.erase(first, last); }
+    const_iterator begin  () const { return point_sets.begin (); }
+    const_iterator end    () const { return point_sets.end   (); }
     iterator begin  () { return point_sets.begin (); }
     iterator end    () { return point_sets.end   (); }
     bool empty() const { return point_sets.empty(); }
@@ -85,6 +88,17 @@ struct Distributed_point_set {
   private:
     Container point_sets;
 };
+
+template<typename TileIndex, typename Point, typename PointSerializer>
+std::string to_summary(const Distributed_point_set<TileIndex, Point, PointSerializer>& ps) {
+    if (ps.empty()) return "{}";
+    std::ostringstream oss;
+    for(auto it = ps.begin(); it != ps.end(); ++it) {
+        oss << (it == ps.begin() ? "{\"" : ",\"") << std::to_string(it->first) << "\": " << it->second.size();
+    }
+    oss << "}";
+    return oss.str();
+}
 
 }
 

@@ -5,6 +5,8 @@
 
 #include <CGAL/Distributed_triangulation.h>
 #include <CGAL/DDT/serializer/VRT_file_serializer.h>
+#include <CGAL/DDT/serializer/PVTU_file_serializer.h>
+#include <CGAL/DDT/serializer/File_serializer.h>
 #include <CGAL/DDT/IO/write_ply.h>
 #include <boost/program_options.hpp>
 #include "logging.h"
@@ -29,7 +31,7 @@ int DDT_demo(int argc, char **argv)
 
   int NP, loglevel, max_concurrency, max_number_of_tiles;
   std::vector<int> NT;
-  std::string vrt, ply, ser;
+  std::string vrt, ply, cgal, pvtu, ser;
   double range;
   int dimension = Traits::D;
 
@@ -45,6 +47,8 @@ int DDT_demo(int argc, char **argv)
   ("serialize,s", po::value<std::string>(&ser)->default_value("tile_"), "prefix for tile serialization")
   ("vrt", po::value<std::string>(&vrt), "VRT+CSV output basename")
   ("ply", po::value<std::string>(&ply), "PLY output basename")
+  ("pvtu", po::value<std::string>(&pvtu), "PVTU+VTU output basename")
+  ("cgal", po::value<std::string>(&cgal), "CGAL output basename")
   ("memory,m", po::value<int>(&max_number_of_tiles)->default_value(0), "max number of tiles in memory")
   ;
 
@@ -101,8 +105,10 @@ int DDT_demo(int argc, char **argv)
   std::cout << "- Points      : " << NP << std::endl;
   std::cout << "- Concurrency : " << scheduler.max_concurrency() << std::endl;
   std::cout << "- memTiles    : " << max_number_of_tiles << std::endl;
-  std::cout << "- VRT Out     : " << (vrt.empty() ? "[no output]" : vrt) << std::endl;
-  std::cout << "- PLY Out     : " << (ply.empty() ? "[no output]" : ply) << std::endl;
+  std::cout << "- VRT Out     : " << (vrt.empty() ? "[no output]" : vrt ) << std::endl;
+  std::cout << "- PLY Out     : " << (ply.empty() ? "[no output]" : ply ) << std::endl;
+  std::cout << "- PVTU Out    : " << (pvtu.empty()? "[no output]" : pvtu) << std::endl;
+  std::cout << "- CGAL Out    : " << (cgal.empty()? "[no output]" : cgal) << std::endl;
   std::cout << "- Tiles       : " << partitioner.size() << ", " << partitioner << std::endl;
   std::cout << "- Serializer  : " << serializer << std::endl;
 
@@ -118,6 +124,18 @@ int DDT_demo(int argc, char **argv)
   {
       log.step("write_vrt       ");
       tri.write(CGAL::DDT::VRT_serializer(vrt), scheduler);
+  }
+
+  if ( vm.count("cgal")  )
+  {
+      log.step("write_cgal       ");
+      tri.write(CGAL::DDT::File_serializer(cgal), scheduler);
+  }
+
+  if ( vm.count("pvtu")  )
+  {
+      log.step("write_pvtu       ");
+      tri.write(CGAL::DDT::PVTU_serializer(pvtu), scheduler);
   }
 
   if ( vm.count("ply")  )

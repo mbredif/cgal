@@ -29,18 +29,17 @@ namespace DDT {
 // VRT header writers
 
 template<typename DistributedTriangulation>
-bool write_union_vrt_header(const std::string& dirname, const std::string& type, const std::string& union_name, DistributedTriangulation& tri, bool local)
+bool write_union_vrt_header(const std::string& dirname, const std::string& prefix, const std::string& suffix,
+    const std::string& type, const std::string& union_name, DistributedTriangulation& tri, bool local)
 {
-    std::ofstream f(dirname+".vrt");
-    boost::filesystem::path path(dirname);
-    std::string stem = path.stem().string();
+    std::ofstream f(dirname + "/" + prefix + suffix + ".vrt");
     f <<"<OGRVRTDataSource>" << std::endl;
     f <<"<OGRVRTUnionLayer name=\""<< union_name << "\">" << std::endl;
     f <<"<SourceLayerFieldName>tile</SourceLayerFieldName>" << std::endl;
     for(const auto& [id, tile] : tri.tiles) {
         std::string name = std::to_string(id);
         f <<  "<OGRVRTLayer name=\"" << name <<  "\">" << std::endl;
-        f <<    "<SrcDataSource relativeToVRT=\"1\">" << stem << "/" << name << ".csv</SrcDataSource>" << std::endl;
+        f <<    "<SrcDataSource relativeToVRT=\"1\">" << prefix << "/" << name << ".csv</SrcDataSource>" << std::endl;
         f <<    "<SrcLayer>" << name <<  "</SrcLayer>" << std::endl;
         f <<    "<LayerSRS>IGNF:LAMB93</LayerSRS> " << std::endl;
         f <<    "<GeometryType>" << type << "</GeometryType>" << std::endl;
@@ -54,32 +53,28 @@ bool write_union_vrt_header(const std::string& dirname, const std::string& type,
     return !f.fail();
 }
 
-bool write_vrt_header(const std::string& filename, const std::string& type, bool local)
+bool write_vrt_header(std::ostream& vrt, const std::string& stem, const std::string& type, bool local)
 {
-    boost::filesystem::path path(filename);
-    std::string stem = path.stem().string();
-    std::ofstream f(filename+".vrt");
-    f <<"<OGRVRTDataSource>" << std::endl;
-    f <<  "<OGRVRTLayer name=\"" << stem <<  "\">" << std::endl;
-    f <<    "<SrcDataSource relativeToVRT=\"1\">" << stem << ".csv</SrcDataSource>" << std::endl;
-    f <<    "<SrcLayer>" << stem <<  "</SrcLayer>" << std::endl;
-    f <<    "<LayerSRS>IGNF:LAMB93</LayerSRS> " << std::endl;
-    f <<    "<GeometryType>" << type << "</GeometryType>" << std::endl;
-    f <<    "<GeometryField encoding=\"WKT\" field=\"geom\"/>" << std::endl;
-    f <<    "<Field name=\"id\" type=\"Integer\"/>" << std::endl;
-    if (local) f <<    "<Field name=\"local\" type=\"Integer\"/>" << std::endl;
-    f <<  "</OGRVRTLayer>" << std::endl;
-    f <<"</OGRVRTDataSource>" << std::endl;
-    return !f.fail();
+    vrt << "<OGRVRTDataSource>" << std::endl;
+    vrt <<  "<OGRVRTLayer name=\"" << stem <<  "\">" << std::endl;
+    vrt <<    "<SrcDataSource relativeToVRT=\"1\">" << stem << ".csv</SrcDataSource>" << std::endl;
+    vrt <<    "<SrcLayer>" << stem <<  "</SrcLayer>" << std::endl;
+    vrt <<    "<LayerSRS>IGNF:LAMB93</LayerSRS> " << std::endl;
+    vrt <<    "<GeometryType>" << type << "</GeometryType>" << std::endl;
+    vrt <<    "<GeometryField encoding=\"WKT\" field=\"geom\"/>" << std::endl;
+    vrt <<    "<Field name=\"id\" type=\"Integer\"/>" << std::endl;
+    if (local) vrt <<    "<Field name=\"local\" type=\"Integer\"/>" << std::endl;
+    vrt <<  "</OGRVRTLayer>" << std::endl;
+    vrt <<"</OGRVRTDataSource>" << std::endl;
+    return !vrt.fail();
 }
 
 // CSV tile writers
 
 template<typename TileTriangulation>
-bool write_csv_vert(const std::string& filename, const TileTriangulation& triangulation)
+bool write_csv_vert(std::ostream& csv, const TileTriangulation& triangulation)
 {
     typedef typename TileTriangulation::Vertex_index Vertex_index;
-    std::ofstream csv(filename+".csv");
     csv << "geom,id" << std::endl;
     int D = triangulation.maximal_dimension();
     for(Vertex_index v = triangulation.vertices_begin(); v != triangulation.vertices_end(); ++v)
@@ -94,12 +89,11 @@ bool write_csv_vert(const std::string& filename, const TileTriangulation& triang
 }
 
 template<typename TileTriangulation>
-bool write_csv_facet(const std::string& filename, const TileTriangulation& triangulation)
+bool write_csv_facet(std::ostream& csv, const TileTriangulation& triangulation)
 {
     typedef typename TileTriangulation::Vertex_index Vertex_index;
     typedef typename TileTriangulation::Facet_index  Facet_index;
     typedef typename TileTriangulation::Cell_index   Cell_index;
-    std::ofstream csv(filename+".csv");
     csv << "geom,id,local" << std::endl;
     int D = triangulation.maximal_dimension();
     for(Facet_index f = triangulation.facets_begin(); f != triangulation.facets_end(); ++f)
@@ -125,11 +119,10 @@ bool write_csv_facet(const std::string& filename, const TileTriangulation& trian
 }
 
 template<typename TileTriangulation>
-bool write_csv_cell(const std::string& filename, const TileTriangulation& triangulation)
+bool write_csv_cell(std::ostream& csv, const TileTriangulation& triangulation)
 {
     typedef typename TileTriangulation::Vertex_index Vertex_index;
     typedef typename TileTriangulation::Cell_index   Cell_index;
-    std::ofstream csv(filename+".csv");
     csv << "geom,id,local" << std::endl;
     int D = triangulation.maximal_dimension();
     for(Cell_index c = triangulation.cells_begin(); c != triangulation.cells_end(); ++c)
@@ -153,11 +146,10 @@ bool write_csv_cell(const std::string& filename, const TileTriangulation& triang
 }
 
 template<typename TileTriangulation>
-bool write_csv_tin(const std::string& filename, const TileTriangulation& triangulation)
+bool write_csv_tin(std::ostream& csv, const TileTriangulation& triangulation)
 {
     typedef typename TileTriangulation::Vertex_index Vertex_index;
     typedef typename TileTriangulation::Cell_index   Cell_index;
-    std::ofstream csv(filename+".csv");
     csv << "geom,id" << std::endl;
     int D = triangulation.maximal_dimension();
     bool first = true;
@@ -186,27 +178,39 @@ bool write_csv_tin(const std::string& filename, const TileTriangulation& triangu
 // VRT+CSV tile writers
 
 template<typename TileTriangulation>
-bool write_tile_vrt_verts(const std::string& filename, const TileTriangulation& triangulation)
+bool write_tile_vrt_verts(const std::string& dirname, const TileTriangulation& triangulation)
 {
-    return write_vrt_header(filename, "wkbPoint", false) && write_csv_vert(filename, triangulation);
+    std::string stem = std::to_string(triangulation.id());
+    std::ofstream csv(dirname + "/" + stem + ".csv");
+    std::ofstream vrt(dirname + "/" + stem + ".vrt");
+    return write_vrt_header(vrt, stem, "wkbPoint", false) && write_csv_vert(csv, triangulation);
 }
 
 template<typename TileTriangulation>
-bool write_tile_vrt_facets(const std::string& filename, const TileTriangulation& triangulation)
+bool write_tile_vrt_facets(const std::string& dirname, const TileTriangulation& triangulation)
 {
-    return write_vrt_header(filename, "wkbLineString", true) && write_csv_facet(filename, triangulation);
+    std::string stem = std::to_string(triangulation.id());
+    std::ofstream csv(dirname + "/" + stem + ".csv");
+    std::ofstream vrt(dirname + "/" + stem + ".vrt");
+    return write_vrt_header(vrt, std::to_string(triangulation.id()), "wkbLineString", true) && write_csv_facet(csv, triangulation);
 }
 
 template<typename TileTriangulation>
-bool write_tile_vrt_cells(const std::string& filename, const TileTriangulation& triangulation)
+bool write_tile_vrt_cells(const std::string& dirname, const TileTriangulation& triangulation)
 {
-    return write_vrt_header(filename, "wkbPolygon", true) && write_csv_cell(filename, triangulation);
+    std::string stem = std::to_string(triangulation.id());
+    std::ofstream csv(dirname + "/" + stem + ".csv");
+    std::ofstream vrt(dirname + "/" + stem + ".vrt");
+    return write_vrt_header(vrt, std::to_string(triangulation.id()), "wkbPolygon", true) && write_csv_cell(csv, triangulation);
 }
 
 template<typename TileTriangulation>
-bool write_tile_vrt_tins(const std::string& filename, const TileTriangulation& triangulation)
+bool write_tile_vrt_tins(const std::string& dirname, const TileTriangulation& triangulation)
 {
-    return write_vrt_header(filename, "wkbTIN", false) && write_csv_tin(filename, triangulation);
+    std::string stem = std::to_string(triangulation.id());
+    std::ofstream csv(dirname + "/" + stem + ".csv");
+    std::ofstream vrt(dirname + "/" + stem + ".vrt");
+    return write_vrt_header(vrt, std::to_string(triangulation.id()), "wkbTIN", false) && write_csv_tin(csv, triangulation);
 }
 
 }

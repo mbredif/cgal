@@ -12,7 +12,6 @@
 #ifndef CGAL_DDT_WRITE_PVTU_H
 #define CGAL_DDT_WRITE_PVTU_H
 
-#include <boost/filesystem.hpp>
 #undef BOOST_NO_CXX11_SCOPED_ENUMS
 
 #include <iostream>
@@ -61,16 +60,13 @@ void write_vtk_header(std::ostream& os, const std::string& type, const std::stri
 }
 
 template<typename DistributedTriangulation>
-bool write_pvtu_file(const DistributedTriangulation& tri, const std::string& dirname)
+bool write_pvtu(std::ostream& os, const DistributedTriangulation& tri)
 {
     typedef std::remove_cv_t<typename DistributedTriangulation::Tile_index> Id;
-    boost::filesystem::path path(dirname);
-    std::string stem = path.filename().string();
     const char *tile_attr = Impl::vtk_types<Id>::string;
     const char *size_attr = Impl::vtk_types<std::size_t>::string;
     const char *type_attr = Impl::vtk_types<unsigned char>::string;
     const char *coor_attr = Impl::vtk_types<double>::string;
-    std::ofstream os(dirname+".pvtu");
     write_vtk_header(os, "PUnstructuredGrid", "1.0");
     os <<" <PUnstructuredGrid GhostLevel=\"1\">\n";
     os <<"  <PPointData>\n";
@@ -87,7 +83,7 @@ bool write_pvtu_file(const DistributedTriangulation& tri, const std::string& dir
     os <<"   <PDataArray type=\"" << type_attr << "\" NumberOfComponents=\"1\" Name=\"types\"/>\n";
     os <<"  </PCells>\n";
     for(const auto& [id, triangulation] : tri.tiles)
-          os << "  <Piece Source=\"" << stem << "/" << std::to_string(id) << ".vtu\"/>\n";
+          os << "  <Piece Source=\"" << std::to_string(id) << ".vtu\"/>\n";
     os <<" </PUnstructuredGrid>\n";
     os <<"</VTKFile>\n";
     return true;

@@ -12,7 +12,6 @@
 #define CGAL_DDT_IO_TRACE_LOGGER_H
 
 #ifdef CGAL_DDT_TRACING
-#include <tbb/tick_count.h>
 
 #define CGAL_DDT_TRACE_(sch, cat, name, cname, ph, args) \
     do { \
@@ -21,7 +20,7 @@
             << "{\"name\": \"" << name << "\"" \
             << ", \"cat\": \"" << cat << "\"" \
             << ", \"ph\": \"" << ph << "\"" \
-            << ", \"pid\": " << (sch).process_index() \
+            << ", \"pid\": 0" \
             << ", \"tid\": " << (sch).thread_index() \
             << ", \"args\": {" << args << "}" \
             << ", \"ts\": " << (sch).clock_microsec(); \
@@ -103,22 +102,29 @@ std::ostream& write_summary(std::ostream& out, const std::vector<T, Alloc>& v)
 template<class T, class U>
 std::ostream& write_summary(std::ostream& out, const std::pair<T, U>& p)
 {
-    return write_summary(write_summary(out << "[", p.first) << ",", p.second) << "]";
+    return write_summary(write_summary(out << "\"", p.first) << "\":", p.second);
 }
 
 template<typename Iterator>
 std::ostream& write_summary(std::ostream& out, Iterator begin, Iterator end)
 {
-    out << "[";
+    if (begin == end) return out << "{}";
     for(Iterator it = begin; it != end; ++it)
-        write_summary(out << (it==begin?" ":", "), *it);
-    return out << " ]";
+        write_summary(out << (it==begin?"{":","), *it);
+    return out << "}";
 }
 
 template<typename Iterator>
 std::string to_summary(Iterator begin, Iterator end) {
     std::ostringstream oss;
     write_summary(oss, begin, end);
+    return oss.str();
+}
+
+template<typename T>
+std::string to_summary(const T& t) {
+    std::ostringstream oss;
+    write_summary(oss, t);
     return oss.str();
 }
 

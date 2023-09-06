@@ -29,22 +29,22 @@ public:
     template <class TileTriangulation>
     bool write(const TileTriangulation& tri) const
     {
-        std::string filename(dirname_ + "/" + std::to_string(tri.id()));
-        std::ofstream os(filename+".vtu");
+        std::ofstream os(dirname_ + "/" + std::to_string(tri.id())+".vtu");
         write_vtu_tile(os, tri, binary_);
         return true;
     }
 
     template <typename DistributedTriangulation>
-    bool write_begin(const DistributedTriangulation& tri) const
+    bool write_begin(const DistributedTriangulation& tri, int) const
     {
         return true;
     }
 
     template <typename DistributedTriangulation>
-    bool write_end(const DistributedTriangulation& tri) const
+    bool write_end(const DistributedTriangulation& tri, int id) const
     {
-        return write_pvtu_file(tri, dirname_);
+        std::ofstream os(dirname_ + "/" + std::to_string(id)+".pvtu");
+        return write_pvtu(os, tri);
     }
 
     /// File system directory name

@@ -39,29 +39,18 @@ void json_get_statistics(const boost::property_tree::ptree& node, Statistics& st
 }
 
 template<typename TileTriangulation>
-bool read_cgal_tile(TileTriangulation& triangulation, const std::string& dirname)
+bool read_cgal_tile(std::istream& is, TileTriangulation& triangulation)
 {
-    std::string cgal_name = dirname + "/" + std::to_string(triangulation.id() ) + ".txt";
-    std::ifstream ifile(cgal_name,  std::ios::in );
-    if(!ifile.is_open())
-    {
-        std::cerr << "read_cgal_tile : File could not be opened" << std::endl;
-        std::cerr << cgal_name << std::endl;
-        return false;
-    }
-
-    ifile >> triangulation;
-    return !ifile.fail();
+    is >> triangulation;
+    return !is.fail();
 }
 
 template<typename DistributedTriangulation>
-bool read_json_tiles(DistributedTriangulation& tri, const std::string& dirname)
+bool read_cgal_json(std::istream& is, DistributedTriangulation& tri)
 {
-    std::string json_name = dirname + "/tiles.json";
-    std::ifstream ifile(json_name, std::ifstream::in);
     boost::property_tree::ptree root_node;
-    boost::property_tree::read_json(ifile, root_node);
-    if (ifile.fail()) return false;
+    boost::property_tree::read_json(is, root_node);
+    if (is.fail()) return false;
 
     typedef typename DistributedTriangulation::Tile_index Tile_index;
     typedef typename DistributedTriangulation::Tile_triangulation Tile_triangulation;

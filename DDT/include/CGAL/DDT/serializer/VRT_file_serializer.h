@@ -23,36 +23,36 @@ public:
     VRT_serializer(const std::string& dirname, bool tins = true, bool verts = true, bool facets = true, bool cells = true)
     : dirname_(dirname), tins(tins), verts(verts), facets(facets), cells(cells)
     {
-        boost::filesystem::create_directories(dirname_+"_v");
-        boost::filesystem::create_directories(dirname_+"_f");
-        boost::filesystem::create_directories(dirname_+"_c");
-        boost::filesystem::create_directories(dirname_+"_t");
+        boost::filesystem::create_directories(dirname_+"/v");
+        boost::filesystem::create_directories(dirname_+"/f");
+        boost::filesystem::create_directories(dirname_+"/c");
+        boost::filesystem::create_directories(dirname_+"/t");
     }
 
     template <class TileTriangulation>
     bool write(const TileTriangulation& tri) const
     {
-        std::string s("/" + std::to_string(tri.id()));
-        if (verts  && !write_tile_vrt_verts (dirname_+"_v"+s, tri)) return false;
-        if (facets && !write_tile_vrt_facets(dirname_+"_f"+s, tri)) return false;
-        if (cells  && !write_tile_vrt_cells (dirname_+"_c"+s, tri)) return false;
-        if (tins   && !write_tile_vrt_tins  (dirname_+"_t"+s, tri)) return false;
+        if (verts  && !write_tile_vrt_verts (dirname_+"/v", tri)) return false;
+        if (facets && !write_tile_vrt_facets(dirname_+"/f", tri)) return false;
+        if (cells  && !write_tile_vrt_cells (dirname_+"/c", tri)) return false;
+        if (tins   && !write_tile_vrt_tins  (dirname_+"/t", tri)) return false;
         return true;
     }
 
     template <typename DistributedTriangulation>
-    bool write_begin(const DistributedTriangulation& tri) const
+    bool write_begin(const DistributedTriangulation& tri, int id) const
     {
         return true;
     }
 
     template <typename DistributedTriangulation>
-    bool write_end(const DistributedTriangulation& tri) const
+    bool write_end(const DistributedTriangulation& tri, int id) const
     {
-        if (verts  && !write_union_vrt_header(dirname_+"_v", "wkbPoint",      "vertices", tri, false)) return false;
-        if (facets && !write_union_vrt_header(dirname_+"_f", "wkbLineString", "facets",   tri, true )) return false;
-        if (cells  && !write_union_vrt_header(dirname_+"_c", "wkbPolygon",    "cells",    tri, true )) return false;
-        if (tins   && !write_union_vrt_header(dirname_+"_t", "wkbTIN",        "tins",     tri, false)) return false;
+        std::string name = std::to_string(id);
+        if (verts  && !write_union_vrt_header(dirname_, "v", name, "wkbPoint",      "vertices", tri, false)) return false;
+        if (facets && !write_union_vrt_header(dirname_, "f", name, "wkbLineString", "facets",   tri, true )) return false;
+        if (cells  && !write_union_vrt_header(dirname_, "c", name, "wkbPolygon",    "cells",    tri, true )) return false;
+        if (tins   && !write_union_vrt_header(dirname_, "t", name, "wkbTIN",        "tins",     tri, false)) return false;
         return true;
     }
 

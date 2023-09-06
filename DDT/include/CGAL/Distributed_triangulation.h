@@ -20,6 +20,7 @@
 #include <CGAL/DDT/Tile_container.h>
 #include <CGAL/Distributed_point_set.h>
 #include <CGAL/DDT/serializer/No_serializer.h>
+#include <CGAL/DDT/serializer/VRT_file_serializer.h>
 #include <CGAL/DDT/IO/trace_logger.h>
 #include <CGAL/assertions.h>
 
@@ -548,18 +549,29 @@ public:
     {
         CGAL_DDT_TRACE0(sch, "DDT", "insert", 0, "B");
         typedef CGAL::Distributed_point_set<TileIndex, Point, TilePoints> Distributed_point_set;
+        typedef typename Distributed_point_set::mapped_type               Point_set;
         std::size_t n = number_of_finite_vertices();
+
         CGAL_DDT_TRACE0(sch, "DDT", "insert_and_send_all_axis_extreme_points", 0, "B");
         Distributed_point_set points;
-        CGAL::DDT::impl::insert_and_get_axis_extreme_points(tiles, point_sets, std::back_inserter(points), sch, maximal_dimension());
+        TileIndex root = 20;
+        CGAL::DDT::impl::insert_and_get_axis_extreme_points(tiles, point_sets, std::back_inserter(points), root, sch, maximal_dimension());
         CGAL_DDT_TRACE0(sch, "DDT", "insert_and_send_all_axis_extreme_points", 0, "E");
-        CGAL_DDT_TRACE0(sch, "DDT", "splay_root_triangulation", 0, "B");
-        Tile_triangulation tri(-1, maximal_dimension());
-        CGAL::DDT::impl::splay_root_triangulation(tri, point_sets, std::back_inserter(points));
-        CGAL_DDT_TRACE0(sch, "DDT", "splay_root_triangulation", 0, "E");
-        CGAL_DDT_TRACE0(sch, "DDT", "splay_stars", 0, "B");
+
+        std::cout << root << "," << maximal_dimension() << points.begin()->second.front().second << std::endl;
+        CGAL_DDT_TRACE1(sch, "DDT", "splay_root_triangulation", 0, "B", in, to_summary(points));
+        Tile_triangulation tri(root, maximal_dimension());
+        auto range = points.equal_range(root);
+        CGAL::DDT::impl::splay_root_triangulation(range.first, range.second, tri, std::back_inserter(points));
+        CGAL_DDT_TRACE1(sch, "DDT", "splay_root_triangulation", 0, "E", out, to_summary(points));
+        CGAL_DDT_TRACE1(sch, "DDT", "all_to_all", 0, "B", in, to_summary(points));
+        sch.all_to_all(points.begin(), points.end(), std::back_inserter(points));
+        CGAL_DDT_TRACE1(sch, "DDT", "all_to_all", 0, "E", out, to_summary(points));
+
+        CGAL_DDT_TRACE1(sch, "DDT", "splay_stars", 0, "B", in, to_summary(points));
         CGAL::DDT::impl::splay_stars(tiles, points, sch, maximal_dimension());
         CGAL_DDT_TRACE0(sch, "DDT", "splay_stars", 0, "E");
+
         finalize(sch);
         CGAL_DDT_TRACE0(sch, "DDT", "insert", 0, "E");
         return number_of_finite_vertices() - n;
@@ -636,12 +648,12 @@ public:
     {
         CGAL_DDT_TRACE0(sch, "DDT", "write", 0, "B");
         bool ok =
-            writer.write_begin(*this) &&
+            writer.write_begin(*this, sch.thread_index()) &&
             sch.ranges_reduce(tiles, [&writer](Tile_const_iterator first, Tile_const_iterator last) {
                 CGAL_assertion(std::distance(first, last) == 1);
                 return writer.write(first->second);
             }, true, std::logical_and<>()) &&
-            writer.write_end(*this);
+            writer.write_end(*this, sch.thread_index());
         CGAL_DDT_TRACE0(sch, "DDT", "write", 0, "E");
         return ok;
     }
@@ -649,14 +661,15 @@ public:
     template <typename Reader, typename Scheduler>
     bool read(const Reader& reader, Scheduler& sch)
     {
+        clear();
         CGAL_DDT_TRACE0(sch, "DDT", "read", 0, "B");
         bool ok =
-            reader.read_begin(*this) &&
+            reader.read_begin(*this, sch.thread_index()) &&
             sch.ranges_reduce(tiles, [&reader](Tile_iterator first, Tile_iterator last) {
                 CGAL_assertion(std::distance(first, last) == 1);
                 return reader.read(first->second);
             }, true, std::logical_and<>()) &&
-            reader.read_end(*this);
+            reader.read_end(*this, sch.thread_index());
         CGAL_DDT_TRACE0(sch, "DDT", "read", 0, "E");
         return ok;
     }
@@ -664,16 +677,17 @@ public:
     template <typename Reader, typename Writer, typename Scheduler>
     bool read_write(const Reader& reader, const Writer& writer, Scheduler& sch)
     {
+        clear();
         CGAL_DDT_TRACE0(sch, "DDT", "read_write", 0, "B");
         bool ok =
-            reader.read_begin(*this) &&
-            writer.write_begin(*this) &&
+            reader.read_begin(*this, sch.thread_index()) &&
+            writer.write_begin(*this, sch.thread_index()) &&
             sch.ranges_reduce(tiles, [&reader,&writer](Tile_iterator first, Tile_iterator last) {
                 CGAL_assertion(std::distance(first, last) == 1);
                 return reader.read(first->second) && writer.write(first->second);
             }, true, std::logical_and<>()) &&
-            reader.read_end(*this) &&
-            writer.write_end(*this);
+            reader.read_end(*this, sch.thread_index()) &&
+            writer.write_end(*this, sch.thread_index());
         CGAL_DDT_TRACE0(sch, "DDT", "read_write", 0, "E");
         return ok;
     }
@@ -736,6 +750,14 @@ public:
             }, stats, std::plus<>(), std::inserter(tiles, tiles.begin())
         ).first;
         CGAL_DDT_TRACE0(sch, "DDT", "partition", 0, "E");
+    }
+
+    /// clears the triangulation
+    /// todo: what is the semantics of clearing when a serializer is present ? should we delete the files ?
+    void clear() {
+        statistics_ = {};
+        statistics_.valid = false;
+        tiles.clear();
     }
 
     const Statistics& statistics() const { return statistics_; }
