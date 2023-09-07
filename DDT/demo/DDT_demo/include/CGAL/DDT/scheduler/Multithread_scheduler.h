@@ -294,9 +294,6 @@ struct Multithread_scheduler
     }
     int thread_index() { return pool.thread_index(); }
 
-    template<typename InputIterator, typename OutputIterator>
-    OutputIterator all_to_all(InputIterator begin, InputIterator end, OutputIterator out)  { return out; }
-
 private:
     thread_pool pool;
     std::chrono::milliseconds timeout_;

@@ -181,9 +181,6 @@ struct Sequential_scheduler
 
     static constexpr int thread_index() { return 0; }
 
-    template<typename InputIterator, typename OutputIterator>
-    OutputIterator all_to_all(InputIterator begin, InputIterator end, OutputIterator out)  { return out; }
-
 #ifdef CGAL_DDT_TRACING
 public:
     typedef std::chrono::time_point<std::chrono::high_resolution_clock> clock_type;

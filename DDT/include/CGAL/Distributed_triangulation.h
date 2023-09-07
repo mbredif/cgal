@@ -554,22 +554,10 @@ public:
 
         CGAL_DDT_TRACE0(sch, "DDT", "insert_and_send_all_axis_extreme_points", 0, "B");
         Distributed_point_set points;
-        TileIndex root = -1;
         CGAL::DDT::impl::insert_and_get_axis_extreme_points(tiles, point_sets, std::back_inserter(points), root, sch, maximal_dimension());
         CGAL_DDT_TRACE0(sch, "DDT", "insert_and_send_all_axis_extreme_points", 0, "E");
 
-        CGAL_DDT_TRACE1(sch, "DDT", "splay_root_triangulation", 0, "B", in, to_summary(points));
-        Tile_triangulation tri(root, maximal_dimension());
-        auto range = points.equal_range(root);
-        CGAL::DDT::impl::splay_root_triangulation(range.first, range.second, tri, std::back_inserter(points));
-        CGAL_DDT_TRACE1(sch, "DDT", "splay_root_triangulation", 0, "E", out, to_summary(points));
-        CGAL_DDT_TRACE1(sch, "DDT", "all_to_all", 0, "B", in, to_summary(points));
-        sch.all_to_all(points.begin(), points.end(), std::back_inserter(points));
-        CGAL_DDT_TRACE1(sch, "DDT", "all_to_all", 0, "E", out, to_summary(points));
-
-        CGAL_DDT_TRACE1(sch, "DDT", "splay_stars", 0, "B", in, to_summary(points));
-        CGAL::DDT::impl::splay_stars(tiles, points, sch, maximal_dimension());
-        CGAL_DDT_TRACE0(sch, "DDT", "splay_stars", 0, "E");
+        CGAL::DDT::impl::splay_stars(tiles, points, sch, root, maximal_dimension());
 
         finalize(sch);
         CGAL_DDT_TRACE0(sch, "DDT", "insert", 0, "E");
@@ -636,8 +624,10 @@ public:
     {
         CGAL_DDT_TRACE0(sch, "DDT", "finalize", 0, "B");
         Statistics stats;
-        statistics_ = sch.ranges_reduce(tiles, [](Tile_const_iterator first, Tile_const_iterator last) {
-            return first->second.statistics();
+        Tile_index& root = this->root;
+        statistics_ = sch.ranges_reduce(tiles, [&root](Tile_const_iterator first, Tile_const_iterator last) {
+            first->second.finalize();
+            return (first->first == root) ? Statistics{} : first->second.statistics();
         }, stats, std::plus<>());
         CGAL_DDT_TRACE0(sch, "DDT", "finalize", 0, "E");
     }
@@ -767,6 +757,7 @@ public:
     private:
     Statistics statistics_;
     int maximal_dimension_;
+    Tile_index root = {};
 };
 
 }

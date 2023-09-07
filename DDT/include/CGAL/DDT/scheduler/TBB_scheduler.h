@@ -324,9 +324,6 @@ struct TBB_scheduler
 
     int thread_index() const { return tbb::this_task_arena::current_thread_index(); }
 
-    template<typename InputIterator, typename OutputIterator>
-    OutputIterator all_to_all(InputIterator begin, InputIterator end, OutputIterator out)  { return out; }
-
 private:
     tbb::task_arena arena;
     std::mutex mutex;

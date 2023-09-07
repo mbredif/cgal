@@ -35,7 +35,7 @@ public:
     /// Construction with a bbox, a range of number of grid steps in each dimension, and a base tile index.
     /// If the range ends before providing enough elements, its last element is repeatedly used.
     template<typename Iterator>
-    Grid_partitioner(const Bbox& bbox, Iterator it, Iterator end, Tile_index id0 = {}) : id0(id0)
+    Grid_partitioner(const Bbox& bbox, Iterator it, Iterator end, Tile_index id0) : id0(id0)
     {
         int D = bbox.dimension();
         std::size_t n = 1;
@@ -55,7 +55,7 @@ public:
 
     /// Construction with a bbox, a number grid steps, and a base tile index
     /// All dimensions have the same number of grid steps.
-    Grid_partitioner(const Bbox& bbox, std::size_t n, Tile_index id0 = {}) : id0(id0)
+    Grid_partitioner(const Bbox& bbox, std::size_t n, Tile_index id0) : id0(id0)
     {
         std::size_t D = bbox.dimension();
         M = 1;
@@ -75,7 +75,7 @@ public:
     Tile_index operator()(const Point& p) const
     {
         std::size_t D = N.size();
-        Tile_index id = id0;
+        Tile_index id = 0;
         for(std::size_t i=0; i<D; ++i)
         {
             double f = (Traits::approximate_cartesian_coordinate(p,i)-origin[i])*inv_step[i];
@@ -83,7 +83,7 @@ public:
             if (f >= N[i]) f=N[i]-1;
             id = id*N[i] + Tile_index(f);
         }
-        return id;
+        return id+id0;
     }
     /// begin iterator to the range providing the number of tile in each dimensions
     const_size_iterator size_begin() const { return N.begin(); }

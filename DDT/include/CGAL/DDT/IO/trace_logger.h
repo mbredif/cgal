@@ -106,18 +106,18 @@ std::ostream& write_summary(std::ostream& out, const std::pair<T, U>& p)
 }
 
 template<typename Iterator>
-std::ostream& write_summary(std::ostream& out, Iterator begin, Iterator end)
+std::ostream& write_summary(std::ostream& out, Iterator begin, Iterator end, const std::string& s = "{}")
 {
-    if (begin == end) return out << "{}";
+    if (begin == end) return out << s;
     for(Iterator it = begin; it != end; ++it)
-        write_summary(out << (it==begin?"{":","), *it);
-    return out << "}";
+        write_summary(out << (it==begin ? s[0] : ','), *it);
+    return out << s[1];
 }
 
 template<typename Iterator>
-std::string to_summary(Iterator begin, Iterator end) {
+std::string to_summary(Iterator begin, Iterator end, const std::string& s = "{}") {
     std::ostringstream oss;
-    write_summary(oss, begin, end);
+    write_summary(oss, begin, end, s);
     return oss.str();
 }
 

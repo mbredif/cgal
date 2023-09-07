@@ -186,9 +186,6 @@ struct STD_scheduler
     //std::thread::id thread_index() const { return std::this_thread::get_id(); }
     int thread_index() const { return 0; }
 
-    template<typename InputIterator, typename OutputIterator>
-    OutputIterator all_to_all(InputIterator begin, InputIterator end, OutputIterator out)  { return out; }
-
 private:
     ExecutionPolicy policy;
     std::mutex mutex;

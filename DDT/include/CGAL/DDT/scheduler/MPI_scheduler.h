@@ -29,7 +29,6 @@ namespace DDT {
 /// \cgalModels Scheduler
 struct MPI_scheduler
 {
-
     /// constructor
     MPI_scheduler(int max_concurrency = 0)
     {
@@ -61,178 +60,6 @@ struct MPI_scheduler
         CGAL_DDT_TRACE1(*this, "", "process_name", 0, "M", name, "\"mpi\"");
         CGAL_DDT_TRACE1(*this, "", "thread_name", 0, "M", name, "\"rank " + std::to_string(world_rank) + "\"");
 #endif
-    }
-
-    void gather(const char *sendbuf, int sendcount, std::vector<char>& recvbuf, std::vector<int>& displs, int root) const {
-        std::vector<int> recvcounts(world_size, 0);
-        int success1 = MPI_Gather(&sendcount, 1, MPI_INT, recvcounts.data(), 1, MPI_INT, root, MPI_COMM_WORLD );
-        CGAL_assertion(success1 == MPI_SUCCESS);
-
-        displs.resize(world_size+1, 0);
-        for(int i=0; i<world_size; ++i) displs[i+1] = displs[i] + recvcounts[i];
-        recvbuf.resize(displs[world_size]+1, 0); // null termination
-        int success2 = MPI_Gatherv(sendbuf, sendcount, MPI_CHAR, recvbuf.data(), recvcounts.data(), displs.data(), MPI_CHAR, root, MPI_COMM_WORLD );
-        CGAL_assertion(success2 == MPI_SUCCESS);
-    }
-
-    void all_gather(const char *sendbuf, int sendcount, std::vector<char>& recvbuf, std::vector<int>& displs) const {
-        std::vector<int> recvcounts(world_size, 0);
-        int success1 = MPI_Allgather(&sendcount, 1, MPI_INT, recvcounts.data(), 1, MPI_INT, MPI_COMM_WORLD );
-        CGAL_assertion(success1 == MPI_SUCCESS);
-
-        displs.resize(world_size+1, 0);
-        for(int i=0; i<world_size; ++i) displs[i+1] = displs[i] + recvcounts[i];
-        recvbuf.resize(displs[world_size]+1, 0); // null termination
-        int success2 = MPI_Allgatherv(sendbuf, sendcount, MPI_CHAR, recvbuf.data(), recvcounts.data(), displs.data(), MPI_CHAR, MPI_COMM_WORLD );
-        CGAL_assertion(success2 == MPI_SUCCESS);
-    }
-
-    void all_to_all(const char *sendbuf, int *sendcounts, int *sdispls, std::vector<char>& recvbuf, std::vector<int>& rdispls) {
-        // communicate sendcounts to know recvcounts
-        std::vector<int> recvcounts(world_size, 0);
-        int success1 = MPI_Alltoall(
-            sendcounts, 1, MPI_INT,
-            recvcounts.data(), 1, MPI_INT,
-            MPI_COMM_WORLD);
-        CGAL_assertion(success1 == MPI_SUCCESS);
-
-        // compute rdispls
-        rdispls.resize(world_size+1, 0);
-        for(int i=0; i<world_size; ++i) rdispls[i+1] = rdispls[i] + recvcounts[i];
-
-        // send sendbuf to recvbuf
-        recvbuf.resize(rdispls[world_size]+1, 0); // null termination
-        int success2 = MPI_Alltoallv(
-            sendbuf, sendcounts, sdispls, MPI_CHAR,
-            recvbuf.data(), recvcounts.data(), rdispls.data(), MPI_CHAR,
-            MPI_COMM_WORLD);
-        CGAL_assertion(success2 == MPI_SUCCESS);
-    }
-
-    template<typename V, typename Reduce>
-    V all_reduce(V value, Reduce reduce) {
-        CGAL_DDT_TRACE1(*this, "MPI", "all_reduce", "generic_work", "B", in, value);
-        std::vector<char> recvbuf;
-        std::vector<int> displs;
-        {
-            std::ostringstream oss;
-            oss << value;
-            gather(oss.str().c_str(), oss.str().size(), recvbuf, displs, root_rank);
-        }
-        int sendcount = 0;
-        if (world_rank == root_rank) {
-            std::ostringstream oss;
-            for(int i = 0; i < world_size; ++i) {
-                if (i == root_rank) continue;
-                std::string s(displs[i+1] - displs[i], 0);
-                std::copy(recvbuf.data() + displs[i], recvbuf.data() + displs[i+1], s.data());
-                std::istringstream iss(s);
-                V v;
-                iss >> v;
-                value = reduce(value, v);
-            }
-            oss << value;
-            sendcount = oss.str().size();
-            recvbuf.resize(sendcount);
-            std::copy_n(oss.str().data(), sendcount, recvbuf.data());
-        }
-        {
-            int success = MPI_Bcast(&sendcount, 1, MPI_INT, root_rank, MPI_COMM_WORLD);
-            CGAL_assertion(success == MPI_SUCCESS);
-        }
-        recvbuf.resize(sendcount);
-        {
-            int success = MPI_Bcast(recvbuf.data(), sendcount, MPI_CHAR, root_rank, MPI_COMM_WORLD);
-            CGAL_assertion(success == MPI_SUCCESS);
-        }
-        if (world_rank != root_rank) {
-            std::string s(recvbuf.data(), recvbuf.size());
-            std::istringstream iss(s);
-            iss >> value;
-        }
-        CGAL_DDT_TRACE1(*this, "MPI", "all_reduce", "generic_work", "E", out, value);
-        return value;
-    }
-
-    template<typename Container, typename OutputIterator>
-    OutputIterator all_gather(const Container& c, OutputIterator out) {
-        CGAL_DDT_TRACE0(*this, "MPI", "all_gather", "generic_work", "B");
-        std::ostringstream oss;
-        write(oss, c.begin(), c.end());
-
-        std::vector<char> recvbuf;
-        std::vector<int > rdispls;
-        all_gather(oss.str().c_str(), oss.str().size(), recvbuf, rdispls);
-        //deserialize to out
-        for(int i = 0; i < world_size; ++i) {
-            if (rdispls[i+1] == rdispls[i] || i == world_rank) continue;
-            char c = recvbuf[rdispls[i+1]];
-            recvbuf[rdispls[i+1]] = 0;
-            std::string s(recvbuf.data() + rdispls[i], rdispls[i+1] - rdispls[i]);
-            std::istringstream iss(s);
-            typedef typename Container::value_type value_type;
-            typedef std::remove_const_t<typename value_type::first_type > first_type;
-            typedef std::remove_const_t<typename value_type::second_type> second_type;
-            while (iss)
-                out = read<std::pair<first_type,second_type>>(iss, out);
-            recvbuf[rdispls[i+1]] = c;
-        }
-        CGAL_DDT_TRACE0(*this, "MPI", "all_gather", "generic_work", "E");
-        return out;
-    }
-
-    template<typename OutputValue, typename OutputIterator>
-    OutputIterator all_to_all(std::vector<std::ostringstream>& oss, OutputIterator out) {
-        typedef std::remove_const_t<typename OutputValue::first_type > first_type;
-        typedef std::remove_const_t<typename OutputValue::second_type> second_type;
-        CGAL_DDT_TRACE0(*this, "MPI", "all_to_all", "generic_work", "B");
-        std::vector<int> sendcounts(world_size, 0);
-        std::vector<int> sdispls   (world_size+1, 0);
-        for(int i = 0; i < world_size; ++i) {
-            int count = oss[i].str().size();
-            sendcounts[i] = count;
-            sdispls[i+1] = sdispls[i] + count;
-        }
-        std::vector<char> sendbuf(sdispls[world_size]+1, 0);
-        for(int i = 0; i < world_size; ++i)
-            std::copy_n(oss[i].str().c_str(), sendcounts[i], sendbuf.data() + sdispls[i]);
-
-        std::vector<char> recvbuf;
-        std::vector<int > rdispls;
-        std::vector<std::pair<first_type,second_type>> v;
-        all_to_all(sendbuf.data(), sendcounts.data(), sdispls.data(), recvbuf, rdispls);
-        //deserialize to out
-        for(int i = 0; i < world_size; ++i) if (rdispls[i+1] > rdispls[i]) {
-            char c = recvbuf[rdispls[i+1]];
-            recvbuf[rdispls[i+1]] = 0;
-            std::string s(recvbuf.data() + rdispls[i], rdispls[i+1] + 1 - rdispls[i]);
-            std::istringstream iss(s);
-            while (iss)
-                read<std::pair<first_type,second_type>>(iss, std::back_inserter(v));
-            recvbuf[rdispls[i+1]] = c;
-        }
-        out = std::move(v.begin(), v.end(), out);
-        CGAL_DDT_TRACE0(*this, "MPI", "all_to_all", "generic_work", "E");
-        return out;
-    }
-
-    template<typename InputIterator, typename OutputIterator>
-    OutputIterator all_to_all(InputIterator begin, InputIterator end, OutputIterator out) {
-        typedef typename InputIterator::value_type value_type;
-        std::vector<std::ostringstream> oss(world_size);
-        auto first = begin, last = first;
-        while(first != end) {
-            if (++last == end || first->first != last->first) {
-                if(!is_local(first->first))
-                {
-                    write(oss[rank(first->first)], first, last);
-                    for(auto it = first; it != last; ++it) it->second.clear();
-                }
-                first = last;
-            }
-        }
-        out = all_to_all<value_type>(oss, out);
-        return out;
     }
 
     ~MPI_scheduler() {
@@ -351,13 +178,12 @@ struct MPI_scheduler
         return { value, out };
     }
 
-    template<typename OutputValue3,
-             typename InputIterator1,
+    template<typename InputIterator1,
              typename Container2,
              typename Transform,
              typename OutputIterator3,
              typename... Args2>
-    OutputIterator3 transform_range(InputIterator1 first1, InputIterator1 last1, Container2& c2, Transform transform, OutputIterator3 out3, std::vector<OutputValue3>& foreign3, Args2&&... args2)
+    OutputIterator3 transform_range(InputIterator1 first1, InputIterator1 last1, Container2& c2, Transform transform, OutputIterator3 out3, Args2&&... args2)
     {
         typedef typename Container2::key_type key_type;
         key_type k = first1->first;
@@ -365,16 +191,76 @@ struct MPI_scheduler
         auto it2 = c2.emplace(std::piecewise_construct,
             std::forward_as_tuple(k),
             std::forward_as_tuple(k, std::forward<Args2>(args2)...)).first;
-        std::vector<OutputValue3> v3;
         CGAL_DDT_TRACE2(*this, "PERF", "transform", 0, "B", k, to_string(k), in, to_summary(first1, last1));
-        transform(first1, last1, it2->second, std::back_inserter(v3));
-        CGAL_DDT_TRACE2(*this, "PERF", "transform", 0, "E", inout, to_summary(first1, last1), out, to_summary(v3.begin(), v3.end()));
-        for(OutputValue3& v : v3) {
-            if(is_local(v.first)) *out3++ = std::move(v);
-            else                  foreign3.emplace_back(std::move(v));
-        }
+        out3 = transform(first1, last1, it2->second, out3);
+        CGAL_DDT_TRACE1(*this, "PERF", "transform", 0, "E", inout, to_summary(first1, last1));
         return out3;
     }
+
+    template<typename OutputValue3,
+             typename Container1,
+             typename Container2,
+             typename Transform,
+             typename OutputIterator3,
+             typename... Args2>
+    OutputIterator3 ranges_transform(Container1& c1, Container2& c2, Transform transform, OutputIterator3 out3, Args2&&... args2)
+    {
+        typedef typename Container1::value_type value_type1;
+        std::vector<OutputValue3> v3;
+        auto first1 = std::begin(c1), end1 = std::end(c1), last1 = first1;
+        CGAL_DDT_TRACE1(*this, "PERF", "transform", "generic_work", "B", in, to_summary(first1, last1));
+        while(first1 != end1) {
+            if (++last1 == end1 || first1->first != last1->first) {
+                if(is_local(first1->first))
+                    transform_range(first1, last1, c2, transform, std::back_inserter(v3), std::forward<Args2>(args2)...);
+                first1 = last1;
+            }
+        }
+        CGAL_DDT_TRACE2(*this, "PERF", "transform", "generic_work", "E", inout, to_summary(first1, last1), out, to_summary(v3.begin(), v3.end()));
+        CGAL_DDT_TRACE1(*this, "MPI", "all_to_all", "generic_work", "B", in, to_summary(v3.begin(), v3.end()));
+        typedef std::remove_const_t<typename OutputValue3::first_type > first_type;
+        typedef std::remove_const_t<typename OutputValue3::second_type> second_type;
+        typedef std::pair<first_type,second_type> value_type;
+        out3 = all_to_all(v3.begin(), v3.end(), out3);
+        CGAL_DDT_TRACE0(*this, "MPI", "all_to_all", "generic_work", "E");
+        return out3;
+    }
+
+    template<typename Container1,
+             typename Container2,
+             typename Transform,
+             typename... Args2>
+    void ranges_for_each(Container1& c1, Container2& c2, Transform transform, Args2&&... args2)
+    {
+        CGAL_DDT_TRACE0(*this, "PERF", "for_each", "generic_work", "B");
+        typedef typename Container1::key_type    key_type;
+        typedef typename Container1::mapped_type mapped_type1;
+        typedef typename Container1::value_type  value_type1;
+        std::multimap<key_type, mapped_type1> m1[2];
+        ranges_transform<value_type1>(c1, c2, transform, std::inserter(m1[0], m1[0].begin()), std::forward<Args2>(args2)...);
+        for(int i = 0, j = 1; all_reduce(!m1[i].empty(), std::logical_or<>()); i = j, j = 1-i) {
+            ranges_transform<value_type1>(m1[i], c2, transform, std::inserter(m1[j], m1[j].begin()), std::forward<Args2>(args2)...);
+            m1[i].clear();
+        }
+        CGAL_DDT_TRACE0(*this, "PERF", "for_each", "generic_work", "E");
+    }
+    int thread_index() const { return world_rank; }
+
+private:
+    int world_size;
+    int world_rank, root_rank;
+    int pid;
+    char processor_name[MPI_MAX_PROCESSOR_NAME];
+
+#ifdef CGAL_DDT_TRACING
+public:
+    typedef double clock_type;
+    std::size_t clock_microsec() const { return 1e6*(clock_now() - trace.t0); }
+    clock_type clock_now() const { return MPI_Wtime(); }
+    trace_logger<clock_type> trace = {"", clock_now()};
+#endif
+
+private:
 
     template<typename T>
     std::ostream& write(std::ostream& out, const T& t, const std::string& indent = "") {
@@ -436,84 +322,177 @@ struct MPI_scheduler
        return out;
     }
 
-    template<typename OutputValue3,
-             typename Container1,
-             typename Container2,
-             typename Transform,
-             typename OutputIterator3,
-             typename... Args2>
-    OutputIterator3 ranges_transform_filtered(bool filter_foreign1,
-        Container1& c1, Container2& c2, Transform transform, OutputIterator3 out3, Args2&&... args2)
-    {
-        typedef typename Container1::value_type value_type1;
-        CGAL_DDT_TRACE0(*this, "PERF", "transform", "generic_work", "B");
+    void gather(const char *sendbuf, int sendcount, std::vector<char>& recvbuf, std::vector<int>& displs, int root) const {
+        std::vector<int> recvcounts(world_size, 0);
+        int success1 = MPI_Gather(&sendcount, 1, MPI_INT, recvcounts.data(), 1, MPI_INT, root, MPI_COMM_WORLD );
+        CGAL_assertion(success1 == MPI_SUCCESS);
+
+        displs.resize(world_size+1, 0);
+        for(int i=0; i<world_size; ++i) displs[i+1] = displs[i] + recvcounts[i];
+        recvbuf.resize(displs[world_size]+1, 0); // null termination
+        int success2 = MPI_Gatherv(sendbuf, sendcount, MPI_CHAR, recvbuf.data(), recvcounts.data(), displs.data(), MPI_CHAR, root, MPI_COMM_WORLD );
+        CGAL_assertion(success2 == MPI_SUCCESS);
+    }
+
+    void all_gather(const char *sendbuf, int sendcount, std::vector<char>& recvbuf, std::vector<int>& displs) const {
+        std::vector<int> recvcounts(world_size, 0);
+        int success1 = MPI_Allgather(&sendcount, 1, MPI_INT, recvcounts.data(), 1, MPI_INT, MPI_COMM_WORLD );
+        CGAL_assertion(success1 == MPI_SUCCESS);
+
+        displs.resize(world_size+1, 0);
+        for(int i=0; i<world_size; ++i) displs[i+1] = displs[i] + recvcounts[i];
+        recvbuf.resize(displs[world_size]+1, 0); // null termination
+        int success2 = MPI_Allgatherv(sendbuf, sendcount, MPI_CHAR, recvbuf.data(), recvcounts.data(), displs.data(), MPI_CHAR, MPI_COMM_WORLD );
+        CGAL_assertion(success2 == MPI_SUCCESS);
+    }
+
+    void all_to_all(const char *sendbuf, int *sendcounts, int *sdispls, std::vector<char>& recvbuf, std::vector<int>& rdispls) {
+        CGAL_DDT_TRACE1(*this, "MPI", "MPI_Alltoall", "generic_work", "B", in, to_summary(sendcounts, sendcounts+world_size, "[]"));
+        // communicate sendcounts to know recvcounts
+        std::vector<int> recvcounts(world_size, 0);
+        int success1 = MPI_Alltoall(
+            sendcounts, 1, MPI_INT,
+            recvcounts.data(), 1, MPI_INT,
+            MPI_COMM_WORLD);
+        CGAL_assertion(success1 == MPI_SUCCESS);
+
+        // compute rdispls
+        rdispls.resize(world_size+1, 0);
+        for(int i=0; i<world_size; ++i) rdispls[i+1] = rdispls[i] + recvcounts[i];
+
+        // send sendbuf to recvbuf
+        recvbuf.resize(rdispls[world_size]+1, 0); // null termination
+        int success2 = MPI_Alltoallv(
+            sendbuf, sendcounts, sdispls, MPI_CHAR,
+            recvbuf.data(), recvcounts.data(), rdispls.data(), MPI_CHAR,
+            MPI_COMM_WORLD);
+        CGAL_assertion(success2 == MPI_SUCCESS);
+        CGAL_DDT_TRACE1(*this, "MPI", "MPI_Alltoall", "generic_work", "E", out, to_summary(recvcounts.begin(), recvcounts.end(), "[]"));
+    }
+
+    template<typename V, typename Reduce>
+    V all_reduce(V value, Reduce reduce) {
+        CGAL_DDT_TRACE1(*this, "MPI", "all_reduce", "generic_work", "B", in, value);
+        std::vector<char> recvbuf;
+        std::vector<int> displs;
+        {
+            std::ostringstream oss;
+            oss << value;
+            gather(oss.str().c_str(), oss.str().size(), recvbuf, displs, root_rank);
+        }
+        int sendcount = 0;
+        if (world_rank == root_rank) {
+            std::ostringstream oss;
+            for(int i = 0; i < world_size; ++i) {
+                if (i == root_rank) continue;
+                std::string s(displs[i+1] - displs[i], 0);
+                std::copy(recvbuf.data() + displs[i], recvbuf.data() + displs[i+1], s.data());
+                std::istringstream iss(s);
+                V v;
+                iss >> v;
+                value = reduce(value, v);
+            }
+            oss << value;
+            sendcount = oss.str().size();
+            recvbuf.resize(sendcount);
+            std::copy_n(oss.str().data(), sendcount, recvbuf.data());
+        }
+        {
+            int success = MPI_Bcast(&sendcount, 1, MPI_INT, root_rank, MPI_COMM_WORLD);
+            CGAL_assertion(success == MPI_SUCCESS);
+        }
+        recvbuf.resize(sendcount);
+        {
+            int success = MPI_Bcast(recvbuf.data(), sendcount, MPI_CHAR, root_rank, MPI_COMM_WORLD);
+            CGAL_assertion(success == MPI_SUCCESS);
+        }
+        if (world_rank != root_rank) {
+            std::string s(recvbuf.data(), recvbuf.size());
+            std::istringstream iss(s);
+            iss >> value;
+        }
+        CGAL_DDT_TRACE1(*this, "MPI", "all_reduce", "generic_work", "E", out, value);
+        return value;
+    }
+
+    template<typename Container, typename OutputIterator>
+    OutputIterator all_gather(const Container& c, OutputIterator out) {
+        CGAL_DDT_TRACE0(*this, "MPI", "all_gather", "generic_work", "B");
+        std::ostringstream oss;
+        write(oss, c.begin(), c.end());
+
+        std::vector<char> recvbuf;
+        std::vector<int > rdispls;
+        all_gather(oss.str().c_str(), oss.str().size(), recvbuf, rdispls);
+        //deserialize to out
+        for(int i = 0; i < world_size; ++i) {
+            if (rdispls[i+1] == rdispls[i] || i == world_rank) continue;
+            char c = recvbuf[rdispls[i+1]];
+            recvbuf[rdispls[i+1]] = 0;
+            std::string s(recvbuf.data() + rdispls[i], rdispls[i+1] - rdispls[i]);
+            std::istringstream iss(s);
+            typedef typename Container::value_type value_type;
+            typedef std::remove_const_t<typename value_type::first_type > first_type;
+            typedef std::remove_const_t<typename value_type::second_type> second_type;
+            while (iss)
+                out = read<std::pair<first_type,second_type>>(iss, out);
+            recvbuf[rdispls[i+1]] = c;
+        }
+        CGAL_DDT_TRACE0(*this, "MPI", "all_gather", "generic_work", "E");
+        return out;
+    }
+
+    template<typename InputIterator, typename OutputIterator>
+    OutputIterator all_to_all(InputIterator begin, InputIterator end, OutputIterator out) {
+        CGAL_DDT_TRACE1(*this, "MPI", "serialize", "generic_work", "B", in, to_summary(begin, end));
         std::vector<std::ostringstream> oss(world_size);
-        auto first1 = std::begin(c1), end1 = std::end(c1), last1 = first1;
-        while(first1 != end1) {
-            if (++last1 == end1 || first1->first != last1->first) {
-                if(is_local(first1->first)) {
-                    std::vector<OutputValue3> v3;
-                    transform_range(first1, last1, c2, transform, out3, v3, std::forward<Args2>(args2)...);
-                    for(auto it = v3.begin(); it != v3.end(); ++it)
-                        write(oss[rank(it->first)], it, it+1);
-                } else if (filter_foreign1){
-                    //for(auto it = first1; it != last1; ++it)
-                    //    it->second.clear();
-                } else {
-                    write(oss[rank(first1->first)], first1, last1);
+        auto first = begin, last = first;
+        while(first != end) {
+            if (++last == end || first->first != last->first) {
+                if(is_local(first->first))
+                    std::move(first, last, out);
+                else {
+                    write(oss[rank(first->first)], first, last);
+                    // clear
                 }
-                first1 = last1;
+                first = last;
             }
         }
-        out3 = all_to_all<OutputValue3>(oss, out3);
-        CGAL_DDT_TRACE0(*this, "PERF", "transform", "generic_work", "E");
-        return out3;
-    }
-
-    template<typename OutputValue3,
-             typename Container1,
-             typename Container2,
-             typename Transform,
-             typename OutputIterator3,
-             typename... Args2>
-    OutputIterator3 ranges_transform(Container1& c1, Container2& c2, Transform transform, OutputIterator3 out3, Args2&&... args2)
-    {
-        return ranges_transform_filtered<OutputValue3>(true, c1, c2, transform, out3, std::forward<Args2>(args2)...);
-    }
-
-    template<typename Container1,
-             typename Container2,
-             typename Transform,
-             typename... Args2>
-    void ranges_for_each(Container1& c1, Container2& c2, Transform transform, Args2&&... args2)
-    {
-        CGAL_DDT_TRACE0(*this, "PERF", "for_each", "generic_work", "B");
-        typedef typename Container1::key_type    key_type;
-        typedef typename Container1::mapped_type mapped_type1;
-        typedef typename Container1::value_type  value_type1;
-        std::multimap<key_type, mapped_type1> m1[2];
-        ranges_transform_filtered<value_type1>(false, c1, c2, transform, std::inserter(m1[0], m1[0].begin()), std::forward<Args2>(args2)...);
-        for(int i = 0, j = 1; all_reduce(!m1[i].empty(), std::logical_or<>()); i = j, j = 1-i) {
-            ranges_transform_filtered<value_type1>(false, m1[i], c2, transform, std::inserter(m1[j], m1[j].begin()), std::forward<Args2>(args2)...);
-            m1[i].clear();
+        std::vector<int> sendcounts(world_size, 0);
+        std::vector<int> sdispls   (world_size+1, 0);
+        for(int i = 0; i < world_size; ++i) {
+            int count = oss[i].str().size();
+            sendcounts[i] = count;
+            sdispls[i+1] = sdispls[i] + count;
         }
-        CGAL_DDT_TRACE0(*this, "PERF", "for_each", "generic_work", "E");
+        std::vector<char> sendbuf(sdispls[world_size]+1, 0);
+        for(int i = 0; i < world_size; ++i)
+            std::copy_n(oss[i].str().c_str(), sendcounts[i], sendbuf.data() + sdispls[i]);
+        CGAL_DDT_TRACE1(*this, "MPI", "serialize", "generic_work", "E", inout, to_summary(begin, end));
+
+        std::vector<char> recvbuf;
+        std::vector<int > rdispls;
+        all_to_all(sendbuf.data(), sendcounts.data(), sdispls.data(), recvbuf, rdispls);
+
+
+        CGAL_DDT_TRACE0(*this, "MPI", "deserialize", "generic_work", "B");
+        typedef typename InputIterator::value_type input_value_type;
+        typedef std::remove_const_t<typename input_value_type::first_type > first_type;
+        typedef std::remove_const_t<typename input_value_type::second_type> second_type;
+        typedef std::pair<first_type,second_type> value_type;
+        for(int i = 0; i < world_size; ++i) if (rdispls[i+1] > rdispls[i]) {
+            char c = recvbuf[rdispls[i+1]];
+            recvbuf[rdispls[i+1]] = 0;
+            std::string s(recvbuf.data() + rdispls[i], rdispls[i+1] + 1 - rdispls[i]);
+            std::istringstream iss(s);
+            while (iss)
+                out = read<value_type>(iss, out);
+            recvbuf[rdispls[i+1]] = c;
+        }
+
+        CGAL_DDT_TRACE0(*this, "MPI", "deserialize", "generic_work", "E");
+        return out;
     }
-    int thread_index() const { return world_rank; }
-
-private:
-    int world_size;
-    int world_rank, root_rank;
-    int pid;
-    char processor_name[MPI_MAX_PROCESSOR_NAME];
-
-#ifdef CGAL_DDT_TRACING
-public:
-    typedef double clock_type;
-    std::size_t clock_microsec() const { return 1e6*(clock_now() - trace.t0); }
-    clock_type clock_now() const { return MPI_Wtime(); }
-    trace_logger<clock_type> trace = {"", clock_now()};
-#endif
 };
 
 }

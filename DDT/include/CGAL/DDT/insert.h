@@ -59,6 +59,30 @@ OutputIterator splay_tile(TileTriangulation& tri, InputIterator first, InputIter
     return out;
 }
 
+
+template<typename InputIterator, typename TileTriangulation, typename OutputIterator>
+OutputIterator splay_root_triangulation(TileTriangulation& tri, InputIterator begin, InputIterator end, OutputIterator out)
+{
+    typedef typename TileTriangulation::Tile_index   TileIndex;
+    typedef typename TileTriangulation::Vertex_index Vertex_index;
+    std::vector<Vertex_index> inserted;
+    for(InputIterator it = begin; it != end; ++it) {
+        for(auto& p: it->second)
+            inserted.push_back(tri.insert(p.second, p.first).first);
+        it->second.clear();
+    }
+    std::map<TileIndex, std::set<Vertex_index>> vertices;
+    tri.get_finite_neighbors(inserted, vertices);
+    for(auto& vi : vertices)
+    {
+        typename InputIterator::value_type::second_type points;
+        for(auto v : vi.second)
+            points.emplace_back(tri.vertex_id(v), tri.point(v));
+        *out++ = { vi.first, std::move(points) };
+    }
+    return out;
+}
+
 template<typename TriangulationContainer, typename PointSetContainer, typename OutputIterator, typename TileIndex, typename Scheduler>
 OutputIterator
 insert_and_get_axis_extreme_points(TriangulationContainer& tiles, PointSetContainer& point_sets, OutputIterator out, TileIndex root, Scheduler& sch, int dim)
@@ -81,36 +105,21 @@ insert_and_get_axis_extreme_points(TriangulationContainer& tiles, PointSetContai
     }, out, dim);
 }
 
-template<typename TriangulationContainer, typename PointSetContainer, typename Scheduler>
-void splay_stars(TriangulationContainer& tiles, PointSetContainer& point_sets, Scheduler& sch, int dim)
+template<typename TriangulationContainer, typename PointSetContainer, typename TileIndex, typename Scheduler>
+void splay_stars(TriangulationContainer& tiles, PointSetContainer& points, Scheduler& sch, TileIndex root, int dim)
 {
+    CGAL_DDT_TRACE1(sch, "DDT", "splay_stars", 0, "B", in, to_summary(points));
     typedef typename TriangulationContainer::mapped_type TileTriangulation;
-    sch.ranges_for_each(point_sets, tiles,
-        [](auto first, auto last, TileTriangulation& tri, auto out) { return splay_tile(tri, first, last, out); },
+    sch.ranges_for_each(points, tiles,
+        [&root](auto first, auto last, TileTriangulation& tri, auto out) {
+            if (tri.id() == root) {
+                return splay_root_triangulation(tri, first, last, out);
+            } else {
+                return splay_tile(tri, first, last, out);
+            }
+        },
         dim);
-}
-
-template<typename InputIterator, typename TileTriangulation, typename OutputIterator>
-OutputIterator splay_root_triangulation(InputIterator begin, InputIterator end, TileTriangulation& tri, OutputIterator out)
-{
-    typedef typename TileTriangulation::Tile_index   TileIndex;
-    typedef typename TileTriangulation::Vertex_index Vertex_index;
-    std::vector<Vertex_index> inserted;
-    for(InputIterator it = begin; it != end; ++it) {
-        for(auto& p: it->second)
-            inserted.push_back(tri.insert(p.second, p.first).first);
-        it->second.clear();
-    }
-    std::map<TileIndex, std::set<Vertex_index>> vertices;
-    tri.get_finite_neighbors(inserted, vertices);
-    for(auto& vi : vertices)
-    {
-        typename InputIterator::value_type::second_type points;
-        for(auto v : vi.second)
-            points.emplace_back(tri.vertex_id(v), tri.point(v));
-        *out++ = { vi.first, std::move(points) };
-    }
-    return out;
+    CGAL_DDT_TRACE1(sch, "DDT", "splay_stars", 0, "E", out, to_summary(points));
 }
 
 } // namespace impl

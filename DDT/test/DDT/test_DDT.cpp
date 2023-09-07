@@ -185,7 +185,7 @@ int main(int argc, char **argv)
 
     double range = 3;
     Bbox bbox(-range, -range, range, range);
-    Partitioner partitioner(bbox, ND, ND+N);
+    Partitioner partitioner(bbox, ND, ND+N, 1);
     Serializer serializer("tmp_");
     Scheduler scheduler;
 
@@ -213,7 +213,7 @@ int main(int argc, char **argv)
     tri2.write(CGAL::DDT::VRT_serializer("test_DDT_incr_out"), scheduler);
 
     int ND2[] = {16 , 16};
-    Partitioner partitioner2(bbox, ND2, ND2+N);
+    Partitioner partitioner2(bbox, ND2, ND2+N, 1);
     Serializer serializer2("tmp2_");
     Distributed_triangulation tri3(N, max_number_of_tiles_in_mem, serializer2);
     tri3.partition(partitioner2, tri1, scheduler);
