@@ -38,7 +38,7 @@ OutputIterator splay_tile(TileTriangulation& tri, InputIterator first, InputIter
     std::set<Vertex_index> inserted;
     for(InputIterator it = first; it != last; ++it) {
         tri.insert(it->second, inserted, true);
-        //it->second.clear();
+        it->second.clear();
         // TODO: For now, all points are inserted, disregarding memory constraints
         // if some remain, reschedule them : *out++ = { it->first, std::move(it->second) };
     }
