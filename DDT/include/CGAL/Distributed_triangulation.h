@@ -554,11 +554,10 @@ public:
 
         CGAL_DDT_TRACE0(sch, "DDT", "insert_and_send_all_axis_extreme_points", 0, "B");
         Distributed_point_set points;
-        TileIndex root = 20;
+        TileIndex root = -1;
         CGAL::DDT::impl::insert_and_get_axis_extreme_points(tiles, point_sets, std::back_inserter(points), root, sch, maximal_dimension());
         CGAL_DDT_TRACE0(sch, "DDT", "insert_and_send_all_axis_extreme_points", 0, "E");
 
-        std::cout << root << "," << maximal_dimension() << points.begin()->second.front().second << std::endl;
         CGAL_DDT_TRACE1(sch, "DDT", "splay_root_triangulation", 0, "B", in, to_summary(points));
         Tile_triangulation tri(root, maximal_dimension());
         auto range = points.equal_range(root);
