@@ -25,6 +25,7 @@
 #include <tbb/parallel_reduce.h>
 #include <tbb/parallel_for_each.h>
 #include <tbb/task_arena.h>
+#include <tbb/tick_count.h>
 
 #include <CGAL/DDT/IO/trace_logger.h>
 
