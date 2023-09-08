@@ -183,8 +183,10 @@ struct STD_scheduler
         CGAL_DDT_TRACE0(*this, "PERF", "for_each", "generic_work", "E");
     }
 
-    //std::thread::id thread_index() const { return std::this_thread::get_id(); }
-    int thread_index() const { return 0; }
+    int thread_index() const {
+        // no lock here : assume that it is either called outside any parallel section or that the mutex is already locked
+        return thread_indices.try_emplace(std::this_thread::get_id(), thread_indices.size()).first->second;
+     }
 
 private:
     ExecutionPolicy policy;
@@ -198,6 +200,7 @@ public:
     const std::string shortname = Impl::Execution_policy_traits<ExecutionPolicy>::shortname;
     trace_logger<clock_type> trace = {"perf_std_" + shortname + ".json", clock_now()};
     int process_index() const { return 0; }
+    mutable std::map<std::thread::id, int> thread_indices;
 #endif
 };
 

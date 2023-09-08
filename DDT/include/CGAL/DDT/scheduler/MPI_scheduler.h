@@ -47,7 +47,6 @@ struct MPI_scheduler
         MPI_Get_processor_name(processor_name, &name_len);
 
 #if CGAL_DDT_TRACING
-
         std::vector<char> processor_names;
         std::vector<int> displs;
         all_gather(processor_name, name_len, processor_names, displs);
@@ -68,8 +67,8 @@ struct MPI_scheduler
         // poor man's clock sync
         MPI_Barrier(MPI_COMM_WORLD);
         trace.t0 = clock_now();
-        CGAL_DDT_TRACE1(*this, "", "process_name", 0, "M", name, "\"" << processor_name << "\"");
         CGAL_DDT_TRACE1(*this, "", "thread_name", 0, "M", name, "\"" << processor_name << "[" << core_id << "]\"");
+        CGAL_DDT_TRACE1(*this, "", "process_name", 0, "M", name, "\"" << processor_name << "\"");
 #endif
     }
 
