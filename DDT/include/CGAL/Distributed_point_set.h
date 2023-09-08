@@ -89,17 +89,6 @@ struct Distributed_point_set {
     Container point_sets;
 };
 
-template<typename TileIndex, typename Point, typename PointSerializer>
-std::string to_summary(const Distributed_point_set<TileIndex, Point, PointSerializer>& ps) {
-    if (ps.empty()) return "{}";
-    std::ostringstream oss;
-    for(auto it = ps.begin(); it != ps.end(); ++it) {
-        oss << (it == ps.begin() ? "{\"" : ",\"") << std::to_string(it->first) << "\": " << it->second.size();
-    }
-    oss << "}";
-    return oss.str();
-}
-
 }
 
 #endif // CGAL_DISTRIBUTED_POINT_SET_H

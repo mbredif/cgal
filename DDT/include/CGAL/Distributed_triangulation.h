@@ -547,10 +547,9 @@ public:
     template<typename TileIndex, typename Point, typename TilePoints, typename Scheduler>
     std::size_t insert(CGAL::Distributed_point_set<TileIndex, Point, TilePoints>& point_sets, Scheduler& sch)
     {
-        CGAL_DDT_TRACE0(sch, "DDT", "insert", 0, "B");
+        std::size_t n0 = number_of_finite_vertices();
+        CGAL_DDT_TRACE1(sch, "DDT", "insert", 0, "B", in, n0);
         typedef CGAL::Distributed_point_set<TileIndex, Point, TilePoints> Distributed_point_set;
-        typedef typename Distributed_point_set::mapped_type               Point_set;
-        std::size_t n = number_of_finite_vertices();
 
         CGAL_DDT_TRACE0(sch, "DDT", "insert_and_send_all_axis_extreme_points", 0, "B");
         Distributed_point_set points;
@@ -560,8 +559,11 @@ public:
         CGAL::DDT::impl::splay_stars(tiles, points, sch, root, maximal_dimension());
 
         finalize(sch);
-        CGAL_DDT_TRACE0(sch, "DDT", "insert", 0, "E");
-        return number_of_finite_vertices() - n;
+        std::size_t n1 = number_of_finite_vertices();
+        std::size_t n = n1 - n0;
+        CGAL_DDT_TRACE2(sch, "DDT", "insert", 0, "E", out, n1, inserted, n);
+
+        return n;
     }
 
 

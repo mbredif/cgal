@@ -57,7 +57,7 @@ struct MPI_scheduler
         MPI_Barrier(MPI_COMM_WORLD);
         trace.t0 = clock_now();
 
-        CGAL_DDT_TRACE1(*this, "", "process_name", 0, "M", name, "\"mpi\"");
+        CGAL_DDT_TRACE1(*this, "", "process_name", 0, "M", name, "\"" << processor_name << "\"");
         CGAL_DDT_TRACE1(*this, "", "thread_name", 0, "M", name, "\"rank " + std::to_string(world_rank) + "\"");
 #endif
     }
@@ -138,9 +138,9 @@ struct MPI_scheduler
         auto first = std::begin(c), end = std::end(c), last = first;
         while(first != end) {
             if (++last == end || first->first != last->first) {
-                CGAL_DDT_TRACE2(*this, "PERF", "transform", 0, "B", k, to_string(first->first), in, to_summary(first, last));
+                CGAL_DDT_TRACE1(*this, "PERF", "transform", 0, "B", k, to_string(first->first));
                 V val = transform(first, last);
-                CGAL_DDT_TRACE1(*this, "PERF", "transform", 0, "E", value, val);
+                CGAL_DDT_TRACE2(*this, "PERF", "transform", 0, "E", value, val, in, to_summary(first, last));
                 value = reduce(value, val);
                 first = last;
             }
@@ -221,7 +221,7 @@ struct MPI_scheduler
         typedef std::remove_const_t<typename OutputValue3::first_type > first_type;
         typedef std::remove_const_t<typename OutputValue3::second_type> second_type;
         typedef std::pair<first_type,second_type> value_type;
-        out3 = all_to_all(v3.begin(), v3.end(), out3);
+        out3 = all_to_all<value_type>(v3.begin(), v3.end(), out3);
         CGAL_DDT_TRACE0(*this, "MPI", "all_to_all", "generic_work", "E");
         return out3;
     }
@@ -299,6 +299,7 @@ private:
         for(int i=0; i<n; ++i) {
             T t;
             read(in, t);
+            CGAL_assertion(!!in);
             v.push_back(std::move(t));
         }
         return in;
@@ -313,16 +314,36 @@ private:
     OutputIterator read(std::istream& in, OutputIterator out) {
        int n;
        in >> n;
+       if(!in) return out;
        for(int i=0; i<n; ++i) {
            OutputValue v;
            read(in, v);
-           //CGAL_assertion(is_local(v.first));
+           CGAL_assertion(!!in);
            *out++ = std::move(v);
        }
        return out;
     }
 
-    void gather(const char *sendbuf, int sendcount, std::vector<char>& recvbuf, std::vector<int>& displs, int root) const {
+    template<typename OutputValue, typename OutputIterator>
+    OutputIterator deserialize(std::vector<char>& recvbuf, const std::vector<int>& rdispls, OutputIterator out) {
+        CGAL_DDT_TRACE0(*this, "MPI", "deserialize", "generic_work", "B");
+        //CGAL_DDT_TRACE1(*this, "MPI", "deserialize", "generic_work", "B", in, CGAL::DDT::to_summary(recvbuf.data()));
+        for(int i = 0; i < world_size; ++i) {
+            if (rdispls[i+1] == rdispls[i]) continue;
+            char c = recvbuf[rdispls[i+1]];
+            recvbuf[rdispls[i+1]] = 0;
+            std::string s(recvbuf.data() + rdispls[i], rdispls[i+1] - rdispls[i]);
+            std::istringstream iss(s);
+            while (iss)
+                out = read<OutputValue>(iss, out);
+            recvbuf[rdispls[i+1]] = c;
+        }
+        CGAL_DDT_TRACE0(*this, "MPI", "deserialize", "generic_work", "E");
+        return out;
+    }
+
+    void gather(const char *sendbuf, int sendcount, std::vector<char>& recvbuf, std::vector<int>& displs, int root) {
+        CGAL_DDT_TRACE1(*this, "MPI", "MPI_Gather", "generic_work", "B", in, sendcount);
         std::vector<int> recvcounts(world_size, 0);
         int success1 = MPI_Gather(&sendcount, 1, MPI_INT, recvcounts.data(), 1, MPI_INT, root, MPI_COMM_WORLD );
         CGAL_assertion(success1 == MPI_SUCCESS);
@@ -332,9 +353,11 @@ private:
         recvbuf.resize(displs[world_size]+1, 0); // null termination
         int success2 = MPI_Gatherv(sendbuf, sendcount, MPI_CHAR, recvbuf.data(), recvcounts.data(), displs.data(), MPI_CHAR, root, MPI_COMM_WORLD );
         CGAL_assertion(success2 == MPI_SUCCESS);
+        CGAL_DDT_TRACE1(*this, "MPI", "MPI_Gather", "generic_work", "E", out, (is_root() ? displs[world_size] : 0));
     }
 
-    void all_gather(const char *sendbuf, int sendcount, std::vector<char>& recvbuf, std::vector<int>& displs) const {
+    void all_gather(const char *sendbuf, int sendcount, std::vector<char>& recvbuf, std::vector<int>& displs) {
+        CGAL_DDT_TRACE1(*this, "MPI", "MPI_Allgather", "generic_work", "B", in, sendcount);
         std::vector<int> recvcounts(world_size, 0);
         int success1 = MPI_Allgather(&sendcount, 1, MPI_INT, recvcounts.data(), 1, MPI_INT, MPI_COMM_WORLD );
         CGAL_assertion(success1 == MPI_SUCCESS);
@@ -344,10 +367,11 @@ private:
         recvbuf.resize(displs[world_size]+1, 0); // null termination
         int success2 = MPI_Allgatherv(sendbuf, sendcount, MPI_CHAR, recvbuf.data(), recvcounts.data(), displs.data(), MPI_CHAR, MPI_COMM_WORLD );
         CGAL_assertion(success2 == MPI_SUCCESS);
+        CGAL_DDT_TRACE1(*this, "MPI", "MPI_Allgather", "generic_work", "E", out, displs[world_size]);
     }
 
     void all_to_all(const char *sendbuf, int *sendcounts, int *sdispls, std::vector<char>& recvbuf, std::vector<int>& rdispls) {
-        CGAL_DDT_TRACE1(*this, "MPI", "MPI_Alltoall", "generic_work", "B", in, to_summary(sendcounts, sendcounts+world_size, "[]"));
+        CGAL_DDT_TRACE1(*this, "MPI", "MPI_Alltoall", "generic_work", "B", in, to_summary(sendcounts, sendcounts+world_size));
         // communicate sendcounts to know recvcounts
         std::vector<int> recvcounts(world_size, 0);
         int success1 = MPI_Alltoall(
@@ -367,7 +391,7 @@ private:
             recvbuf.data(), recvcounts.data(), rdispls.data(), MPI_CHAR,
             MPI_COMM_WORLD);
         CGAL_assertion(success2 == MPI_SUCCESS);
-        CGAL_DDT_TRACE1(*this, "MPI", "MPI_Alltoall", "generic_work", "E", out, to_summary(recvcounts.begin(), recvcounts.end(), "[]"));
+        CGAL_DDT_TRACE1(*this, "MPI", "MPI_Alltoall", "generic_work", "E", out, to_summary(recvcounts.begin(), recvcounts.end()));
     }
 
     template<typename V, typename Reduce>
@@ -378,13 +402,13 @@ private:
         {
             std::ostringstream oss;
             oss << value;
-            gather(oss.str().c_str(), oss.str().size(), recvbuf, displs, root_rank);
+            all_gather(oss.str().c_str(), oss.str().size(), recvbuf, displs);
         }
         int sendcount = 0;
-        if (world_rank == root_rank) {
+        {
             std::ostringstream oss;
             for(int i = 0; i < world_size; ++i) {
-                if (i == root_rank) continue;
+                if (i == world_rank) continue;
                 std::string s(displs[i+1] - displs[i], 0);
                 std::copy(recvbuf.data() + displs[i], recvbuf.data() + displs[i+1], s.data());
                 std::istringstream iss(s);
@@ -392,57 +416,27 @@ private:
                 iss >> v;
                 value = reduce(value, v);
             }
-            oss << value;
-            sendcount = oss.str().size();
-            recvbuf.resize(sendcount);
-            std::copy_n(oss.str().data(), sendcount, recvbuf.data());
-        }
-        {
-            int success = MPI_Bcast(&sendcount, 1, MPI_INT, root_rank, MPI_COMM_WORLD);
-            CGAL_assertion(success == MPI_SUCCESS);
-        }
-        recvbuf.resize(sendcount);
-        {
-            int success = MPI_Bcast(recvbuf.data(), sendcount, MPI_CHAR, root_rank, MPI_COMM_WORLD);
-            CGAL_assertion(success == MPI_SUCCESS);
-        }
-        if (world_rank != root_rank) {
-            std::string s(recvbuf.data(), recvbuf.size());
-            std::istringstream iss(s);
-            iss >> value;
         }
         CGAL_DDT_TRACE1(*this, "MPI", "all_reduce", "generic_work", "E", out, value);
         return value;
     }
 
-    template<typename Container, typename OutputIterator>
-    OutputIterator all_gather(const Container& c, OutputIterator out) {
-        CGAL_DDT_TRACE0(*this, "MPI", "all_gather", "generic_work", "B");
+    template<typename OutputValue, typename InputIterator, typename OutputIterator>
+    OutputIterator all_gather(InputIterator begin, InputIterator end, OutputIterator out) {
+        CGAL_DDT_TRACE1(*this, "MPI", "serialize", "generic_work", "B", in, to_summary(begin, end));
         std::ostringstream oss;
-        write(oss, c.begin(), c.end());
+        write(oss, begin, end);
+        CGAL_DDT_TRACE0(*this, "MPI", "serialize", "generic_work", "E");
+        // CGAL_DDT_TRACE1(*this, "MPI", "serialize", "generic_work", "E", out, CGAL::DDT::to_summary(oss.str().c_str()));
 
         std::vector<char> recvbuf;
         std::vector<int > rdispls;
         all_gather(oss.str().c_str(), oss.str().size(), recvbuf, rdispls);
-        //deserialize to out
-        for(int i = 0; i < world_size; ++i) {
-            if (rdispls[i+1] == rdispls[i] || i == world_rank) continue;
-            char c = recvbuf[rdispls[i+1]];
-            recvbuf[rdispls[i+1]] = 0;
-            std::string s(recvbuf.data() + rdispls[i], rdispls[i+1] - rdispls[i]);
-            std::istringstream iss(s);
-            typedef typename Container::value_type value_type;
-            typedef std::remove_const_t<typename value_type::first_type > first_type;
-            typedef std::remove_const_t<typename value_type::second_type> second_type;
-            while (iss)
-                out = read<std::pair<first_type,second_type>>(iss, out);
-            recvbuf[rdispls[i+1]] = c;
-        }
-        CGAL_DDT_TRACE0(*this, "MPI", "all_gather", "generic_work", "E");
-        return out;
+
+        return deserialize<OutputValue>(recvbuf, rdispls, out);
     }
 
-    template<typename InputIterator, typename OutputIterator>
+    template<typename OutputValue, typename InputIterator, typename OutputIterator>
     OutputIterator all_to_all(InputIterator begin, InputIterator end, OutputIterator out) {
         CGAL_DDT_TRACE1(*this, "MPI", "serialize", "generic_work", "B", in, to_summary(begin, end));
         std::vector<std::ostringstream> oss(world_size);
@@ -474,24 +468,7 @@ private:
         std::vector<int > rdispls;
         all_to_all(sendbuf.data(), sendcounts.data(), sdispls.data(), recvbuf, rdispls);
 
-
-        CGAL_DDT_TRACE0(*this, "MPI", "deserialize", "generic_work", "B");
-        typedef typename InputIterator::value_type input_value_type;
-        typedef std::remove_const_t<typename input_value_type::first_type > first_type;
-        typedef std::remove_const_t<typename input_value_type::second_type> second_type;
-        typedef std::pair<first_type,second_type> value_type;
-        for(int i = 0; i < world_size; ++i) if (rdispls[i+1] > rdispls[i]) {
-            char c = recvbuf[rdispls[i+1]];
-            recvbuf[rdispls[i+1]] = 0;
-            std::string s(recvbuf.data() + rdispls[i], rdispls[i+1] + 1 - rdispls[i]);
-            std::istringstream iss(s);
-            while (iss)
-                out = read<value_type>(iss, out);
-            recvbuf[rdispls[i+1]] = c;
-        }
-
-        CGAL_DDT_TRACE0(*this, "MPI", "deserialize", "generic_work", "E");
-        return out;
+        return deserialize<OutputValue>(recvbuf, rdispls, out);
     }
 };
 

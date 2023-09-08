@@ -82,10 +82,22 @@ std::ostream& write_summary(std::ostream& out, const std::string& s)
     return out << s;
 }
 
+std::ostream& write_summary(std::ostream& out, char * const s)
+{
+    return out << "\"" << s << "\"";
+}
+
+std::ostream& write_summary(std::ostream& out, const char * s)
+{
+    return out << "\"" << s << "\"";
+}
+
+
 template<typename T>
 std::ostream& write_summary(std::ostream& out, const T& t)
 {
-    return out << std::to_string(t);
+    using std::to_string;
+    return out << to_string(t);
 }
 
 template<typename T, typename Alloc>
@@ -114,9 +126,13 @@ std::ostream& write_summary(std::ostream& out, Iterator begin, Iterator end, con
     return out << s[1];
 }
 
+template <typename T> struct to_summary_helper { static constexpr const char *s = "[]"; };
+template <typename T, typename U> struct to_summary_helper<std::pair<T,U>> { static constexpr const char *s = "{}"; };
+
 template<typename Iterator>
-std::string to_summary(Iterator begin, Iterator end, const std::string& s = "{}") {
+std::string to_summary(Iterator begin, Iterator end) {
     std::ostringstream oss;
+    std::string s = to_summary_helper<typename std::iterator_traits<Iterator>::value_type>::s;
     write_summary(oss, begin, end, s);
     return oss.str();
 }
