@@ -197,6 +197,7 @@ public:
     clock_type clock_now() const { return std::chrono::high_resolution_clock::now(); }
     const std::string shortname = Impl::Execution_policy_traits<ExecutionPolicy>::shortname;
     trace_logger<clock_type> trace = {"perf_std_" + shortname + ".json", clock_now()};
+    int process_index() const { return 0; }
 #endif
 };
 

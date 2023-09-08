@@ -46,8 +46,6 @@ struct MPI_scheduler
         int name_len;
         MPI_Get_processor_name(processor_name, &name_len);
 
-        pid = getpid();
-
 #if CGAL_DDT_TRACING
         std::ostringstream oss;
         oss << "perf_mpi." << world_rank << ".json";
@@ -57,8 +55,21 @@ struct MPI_scheduler
         MPI_Barrier(MPI_COMM_WORLD);
         trace.t0 = clock_now();
 
+        std::vector<char> processor_names;
+        std::vector<int> displs;
+        all_gather(processor_name, name_len, processor_names, displs);
+        std::set<std::string> processor_nameset;
+        int core_id = 0;
+        for(int i = 0; i < world_size; ++i) {
+            processor_nameset.insert(std::string(processor_names.data()+displs[i], processor_names.data()+displs[i+1]));
+            if (i < world_rank && strncmp(processor_name, processor_names.data()+displs[i], name_len)==0) {
+                core_id++;
+            }
+        }
+        pid = std::distance(processor_nameset.begin(), processor_nameset.find(processor_name));
+
         CGAL_DDT_TRACE1(*this, "", "process_name", 0, "M", name, "\"" << processor_name << "\"");
-        CGAL_DDT_TRACE1(*this, "", "thread_name", 0, "M", name, "\"rank " + std::to_string(world_rank) + "\"");
+        CGAL_DDT_TRACE1(*this, "", "thread_name", 0, "M", name, "\"" << processor_name << "[" << core_id << "]\"");
 #endif
     }
 
@@ -258,6 +269,7 @@ public:
     std::size_t clock_microsec() const { return 1e6*(clock_now() - trace.t0); }
     clock_type clock_now() const { return MPI_Wtime(); }
     trace_logger<clock_type> trace = {"", clock_now()};
+    int process_index() const { return pid; }
 #endif
 
 private:

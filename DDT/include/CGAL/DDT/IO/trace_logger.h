@@ -20,7 +20,7 @@
             << "{\"name\": \"" << name << "\"" \
             << ", \"cat\": \"" << cat << "\"" \
             << ", \"ph\": \"" << ph << "\"" \
-            << ", \"pid\": 0" \
+            << ", \"pid\": " << (sch).process_index() \
             << ", \"tid\": " << (sch).thread_index() \
             << ", \"args\": {" << args << "}" \
             << ", \"ts\": " << (sch).clock_microsec(); \

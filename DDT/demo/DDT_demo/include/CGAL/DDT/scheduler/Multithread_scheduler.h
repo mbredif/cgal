@@ -305,6 +305,7 @@ public:
     std::size_t clock_microsec() const { return std::chrono::duration<double, std::micro>(clock_now() - trace.t0).count(); }
     clock_type clock_now() const { return std::chrono::high_resolution_clock::now(); }
     trace_logger<clock_type> trace = {"perf_mt.json", clock_now()};
+    int process_index() const { return 0; }
 #endif
 };
 

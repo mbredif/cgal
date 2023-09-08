@@ -334,6 +334,7 @@ public:
     std::size_t clock_microsec() const { return 1e6*(clock_now()-trace.t0).seconds(); }
     clock_type clock_now() const { return tbb::tick_count::now(); }
     trace_logger<clock_type> trace = {"perf_tbb.json", clock_now()};
+    int process_index() const { return 0; }
 #endif
 };
 

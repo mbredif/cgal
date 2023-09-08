@@ -159,6 +159,7 @@ public:
         } out;
     } trace;
     unspecified_type clock_microsec() { return {}; }
+    int process_index() { return 0; }
 #endif
 
 };
