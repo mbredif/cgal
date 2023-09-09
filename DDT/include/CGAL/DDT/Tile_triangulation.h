@@ -636,6 +636,8 @@ public:
             if(vertex_is_main(v))
                 ++statistics_.number_of_finite_vertices;
         }
+#define CGAL_DDT_FINALIZE_OPT 2
+#if CGAL_DDT_FINALIZE_OPT == 0
         for(Facet_index f = facets_begin(); f != facets_end(); ++f )
         {
             if(facet_is_main(f))
@@ -655,6 +657,101 @@ public:
                     ++statistics_.number_of_finite_cells;
             }
         }
+#elif CGAL_DDT_FINALIZE_OPT == 1
+        int D = current_dimension();
+        std::vector<Tile_index> ids;
+        for(Cell_index c = cells_begin(); c != cells_end(); ++c)
+        {
+            bool inf = false;
+            ids.clear();
+            for(int i=0; i<=D; ++i) {
+                Vertex_index v = vertex(c, i);
+                if(vertex_is_infinite(v)) inf = true;
+                else {
+                    ids.push_back(vertex_id(v));
+                }
+            }
+            std::sort(ids.begin(), ids.end());
+            int cmed = ids.size()/2;
+            int fmed = (ids.size()-1)/2;
+            Tile_index cid = ids[cmed];
+            if (cid == id()) {
+                ++statistics_.number_of_cells;
+                if (inf) {
+                    ++statistics_.number_of_facets;
+                    ++statistics_.number_of_finite_facets;
+                } else {
+                    ++statistics_.number_of_finite_cells;
+                }
+            }
+            if (ids[fmed] == id()) {
+                statistics_.number_of_facets += cmed;
+                if (!inf) statistics_.number_of_finite_facets += cmed;
+            }
+            if (ids[fmed+1] == id()) {
+                int cmed2 = ids.size()-cmed;
+                statistics_.number_of_facets += cmed2;
+                if (!inf) statistics_.number_of_finite_facets += cmed2;
+            }
+        }
+#else
+        int D = current_dimension();
+        for(Cell_index c = cells_begin(); c != cells_end(); ++c)
+        {
+            int finite= 1;
+            int lower = 0;
+            int equal = 0;
+            for(int i=0; i<=D; ++i) {
+                Vertex_index v = vertex(c, i);
+                if(vertex_is_infinite(v)) {
+                    finite = 0;
+                } else {
+                    Tile_index vid = vertex_id(v);
+                    if (vid < id()) ++lower;
+                    else if (vid == id()) ++equal;
+                }
+            }
+            if (equal==0) continue; // cell and facets are all foreign
+            int upper = lower + equal;
+            int all   = D+finite;
+            int fmed1 = (all+1)/2;
+            int cmed  = all/2;
+
+            if (lower < fmed1 && fmed1 < upper) { // the cell and all its facets are main
+                ++statistics_.number_of_cells;
+                statistics_.number_of_facets += D+1;
+                ++statistics_.number_of_finite_facets;
+                if (finite) {
+                    ++statistics_.number_of_finite_cells;
+                    statistics_.number_of_finite_facets += D;
+                }
+            } else if (fmed1 == lower) {
+                statistics_.number_of_facets += fmed1;
+                if (finite) statistics_.number_of_finite_facets += fmed1;
+                if (cmed == lower) {
+                    ++statistics_.number_of_cells;
+                    if (finite) {
+                        ++statistics_.number_of_finite_cells;
+                    } else {
+                        ++statistics_.number_of_facets;
+                        ++statistics_.number_of_finite_facets;
+                    }
+                }
+            } else if (fmed1 == upper) {
+                statistics_.number_of_facets += cmed;
+                if (finite) statistics_.number_of_finite_facets += cmed;
+                if (cmed < upper) {
+                    ++statistics_.number_of_cells;
+                    if (finite) {
+                        ++statistics_.number_of_finite_cells;
+                    } else {
+                        ++statistics_.number_of_facets;
+                        ++statistics_.number_of_finite_facets;
+                    }
+                }
+            }
+        }
+#endif
     }
 
 
