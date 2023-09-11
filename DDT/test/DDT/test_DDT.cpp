@@ -18,7 +18,7 @@ typedef CGAL::Bbox_2 Bbox;
 typedef CGAL::DDT::Sequential_scheduler Scheduler;
 
 #include <CGAL/DDT/partitioner/Grid_partitioner.h>
-typedef CGAL::DDT::Grid_partitioner<Triangulation, TileIndexProperty> Partitioner;
+typedef CGAL::DDT::Grid_partitioner<Tile_index, Triangulation> Partitioner;
 
 #include <CGAL/Distributed_triangulation.h>
 typedef CGAL::Distributed_triangulation<Triangulation, TileIndexProperty, Serializer> Distributed_triangulation;
@@ -189,12 +189,12 @@ int main(int argc, char **argv)
     Serializer serializer("tmp_");
     Scheduler scheduler;
 
-    Distributed_triangulation tri1(N, max_number_of_tiles_in_mem, serializer);
+    Distributed_triangulation tri1(N, {}, max_number_of_tiles_in_mem, serializer);
     Distributed_point_set pointset(points, partitioner);
     tri1.insert(pointset, scheduler);
     errors += test_DDT(tri1);
 
-    Distributed_triangulation tri2(N, max_number_of_tiles_in_mem, serializer);
+    Distributed_triangulation tri2(N, {}, max_number_of_tiles_in_mem, serializer);
     for(auto& p : points)
     {
         auto inserted = tri2.insert(p, partitioner(p), scheduler);
@@ -215,7 +215,7 @@ int main(int argc, char **argv)
     int ND2[] = {16 , 16};
     Partitioner partitioner2(1, bbox, ND2, ND2+N);
     Serializer serializer2("tmp2_");
-    Distributed_triangulation tri3(N, max_number_of_tiles_in_mem, serializer2);
+    Distributed_triangulation tri3(N, {}, max_number_of_tiles_in_mem, serializer2);
     tri3.partition(partitioner2, tri1, scheduler);
     tri3.write(CGAL::DDT::VRT_serializer("test_DDT_retile_out"), scheduler);
     errors += test_DDT(tri3);

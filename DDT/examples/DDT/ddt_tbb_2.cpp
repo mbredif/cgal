@@ -32,22 +32,22 @@ int main(int argc, char **argv)
     double range = 1;
 
     CGAL::Bbox_2 bbox(-range, -range, range, range);
-    CGAL::DDT::Grid_partitioner<Triangulation, TileIndexProperty> partitioner(1, bbox, number_of_tiles_per_axis);
+    CGAL::DDT::Grid_partitioner<Tile_index, Triangulation> partitioner(1, bbox, number_of_tiles_per_axis);
     Random_points generator(range);
     Distributed_point_set points(generator, number_of_points, partitioner);
 
     Scheduler scheduler(threads);
 
     CGAL::DDT::File_serializer serializer("tile/");
-    Distributed_triangulation tri(2, max_number_of_tiles_in_mem, serializer);
+    Distributed_triangulation tri(2, {}, max_number_of_tiles_in_mem, serializer);
 
     tri.insert(points, scheduler);
 
     tri.write(CGAL::DDT::VRT_serializer("out/"), scheduler);
 
     CGAL::DDT::File_serializer serializer2("tile2/");
-    Distributed_triangulation tri2(3, max_number_of_tiles_in_mem, serializer2);
-    CGAL::DDT::Grid_partitioner<Triangulation, TileIndexProperty> partitioner2(1, bbox, number_of_tiles_per_axis + 1);
+    Distributed_triangulation tri2(2, {}, max_number_of_tiles_in_mem, serializer2);
+    CGAL::DDT::Grid_partitioner<Tile_index, Triangulation> partitioner2(1, bbox, number_of_tiles_per_axis + 1);
     tri2.partition(partitioner2, tri, scheduler);
     tri2.write(CGAL::DDT::VRT_serializer("out2/"), scheduler);
 

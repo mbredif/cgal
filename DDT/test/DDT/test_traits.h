@@ -8,6 +8,7 @@
 #include <CGAL/DDT/serializer/File_serializer.h>
 #include <CGAL/DDT/partitioner/Grid_partitioner.h>
 #include <CGAL/DDT/scheduler/Sequential_scheduler.h>
+#include <CGAL/DDT/traits/Partitioner_property_map.h>
 #include <CGAL/Distributed_triangulation.h>
 
 template <typename T>
@@ -30,25 +31,31 @@ bool is_euler_valid(const T& tri)
     return  (finite_euler == 1 && euler == 2);
 }
 
-template <typename Triangulation, typename TileIndexProperty,
-    typename Partitioner = CGAL::DDT::Grid_partitioner<Triangulation, TileIndexProperty>,
-    typename Scheduler = CGAL::DDT::Sequential_scheduler>
-int test_traits(const Partitioner& partitioner1, const Partitioner& partitioner2, const std::string& testname, int NP, int dim = CGAL::DDT::Triangulation_traits<Triangulation>::D, int NT = -1, double range = 1, bool do_test_io = true)
+template <typename Triangulation,
+    typename Scheduler,
+    typename Partitioner1,
+    typename Partitioner2,
+    typename TileIndexProperty1,
+    typename TileIndexProperty2>
+int test_traits(Scheduler& scheduler,
+    const Partitioner1& partitioner1, const Partitioner2& partitioner2,
+    const TileIndexProperty1& pmap1, const TileIndexProperty2& pmap2,
+    const std::string& testname, int NP, int dim = CGAL::DDT::Triangulation_traits<Triangulation>::D, int NT = -1, double range = 1, bool do_test_io = true)
 {
     std::cout << "Test " << testname << std::endl;
     int result = 0;
 
-    typedef CGAL::Distributed_triangulation<Triangulation, TileIndexProperty> Distributed_triangulation;
+    typedef CGAL::Distributed_triangulation<Triangulation, TileIndexProperty1> Distributed_triangulation1;
+    typedef CGAL::Distributed_triangulation<Triangulation, TileIndexProperty2> Distributed_triangulation2;
+    typedef typename Partitioner1::Tile_index Tile_index;
     typedef typename CGAL::DDT::Triangulation_traits<Triangulation>::Point Point;
-    typedef typename TileIndexProperty::value_type Tile_index;
     typedef typename CGAL::DDT::Triangulation_traits<Triangulation>::Random_points_in_box Random_points;
     typedef CGAL::Distributed_point_set<Tile_index, Point> Distributed_point_set;
 
     std::cout << "== Delaunay ==" << std::endl;
     Random_points generator(dim, range);
-    Scheduler scheduler;
     Distributed_point_set points(generator, NP, partitioner1);
-    Distributed_triangulation tri1(dim);
+    Distributed_triangulation1 tri1(dim, pmap1);
     tri1.insert(points, scheduler);
     if(!tri1.is_valid())
     {
@@ -78,7 +85,7 @@ int test_traits(const Partitioner& partitioner1, const Partitioner& partitioner2
         std::cout << "write..." << std::endl;
         tri1.write(CGAL::DDT::File_serializer(testname + "/cgal"), scheduler);
 
-        Distributed_triangulation tri2(dim);
+        Distributed_triangulation1 tri2(dim, pmap1);
         std::cout << "read..." << std::endl;
         tri2.read(CGAL::DDT::File_serializer(testname + "/cgal"), scheduler);
         std::cout << "write again..." << std::endl;
@@ -93,21 +100,47 @@ int test_traits(const Partitioner& partitioner1, const Partitioner& partitioner2
         }
     }
 
-    Distributed_triangulation tri3(dim);
+    Distributed_triangulation2 tri3(dim, pmap2);
     tri3.partition(partitioner2, tri1, scheduler);
 
     return result;
 }
 
-template <typename Triangulation, typename TileIndexProperty>
-int test_traits_grid(const std::string& testname, int ND, int NP, int dim = CGAL::DDT::Triangulation_traits<Triangulation>::D, int NT = -1, double range = 1, bool do_test_io = true)
+template <
+    typename Triangulation, typename Property,
+    typename Scheduler = CGAL::DDT::Sequential_scheduler, int D = CGAL::DDT::Triangulation_traits<Triangulation>::D>
+int test_info(const std::string& testname, int dim = D, int ND = 2, int NP = 50, int NT = -1, double range = 1, bool do_test_io = true, Scheduler sch = {})
 {
-    typedef CGAL::DDT::Triangulation_traits<Triangulation> Traits;
-    typedef typename Traits::Bbox Bbox;
+    typedef typename Property::value_type                                   Tile_index;
+    typedef CGAL::DDT::Grid_partitioner<Tile_index, Triangulation>          Partitioner;
+    typedef CGAL::DDT::Triangulation_traits<Triangulation>                  Traits;
+    typedef typename Traits::Bbox                                           Bbox;
     Bbox bbox = Traits::bbox(dim, range);
-    CGAL::DDT::Grid_partitioner<Triangulation, TileIndexProperty> partitioner1(1, bbox, ND  );
-    CGAL::DDT::Grid_partitioner<Triangulation, TileIndexProperty> partitioner2(1, bbox, ND+1);
-    return test_traits<Triangulation, TileIndexProperty>(partitioner1, partitioner2, testname, NP, dim, NT, range, do_test_io);
+    Partitioner part1(1, bbox, ND  );
+    Partitioner part2(1, bbox, ND+1);
+
+    Property pmap;
+    return test_traits<Triangulation>(sch, part1, part2, pmap, pmap, testname, NP, dim, NT, range, do_test_io);
+}
+
+template <
+    typename Triangulation, typename TileIndex,
+    typename Scheduler = CGAL::DDT::Sequential_scheduler, int D = CGAL::DDT::Triangulation_traits<Triangulation>::D>
+int test_part(const std::string& testname, int dim = D, int ND = 2, int NP = 50, int NT = -1, double range = 1, bool do_test_io = true, Scheduler sch = {})
+{
+    typedef CGAL::DDT::Grid_partitioner<TileIndex, Triangulation>           Partitioner;
+    typedef CGAL::DDT::Partitioner_property_map<Triangulation, Partitioner> Property;
+    typedef CGAL::DDT::Triangulation_traits<Triangulation>                  Traits;
+    typedef typename Traits::Bbox                                           Bbox;
+
+    Bbox bbox = Traits::bbox(dim, range);
+    Partitioner part1(1, bbox, ND  );
+    Partitioner part2(1, bbox, ND+1);
+
+    Property pmap1(part1);
+    Property pmap2(part2);
+
+    return test_traits<Triangulation>(sch, part1, part2, pmap1, pmap2, testname, NP, dim, NT, range, do_test_io);
 }
 
 #endif // DDT_TEST_HPP

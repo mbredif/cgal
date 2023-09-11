@@ -13,12 +13,12 @@ typedef CGAL::Epick_d<Dim_tag>                                    Geom_traits;
 typedef CGAL::Triangulation_vertex<Geom_traits,Tile_index>        Vb;
 typedef CGAL::Triangulation_data_structure<Dim_tag,Vb>            TDS;
 typedef CGAL::Delaunay_triangulation<Geom_traits, TDS>            Triangulation;
-typedef CGAL::DDT::Vertex_data_property_map<Triangulation>        TileIndexProperty;
+
 int main(int argc, char **argv) {
     return DDT_demo<
             Triangulation,
-            TileIndexProperty,
-            CGAL::DDT::Grid_partitioner<Triangulation, TileIndexProperty>,
+            CGAL::DDT::Vertex_data_property_map<Triangulation>,
+            CGAL::DDT::Grid_partitioner<Tile_index, Triangulation>,
             CGAL::DDT::Multithread_scheduler,
             CGAL::DDT::File_serializer
             >(argc, argv);

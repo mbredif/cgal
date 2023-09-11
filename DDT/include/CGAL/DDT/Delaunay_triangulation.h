@@ -44,16 +44,17 @@ template<typename GT, typename TDS>
 struct Triangulation_traits<CGAL::Delaunay_triangulation<GT, TDS>>
 {
     using Triangulation = CGAL::Delaunay_triangulation<GT, TDS>;
-    typedef typename TDS::Vertex_const_iterator                    Vertex_index;
-    typedef typename TDS::Full_cell_const_iterator                 Cell_index;
+
+    typedef typename Triangulation::Vertex_const_iterator          Vertex_index;
+    typedef typename Triangulation::Full_cell_const_iterator       Cell_index;
     typedef typename GT::Point_d                                   Point;
 
     static constexpr int D = Impl::Dim_value<typename Triangulation::Maximal_dimension>::value;
     typedef CGAL::DDT::Facet_index<D, Cell_index>                  Facet_index;
 
 private:
-    typedef typename TDS::Vertex_iterator                          Vertex_iterator;
-    typedef typename TDS::Full_cell_iterator                       Cell_iterator;
+    typedef typename Triangulation::Vertex_iterator                Vertex_iterator;
+    typedef typename Triangulation::Full_cell_iterator             Cell_iterator;
 
     static Vertex_iterator remove_const_workaround(Vertex_index v) {
         return Vertex_iterator(const_cast<typename Vertex_iterator::pointer>(v.operator->()));

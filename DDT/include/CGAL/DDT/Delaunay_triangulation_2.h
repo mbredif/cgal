@@ -23,17 +23,18 @@
 namespace CGAL {
 namespace DDT {
 
-template<typename GT, typename TDS>
-struct Triangulation_traits<CGAL::Delaunay_triangulation_2<GT, TDS>>
+template<typename GT, typename TDS_>
+struct Triangulation_traits<CGAL::Delaunay_triangulation_2<GT, TDS_>>
 {
-    using Triangulation = CGAL::Delaunay_triangulation_2<GT, TDS>;
-    typedef typename GT::Point_2                            Point;
-
-    typedef typename TDS::Vertex_iterator                            Vertex_index;
-    typedef typename TDS::Face_iterator                              Cell_index;
+    typedef CGAL::Delaunay_triangulation_2<GT, TDS_>              Triangulation;
+    typedef typename Triangulation::Triangulation_data_structure  TDS;
+    typedef typename GT::Point_2                                  Point;
 
     static constexpr int D = 2;
-    typedef CGAL::DDT::Facet_index<D, Cell_index>                    Facet_index;
+    typedef typename TDS::Vertex_iterator                         Vertex_index;
+    typedef typename TDS::Face_iterator                           Cell_index;
+    typedef CGAL::DDT::Facet_index<D, Cell_index>                 Facet_index;
+
 
     static inline Triangulation triangulation(int dim)
     {

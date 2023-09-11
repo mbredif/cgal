@@ -18,12 +18,13 @@ namespace DDT {
 /// \ingroup PkgDDTPartitionerClasses
 /// Dummy partitioner that affects all points to a single tile.
 /// \cgalModels Partitioner
-template<typename Traits>
+template<typename TileIndex, typename Triangulation>
 class Const_partitioner
 {
+    typedef CGAL::DDT::Triangulation_traits<Triangulation> Traits;
 public:
+    typedef TileIndex Tile_index;
     typedef typename Traits::Point Point;
-    typedef typename Traits::Tile_index    Tile_index;
 
     /// Construction with a tile index
     Const_partitioner(Tile_index id) : id_(id) {}

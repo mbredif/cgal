@@ -5,8 +5,10 @@
 \ingroup PkgDDTConcepts
 \cgalConcept
 
-The concept `VertexPropertyMap` describes the requirements of a property map from Vertex_indices to Tile_indices.
+The concept `VertexPropertyMap` describes the requirements of a readable property map from (Triangulation, Vertex_index) pairs to Tile_indices.
+If the mapped value does not only depend on the point embedding of the vertex, then it should also be writable.
 
+\cgalHasModel `CGAL::DDT::Partitioner_property_map`
 \cgalHasModel `CGAL::DDT::Vertex_info_property_map`
 \cgalHasModel `CGAL::DDT::Vertex_data_property_map`
 \cgalHasModel `CGAL::DDT::Vertex_info_id_property_map`
@@ -19,16 +21,12 @@ struct VertexPropertyMap
 {
 /// \cond SKIP_IN_MANUAL
   typedef VertexPropertyMap Self;
-  typedef ::VertexIndex key_type;
+  typedef std::pair<const ::Triangulation&, ::VertexIndex> key_type;
   typedef ::TileIndex value_type;
-  typedef value_type& reference;
-  typedef boost::lvalue_property_map_tag category;
+  typedef boost::readable_property_map_tag category;
 
-  value_type& operator[](key_type& k) const { return Self::value; }
-
-  friend value_type& get(const Self&, key_type& k) { return Self::value; }
-  friend const value_type& get(const Self&, const key_type& k) { return Self::value; }
-  friend void put(const Self&, key_type& k, const value_type& v) { }
+  friend value_type get(const Self&, const key_type& k) { return Self::value; }
+  friend void put(const Self&, const key_type& k, const value_type& v) { }
 /// \endcond
 
 private:

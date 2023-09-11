@@ -77,9 +77,10 @@ public:
 
     /// contructor
     template<typename... Args>
-    Distributed_triangulation(int dim, Args&&... args)
+    Distributed_triangulation(int dim, TileIndexProperty tile_indices = {}, Args&&... args)
     :   maximal_dimension_(dim),
         tiles(std::forward<Args>(args)...),
+        tile_indices(tile_indices),
         statistics_()
     {}
 
@@ -553,11 +554,11 @@ public:
 
         CGAL_DDT_TRACE0(sch, "DDT", "insert_and_send_all_axis_extreme_points", 0, "B");
         Distributed_point_set points;
-        CGAL::DDT::impl::insert_and_get_axis_extreme_points(tiles, point_sets, std::back_inserter(points), root, sch, maximal_dimension());
+        CGAL::DDT::impl::insert_and_get_axis_extreme_points(tiles, point_sets, std::back_inserter(points), root, sch, maximal_dimension(), tile_indices);
         CGAL_DDT_TRACE0(sch, "DDT", "insert_and_send_all_axis_extreme_points", 0, "E");
 
         CGAL_DDT_TRACE1(sch, "DDT", "splay_stars", 0, "B", in, CGAL::DDT::to_summary(points.begin(), points.end()));
-        CGAL::DDT::impl::splay_stars(tiles, points, sch, root, maximal_dimension());
+        CGAL::DDT::impl::splay_stars(tiles, points, sch, root, maximal_dimension(), tile_indices);
         CGAL_DDT_TRACE1(sch, "DDT", "splay_stars", 0, "E", out, CGAL::DDT::to_summary(points.begin(), points.end()));
 
         finalize(sch);
@@ -579,7 +580,7 @@ public:
         CGAL_DDT_TRACE0(sch, "DDT", "insert1", 0, "B");
         auto emplaced = tiles.emplace(std::piecewise_construct,
                 std::forward_as_tuple(id),
-                std::forward_as_tuple(id, maximal_dimension()));
+                std::forward_as_tuple(id, maximal_dimension_, tile_indices));
         // insert the point in its local tile
         Tile_iterator tile = emplaced.first;
         Tile_triangulation& tri  = tile->second;
@@ -722,14 +723,13 @@ public:
                 return out;
             }, std::inserter(point_sets, point_sets.begin())
         );
-        int dim = that.maximal_dimension();
-        maximal_dimension_ = dim;
+        maximal_dimension_ = that.maximal_dimension();
         Statistics stats;
         tiles.clear();
         statistics_ = sch.template ranges_transform_reduce<typename AssociativeContainer::value_type>(point_sets,
-            [&dim](auto first, auto last, auto out) {
+            [&](auto first, auto last, auto out) {
                 Tile_index key = first->first;
-                Tile_triangulation tri(key, dim);
+                Tile_triangulation tri(key, maximal_dimension_, tile_indices);
                 Vertex_index hint;
                 // simplification is not needed (local and adjacent to local points only are received)
                 // simplification would be incorrect, as foreign vertices may come first and be simplified before their local neighbor is inserted
@@ -757,6 +757,7 @@ public:
     Statistics& statistics() { return statistics_; }
 
     Container tiles;
+    TileIndexProperty tile_indices;
 
     private:
     Statistics statistics_;

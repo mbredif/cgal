@@ -22,12 +22,13 @@ namespace DDT {
 // Affects points randomly to the range of tile indices [a, b].
 // For testing purposes only (correct but bad performance)
 // \cgalModels Partitioner
-template<typename Traits, typename Generator = std::default_random_engine>
+template<typename TileIndex, typename Triangulation, typename Generator = std::default_random_engine>
 class Random_partitioner
 {
+    typedef CGAL::DDT::Triangulation_traits<Triangulation> Traits;
 public:
+    typedef TileIndex Tile_index;
     typedef typename Traits::Point Point;
-    typedef typename Traits::Tile_index    Tile_index;
 
     Random_partitioner(Tile_index a, Tile_index b, unsigned int seed = 0) : distribution(a,b), generator(seed)
     {

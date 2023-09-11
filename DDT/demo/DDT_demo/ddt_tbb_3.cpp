@@ -13,12 +13,12 @@ typedef CGAL::Exact_predicates_inexact_constructions_kernel                  Geo
 typedef CGAL::Triangulation_vertex_base_with_info_3<Tile_index, Geom_traits> Vb;
 typedef CGAL::Triangulation_data_structure_3<Vb>                             TDS;
 typedef CGAL::Delaunay_triangulation_3<Geom_traits, TDS>                     Triangulation;
-typedef CGAL::DDT::Vertex_info_property_map<Triangulation>                   TileIndexProperty;
+
 int main(int argc, char **argv) {
     return DDT_demo<
             Triangulation,
-            TileIndexProperty,
-            CGAL::DDT::Grid_partitioner<Triangulation, TileIndexProperty>,
+            CGAL::DDT::Vertex_info_property_map<Triangulation>,
+            CGAL::DDT::Grid_partitioner<Tile_index, Triangulation>,
             CGAL::DDT::TBB_scheduler,
             CGAL::DDT::File_serializer
             >(argc, argv);

@@ -83,9 +83,9 @@ OutputIterator splay_root_triangulation(TileTriangulation& tri, InputIterator be
     return out;
 }
 
-template<typename TriangulationContainer, typename PointSetContainer, typename OutputIterator, typename TileIndex, typename Scheduler>
+template<typename TriangulationContainer, typename PointSetContainer, typename OutputIterator, typename TileIndex, typename Scheduler, typename TileIndexMap>
 OutputIterator
-insert_and_get_axis_extreme_points(TriangulationContainer& tiles, PointSetContainer& point_sets, OutputIterator out, TileIndex root, Scheduler& sch, int dim)
+insert_and_get_axis_extreme_points(TriangulationContainer& tiles, PointSetContainer& point_sets, OutputIterator out, TileIndex root, Scheduler& sch, int dim, TileIndexMap index_map)
 {
     typedef typename TriangulationContainer::mapped_type TileTriangulation;
     typedef typename PointSetContainer::value_type PointSetContainerValue;
@@ -102,11 +102,11 @@ insert_and_get_axis_extreme_points(TriangulationContainer& tiles, PointSetContai
             ps.emplace_back(tri.vertex_id(v), tri.point(v));
         *out_++ = { root, std::move(ps) };
         return out_;
-    }, out, dim);
+    }, out, dim, index_map);
 }
 
-template<typename TriangulationContainer, typename PointSetContainer, typename TileIndex, typename Scheduler>
-void splay_stars(TriangulationContainer& tiles, PointSetContainer& points, Scheduler& sch, TileIndex root, int dim)
+template<typename TriangulationContainer, typename PointSetContainer, typename TileIndex, typename Scheduler, typename TileIndexMap>
+void splay_stars(TriangulationContainer& tiles, PointSetContainer& points, Scheduler& sch, TileIndex root, int dim, TileIndexMap index_map)
 {
     typedef typename TriangulationContainer::mapped_type TileTriangulation;
     sch.ranges_for_each(points, tiles,
@@ -117,7 +117,7 @@ void splay_stars(TriangulationContainer& tiles, PointSetContainer& points, Sched
                 return splay_tile(tri, first, last, out);
             }
         },
-        dim);
+        dim, index_map);
 }
 
 } // namespace impl

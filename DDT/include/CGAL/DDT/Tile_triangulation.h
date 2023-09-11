@@ -103,9 +103,10 @@ public:
     typedef typename Traits::Cell_index              Cell_index;
 
     /// constructor
-    Tile_triangulation(Tile_index id, int dimension)
+    Tile_triangulation(Tile_index id, int dimension, Tile_index_property index_map)
         : id_(id),
           tri_(Traits::triangulation(dimension)),
+          tile_indices(index_map),
           statistics_()
     {}
 
@@ -138,7 +139,7 @@ public:
 
     inline Tile_index vertex_id(Vertex_index v) const {
         CGAL_assertion(!vertex_is_infinite(v));
-        return get(tile_indices, v);
+        return get(tile_indices, std::make_pair(std::ref(tri_), v));
     }
 
     Tile_index cell_id(Cell_index c) const
@@ -170,7 +171,12 @@ public:
     inline std::pair<Vertex_index, bool> insert(const Point& p, Tile_index id, Vertex_index v = Vertex_index()) {
         statistics_.valid = false;
         auto inserted = Traits::insert(tri_, p, v);
-        if (inserted.second) put(tile_indices, inserted.first, id);
+        if(inserted.second) {
+            if constexpr (std::is_convertible_v<typename Tile_index_property::category, boost::writable_property_map_tag>)
+                put(tile_indices, std::make_pair(std::ref(tri_), inserted.first), id);
+            else
+                CGAL_assertion(get(tile_indices, std::make_pair(std::ref(tri_), inserted.first)) == id);
+        }
         return inserted;
     }
 

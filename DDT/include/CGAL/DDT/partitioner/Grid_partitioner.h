@@ -22,12 +22,12 @@ namespace DDT {
 /// Partitions the domain enclosed by an axis aligned bounding box using a uniform grid.
 /// The number of grid steps in each dimension may be specified independently.
 /// \cgalModels Partitioner
-template<typename Triangulation, typename TileIndexProperty>
+template<typename TileIndex, typename Triangulation>
 class Grid_partitioner
 {
     typedef CGAL::DDT::Triangulation_traits<Triangulation> Traits;
 public:
-    typedef typename TileIndexProperty::value_type Tile_index;
+    typedef TileIndex Tile_index;
     typedef typename Traits::Point Point;
     typedef typename Traits::Bbox Bbox;
     typedef typename std::vector<std::size_t>::const_iterator const_size_iterator;

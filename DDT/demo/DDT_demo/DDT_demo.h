@@ -97,7 +97,7 @@ int DDT_demo(int argc, char **argv)
   Partitioner partitioner(1, bbox, NT.begin(), NT.end());
   Scheduler scheduler(max_concurrency);
   Serializer serializer(ser);
-  Distributed_triangulation tri(dimension, max_number_of_tiles, serializer);
+  Distributed_triangulation tri(dimension, {}, max_number_of_tiles, serializer);
 
   std::cout << "- Program     : " << argv[0] << std::endl;
   std::cout << "- Loglevel    : " << loglevel << std::endl;

@@ -31,9 +31,9 @@ int main(int argc, char **argv)
     double range = 1;
 
     CGAL::Bbox_2 bbox(-range, -range, range, range);
-    CGAL::DDT::Grid_partitioner<Triangulation, TileIndexProperty> partitioner(1, bbox, number_of_tiles_per_axis);
+    CGAL::DDT::Grid_partitioner<Tile_index, Triangulation> partitioner(1, bbox, number_of_tiles_per_axis);
     Serializer serializer("tile_");
-    Distributed_triangulation tri(2, max_number_of_tiles, serializer);
+    Distributed_triangulation tri(2, {}, max_number_of_tiles, serializer);
     Scheduler scheduler;
     Random_points generator(range);
     Distributed_point_set points(generator, number_of_points, partitioner);

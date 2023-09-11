@@ -39,7 +39,7 @@ int main(int argc, char*argv[])
     char* const*end  = argv+argc;
 
     Serializer serializer(tmp);
-    Distributed_triangulation tri(3, max_number_of_tiles, serializer);
+    Distributed_triangulation tri(3, {}, max_number_of_tiles, serializer);
     Scheduler scheduler;
 
     Distributed_point_set points(begin, end);

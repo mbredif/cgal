@@ -38,6 +38,12 @@ void json_get_statistics(const boost::property_tree::ptree& node, Statistics& st
     stats.valid = true;
 }
 
+template<typename TileIndexProperty>
+void json_get_indices(const boost::property_tree::ptree& node, TileIndexProperty& indices)
+{
+    // TileIndexProperty models may specialize this JSON reader
+}
+
 template<typename TileTriangulation>
 bool read_cgal_tile(std::istream& is, TileTriangulation& triangulation)
 {
@@ -59,10 +65,11 @@ bool read_cgal_json(std::istream& is, DistributedTriangulation& tri)
     tri.maximal_dimension() = dimension;
     json_get_statistics(root_node, tri.statistics());
     boost::property_tree::ptree tiles_node = root_node.get_child("tiles");
+    json_get_indices(root_node, tri.tile_indices);
     for(const auto& [sid, node] : tiles_node)
     {
         Tile_index id = std::stoi(sid);
-        Tile_triangulation& triangulation = tri.tiles.try_emplace(id, id, dimension).first->second;
+        Tile_triangulation& triangulation = tri.tiles.try_emplace(id, id, dimension, tri.tile_indices).first->second;
         json_get_statistics(node, triangulation.statistics());
     }
     return true;

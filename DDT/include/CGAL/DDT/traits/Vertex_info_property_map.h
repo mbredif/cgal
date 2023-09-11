@@ -13,6 +13,8 @@
 #define CGAL_DDT_VERTEX_INFO_PROPERTY_MAP_H
 
 #include <boost/property_map/property_map.hpp>
+#include <CGAL/DDT/traits/Data.h>
+
 
 namespace CGAL {
 namespace DDT {
@@ -21,22 +23,20 @@ namespace DDT {
 /// Property map that accesses the info item of a Triangulation_vertex_base_with_info_2/3 handle.
 /// It is mutable if `T` is not `const` and non-mutable otherwise.
 ///
-/// \cgalModels `LvaluePropertyMap`
+/// \cgalModels `ReadWritePropertyMap`
 template <typename T>
 struct Vertex_info_property_map
 {
 /// \cond SKIP_IN_MANUAL
-  typedef Vertex_info_property_map<T> Self;
-  typedef typename T::Vertex_handle key_type;
-  typedef typename T::Vertex::Info value_type;
-  typedef value_type& reference;
-  typedef boost::lvalue_property_map_tag category;
+  typedef Vertex_info_property_map<T>        Self;
+  typedef typename T::Vertex_handle          Vertex_index;
+  typedef std::pair<const T&, Vertex_index>  key_type;
+  typedef typename T::Vertex::Info           value_type;
+  typedef value_type                         reference;
+  typedef boost::read_write_property_map_tag category;
 
-  value_type& operator[](key_type& k) const { return k->info(); }
-
-  friend value_type& get(const Self&, key_type& k) { return k->info(); }
-  friend const value_type& get(const Self&, const key_type& k) { return k->info(); }
-  friend void put(const Self&, key_type& k, const value_type& v) { k->info() = v; }
+  friend value_type get(const Self&, const key_type& k) { return k.second->info(); }
+  friend void put(const Self&, const key_type& k, value_type v) { k.second->info() = v; }
 /// \endcond
 };
 
@@ -44,22 +44,20 @@ struct Vertex_info_property_map
 /// Property map that accesses the id member of the info item of a Triangulation_vertex_base_with_info_2/3 handle.
 /// It is mutable if `T` is not `const` and non-mutable otherwise.
 ///
-/// \cgalModels `LvaluePropertyMap`
+/// \cgalModels `ReadWritePropertyMap`
 template <typename T>
 struct Vertex_info_id_property_map
 {
 /// \cond SKIP_IN_MANUAL
-  typedef Vertex_info_id_property_map<T> Self;
-  typedef typename T::Vertex_handle key_type;
-  typedef typename T::Vertex::Info::Info value_type;
-  typedef value_type& reference;
-  typedef boost::lvalue_property_map_tag category;
+  typedef Vertex_info_id_property_map<T>       Self;
+  typedef typename T::Vertex_handle            Vertex_index;
+  typedef std::pair<const T&, Vertex_index>    key_type;
+  typedef typename T::Vertex::Info::Tile_index value_type;
+  typedef value_type                           reference;
+  typedef boost::read_write_property_map_tag   category;
 
-  value_type& operator[](key_type& k) const { return k->info().id; }
-
-  friend value_type& get(const Self&, key_type& k) { return k->info().id; }
-  friend const value_type& get(const Self&, const key_type& k) { return k->info().id; }
-  friend void put(const Self&, key_type& k, const value_type& v) { k->info().id = v; }
+  friend value_type get(const Self&, const key_type& k) { return k.second->info().id; }
+  friend void put(const Self&, const key_type& k, value_type v) { k.second->info().id = v; }
 /// \endcond
 };
 
