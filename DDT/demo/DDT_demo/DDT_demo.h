@@ -86,12 +86,12 @@ int DDT_demo(int argc, char **argv)
       return -1;
   }
 
-  if (max_number_of_tiles > 0 && (max_concurrency > max_number_of_tiles || max_concurrency == 0))
-  {
-      std::cout << "Limiting concurrency to the maximum number of tiles in memory : ";
-      std::cout << max_concurrency << " --> " << max_number_of_tiles << std::endl;
-      max_concurrency = max_number_of_tiles;
-  }
+//  if (max_number_of_tiles > 0 && (max_concurrency > max_number_of_tiles || max_concurrency == 0))
+//  {
+//      std::cout << "Limiting concurrency to the maximum number of tiles in memory : ";
+//      std::cout << max_concurrency << " --> " << max_number_of_tiles << std::endl;
+//      max_concurrency = max_number_of_tiles;
+//  }
 
   typename Traits::Bbox bbox = Traits::bbox(dimension, range);
   Partitioner partitioner(1, bbox, NT.begin(), NT.end());
