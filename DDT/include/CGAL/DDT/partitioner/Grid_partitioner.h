@@ -35,7 +35,7 @@ public:
     /// Construction with a bbox, a range of number of grid steps in each dimension, and a base tile index.
     /// If the range ends before providing enough elements, its last element is repeatedly used.
     template<typename Iterator>
-    Grid_partitioner(const Bbox& bbox, Iterator it, Iterator end, Tile_index id0) : id0(id0)
+    Grid_partitioner(Tile_index id0, const Bbox& bbox, Iterator it, Iterator end) : id0(id0)
     {
         int D = bbox.dimension();
         std::size_t n = 1;
@@ -55,7 +55,7 @@ public:
 
     /// Construction with a bbox, a number grid steps, and a base tile index
     /// All dimensions have the same number of grid steps.
-    Grid_partitioner(const Bbox& bbox, std::size_t n, Tile_index id0) : id0(id0)
+    Grid_partitioner(Tile_index id0, const Bbox& bbox, std::size_t n) : id0(id0)
     {
         std::size_t D = bbox.dimension();
         M = 1;

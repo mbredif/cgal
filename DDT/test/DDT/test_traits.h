@@ -105,8 +105,8 @@ int test_traits_grid(const std::string& testname, int ND, int NP, int dim = CGAL
     typedef CGAL::DDT::Triangulation_traits<Triangulation> Traits;
     typedef typename Traits::Bbox Bbox;
     Bbox bbox = Traits::bbox(dim, range);
-    CGAL::DDT::Grid_partitioner<Triangulation, TileIndexProperty> partitioner1(bbox, ND  , 1);
-    CGAL::DDT::Grid_partitioner<Triangulation, TileIndexProperty> partitioner2(bbox, ND+1, 1);
+    CGAL::DDT::Grid_partitioner<Triangulation, TileIndexProperty> partitioner1(1, bbox, ND  );
+    CGAL::DDT::Grid_partitioner<Triangulation, TileIndexProperty> partitioner2(1, bbox, ND+1);
     return test_traits<Triangulation, TileIndexProperty>(partitioner1, partitioner2, testname, NP, dim, NT, range, do_test_io);
 }
 

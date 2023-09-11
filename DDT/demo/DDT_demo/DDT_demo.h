@@ -94,7 +94,7 @@ int DDT_demo(int argc, char **argv)
   }
 
   typename Traits::Bbox bbox = Traits::bbox(dimension, range);
-  Partitioner partitioner(bbox, NT.begin(), NT.end(), 1);
+  Partitioner partitioner(1, bbox, NT.begin(), NT.end());
   Scheduler scheduler(max_concurrency);
   Serializer serializer(ser);
   Distributed_triangulation tri(dimension, max_number_of_tiles, serializer);
