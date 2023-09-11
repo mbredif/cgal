@@ -10,7 +10,7 @@ typedef int Id;
 typedef int Flag;
 //
 
-#include <CGAL/DDT/Delaunay_triangulation.h>
+#include <CGAL/DDT/triangulation/Delaunay_triangulation.h>
 typedef CGAL::DDT::Triangulation_traits_d<2,Id,Flag> Traits;
 typedef Traits::Random_points_in_box Random_points;
 

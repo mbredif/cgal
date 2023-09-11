@@ -13,7 +13,7 @@
 #define CGAL_DDT_VERTEX_INFO_PROPERTY_MAP_H
 
 #include <boost/property_map/property_map.hpp>
-#include <CGAL/DDT/traits/Data.h>
+#include <CGAL/DDT/property_map/Data.h>
 
 
 namespace CGAL {

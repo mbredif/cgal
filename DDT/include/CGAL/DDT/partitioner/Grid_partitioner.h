@@ -12,7 +12,7 @@
 #ifndef CGAL_DDT_PARITIONER_GRID_PARTITIONER_H
 #define CGAL_DDT_PARITIONER_GRID_PARTITIONER_H
 
-#include <CGAL/DDT/traits/Triangulation_traits.h>
+#include <CGAL/DDT/triangulation/Triangulation_traits.h>
 #include <iterator>
 
 namespace CGAL {

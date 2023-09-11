@@ -1,6 +1,6 @@
 #include <CGAL/Epick_d.h>
-#include <CGAL/DDT/Delaunay_triangulation.h>
-#include <CGAL/DDT/traits/Vertex_data_property_map.h>
+#include <CGAL/DDT/triangulation/Delaunay_triangulation.h>
+#include <CGAL/DDT/property_map/Vertex_data_property_map.h>
 #include <CGAL/DDT/partitioner/Grid_partitioner.h>
 #include <CGAL/DDT/scheduler/Sequential_scheduler.h>
 #include <CGAL/DDT/serializer/File_serializer.h>

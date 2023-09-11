@@ -7,7 +7,7 @@
 #include <Concepts/TileIndex.h>
 #include <Concepts/RandomPointsInBox.h>
 #include <Concepts/RandomPointsInBall.h>
-#include <CGAL/DDT/traits/Triangulation_traits.h>
+#include <CGAL/DDT/triangulation/Triangulation_traits.h>
 #include <vector>
 
 struct VertexIndex : public SimplexIndex {};

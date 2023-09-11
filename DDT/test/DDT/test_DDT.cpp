@@ -1,7 +1,7 @@
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
 #include <CGAL/Triangulation_vertex_base_with_info_2.h>
-#include <CGAL/DDT/Delaunay_triangulation_2.h>
-#include <CGAL/DDT/traits/Vertex_info_property_map.h>
+#include <CGAL/DDT/triangulation/Delaunay_triangulation_2.h>
+#include <CGAL/DDT/property_map/Vertex_info_property_map.h>
 #include <CGAL/DDT/serializer/File_points_serializer.h>
 
 typedef int                                                                  Tile_index;

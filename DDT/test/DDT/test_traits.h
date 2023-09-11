@@ -8,7 +8,7 @@
 #include <CGAL/DDT/serializer/File_serializer.h>
 #include <CGAL/DDT/partitioner/Grid_partitioner.h>
 #include <CGAL/DDT/scheduler/Sequential_scheduler.h>
-#include <CGAL/DDT/traits/Partitioner_property_map.h>
+#include <CGAL/DDT/property_map/Partitioner_property_map.h>
 #include <CGAL/Distributed_triangulation.h>
 
 template <typename T>

@@ -12,13 +12,13 @@
 #ifndef CGAL_DDT_DELAUNAY_TRIANGULATION_D_H
 #define CGAL_DDT_DELAUNAY_TRIANGULATION_D_H
 
-#include <CGAL/DDT/traits/Triangulation_traits.h>
+#include <CGAL/DDT/triangulation/Triangulation_traits.h>
 #include <CGAL/Delaunay_triangulation.h>
 #include <CGAL/point_generators_d.h>
 #include <CGAL/Spatial_sort_traits_adapter_d.h>
 #include <CGAL/spatial_sort.h>
-#include <CGAL/DDT/traits/Bbox.h>
-#include <CGAL/DDT/traits/Facet_index.h>
+#include <CGAL/DDT/triangulation/Bbox.h>
+#include <CGAL/DDT/triangulation/Facet_index.h>
 
 namespace CGAL {
 namespace DDT {
