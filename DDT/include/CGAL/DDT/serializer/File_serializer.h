@@ -25,16 +25,20 @@ namespace DDT {
 /// \cgalModels Serializer
 class File_serializer {
 public:
-    File_serializer(const std::string& dirname) : dirname_(dirname)
+    File_serializer(const std::string& dirname = "") : dirname_(dirname)
     {
+        if(dirname_.empty()) {
+            dirname_ = "tmp/" + boost::filesystem::unique_path().string();
+        }
         boost::filesystem::path p(dirname_);
+        dirname_ = p.string()+"/";
         boost::filesystem::create_directories(p);
     }
 
     template <class TileTriangulation>
     bool write(const TileTriangulation& tri) const
     {
-        std::ofstream os(dirname_ + "/" + std::to_string(tri.id()) + ".txt");
+        std::ofstream os(dirname_ + std::to_string(tri.id()) + ".txt");
         return write_cgal_tile(os, tri);
     }
 
@@ -47,28 +51,28 @@ public:
     template <typename DistributedTriangulation>
     bool write_end(const DistributedTriangulation& tri, int id) const
     {
-        std::ofstream os(dirname_ + "/" + std::to_string(id) + ".json");
+        std::ofstream os(dirname_ + std::to_string(id) + ".json");
         return write_json_tiles(os, tri);
     }
 
     template <typename TileIndex>
     bool is_readable(TileIndex id) const
     {
-        std::ifstream is(dirname_ + "/" + std::to_string(id) + ".txt", std::ios::in);
+        std::ifstream is(dirname_ + std::to_string(id) + ".txt", std::ios::in);
         return is.is_open();
     }
 
     template<typename TileTriangulation>
     bool read(TileTriangulation& tri) const
     {
-        std::ifstream is(dirname_ + "/" + std::to_string(tri.id()) + ".txt", std::ios::in);
+        std::ifstream is(dirname_ + std::to_string(tri.id()) + ".txt", std::ios::in);
         return read_cgal_tile(is, tri);
     }
 
     template <typename DistributedTriangulation>
     bool read_begin(DistributedTriangulation& tri, int id) const
     {
-        std::ifstream is(dirname_ + "/" + std::to_string(id) + ".json", std::ios::in);
+        std::ifstream is(dirname_ + std::to_string(id) + ".json", std::ios::in);
         return read_cgal_json(is, tri);
     }
 

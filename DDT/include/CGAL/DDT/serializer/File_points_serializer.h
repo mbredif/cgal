@@ -29,13 +29,17 @@ std::ostream& operator<<(std::ostream& out, const File_points_serializer& serial
 struct File_points_serializer
 {
 
-  /// Each tile is saved as the file "{prefix}{tile_index}.txt".
-  File_points_serializer(const std::string& prefix = "") : m_prefix(prefix) {
-      boost::filesystem::path p(prefix);
-      boost::filesystem::path q(p.parent_path());
-      if(p.has_parent_path() && !boost::filesystem::exists(q))
-          boost::filesystem::create_directories(q);
-  }
+  /// Each tile is saved as the file "{dirname}/{tile_index}.txt".
+    File_points_serializer(const std::string& dirname = "") : dirname_(dirname)
+    {
+        if(dirname_.empty()) {
+            dirname_ = "tmp/" + boost::filesystem::unique_path().string();
+        }
+        boost::filesystem::path p(dirname_);
+        dirname_ = p.string()+"/";
+        boost::filesystem::create_directories(p);
+    }
+
 #ifdef CGAL_DEBUG_DDT
   ~File_points_serializer()
   {
@@ -106,17 +110,17 @@ struct File_points_serializer
     return !out.fail();
   }
 
-  /// File system prefix
-  const std::string& prefix() const { return m_prefix; }
+  /// File system dirname
+  const std::string& dirname() const { return dirname_; }
 
 private:
   template <typename TileIndex>
   std::string filename(TileIndex i) const
   {
-    return m_prefix+std::to_string(i)+".txt";
+    return dirname_+std::to_string(i)+".txt";
   }
 
-  std::string m_prefix;
+  std::string dirname_;
 #ifdef CGAL_DEBUG_DDT
   mutable int nb_loads = 0;
   mutable int nb_save = 0;
@@ -124,7 +128,7 @@ private:
 };
 
 std::ostream& operator<<(std::ostream& out, const File_points_serializer& serializer) {
-    return out << "File_points_serializer(prefix=" << serializer.prefix() << ")";
+    return out << "File_points_serializer(dirname=" << serializer.dirname() << ")";
 }
 
 }

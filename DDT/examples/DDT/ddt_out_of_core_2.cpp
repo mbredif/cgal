@@ -32,7 +32,8 @@ int main(int argc, char **argv)
 
     CGAL::Bbox_2 bbox(-range, -range, range, range);
     CGAL::DDT::Grid_partitioner<Tile_index, Triangulation> partitioner(1, bbox, number_of_tiles_per_axis);
-    Serializer serializer("tile_");
+    Serializer serializer;
+    std::cout << "temp directory: " << serializer.dirname() << std::endl;
     Distributed_triangulation tri(2, {}, max_number_of_tiles, serializer);
     Scheduler scheduler;
     Random_points generator(range);
