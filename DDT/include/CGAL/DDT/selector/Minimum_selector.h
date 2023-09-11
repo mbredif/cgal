@@ -42,12 +42,8 @@ public:
             int f = D+(equal>1);
             ++cells;
             facets += f;
-            if(finite) {
-                ++finite_cells;
-                finite_facets += f;
-            } else {
-                ++finite_facets;
-            }
+            finite_cells  += finite;
+            finite_facets += finite ? f : 1;
             return;
         }
         case 1: {

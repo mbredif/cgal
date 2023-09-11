@@ -6,13 +6,11 @@ struct Triangulation {};
 
 #include "test_traits.h"
 
-
 int main(int argc, char **)
 {
   typedef ::Partitioner Partitioner;
   typedef ::VertexPropertyMap TileIndexProperty;
   typedef ::Scheduler Scheduler;
-
   Partitioner partitioner1;
   Partitioner partitioner2;
   // do not run it!
