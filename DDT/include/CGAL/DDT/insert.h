@@ -108,7 +108,6 @@ insert_and_get_axis_extreme_points(TriangulationContainer& tiles, PointSetContai
 template<typename TriangulationContainer, typename PointSetContainer, typename TileIndex, typename Scheduler>
 void splay_stars(TriangulationContainer& tiles, PointSetContainer& points, Scheduler& sch, TileIndex root, int dim)
 {
-    CGAL_DDT_TRACE1(sch, "DDT", "splay_stars", 0, "B", in, to_summary(points.begin(), points.end()));
     typedef typename TriangulationContainer::mapped_type TileTriangulation;
     sch.ranges_for_each(points, tiles,
         [&root](auto first, auto last, TileTriangulation& tri, auto out) {
@@ -119,7 +118,6 @@ void splay_stars(TriangulationContainer& tiles, PointSetContainer& points, Sched
             }
         },
         dim);
-    CGAL_DDT_TRACE1(sch, "DDT", "splay_stars", 0, "E", out, to_summary(points.begin(), points.end()));
 }
 
 } // namespace impl

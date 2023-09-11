@@ -35,6 +35,54 @@ public:
         std::nth_element(begin, median, values.end());
         return *median;
     }
+
+    template<typename S>
+    void cell_statistics(int lower, int equal, int D, int finite,
+                S& cells,
+                S& finite_cells,
+                S& facets,
+                S& finite_facets)
+    {
+        if (equal==0) return; // cell and facets are all foreign
+        int upper = lower + equal;
+        int all   = D+finite;
+        int fmed1 = (all+1)/2;
+        int cmed  = all/2;
+
+        if (lower < fmed1 && fmed1 < upper) { // the cell and all its facets are main
+            ++cells;
+            facets += D+1;
+            ++finite_facets;
+            if (finite) {
+                ++finite_cells;
+                finite_facets += D;
+            }
+        } else if (fmed1 == lower) {
+            facets += fmed1;
+            if (finite) finite_facets += fmed1;
+            if (cmed == lower) {
+                ++cells;
+                if (finite) {
+                    ++finite_cells;
+                } else {
+                    ++facets;
+                    ++finite_facets;
+                }
+            }
+        } else if (fmed1 == upper) {
+            facets += cmed;
+            if (finite) finite_facets += cmed;
+            if (cmed < upper) {
+                ++cells;
+                if (finite) {
+                    ++finite_cells;
+                } else {
+                    ++facets;
+                    ++finite_facets;
+                }
+            }
+        }
+    }
 private:
     std::vector<value_type> values;
 };

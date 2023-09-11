@@ -556,7 +556,9 @@ public:
         CGAL::DDT::impl::insert_and_get_axis_extreme_points(tiles, point_sets, std::back_inserter(points), root, sch, maximal_dimension());
         CGAL_DDT_TRACE0(sch, "DDT", "insert_and_send_all_axis_extreme_points", 0, "E");
 
+        CGAL_DDT_TRACE1(sch, "DDT", "splay_stars", 0, "B", in, CGAL::DDT::to_summary(points.begin(), points.end()));
         CGAL::DDT::impl::splay_stars(tiles, points, sch, root, maximal_dimension());
+        CGAL_DDT_TRACE1(sch, "DDT", "splay_stars", 0, "E", out, CGAL::DDT::to_summary(points.begin(), points.end()));
 
         finalize(sch);
         std::size_t n1 = number_of_finite_vertices();

@@ -27,17 +27,25 @@ struct Selector
     typedef T value_type;
 
     /// Empty constructor.
-    Selector();
+    Selector() {}
 
     /// Inserts a value in the set.
-    void insert(value_type v);
+    void insert(value_type v) {}
 
     /// Reinitialize the set of values.
-    void clear();
+    void clear() {}
 
     /// Gets the selected value
-    inline value_type select();
+    inline value_type select() { return {}; }
 
+    /// Gets the statistics of a cell given its counts
+    template<typename S>
+    void cell_statistics(int lower, int equal, int D, int finite,
+                S& cells,
+                S& finite_cells,
+                S& facets,
+                S& finite_facets)
+    {}
 }; /* end Selector */
 
 #endif
