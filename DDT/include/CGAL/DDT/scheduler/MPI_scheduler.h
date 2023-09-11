@@ -432,6 +432,15 @@ private:
         return value;
     }
 
+    bool all_reduce(bool value, std::logical_or<> reduce) {
+        CGAL_DDT_TRACE1(*this, "MPI", "MPI_Allreduce(BOOL,LOR)", "generic_work", "B", in, value);
+        bool reduced;
+        int success = MPI_Allreduce(&value, &reduced, 1, MPI_CXX_BOOL, MPI_LOR, MPI_COMM_WORLD );
+        CGAL_assertion(success == MPI_SUCCESS);
+        CGAL_DDT_TRACE1(*this, "MPI", "MPI_Allreduce(BOOL,LOR)", "generic_work", "E", out, reduced);
+        return reduced;
+    }
+
     template<typename OutputValue, typename InputIterator, typename OutputIterator>
     OutputIterator all_gather(InputIterator begin, InputIterator end, OutputIterator out) {
         CGAL_DDT_TRACE1(*this, "MPI", "serialize", "generic_work", "B", in, to_summary(begin, end));
