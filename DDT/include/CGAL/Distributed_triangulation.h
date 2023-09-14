@@ -546,16 +546,10 @@ public:
     /// The scheduler provides the distribution environment (single thread, multithread, MPI...)
     /// @returns the number of newly inserted vertices
     template<typename TileIndex, typename Point, typename TilePoints, typename Scheduler>
-    std::size_t insert(CGAL::Distributed_point_set<TileIndex, Point, TilePoints>& point_sets, Scheduler& sch)
+    std::size_t insert(CGAL::Distributed_point_set<TileIndex, Point, TilePoints>& points, Scheduler& sch)
     {
         std::size_t n0 = number_of_finite_vertices();
         CGAL_DDT_TRACE1(sch, "DDT", "insert", 0, "B", in, n0);
-        typedef CGAL::Distributed_point_set<TileIndex, Point, TilePoints> Distributed_point_set;
-
-        CGAL_DDT_TRACE0(sch, "DDT", "insert_and_send_all_axis_extreme_points", 0, "B");
-        Distributed_point_set points;
-        CGAL::DDT::impl::insert_and_get_axis_extreme_points(tiles, point_sets, std::back_inserter(points), root, sch, maximal_dimension(), tile_indices);
-        CGAL_DDT_TRACE0(sch, "DDT", "insert_and_send_all_axis_extreme_points", 0, "E");
 
         CGAL_DDT_TRACE1(sch, "DDT", "splay_stars", 0, "B", in, CGAL::DDT::to_summary(points.begin(), points.end()));
         CGAL::DDT::impl::splay_stars(tiles, points, sch, root, maximal_dimension(), tile_indices);

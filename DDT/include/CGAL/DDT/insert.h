@@ -83,38 +83,31 @@ OutputIterator splay_root_triangulation(TileTriangulation& tri, InputIterator be
     return out;
 }
 
-template<typename TriangulationContainer, typename PointSetContainer, typename OutputIterator, typename TileIndex, typename Scheduler, typename TileIndexMap>
-OutputIterator
-insert_and_get_axis_extreme_points(TriangulationContainer& tiles, PointSetContainer& point_sets, OutputIterator out, TileIndex root, Scheduler& sch, int dim, TileIndexMap index_map)
+template<typename TriangulationContainer, typename PointSetContainer, typename TileIndex, typename Scheduler, typename TileIndexMap>
+void splay_stars(TriangulationContainer& tiles, PointSetContainer& points,
+    Scheduler& sch, TileIndex root, int dim, TileIndexMap index_map)
 {
     typedef typename TriangulationContainer::mapped_type TileTriangulation;
     typedef typename PointSetContainer::value_type PointSetContainerValue;
-    return sch.template ranges_transform<PointSetContainerValue>(point_sets, tiles, [&root](auto first, auto last, TileTriangulation& tri, auto out_)
-    {
-        typedef typename TileTriangulation::Vertex_index Vertex_index;
-        typedef typename PointSetContainerValue::second_type PointSet;
-        out_ = splay_tile(tri, first, last, out_);
-        // send the extreme points along each axis to all tiles to initialize the star splaying
-        std::vector<Vertex_index> vertices;
-        tri.get_axis_extreme_points(vertices);
-        PointSet ps;
-        for(auto v : vertices)
-            ps.emplace_back(tri.vertex_id(v), tri.point(v));
-        *out_++ = { root, std::move(ps) };
-        return out_;
-    }, out, dim, index_map);
-}
-
-template<typename TriangulationContainer, typename PointSetContainer, typename TileIndex, typename Scheduler, typename TileIndexMap>
-void splay_stars(TriangulationContainer& tiles, PointSetContainer& points, Scheduler& sch, TileIndex root, int dim, TileIndexMap index_map)
-{
-    typedef typename TriangulationContainer::mapped_type TileTriangulation;
+    typedef typename TileTriangulation::Vertex_index Vertex_index;
+    typedef typename PointSetContainerValue::second_type PointSet;
     sch.ranges_for_each(points, tiles,
         [&root](auto first, auto last, TileTriangulation& tri, auto out) {
             if (tri.id() == root) {
                 return splay_root_triangulation(tri, first, last, out);
             } else {
-                return splay_tile(tri, first, last, out);
+                bool empty = tri.number_of_vertices() == 0;
+                out = splay_tile(tri, first, last, out);
+                if(empty) {
+                    // send the extreme points along each axis to all tiles to initialize the star splaying
+                    std::vector<Vertex_index> vertices;
+                    tri.get_axis_extreme_points(vertices);
+                    PointSet ps;
+                    for(auto v : vertices)
+                        ps.emplace_back(tri.vertex_id(v), tri.point(v));
+                    *out++ = { root, std::move(ps) };
+                }
+                return out;
             }
         },
         dim, index_map);
