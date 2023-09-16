@@ -27,7 +27,7 @@ struct Partitioner_property_map
   Partitioner_property_map(const Partitioner& part) : partitioner(part) {}
 
 /// \cond SKIP_IN_MANUAL
-  typedef Triangulation_traits<T>                  Traits;
+  typedef Point_set_traits<T>                      Traits;
   typedef Partitioner_property_map<T, Partitioner> Self;
   typedef typename Traits::Vertex_index            Vertex_index;
   typedef std::pair<const T&, Vertex_index>        key_type;

@@ -13,29 +13,27 @@
 #define CGAL_DDT_DELAUNAY_TRIANGULATION_2_H
 
 #include <CGAL/DDT/triangulation/Triangulation_traits.h>
-#include <CGAL/Delaunay_triangulation_2.h>
+#include <CGAL/DDT/triangulation/Delaunay_triangulation_2.h>
 #include <CGAL/point_generators_2.h>
 #include <CGAL/Spatial_sort_traits_adapter_2.h>
 #include <CGAL/spatial_sort.h>
 #include <CGAL/Bbox_2.h>
 #include <CGAL/DDT/triangulation/Facet_index.h>
-#include <CGAL/DDT/triangulation/Random_points_in_bbox.h>
 
 namespace CGAL {
 namespace DDT {
 
-template<typename GT, typename TDS_>
-struct Triangulation_traits<CGAL::Delaunay_triangulation_2<GT, TDS_>>
+template<typename GT, typename TDS>
+struct Triangulation_traits<CGAL::Delaunay_triangulation_2<GT, TDS>>
 {
-    typedef CGAL::Delaunay_triangulation_2<GT, TDS_>              Triangulation;
-    typedef typename Triangulation::Triangulation_data_structure  TDS;
-    typedef typename GT::Point_2                                  Point;
+    using Triangulation = CGAL::Delaunay_triangulation_2<GT, TDS>;
+    typedef typename GT::Point_2                            Point;
 
-    static constexpr int D = 2;
-    typedef typename TDS::Vertex_iterator                         Vertex_index;
-    typedef typename TDS::Face_iterator                           Cell_index;
-    typedef CGAL::DDT::Facet_index<D, Cell_index>                 Facet_index;
+    typedef typename TDS::Vertex_iterator                            Vertex_index;
+    typedef typename TDS::Face_iterator                              Cell_index;
 
+    static const int D = 2;
+    typedef CGAL::DDT::Facet_index<D, Cell_index>                    Facet_index;
 
     static inline Triangulation triangulation(int dim)
     {
@@ -199,35 +197,25 @@ struct Triangulation_traits<CGAL::Delaunay_triangulation_2<GT, TDS_>>
         Cell_index c2 = f2.cell();
         int icv1 = f1.index_of_covertex();
         int icv2 = f2.index_of_covertex();
-        int perm[D+1];
-        for(int i1 = 0; i1 <= D; ++i1 )
+        for(int i1 = 0; i1 < t1.dimension(); ++i1 )
         {
-            if(i1 == icv1) {
-                perm[icv1] = icv2;
-                continue;
-            }
+            if(i1 == icv1) continue;
             auto v1 = c1->vertex(i1);
             bool found = false;
-            for(int i2 = 0; i2 <= D; ++i2 )
+            for(int i2 = 0; i2 < t2.dimension(); ++i2 )
             {
                 if(i2 == icv2) continue;
                 auto v2 = c2->vertex(i2);
                 if(are_vertices_equal(t1, v1, t2, v2))
                 {
                     found = true;
-                    perm[i1] = i2;
                     break;
                 }
             }
             if(!found)
                 return false;
         }
-
-        bool orientation = true;
-        for(int i = 0; i <= D; ++i)
-            for(int j = i+1; j <= D; ++j)
-                if (perm[i] > perm[j]) orientation = !orientation;
-        return orientation;
+        return true;
     }
 
     static bool are_cells_equal(const Triangulation& t1, Cell_index c1, const Triangulation& t2, Cell_index c2)
@@ -317,32 +305,35 @@ struct Triangulation_traits<CGAL::Delaunay_triangulation_2<GT, TDS_>>
     static inline std::ostream& write(std::ostream& out, const Triangulation& tri) { return out << tri; }
     static inline std::istream& read(std::istream& in, Triangulation& tri) { return in >> tri; }
 
+    // Bbox type
     typedef CGAL::Bbox_2 Bbox;
-
-    static inline Bbox bbox(int /*dim*/) {
-        return Bbox();
-    }
 
     static inline Bbox bbox(const Point& p) {
         return Bbox(p.x(), p.y(), p.x(), p.y());
     }
 
-    static inline Bbox bbox(const Point& p, const Point& q) {
-        return Bbox(p.x(), p.y(), q.x(), q.y());
+    static inline Bbox bbox(int dim, double range) {
+      CGAL_assertion(dim==D);
+      return Bbox(-range, -range, range, range);
     }
 
-    template<typename InputIterator>
-    static inline Point point(InputIterator begin, InputIterator end) {
-        CGAL_assertion(std::distance(begin, end) == 2);
-        return Point(*begin, *(begin+1));
+    static inline Bbox bbox(int dim) {
+      CGAL_assertion(dim==D);
+      return Bbox();
     }
 
-    static inline Point point(int /*dim*/) {
-        return Point();
-    }
+    typedef CGAL::Random_points_in_disc_2<Point>                     Random_points_in_ball;
 
-    typedef Random_points_in_bbox<Point, Bbox> Random_points_in_box;
-
+#ifndef DOXYGEN_RUNNING
+    struct Random_points_in_box : CGAL::Random_points_in_square_2<Point>
+    {
+        Random_points_in_box(int dim, double g) : CGAL::Random_points_in_square_2<Point>(g)
+        {
+            CGAL_assertion(dim==D);
+        }
+        Random_points_in_box(double g) : CGAL::Random_points_in_square_2<Point>(g) {}
+    };
+#endif
 };
 
 }

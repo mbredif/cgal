@@ -92,6 +92,38 @@ public:
     /// number of tile indices
     std::size_t size() const { return M; }
 
+    Tile_index begin() const { return id0; }
+    Tile_index end  () const { return id0+M; }
+
+    Bbox bbox(Tile_index id) const {
+        if (id < id0 || !(id < id0 + size())) {
+            return Traits::bbox(N.size());
+        }
+        id -= id0;
+        std::size_t f(id);
+        std::vector<double> p(origin.begin(), origin.end());
+        std::vector<double> q(origin.begin(), origin.end());
+        std::size_t D = N.size();
+        for(std::size_t i=0; i<D; ++i)
+        {
+            std::size_t x = f % N[i];
+            double d = 1.d/inv_step[i];
+            f /= N[i];
+            p[i] += d*x;
+            q[i] = p[i] + d;
+        }
+        return Traits::bbox(Traits::point(p.begin(), p.end()), Traits::point(q.begin(), q.end()));
+    }
+
+    Bbox bbox() const {
+        std::vector<double> p(origin.begin(), origin.end());
+        std::vector<double> q(origin.begin(), origin.end());
+        std::size_t D = N.size();
+        for(std::size_t i=0; i<D; ++i)
+            q[i] = p[i] + N[i]/inv_step[i];
+        return Traits::bbox(Traits::point(p.begin(), p.end()), Traits::point(q.begin(), q.end()));
+    }
+
 private:
     std::size_t M;
     std::vector<std::size_t> N;

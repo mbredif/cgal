@@ -7,6 +7,7 @@
 #include <CGAL/DDT/serializer/VRT_file_serializer.h>
 #include <CGAL/DDT/serializer/PVTU_file_serializer.h>
 #include <CGAL/DDT/serializer/File_serializer.h>
+#include <CGAL/DDT/property_map/Partitioner_property_map.h>
 #include <CGAL/DDT/IO/write_ply.h>
 #include <boost/program_options.hpp>
 #include "logging.h"
@@ -27,7 +28,13 @@ int DDT_demo(int argc, char **argv)
   typedef typename Traits::Point Point;
   typedef typename TileIndexProperty::value_type Tile_index;
   typedef CGAL::Distributed_triangulation<Triangulation, TileIndexProperty, Serializer> Distributed_triangulation;
-  typedef CGAL::Distributed_point_set<Tile_index, Point>                                Distributed_point_set;
+
+  //typedef std::vector<std::pair<Tile_index, Point>> Point_set;
+  //typedef CGAL::Distributed_point_set<Point_set, CGAL::DDT::First_property_map<Point_set>>  Distributed_point_set;
+  //typedef std::vector<Point> Point_set;
+  //typedef CGAL::Distributed_point_set<Point_set, /* ??? */>  Distributed_point_set;
+  typedef CGAL::DDT::Random_point_set<Random_points> Point_set;
+  typedef CGAL::Distributed_point_set<Point_set, CGAL::DDT::Partitioner_property_map<Point_set, Partitioner>>  Distributed_point_set;
 
   int NP, loglevel, max_concurrency, max_number_of_tiles;
   std::vector<int> NT;
@@ -93,7 +100,9 @@ int DDT_demo(int argc, char **argv)
 //      max_concurrency = max_number_of_tiles;
 //  }
 
-  typename Traits::Bbox bbox = Traits::bbox(dimension, range);
+  Point a(-1, -1);
+  Point b( 1,  1);
+  typename Traits::Bbox bbox = Traits::bbox(a, b);
   Partitioner partitioner(1, bbox, NT.begin(), NT.end());
   Scheduler scheduler(max_concurrency);
   Serializer serializer(ser);
@@ -114,8 +123,10 @@ int DDT_demo(int argc, char **argv)
 
   CGAL::DDT::logging<> log("--- Overall --> ", loglevel);
   log.step("Random_points   ");
-  Random_points generator(dimension, range);
-  Distributed_point_set points(generator, NP, partitioner);
+  Random_points generator(bbox);
+  //Distributed_point_set points(generator, NP, partitioner);
+  Point_set ps(NP, generator);
+  Distributed_point_set points(ps, partitioner);
 
   log.step("insertion       ");
   std::size_t count = tri.insert(points, scheduler);

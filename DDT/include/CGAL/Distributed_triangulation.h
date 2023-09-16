@@ -15,10 +15,10 @@
 #include <CGAL/DDT/iterator/Vertex_iterator.h>
 #include <CGAL/DDT/iterator/Facet_iterator.h>
 #include <CGAL/DDT/iterator/Cell_iterator.h>
+#include <CGAL/Distributed_point_set.h>
 #include <CGAL/DDT/insert.h>
 #include <CGAL/DDT/Tile_triangulation.h>
 #include <CGAL/DDT/Tile_container.h>
-#include <CGAL/Distributed_point_set.h>
 #include <CGAL/DDT/serializer/No_serializer.h>
 #include <CGAL/DDT/serializer/VRT_file_serializer.h>
 #include <CGAL/DDT/IO/trace_logger.h>
@@ -545,14 +545,21 @@ public:
     /// triangulation of all inserted points.
     /// The scheduler provides the distribution environment (single thread, multithread, MPI...)
     /// @returns the number of newly inserted vertices
-    template<typename TileIndex, typename Point, typename TilePoints, typename Scheduler>
-    std::size_t insert(CGAL::Distributed_point_set<TileIndex, Point, TilePoints>& points, Scheduler& sch)
+    template<typename PointSet1, typename IndexMap1, typename Serializer1, typename Scheduler>
+    std::size_t insert(CGAL::Distributed_point_set<PointSet1, IndexMap1, Serializer1>& points, Scheduler& sch)
     {
         std::size_t n0 = number_of_finite_vertices();
         CGAL_DDT_TRACE1(sch, "DDT", "insert", 0, "B", in, n0);
 
+        typedef CGAL::Distributed_point_set<PointSet1, IndexMap1, Serializer1>  Distributed_point_set1;
+        typedef typename Distributed_point_set1::Point     Point;
+        typedef std::vector<std::pair<Tile_index, Point>>  PointSet2;
+        typedef CGAL::DDT::First_property_map<PointSet2>   IndexMap2;
+        IndexMap2 indices2;
+        std::multimap<Tile_index, CGAL::DDT::Tile_point_set<PointSet2, IndexMap2>> points2;
+
         CGAL_DDT_TRACE1(sch, "DDT", "splay_stars", 0, "B", in, CGAL::DDT::to_summary(points.begin(), points.end()));
-        CGAL::DDT::impl::splay_stars(tiles, points, sch, root, maximal_dimension(), tile_indices);
+        CGAL::DDT::impl::splay_stars(tiles, tile_indices, points.tiles, points2, indices2, sch, root, maximal_dimension());
         CGAL_DDT_TRACE1(sch, "DDT", "splay_stars", 0, "E", out, CGAL::DDT::to_summary(points.begin(), points.end()));
 
         finalize(sch);

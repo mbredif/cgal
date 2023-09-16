@@ -474,8 +474,8 @@ public:
 
     /// collects (vertex,id) pairs listing finite vertices that are possibly newly adjacent to vertices of a foreign tile (id),
     /// after the insertion of the inserted vertices, as required by the star splaying algorithm.
-    template <class VertexContainer>
-    void get_finite_neighbors(const VertexContainer& inserted, std::map<Tile_index, std::set<Vertex_index>>& out) const
+    template <class VertexContainer, typename VertexIndexSet>
+    void get_finite_neighbors(const VertexContainer& inserted, std::map<Tile_index, VertexIndexSet>& out) const
     {
         for(auto v : inserted) {
             if(vertex_is_infinite(v)) continue;
@@ -502,8 +502,8 @@ public:
     /// If report_vertices_with_mixed_stars_only is true, then only the new vertices with mixed stars are reported.
     /// foreign vertices of the tile triangulation are automatically simplified if their star is foreign as well.
     /// @returns the number of inserted points (not counting the number of simplified points and the insertion of already inserted points)
-    template <class PointIdContainer>
-    int insert(const PointIdContainer& received, std::set<Vertex_index>& inserted, bool report_vertices_with_mixed_stars_only=false)
+    template <typename PointSet>
+    int insert(PointSet input, std::set<Vertex_index>& inserted, bool report_vertices_with_mixed_stars_only=false)
     {
         statistics_.valid = false;
         // retrieve the input points and ids in separate vectors
@@ -512,11 +512,16 @@ public:
         std::vector<Tile_index> ids;
         std::vector<std::size_t> indices;
         std::size_t index=0;
-        points.reserve(received.size());
-        for(auto& r : received)
+        points.reserve(input.size());
+        ids.reserve(input.size());
+        indices.reserve(input.size());
+
+        for(auto it = input.begin(); it != input.end(); ++it)
         {
-            points.push_back(r.second);
-            ids.push_back(r.first);
+            Point p = input.point(it);
+            Tile_index i = input.point_id(it);
+            points.push_back(p);
+            ids.push_back(i);
             indices.push_back(index++);
         }
 
@@ -721,15 +726,15 @@ private:
 };
 
 template<class T, class Pmap, template <class> class Selector>
-std::ostream& operator<<(std::ostream& out, const Tile_triangulation<T, Pmap, Selector>& tt)
+std::ostream& operator<<(std::ostream& out, const Tile_triangulation<T, Pmap, Selector>& t)
 {
-    return CGAL::DDT::Triangulation_traits<T>::write(out, tt.triangulation());
+    return CGAL::DDT::Triangulation_traits<T>::write(out, t.triangulation());
 }
 
 template<class T, class Pmap, template <class> class Selector>
-std::istream& operator>>(std::istream& in, Tile_triangulation<T, Pmap, Selector>& tt)
+std::istream& operator>>(std::istream& in, Tile_triangulation<T, Pmap, Selector>& t)
 {
-    return CGAL::DDT::Triangulation_traits<T>::read(in, tt.triangulation());
+    return CGAL::DDT::Triangulation_traits<T>::read(in, t.triangulation());
 }
 
 template<class T, class Pmap, template <class> class Selector>
