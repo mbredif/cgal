@@ -18,11 +18,12 @@ typedef CGAL::Bbox_2 Bbox;
 typedef CGAL::DDT::Sequential_scheduler Scheduler;
 
 #include <CGAL/DDT/partitioner/Grid_partitioner.h>
-typedef CGAL::DDT::Grid_partitioner<Tile_index, Triangulation> Partitioner;
+typedef CGAL::DDT::Grid_partitioner<Tile_index, Point> Partitioner;
 
 #include <CGAL/Distributed_triangulation.h>
 typedef CGAL::Distributed_triangulation<Triangulation, TileIndexProperty, Serializer> Distributed_triangulation;
-typedef CGAL::Distributed_point_set<Tile_index, Point> Distributed_point_set;
+typedef std::vector<std::pair<Tile_index, Point>> Point_set;
+typedef CGAL::Distributed_point_set<Point_set, CGAL::DDT::First_property_map<Point_set>>  Distributed_point_set;
 
 #include <CGAL/DDT/serializer/VRT_file_serializer.h>
 
@@ -190,7 +191,7 @@ int main(int argc, char **argv)
     Scheduler scheduler;
 
     Distributed_triangulation tri1(N, {}, max_number_of_tiles_in_mem, serializer);
-    Distributed_point_set pointset(points, partitioner);
+    Distributed_point_set pointset(points.begin(), points.end(), partitioner);
     tri1.insert(pointset, scheduler);
     errors += test_DDT(tri1);
 

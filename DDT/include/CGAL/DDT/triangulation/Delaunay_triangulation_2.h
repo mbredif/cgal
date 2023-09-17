@@ -13,19 +13,18 @@
 #define CGAL_DDT_DELAUNAY_TRIANGULATION_2_H
 
 #include <CGAL/DDT/triangulation/Triangulation_traits.h>
+#include <CGAL/DDT/point_set/Point_set_traits.h>
 #include <CGAL/Delaunay_triangulation_2.h>
-#include <CGAL/point_generators_2.h>
 #include <CGAL/Spatial_sort_traits_adapter_2.h>
 #include <CGAL/spatial_sort.h>
-#include <CGAL/Bbox_2.h>
 #include <CGAL/DDT/triangulation/Facet_index.h>
-#include <CGAL/DDT/triangulation/Random_points_in_bbox.h>
+#include <CGAL/DDT/kernel/Kernel_traits_2.h>
 
 namespace CGAL {
 namespace DDT {
 
 template<typename GT, typename TDS_>
-struct Triangulation_traits<CGAL::Delaunay_triangulation_2<GT, TDS_>>
+struct Triangulation_traits<CGAL::Delaunay_triangulation_2<GT, TDS_>> : public Kernel_traits<typename GT::Point_2>
 {
     typedef CGAL::Delaunay_triangulation_2<GT, TDS_>              Triangulation;
     typedef typename Triangulation::Triangulation_data_structure  TDS;
@@ -181,11 +180,6 @@ struct Triangulation_traits<CGAL::Delaunay_triangulation_2<GT, TDS_>>
         return v->point();
     }
 
-    static inline double approximate_cartesian_coordinate(const Point& p, int i)
-    {
-        return CGAL::to_double(p[i]);
-    }
-
     static bool are_vertices_equal(const Triangulation& t1, Vertex_index v1, const Triangulation& t2, Vertex_index v2)
     {
         bool inf1 = vertex_is_infinite(t1, v1);
@@ -310,39 +304,16 @@ struct Triangulation_traits<CGAL::Delaunay_triangulation_2<GT, TDS_>>
         return tri.is_valid(verbose, level);
     }
 
-    static inline bool less_coordinate(const Point& p, const Point& q, int i) {
-        return p[i] < q[i];
-    }
-
     static inline std::ostream& write(std::ostream& out, const Triangulation& tri) { return out << tri; }
     static inline std::istream& read(std::istream& in, Triangulation& tri) { return in >> tri; }
+};
 
-    typedef CGAL::Bbox_2 Bbox;
-
-    static inline Bbox bbox(int /*dim*/) {
-        return Bbox();
-    }
-
-    static inline Bbox bbox(const Point& p) {
-        return Bbox(p.x(), p.y(), p.x(), p.y());
-    }
-
-    static inline Bbox bbox(const Point& p, const Point& q) {
-        return Bbox(p.x(), p.y(), q.x(), q.y());
-    }
-
-    template<typename InputIterator>
-    static inline Point point(InputIterator begin, InputIterator end) {
-        CGAL_assertion(std::distance(begin, end) == 2);
-        return Point(*begin, *(begin+1));
-    }
-
-    static inline Point point(int /*dim*/) {
-        return Point();
-    }
-
-    typedef Random_points_in_bbox<Point, Bbox> Random_points_in_box;
-
+template<typename GT, typename TDS_>
+struct Point_set_traits<CGAL::Delaunay_triangulation_2<GT, TDS_>> : public Triangulation_traits<CGAL::Delaunay_triangulation_2<GT, TDS_>>
+{
+    typedef Triangulation_traits<CGAL::Delaunay_triangulation_2<GT, TDS_>> Traits;
+    typedef typename Traits::Vertex_index const_iterator;
+    typedef typename Traits::Vertex_index iterator;
 };
 
 }

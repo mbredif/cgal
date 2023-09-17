@@ -75,14 +75,16 @@ template<typename TileTriangulation>
 bool write_csv_vert(std::ostream& csv, const TileTriangulation& triangulation)
 {
     typedef typename TileTriangulation::Vertex_index Vertex_index;
+    typedef typename TileTriangulation::Point Point;
     csv << "geom,id" << std::endl;
     int D = triangulation.maximal_dimension();
     for(Vertex_index v = triangulation.vertices_begin(); v != triangulation.vertices_end(); ++v)
     {
         if(triangulation.vertex_is_infinite(v)) continue;
         csv << "POINT( ";
+        const Point& p = triangulation.point(v);
         for(int d=0; d<D; ++d)
-            csv << triangulation.approximate_cartesian_coordinate(v,d) << " ";
+            csv << approximate_cartesian_coordinate(p,d) << " ";
         csv << ")," << std::to_string(triangulation.vertex_id(v)) << "\n";
     }
     return !csv.fail();
@@ -94,6 +96,7 @@ bool write_csv_facet(std::ostream& csv, const TileTriangulation& triangulation)
     typedef typename TileTriangulation::Vertex_index Vertex_index;
     typedef typename TileTriangulation::Facet_index  Facet_index;
     typedef typename TileTriangulation::Cell_index   Cell_index;
+    typedef typename TileTriangulation::Point        Point;
     csv << "geom,id,local" << std::endl;
     int D = triangulation.maximal_dimension();
     for(Facet_index f = triangulation.facets_begin(); f != triangulation.facets_end(); ++f)
@@ -109,8 +112,9 @@ bool write_csv_facet(std::ostream& csv, const TileTriangulation& triangulation)
             if(i == idx) continue;
             Vertex_index v = triangulation.vertex(c,i);
             local += triangulation.vertex_is_local(v);
+            const Point& p = triangulation.point(v);
             for(int d=0; d<D; ++d)
-                csv << triangulation.approximate_cartesian_coordinate(v, d) << " ";
+                csv << approximate_cartesian_coordinate(p, d) << " ";
             if (++j < D) csv << ",";
         }
         csv << ")\"," << std::to_string(triangulation.facet_id(f)) << "," << local << "\n";
@@ -123,6 +127,7 @@ bool write_csv_cell(std::ostream& csv, const TileTriangulation& triangulation)
 {
     typedef typename TileTriangulation::Vertex_index Vertex_index;
     typedef typename TileTriangulation::Cell_index   Cell_index;
+    typedef typename TileTriangulation::Point        Point;
     csv << "geom,id,local" << std::endl;
     int D = triangulation.maximal_dimension();
     for(Cell_index c = triangulation.cells_begin(); c != triangulation.cells_end(); ++c)
@@ -134,12 +139,15 @@ bool write_csv_cell(std::ostream& csv, const TileTriangulation& triangulation)
         {
             Vertex_index v = triangulation.vertex(c,i);
             local += triangulation.vertex_is_local(v);
+            const Point& p = triangulation.point(v);
             for(int d=0; d<D; ++d)
-                csv << triangulation.approximate_cartesian_coordinate(v, d) << " ";
+                csv << approximate_cartesian_coordinate(p, d) << " ";
             csv << ",";
         }
+        Vertex_index v = triangulation.vertex(c,0);
+        const Point& p = triangulation.point(v);
         for(int d=0; d<D; ++d) // repeat first to close the polygon
-            csv << triangulation.approximate_cartesian_coordinate(triangulation.vertex(c, 0), d) << " ";
+            csv << approximate_cartesian_coordinate(p, d) << " ";
         csv << "))\"," << std::to_string(triangulation.cell_id(c)) << "," << local << "\n";
     }
     return !csv.fail();
@@ -150,6 +158,7 @@ bool write_csv_tin(std::ostream& csv, const TileTriangulation& triangulation)
 {
     typedef typename TileTriangulation::Vertex_index Vertex_index;
     typedef typename TileTriangulation::Cell_index   Cell_index;
+    typedef typename TileTriangulation::Point        Point;
     csv << "geom,id" << std::endl;
     int D = triangulation.maximal_dimension();
     bool first = true;
@@ -162,13 +171,15 @@ bool write_csv_tin(std::ostream& csv, const TileTriangulation& triangulation)
         for(int i=0; i<=D; ++i)
         {
             v = triangulation.vertex(c,i);
+            const Point& p = triangulation.point(v);
             for(int d=0; d<D; ++d)
-                csv << triangulation.approximate_cartesian_coordinate(v, d) << " ";
+                csv << approximate_cartesian_coordinate(p, d) << " ";
             csv << ",";
         }
         v = triangulation.vertex(c,0);
+        const Point& p = triangulation.point(v);
         for(int d=0; d<D; ++d) // repeat first to close the polygon
-            csv << triangulation.approximate_cartesian_coordinate(v,d) << " ";
+            csv << approximate_cartesian_coordinate(p,d) << " ";
         csv << "))";
     }
     if (!first) csv << ")\"," << std::to_string(triangulation.id()) << "\n";

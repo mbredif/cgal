@@ -22,6 +22,7 @@
 #include <CGAL/DDT/serializer/No_serializer.h>
 #include <CGAL/DDT/serializer/VRT_file_serializer.h>
 #include <CGAL/DDT/IO/trace_logger.h>
+#include <CGAL/DDT/property_map/First_property_map.h>
 #include <CGAL/assertions.h>
 
 namespace CGAL {
@@ -594,13 +595,13 @@ public:
             return std::make_pair(res, false);
         }
 
-        CGAL::Distributed_point_set<Tile_index, Point> point_sets;
+        typedef std::vector<std::pair<Tile_index, Point>> Point_set;
+        typedef CGAL::Distributed_point_set<Point_set, CGAL::DDT::First_property_map<Point_set>>  Distributed_point_set;
+        Distributed_point_set points;
 
         if (emplaced.second) { // tile did not exist
-            // send (id, point) to all other tiles
-            for(const auto& [i, _] : tiles)
-                if (i!=id)
-                    point_sets[i].emplace_back(id, point);
+            // send (id, point) to the root tile
+            points.insert(point, id, root);
 
         } else {
             // get its neighbors
@@ -617,10 +618,10 @@ public:
 
             // send (id, point) to each such neighboring tile
             for (auto idw : indices)
-                point_sets[idw].emplace_back(id, point);
+                points.insert(point, id, idw);
         }
 
-        insert(point_sets, sch);
+        insert(points, sch);
         CGAL_DDT_TRACE1(sch, "DDT", "insert1", 0, "E", new, 1);
         return std::make_pair(res, true);
     }

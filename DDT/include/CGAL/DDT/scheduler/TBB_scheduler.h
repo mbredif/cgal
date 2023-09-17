@@ -235,13 +235,13 @@ struct TBB_scheduler
     void ranges_for_each_aux(InputIterator1 first1, InputIterator1 last1, Value2& v2, Transform transform, Container3& c3,
         tbb::feeder<Key>& feeder, std::unique_lock<std::mutex>& lock, std::set<Key>& todo)
     {
-        typedef typename std::iterator_traits<InputIterator1>::value_type value_type1;
+        typedef typename Container3::value_type value_type3;
         Key k = first1->first;
         CGAL_DDT_TRACE0(*this, "LOCK", "mutex", "bad", "E");
         CGAL_DDT_TRACE2(*this, "PERF", "transform", 0, "B", k, to_string(k), in, to_summary(first1, last1));
         lock.unlock();
 
-        std::vector<value_type1> v3;
+        std::vector<value_type3> v3;
         transform(first1, last1, v2, std::back_inserter(v3));
 
         lock.lock();
@@ -258,18 +258,16 @@ struct TBB_scheduler
 
     template<typename Container1,
              typename Container2,
+             typename Container3,
              typename Transform,
              typename... Args2>
-    void ranges_for_each(Container1& c1, Container2& c2, Transform transform, Args2&&... args2)
+    void ranges_for_each(Container1& c1, Container2& c2, Container3& c3, Transform transform, Args2&&... args2)
     {
         CGAL_DDT_TRACE0(*this, "PERF", "for_each", "generic_work", "B");
         typedef typename Container1::key_type    key_type;
-        typedef typename Container1::value_type  value_type1;
-        typedef typename Container1::mapped_type mapped_type1;
-        typedef std::multimap<key_type, mapped_type1> Container3;
+        typedef typename Container3::value_type  value_type3;
         std::set<key_type> keys1;
         get_unique_keys(c1, keys1);
-        Container3 c3; // extra values to be processed (beyond those of c1)
         std::set<key_type> todo;
         std::copy(keys1.begin(), keys1.end(), std::inserter(todo, todo.begin()));
 
@@ -290,7 +288,7 @@ struct TBB_scheduler
                 {
                     auto range3 = c3.equal_range(k);
                     if (range3.first == range3.second) break; // no more work available
-                    std::vector<value_type1> v3;
+                    std::vector<value_type3> v3;
                     std::move(range3.first, range3.second, std::back_inserter(v3));
                     c3.erase(range3.first, range3.second);
                     ranges_for_each_aux(v3.begin(), v3.end(), it2->second, transform, c3, feeder, lock, todo);

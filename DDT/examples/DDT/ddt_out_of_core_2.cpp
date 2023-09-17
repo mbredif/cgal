@@ -7,6 +7,7 @@
 #include <CGAL/DDT/serializer/File_points_serializer.h>
 #include <CGAL/DDT/serializer/VRT_file_serializer.h>
 #include <CGAL/Distributed_triangulation.h>
+#include <CGAL/point_generators_2.h>
 
 typedef int Tile_index;
 typedef CGAL::Exact_predicates_inexact_constructions_kernel                  Geom_traits;
@@ -20,7 +21,8 @@ typedef CGAL::Random_points_in_square_2<Point>                                  
 typedef CGAL::DDT::Sequential_scheduler                                               Scheduler;
 typedef CGAL::DDT::File_points_serializer                                             Serializer;
 typedef CGAL::Distributed_triangulation<Triangulation, TileIndexProperty, Serializer> Distributed_triangulation;
-typedef CGAL::Distributed_point_set<Tile_index, Point>                                Distributed_point_set;
+typedef std::vector<std::pair<Tile_index, Point>> Point_set;
+typedef CGAL::Distributed_point_set<Point_set, CGAL::DDT::First_property_map<Point_set>>  Distributed_point_set;
 
 int main(int argc, char **argv)
 {
@@ -31,7 +33,7 @@ int main(int argc, char **argv)
     double range = 1;
 
     CGAL::Bbox_2 bbox(-range, -range, range, range);
-    CGAL::DDT::Grid_partitioner<Tile_index, Triangulation> partitioner(1, bbox, number_of_tiles_per_axis);
+    CGAL::DDT::Grid_partitioner<Tile_index, Point> partitioner(1, bbox, number_of_tiles_per_axis);
     Serializer serializer;
     std::cout << "temp directory: " << serializer.dirname() << std::endl;
     Distributed_triangulation tri(2, {}, max_number_of_tiles, serializer);

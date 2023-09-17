@@ -18,7 +18,7 @@ int main(int argc, char **argv) {
     return DDT_demo<
             Triangulation,
             CGAL::DDT::Vertex_data_property_map<Triangulation>,
-            CGAL::DDT::Grid_partitioner<Tile_index, Triangulation>,
+            CGAL::DDT::Grid_partitioner<Tile_index, typename Geom_traits::Point_d>,
             CGAL::DDT::Sequential_scheduler,
             CGAL::DDT::File_serializer
             >(argc, argv);

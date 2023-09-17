@@ -33,6 +33,6 @@ private:
   static value_type value;
 };
 
-VertexPropertyMap::value_type VertexPropertyMap::value = {};
+typename  VertexPropertyMap::value_type VertexPropertyMap::value = {};
 
 #endif // CGAL_DDT_CONCEPT_VERTEX_PROPERTY_MAP

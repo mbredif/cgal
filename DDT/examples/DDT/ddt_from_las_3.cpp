@@ -2,13 +2,15 @@
 #include <CGAL/Triangulation_vertex_base_with_info_3.h>
 #include <CGAL/DDT/triangulation/Delaunay_triangulation_3.h>
 #include <CGAL/DDT/property_map/Vertex_info_property_map.h>
+#include <CGAL/DDT/property_map/Constant_property_map.h>
 #include <CGAL/Distributed_triangulation.h>
 
 #include <CGAL/DDT/partitioner/Grid_partitioner.h>
 #include <CGAL/DDT/scheduler/TBB_scheduler.h>
 #include <CGAL/DDT/serializer/File_serializer.h>
-#include <CGAL/DDT/tile_points/LAS_tile_points.h>
+#include <CGAL/DDT/point_set/LAS_point_set.h>
 #include <CGAL/DDT/serializer/PVTU_file_serializer.h>
+#include <CGAL/point_generators_3.h>
 
 // types
 typedef unsigned char Tile_index;
@@ -21,9 +23,9 @@ typedef CGAL::DDT::Vertex_info_property_map<Triangulation>                   Til
 
 typedef CGAL::DDT::TBB_scheduler                                             Scheduler;
 typedef CGAL::DDT::File_serializer                                           Serializer;
-typedef CGAL::DDT::LAS_tile_points<Point>                                    Tile_points;
-typedef CGAL::Distributed_point_set<Tile_index, Point, Tile_points>          Distributed_point_set;
+typedef CGAL::DDT::LAS_point_set<Point>                                      Point_set;
 typedef CGAL::Distributed_triangulation<Triangulation, TileIndexProperty, Serializer> Distributed_triangulation;
+typedef CGAL::Distributed_point_set<Point_set, CGAL::DDT::Constant_property_map<Tile_index>>  Distributed_point_set;
 
 int main(int argc, char*argv[])
 {
@@ -42,7 +44,7 @@ int main(int argc, char*argv[])
     Distributed_triangulation tri(3, {}, max_number_of_tiles, serializer);
     Scheduler scheduler;
 
-    Distributed_point_set points(begin, end);
+    Distributed_point_set points(1, begin, end);
 
     std::cout << "Inserting points using " << max_number_of_tiles << " tiles at most in memory" << std::endl;
     tri.insert(points, scheduler);

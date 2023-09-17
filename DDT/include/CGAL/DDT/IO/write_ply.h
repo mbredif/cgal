@@ -103,17 +103,19 @@ void write_ply_property_cell(const TileTriangulation& triangulation, std::ostrea
 template<typename TileTriangulation>
 void write_ply_property_vert(const TileTriangulation& triangulation, std::ostream& out)
 {
-    typedef typename TileTriangulation::Tile_index Tile_index;
+    typedef typename TileTriangulation::Tile_index   Tile_index;
     typedef typename TileTriangulation::Vertex_index Vertex_index;
+    typedef typename TileTriangulation::Point        Point;
     int D = triangulation.maximal_dimension();
     Tile_index tid = triangulation.id();
     for(Vertex_index v = triangulation.vertices_begin(); v != triangulation.vertices_end(); ++v)
     {
         if(triangulation.vertex_is_infinite(v)) continue;
         Tile_index id = triangulation.vertex_id(v);
+        const Point& p = triangulation.point(v);
         for(int d=0; d<D; ++d)
         {
-            float coord = float(triangulation.approximate_cartesian_coordinate(v,d));
+            float coord = float(approximate_cartesian_coordinate(p,d));
             out.write(reinterpret_cast<char *>(&coord), sizeof(coord));
         }
         out.write(reinterpret_cast<char *>(&tid), sizeof(tid));

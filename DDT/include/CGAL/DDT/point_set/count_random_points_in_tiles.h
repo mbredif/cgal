@@ -13,8 +13,7 @@
 #define CGAL_DDT_COUNT_RANDOM_POINTS_IN_TILES_H
 
 #include <CGAL/DDT/partitioner/Grid_partitioner.h>
-#include <CGAL/DDT/Tile_point_set.h>
-#include <iterator>
+#include <CGAL/DDT/point_set/Random_points_in_bbox.h>
 
 namespace CGAL {
 namespace DDT {

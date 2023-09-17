@@ -12,7 +12,7 @@
 #ifndef CGAL_DDT_PARITIONER_GRID_PARTITIONER_H
 #define CGAL_DDT_PARITIONER_GRID_PARTITIONER_H
 
-#include <CGAL/DDT/triangulation/Triangulation_traits.h>
+#include <CGAL/DDT/kernel/Kernel_traits.h>
 #include <iterator>
 
 namespace CGAL {
@@ -22,10 +22,10 @@ namespace DDT {
 /// Partitions the domain enclosed by an axis aligned bounding box using a uniform grid.
 /// The number of grid steps in each dimension may be specified independently.
 /// \cgalModels Partitioner
-template<typename TileIndex, typename Triangulation>
+template<typename TileIndex, typename Point_>
 class Grid_partitioner
 {
-    typedef CGAL::DDT::Triangulation_traits<Triangulation> Traits;
+    typedef CGAL::DDT::Kernel_traits<Point_> Traits;
 public:
     typedef TileIndex Tile_index;
     typedef typename Traits::Point Point;
@@ -78,7 +78,7 @@ public:
         Tile_index id = 0;
         for(std::size_t i=0; i<D; ++i)
         {
-            double f = (Traits::approximate_cartesian_coordinate(p,i)-origin[i])*inv_step[i];
+            double f = (approximate_cartesian_coordinate(p,i)-origin[i])*inv_step[i];
             if (f <   0  ) f=0;
             if (f >= N[i]) f=N[i]-1;
             id = id*N[i] + Tile_index(f);

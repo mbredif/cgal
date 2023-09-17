@@ -214,7 +214,6 @@ public:
     inline OutputIterator incident_cells(Vertex_index v, OutputIterator out) const { return Traits::incident_cells(tri_, v, out); }
     inline Vertex_index infinite_vertex() const { return Traits::infinite_vertex(tri_); }
     inline const Point& point(Vertex_index v) const { return Traits::point(tri_, v); }
-    inline double approximate_cartesian_coordinate(Vertex_index v, int i) const { return Traits::approximate_cartesian_coordinate(point(v), i); }
     /// @}
 
     /// \name Facet functions
@@ -503,7 +502,7 @@ public:
     /// foreign vertices of the tile triangulation are automatically simplified if their star is foreign as well.
     /// @returns the number of inserted points (not counting the number of simplified points and the insertion of already inserted points)
     template <typename PointSet>
-    int insert(PointSet input, std::set<Vertex_index>& inserted, bool report_vertices_with_mixed_stars_only=false)
+    int insert(const PointSet& input, std::set<Vertex_index>& inserted, bool report_vertices_with_mixed_stars_only=false)
     {
         statistics_.valid = false;
         // retrieve the input points and ids in separate vectors

@@ -1,0 +1,78 @@
+// Copyright (c) 2022 Institut Géographique National - IGN (France)
+// All rights reserved.
+//
+// This file is part of CGAL (www.cgal.org).
+//
+// $URL$
+// $Id$
+// SPDX-License-Identifier: GPL-3.0-or-later OR LicenseRef-Commercial
+//
+// Author(s)     : Mathieu Brédif and Laurent Caraffa
+
+#ifndef CGAL_DDT_POINT_SET_TRAITS_H
+#define CGAL_DDT_POINT_SET_TRAITS_H
+
+namespace CGAL {
+namespace DDT {
+
+/// general case, for Containers of points
+template <typename PointSet, typename = void>
+struct Point_set_traits
+{
+    typedef typename PointSet::value_type              Point;
+    typedef typename PointSet::iterator                iterator;
+    typedef typename PointSet::const_iterator          const_iterator;
+
+    static std::size_t size(const PointSet& ps) { return ps.size(); }
+
+    static const Point& point(const PointSet& ps, const_iterator v) {
+        return *ps;
+    }
+    static void clear(PointSet& ps) { ps.clear(); }
+    static std::pair<iterator, bool> insert(PointSet& ps, const Point& p, const_iterator hint = {})
+    {
+        return std::make_pair(ps.emplace(ps.end(), p), true);
+    }
+
+    static inline std::ostream& write(std::ostream& out, const PointSet& ps) { return out << ps; }
+    static inline std::istream& read(std::istream& in, PointSet& ps) { return in >> ps; }
+};
+
+/// specialization for Containers of (key,point) pairs
+template <typename PointSet>
+struct Point_set_traits<PointSet, std::enable_if_t<std::is_default_constructible_v<typename PointSet::value_type::first_type>>>
+{
+    typedef typename PointSet::value_type::first_type  Tile_index;
+    typedef typename PointSet::value_type::second_type Point;
+    typedef typename PointSet::iterator                iterator;
+    typedef typename PointSet::const_iterator          const_iterator;
+
+    static const Point& point(const PointSet& ps, const_iterator v) {
+        return v->second;
+    }
+    static void clear(PointSet& ps) { ps.clear(); }
+    static std::size_t size(const PointSet& ps) { return ps.size(); }
+
+    static std::pair<iterator, bool> insert(PointSet& ps, const Point& p, const_iterator hint = {})
+    {
+        Tile_index i;
+        return std::make_pair(ps.emplace(ps.end(), i, p), true);
+    }
+
+    static inline std::ostream& write(std::ostream& out, const PointSet& ps) {
+        for(auto it = ps.begin(); it != ps.end(); ++it)
+            out << it->first << " " << it->second << " ";
+        return out;
+    }
+    static inline std::istream& read(std::istream& in, PointSet& ps) {
+            for(auto it = ps.begin(); it != ps.end(); ++it)
+            return in >> it->first >> it->second;
+        return in;
+}
+};
+
+}
+}
+
+#endif // CGAL_DDT_POINT_SET_TRAITS_H
+

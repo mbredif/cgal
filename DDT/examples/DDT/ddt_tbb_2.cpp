@@ -7,6 +7,8 @@
 #include <CGAL/DDT/serializer/File_serializer.h>
 #include <CGAL/DDT/serializer/VRT_file_serializer.h>
 #include <CGAL/Distributed_triangulation.h>
+#include <CGAL/point_generators_2.h>
+
 
 typedef int Tile_index;
 typedef CGAL::Exact_predicates_inexact_constructions_kernel                  Geom_traits;
@@ -16,11 +18,12 @@ typedef CGAL::Delaunay_triangulation_2<Geom_traits, TDS>                     Tri
 typedef typename Triangulation::Point_2                                      Point;
 typedef CGAL::DDT::Vertex_info_property_map<Triangulation>                   TileIndexProperty;
 
-typedef CGAL::Random_points_in_square_2<typename Triangulation::Point>       Random_points;
+typedef CGAL::Random_points_in_square_2<Point>       Random_points;
 typedef CGAL::DDT::TBB_scheduler                                             Scheduler;
 typedef CGAL::DDT::File_serializer                                           Serializer;
 typedef CGAL::Distributed_triangulation<Triangulation, TileIndexProperty, Serializer>             Distributed_triangulation;
-typedef CGAL::Distributed_point_set<Tile_index, Point>                       Distributed_point_set;
+typedef std::vector<std::pair<Tile_index, Point>> Point_set;
+typedef CGAL::Distributed_point_set<Point_set, CGAL::DDT::First_property_map<Point_set>>  Distributed_point_set;
 
 int main(int argc, char **argv)
 {
@@ -32,7 +35,7 @@ int main(int argc, char **argv)
     double range = 1;
 
     CGAL::Bbox_2 bbox(-range, -range, range, range);
-    CGAL::DDT::Grid_partitioner<Tile_index, Triangulation> partitioner(1, bbox, number_of_tiles_per_axis);
+    CGAL::DDT::Grid_partitioner<Tile_index, Point> partitioner(1, bbox, number_of_tiles_per_axis);
     Random_points generator(range);
     Distributed_point_set points(generator, number_of_points, partitioner);
 
@@ -49,7 +52,7 @@ int main(int argc, char **argv)
     CGAL::DDT::File_serializer serializer2;
     std::cout << "temp directory 2: " << serializer.dirname() << std::endl;
     Distributed_triangulation tri2(2, {}, max_number_of_tiles_in_mem, serializer2);
-    CGAL::DDT::Grid_partitioner<Tile_index, Triangulation> partitioner2(1, bbox, number_of_tiles_per_axis + 1);
+    CGAL::DDT::Grid_partitioner<Tile_index, Point> partitioner2(1, bbox, number_of_tiles_per_axis + 1);
     tri2.partition(partitioner2, tri, scheduler);
     tri2.write(CGAL::DDT::VRT_serializer("out2/"), scheduler);
 

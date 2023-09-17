@@ -13,6 +13,7 @@
 #define CGAL_DDT_PARTITIONER_PROPERTY_MAP_H
 
 #include <boost/property_map/property_map.hpp>
+#include <CGAL/DDT/point_set/Point_set_traits.h>
 
 namespace CGAL {
 namespace DDT {
@@ -29,14 +30,14 @@ struct Partitioner_property_map
 /// \cond SKIP_IN_MANUAL
   typedef Point_set_traits<T>                      Traits;
   typedef Partitioner_property_map<T, Partitioner> Self;
-  typedef typename Traits::Vertex_index            Vertex_index;
+  typedef typename Traits::const_iterator          Vertex_index;
   typedef std::pair<const T&, Vertex_index>        key_type;
   typedef typename Partitioner::Tile_index         value_type;
   typedef value_type                               reference;
   typedef boost::readable_property_map_tag         category;
 
 
-  friend value_type get(const Self& self, const key_type& k) {
+  friend value_type get(const Self& self, key_type k) {
     return self.partitioner(Traits::point(k.first, k.second));
   }
 

@@ -215,7 +215,6 @@ struct MPI_scheduler
              typename... Args2>
     OutputIterator3 ranges_transform(Container1& c1, Container2& c2, Transform transform, OutputIterator3 out3, Args2&&... args2)
     {
-        typedef typename Container1::value_type value_type1;
         std::vector<OutputValue3> v3;
         auto first1 = std::begin(c1), end1 = std::end(c1), last1 = first1;
         CGAL_DDT_TRACE1(*this, "PERF", "transform", "generic_work", "B", in, to_summary(first1, last1));
@@ -231,26 +230,25 @@ struct MPI_scheduler
         typedef std::remove_const_t<typename OutputValue3::first_type > first_type;
         typedef std::remove_const_t<typename OutputValue3::second_type> second_type;
         typedef std::pair<first_type,second_type> value_type;
-        out3 = all_to_all<value_type>(v3.begin(), v3.end(), out3);
+        out3 = all_to_all<OutputValue3>(v3.begin(), v3.end(), out3);
         CGAL_DDT_TRACE0(*this, "MPI", "all_to_all", "generic_work", "E");
         return out3;
     }
 
     template<typename Container1,
              typename Container2,
+             typename Container3,
              typename Transform,
              typename... Args2>
-    void ranges_for_each(Container1& c1, Container2& c2, Transform transform, Args2&&... args2)
+    void ranges_for_each(Container1& c1, Container2& c2, Container3& c3, Transform transform, Args2&&... args2)
     {
         CGAL_DDT_TRACE0(*this, "PERF", "for_each", "generic_work", "B");
-        typedef typename Container1::key_type    key_type;
-        typedef typename Container1::mapped_type mapped_type1;
-        typedef typename Container1::value_type  value_type1;
-        std::multimap<key_type, mapped_type1> m1[2];
-        ranges_transform<value_type1>(c1, c2, transform, std::inserter(m1[0], m1[0].begin()), std::forward<Args2>(args2)...);
-        for(int i = 0, j = 1; all_reduce(!m1[i].empty(), std::logical_or<>()); i = j, j = 1-i) {
-            ranges_transform<value_type1>(m1[i], c2, transform, std::inserter(m1[j], m1[j].begin()), std::forward<Args2>(args2)...);
-            m1[i].clear();
+        typedef typename Container3::value_type  value_type3;
+        ranges_transform<value_type3>(c1, c2, transform, std::inserter(c3, c3.end()), std::forward<Args2>(args2)...);
+        while(!c3.empty()) {
+            Container3 tmp;
+            ranges_transform<value_type3>(c3, c2, transform, std::inserter(tmp, tmp.end()), std::forward<Args2>(args2)...);
+            std::swap(tmp, c3);
         }
         CGAL_DDT_TRACE0(*this, "PERF", "for_each", "generic_work", "E");
     }
@@ -322,15 +320,18 @@ private:
     }
 
     template<typename OutputValue, typename OutputIterator>
-    OutputIterator read(std::istream& in, OutputIterator out) {
+    OutputIterator read_all(std::istream& in, OutputIterator out) {
+       typedef typename std::remove_cv_t<typename OutputValue::first_type > first_type;
+       typedef typename std::remove_cv_t<typename OutputValue::second_type> second_type;
        int n;
        in >> n;
        if(!in) return out;
        for(int i=0; i<n; ++i) {
-           OutputValue v;
-           read(in, v);
+           first_type v1;
+           second_type v2;
+           read(read(in, v1), v2);
            CGAL_assertion(!!in);
-           *out++ = std::move(v);
+           *out++ = {std::move(v1), std::move(v2)};
        }
        return out;
     }
@@ -346,7 +347,7 @@ private:
             std::string s(recvbuf.data() + rdispls[i], rdispls[i+1] - rdispls[i]);
             std::istringstream iss(s);
             while (iss)
-                out = read<OutputValue>(iss, out);
+                out = read_all<OutputValue>(iss, out);
             recvbuf[rdispls[i+1]] = c;
         }
         CGAL_DDT_TRACE0(*this, "MPI", "deserialize", "generic_work", "E");

@@ -166,19 +166,18 @@ struct STD_scheduler
 
     template<typename Container1,
              typename Container2,
+             typename Container3,
              typename Transform,
              typename... Args2>
-    void ranges_for_each(Container1& c1, Container2& c2, Transform transform, Args2&&... args2)
+    void ranges_for_each(Container1& c1, Container2& c2, Container3& c3, Transform transform, Args2&&... args2)
     {
         CGAL_DDT_TRACE0(*this, "PERF", "for_each", "generic_work", "B");
-        typedef typename Container1::key_type    key_type;
-        typedef typename Container1::mapped_type mapped_type1;
-        typedef typename Container1::value_type  value_type1;
-        std::multimap<key_type, mapped_type1> m1[2];
-        ranges_transform<value_type1>(c1, c2, transform, std::inserter(m1[0], m1[0].begin()), std::forward<Args2>(args2)...);
-        for(int i = 0, j = 1; !m1[i].empty(); i = j, j = 1-i) {
-            ranges_transform<value_type1>(m1[i], c2, transform, std::inserter(m1[j], m1[j].begin()), std::forward<Args2>(args2)...);
-            m1[i].clear();
+        typedef typename Container3::value_type  value_type3;
+        ranges_transform<value_type3>(c1, c2, transform, std::inserter(c3, c3.end()), std::forward<Args2>(args2)...);
+        while(!c3.empty()) {
+            Container3 tmp;
+            ranges_transform<value_type3>(c3, c2, transform, std::inserter(tmp, tmp.end()), std::forward<Args2>(args2)...);
+            std::swap(tmp, c3);
         }
         CGAL_DDT_TRACE0(*this, "PERF", "for_each", "generic_work", "E");
     }

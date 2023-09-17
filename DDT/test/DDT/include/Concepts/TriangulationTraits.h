@@ -2,17 +2,11 @@
 #define CGAL_DDT_CONCEPT_TRIANGULATION_TRAITS
 
 #include <Concepts/Point.h>
-#include <Concepts/SimplexIndex.h>
 #include <Concepts/Bbox.h>
 #include <Concepts/TileIndex.h>
 #include <Concepts/RandomPointsInBox.h>
-#include <Concepts/RandomPointsInBall.h>
 #include <CGAL/DDT/triangulation/Triangulation_traits.h>
 #include <vector>
-
-struct VertexIndex : public SimplexIndex {};
-struct FacetIndex: public SimplexIndex {};
-struct CellIndex: public SimplexIndex {};
 
 /*!
 \ingroup PkgDDTConcepts
@@ -30,13 +24,6 @@ The concept `TriangulationTraits` describes the requirements of a traits that ad
 
 namespace CGAL {
 namespace DDT {
-
-namespace Impl {
-    ::Point p;
-    ::VertexIndex v;
-    ::CellIndex c;
-    ::FacetIndex f;
-}
 
 template<> struct Triangulation_traits<::Triangulation> {
 
@@ -74,8 +61,6 @@ public:
     typedef FacetIndex Facet_index;
     typedef CellIndex Cell_index;
     typedef ::Triangulation Triangulation;
-    typedef ::RandomPointsInBall Random_points_in_ball;
-    typedef ::RandomPointsInBox Random_points_in_box;
     typedef ::Bbox Bbox;
     static constexpr int D=33;
 #endif
@@ -141,21 +126,8 @@ public:
 /// @{
     /// returns the point embedding of a vertex
     static const Point& point(const Triangulation& tri, Vertex_index v) { return Impl::p; }
-    /// creates a box bounding the approximation of a point
-    static Bbox bbox(const Point& p) { return {}; }
-    /// creates an an empty bounding box in d dimensions.
-    /// If the geometric traits have a static dimension, the dimensions should match.
-    static Bbox bbox(int d) { return {}; }
-    /// creates a bounding box in d dimensions with intervals [-range, range] on each axis.
-    /// If the geometric traits have a static dimension, the dimensions should match
-    static  Bbox bbox(int d, double range) { return {}; }
-
     /// returns the identifier of the tile where this vertex is local
     Tile_index  vertex_id  (const Triangulation& tri, Vertex_index v) { return {}; }
-    /// returns the ith coodinate of a point as a (possibly approximated) double
-    static double approximate_cartesian_coordinate(const Point& p, int i) { return {}; }
-    /// compares the `i`'th Cartesian coodinate of `p` and `q`
-    static bool less_coordinate(const Point& p, const Point& q, int i) { return true; }
 /// @}
 
 

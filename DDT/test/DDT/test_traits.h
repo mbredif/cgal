@@ -10,6 +10,7 @@
 #include <CGAL/DDT/scheduler/Sequential_scheduler.h>
 #include <CGAL/DDT/property_map/Partitioner_property_map.h>
 #include <CGAL/Distributed_triangulation.h>
+#include <CGAL/DDT/point_set/Random_points_in_bbox.h>
 
 template <typename T>
 bool is_euler_valid(const T& tri)
@@ -49,11 +50,12 @@ int test_traits(Scheduler& scheduler,
     typedef CGAL::Distributed_triangulation<Triangulation, TileIndexProperty2> Distributed_triangulation2;
     typedef typename Partitioner1::Tile_index Tile_index;
     typedef typename CGAL::DDT::Triangulation_traits<Triangulation>::Point Point;
-    typedef typename CGAL::DDT::Triangulation_traits<Triangulation>::Random_points_in_box Random_points;
-    typedef CGAL::Distributed_point_set<Tile_index, Point> Distributed_point_set;
+    typedef std::vector<std::pair<Tile_index, Point>>                       Point_set;
+    typedef CGAL::Distributed_point_set<Point_set, CGAL::DDT::First_property_map<Point_set>>  Distributed_point_set;
+    typedef CGAL::DDT::Random_points_in_bbox<Point> Random_points;
 
     std::cout << "== Delaunay ==" << std::endl;
-    Random_points generator(dim, range);
+    Random_points generator(partitioner1.bbox());
     Distributed_point_set points(generator, NP, partitioner1);
     Distributed_triangulation1 tri1(dim, pmap1);
     tri1.insert(points, scheduler);
@@ -111,11 +113,17 @@ template <
     typename Scheduler = CGAL::DDT::Sequential_scheduler, int D = CGAL::DDT::Triangulation_traits<Triangulation>::D>
 int test_info(const std::string& testname, int dim = D, int ND = 2, int NP = 50, int NT = -1, double range = 1, bool do_test_io = true, Scheduler sch = {})
 {
+    typedef typename CGAL::DDT::Triangulation_traits<Triangulation>::Point  Point;
     typedef typename Property::value_type                                   Tile_index;
-    typedef CGAL::DDT::Grid_partitioner<Tile_index, Triangulation>          Partitioner;
-    typedef CGAL::DDT::Triangulation_traits<Triangulation>                  Traits;
+    typedef CGAL::DDT::Grid_partitioner<Tile_index, Point>                  Partitioner;
+    typedef CGAL::DDT::Kernel_traits<Point>                                 Traits;
     typedef typename Traits::Bbox                                           Bbox;
-    Bbox bbox = Traits::bbox(dim, range);
+
+    std::vector<double> coord0(dim, -1);
+    std::vector<double> coord1(dim,  1);
+    Point p0 = Traits::point(coord0.begin(), coord0.end());
+    Point p1 = Traits::point(coord1.begin(), coord1.end());
+    Bbox bbox = Traits::bbox(p0, p1);
     Partitioner part1(1, bbox, ND  );
     Partitioner part2(1, bbox, ND+1);
 
@@ -128,12 +136,17 @@ template <
     typename Scheduler = CGAL::DDT::Sequential_scheduler, int D = CGAL::DDT::Triangulation_traits<Triangulation>::D>
 int test_part(const std::string& testname, int dim = D, int ND = 2, int NP = 50, int NT = -1, double range = 1, bool do_test_io = true, Scheduler sch = {})
 {
-    typedef CGAL::DDT::Grid_partitioner<TileIndex, Triangulation>           Partitioner;
+    typedef typename CGAL::DDT::Triangulation_traits<Triangulation>::Point  Point;
+    typedef CGAL::DDT::Grid_partitioner<TileIndex, Point>                   Partitioner;
     typedef CGAL::DDT::Partitioner_property_map<Triangulation, Partitioner> Property;
-    typedef CGAL::DDT::Triangulation_traits<Triangulation>                  Traits;
+    typedef CGAL::DDT::Kernel_traits<Point>                                 Traits;
     typedef typename Traits::Bbox                                           Bbox;
 
-    Bbox bbox = Traits::bbox(dim, range);
+    std::vector<double> coord0(dim, -1);
+    std::vector<double> coord1(dim,  1);
+    Point p0 = Traits::point(coord0.begin(), coord0.end());
+    Point p1 = Traits::point(coord1.begin(), coord1.end());
+    Bbox bbox = Traits::bbox(p0, p1);
     Partitioner part1(1, bbox, ND  );
     Partitioner part2(1, bbox, ND+1);
 

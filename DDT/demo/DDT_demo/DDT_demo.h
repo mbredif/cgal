@@ -8,6 +8,7 @@
 #include <CGAL/DDT/serializer/PVTU_file_serializer.h>
 #include <CGAL/DDT/serializer/File_serializer.h>
 #include <CGAL/DDT/property_map/Partitioner_property_map.h>
+#include <CGAL/DDT/point_set/Random_points_in_bbox.h>
 #include <CGAL/DDT/IO/write_ply.h>
 #include <boost/program_options.hpp>
 #include "logging.h"
@@ -23,18 +24,18 @@ template<
 
 int DDT_demo(int argc, char **argv)
 {
-  typedef CGAL::DDT::Triangulation_traits<Triangulation> Traits;
-  typedef typename Traits::Random_points_in_box Random_points;
-  typedef typename Traits::Point Point;
+  typedef typename Partitioner::Point Point;
+  typedef CGAL::DDT::Kernel_traits<Point> Traits;
+  typedef CGAL::DDT::Random_points_in_bbox<Point> Random_points;
   typedef typename TileIndexProperty::value_type Tile_index;
   typedef CGAL::Distributed_triangulation<Triangulation, TileIndexProperty, Serializer> Distributed_triangulation;
 
-  //typedef std::vector<std::pair<Tile_index, Point>> Point_set;
-  //typedef CGAL::Distributed_point_set<Point_set, CGAL::DDT::First_property_map<Point_set>>  Distributed_point_set;
+  typedef std::vector<std::pair<Tile_index, Point>> Point_set;
+  typedef CGAL::Distributed_point_set<Point_set, CGAL::DDT::First_property_map<Point_set>>  Distributed_point_set;
   //typedef std::vector<Point> Point_set;
   //typedef CGAL::Distributed_point_set<Point_set, /* ??? */>  Distributed_point_set;
-  typedef CGAL::DDT::Random_point_set<Random_points> Point_set;
-  typedef CGAL::Distributed_point_set<Point_set, CGAL::DDT::Partitioner_property_map<Point_set, Partitioner>>  Distributed_point_set;
+  //typedef CGAL::DDT::Random_point_set<Random_points> Point_set;
+  //typedef CGAL::Distributed_point_set<Point_set, CGAL::DDT::Partitioner_property_map<Point_set, Partitioner>>  Distributed_point_set;
 
   int NP, loglevel, max_concurrency, max_number_of_tiles;
   std::vector<int> NT;
@@ -100,9 +101,11 @@ int DDT_demo(int argc, char **argv)
 //      max_concurrency = max_number_of_tiles;
 //  }
 
-  Point a(-1, -1);
-  Point b( 1,  1);
-  typename Traits::Bbox bbox = Traits::bbox(a, b);
+  std::vector<double> coord0(dimension, -1);
+  std::vector<double> coord1(dimension,  1);
+  Point p0 = Traits::point(coord0.begin(), coord0.end());
+  Point p1 = Traits::point(coord1.begin(), coord1.end());
+  typename Traits::Bbox bbox = Traits::bbox(p0, p1);
   Partitioner partitioner(1, bbox, NT.begin(), NT.end());
   Scheduler scheduler(max_concurrency);
   Serializer serializer(ser);
@@ -124,9 +127,9 @@ int DDT_demo(int argc, char **argv)
   CGAL::DDT::logging<> log("--- Overall --> ", loglevel);
   log.step("Random_points   ");
   Random_points generator(bbox);
-  //Distributed_point_set points(generator, NP, partitioner);
-  Point_set ps(NP, generator);
-  Distributed_point_set points(ps, partitioner);
+  Distributed_point_set points(generator, NP, partitioner);
+  //Point_set ps(NP, generator);
+  //Distributed_point_set points(ps, partitioner);
 
   log.step("insertion       ");
   std::size_t count = tri.insert(points, scheduler);
