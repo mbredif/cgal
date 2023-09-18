@@ -117,6 +117,24 @@ std::ostream& operator<<(std::ostream& out, const Random_point_set<RandomPointGe
     return out << ps.generator() << " " << ps.size();
 }
 
+template<typename Point>
+std::istream& operator>>(std::istream& in, Uniform_point_in_bbox<Point>& ps)
+{
+    typename Uniform_point_in_bbox<Point>::Bbox bbox;
+    unsigned int seed;
+    in >> ps.bbox() >> ps.seed();
+    ps = { bbox, seed };
+}
+
+template<typename RandomPointGenerator>
+std::istream& operator>>(std::istream& in, Random_point_set<RandomPointGenerator>& ps)
+{
+    std::size_t size;
+    RandomPointGenerator rpg;
+    in >> rpg >> size;
+    ps = { rpg, size };
+    return in;
+}
 
 }
 }

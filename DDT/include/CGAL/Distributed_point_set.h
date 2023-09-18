@@ -107,9 +107,9 @@ struct Distributed_point_set {
     }
 
     Container tiles;
+    TileIndexProperty tile_indices;
 
 private:
-    TileIndexProperty tile_indices;
     std::size_t size_;
 };
 

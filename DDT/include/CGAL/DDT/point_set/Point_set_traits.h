@@ -34,8 +34,23 @@ struct Point_set_traits
         return std::make_pair(ps.emplace(ps.end(), p), true);
     }
 
-    static inline std::ostream& write(std::ostream& out, const PointSet& ps) { return out << ps; }
-    static inline std::istream& read(std::istream& in, PointSet& ps) { return in >> ps; }
+    static inline std::ostream& write(std::ostream& out, const PointSet& ps) {
+        out << ps.size() << " ";
+        for(auto it = ps.begin(); it != ps.end(); ++it)
+            out << CGAL::IO::serialize(*it) << " ";
+        return out;
+    }
+
+    static inline std::istream& read(std::istream& in, PointSet& ps) {
+        std::size_t size;
+        in >> size;
+        for(std::size_t i = 0; i<size; ++i) {
+            typename PointSet::value_type p;
+            in >> p;
+            ps.emplace_back(p);
+        }
+        return in;
+    }
 };
 
 /// specialization for Containers of (key,point) pairs
@@ -62,9 +77,10 @@ struct Point_set_traits<PointSet, std::enable_if_t<std::is_default_constructible
     static inline std::ostream& write(std::ostream& out, const PointSet& ps) {
         out << ps.size() << " ";
         for(auto it = ps.begin(); it != ps.end(); ++it)
-            out << it->first << " " << it->second << " ";
+            out << it->first << " " << CGAL::IO::serialize(it->second) << " ";
         return out;
     }
+
     static inline std::istream& read(std::istream& in, PointSet& ps) {
         std::size_t size;
         in >> size;
@@ -74,7 +90,7 @@ struct Point_set_traits<PointSet, std::enable_if_t<std::is_default_constructible
             ps.emplace_back(p);
         }
         return in;
-}
+    }
 };
 
 }
