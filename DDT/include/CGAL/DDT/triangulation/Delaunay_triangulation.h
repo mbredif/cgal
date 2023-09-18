@@ -318,10 +318,6 @@ public:
         return tri.is_valid(verbose, level);
     }
 
-    static inline bool less_coordinate(const Point& p, const Point& q, int i) {
-        return p[i] < q[i];
-    }
-
     static inline std::ostream& write(std::ostream& out, const Triangulation& tri) { return out << tri; }
     static inline std::istream& read(std::istream& in, Triangulation& tri) { return in >> tri; }
 };
