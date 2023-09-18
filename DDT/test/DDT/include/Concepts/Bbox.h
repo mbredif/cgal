@@ -37,6 +37,10 @@ public:
     double& max(int i) { return coord; }
     /// @}
 
+
+    bool operator==(const Bbox& bbox) const { return true; }
+    bool operator!=(const Bbox& bbox) const { return true; }
+
 private:
     double coord;
     int dim;

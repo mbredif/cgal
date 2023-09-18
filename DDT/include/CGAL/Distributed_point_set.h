@@ -100,7 +100,7 @@ struct Distributed_point_set {
     template <typename PointSetIterator>
     Distributed_point_set(Tile_index id, PointSetIterator begin, PointSetIterator end) : tile_indices() {
         for(PointSetIterator ps = begin; ps != end; ++ps, ++id)
-            try_emplace(id, *ps);
+            try_emplace(id, id, *ps);
     }
 
     template<typename RandomPoint, typename Partitioner>

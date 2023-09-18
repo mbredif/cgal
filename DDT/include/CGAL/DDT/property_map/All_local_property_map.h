@@ -9,8 +9,8 @@
 //
 // Author(s)     : Mathieu Brédif and Laurent Caraffa
 
-#ifndef CGAL_DDT_CONSTANT_PROPERTY_MAP_H
-#define CGAL_DDT_CONSTANT_PROPERTY_MAP_H
+#ifndef CGAL_DDT_ALL_LOCAL_PROPERTY_MAP_H
+#define CGAL_DDT_ALL_LOCAL_PROPERTY_MAP_H
 
 #include <boost/property_map/property_map.hpp>
 
@@ -18,26 +18,26 @@ namespace CGAL {
 namespace DDT {
 
 /// \ingroup PkgPropertyMapRef
-/// Property map that evaluates a partitioner on the vertex point.
+/// Property map that return the id of the Tile for all iterators.
 ///
 /// \cgalModels `ReadablePropertyMap`
-template <typename T>
-struct Constant_property_map
+template <typename TileIndex>
+struct All_local_property_map
 {
-  Constant_property_map(const T& t) : value(t) {}
-
 /// \cond SKIP_IN_MANUAL
-  typedef Constant_property_map<T>           Self;
-  typedef T                                  value_type;
+  typedef All_local_property_map<TileIndex>  Self;
+  typedef TileIndex                          value_type;
   typedef const value_type&                  reference;
   typedef boost::readable_property_map_tag   category;
 
-  template<typename Key> friend value_type get(const Self& s, const Key&) { return s.value; }
-  T value;
+  template<typename Tile, typename ConstIterator>
+  friend value_type get(const Self& s, const std::pair<const Tile&, ConstIterator>& key) {
+    return key.first.id();
+  }
 /// \endcond
 };
 
 }
 }
 
-#endif // CGAL_DDT_CONSTANT_PROPERTY_MAP_H
+#endif // CGAL_DDT_ALL_LOCAL_PROPERTY_MAP_H

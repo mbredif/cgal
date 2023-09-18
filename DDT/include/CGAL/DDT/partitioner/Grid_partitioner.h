@@ -99,7 +99,7 @@ public:
         if (id < id0 || !(id < id0 + size())) {
             return Traits::bbox(N.size());
         }
-        id -= id0;
+        id = id - id0;
         std::size_t f(id);
         std::vector<double> p(origin.begin(), origin.end());
         std::vector<double> q(origin.begin(), origin.end());

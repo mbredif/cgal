@@ -45,18 +45,19 @@ int test_traits(Scheduler& scheduler,
 {
     std::cout << "Test " << testname << std::endl;
     int result = 0;
+    int seed = 0;
 
     typedef CGAL::Distributed_triangulation<Triangulation, TileIndexProperty1> Distributed_triangulation1;
     typedef CGAL::Distributed_triangulation<Triangulation, TileIndexProperty2> Distributed_triangulation2;
     typedef typename Partitioner1::Tile_index Tile_index;
     typedef typename CGAL::DDT::Triangulation_traits<Triangulation>::Point Point;
-    typedef std::vector<std::pair<Tile_index, Point>>                       Point_set;
-    typedef CGAL::Distributed_point_set<Point_set, CGAL::DDT::First_property_map<Point_set>>  Distributed_point_set;
-    typedef CGAL::DDT::Random_points_in_bbox<Point> Random_points;
+    typedef CGAL::DDT::Uniform_point_in_bbox<Point> Random_point_generator;
+    typedef CGAL::DDT::Random_point_set<Random_point_generator> Point_set;
+    typedef CGAL::Distributed_point_set<Point_set, CGAL::DDT::Partitioner_property_map<Point_set, Partitioner1>>  Distributed_point_set;
 
     std::cout << "== Delaunay ==" << std::endl;
-    Random_points generator(partitioner1.bbox());
-    Distributed_point_set points(generator, NP, partitioner1);
+    Point_set ps(NP, partitioner1.bbox(), seed);
+    Distributed_point_set points(ps, partitioner1);
     Distributed_triangulation1 tri1(dim, pmap1);
     tri1.insert(points, scheduler);
     if(!tri1.is_valid())

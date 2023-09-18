@@ -18,10 +18,13 @@ struct TileIndex {
 
     // \name Grid_partitioner requirements
     // @{
-    TileIndex(double) {}
+    TileIndex(std::size_t) {}
     TileIndex operator%(std::size_t) const { return {}; }
     TileIndex operator+(TileIndex) const { return {}; }
+    TileIndex operator-(TileIndex) const { return {}; }
+    TileIndex operator++() const { return {}; }
     TileIndex operator*(std::size_t) const { return {}; }
+    explicit operator size_t() { return 0; }
     // @}
 
     // \name Comparisons

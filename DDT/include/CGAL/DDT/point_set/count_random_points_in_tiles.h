@@ -14,6 +14,7 @@
 
 #include <CGAL/DDT/partitioner/Grid_partitioner.h>
 #include <CGAL/DDT/point_set/Random_points_in_bbox.h>
+#include <CGAL/assertions.h>
 
 namespace CGAL {
 namespace DDT {
@@ -32,17 +33,22 @@ OutputIterator count_random_points_in_tiles(
     typedef typename Partitioner::Bbox                Bbox;
     Bbox part_bbox = part.bbox();
     Bbox points_bbox = points.generator().bbox();
-    CGAL_assertion( part_bbox ==  points_bbox );
+    CGAL_assertion( part_bbox == points_bbox );
     std::vector<std::size_t> counts(part.size(), 0);
     std::mt19937 gen(points.seed());
-    std::uniform_int_distribution<> distrib(0, part.size()-1);
-    for(std::size_t i = 0; i < points.size(); ++i) {
-        ++counts[distrib(gen)];
+    std::size_t n_tiles = part.size();
+    std::size_t n_points = points.size();
+    for(TileIndex id = part.begin(); id < part.end(); ++id, --n_tiles) {
+        std::size_t n = 0;
+        if (n_points > 0) {
+            std::binomial_distribution<std::size_t> distrib(n_points, 1./n_tiles);
+            n = distrib(gen);
+        }
+
+        n_points -= n;
+        *out++ = {id, n};
     }
-    std::size_t i = 0;
-    for(TileIndex id = part.begin(); id < part.end(); ++id, ++i) {
-        *out++ = {id, counts[i]};
-    }
+
     return out;
 }
 

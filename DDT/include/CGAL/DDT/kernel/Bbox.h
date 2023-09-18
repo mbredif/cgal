@@ -68,6 +68,15 @@ public:
         return max_values[i];
     }
 
+    bool operator==(const Bbox& bbox) const {
+        for(int i=0; i<dimension(); ++i)
+            if (min_values[i] != bbox.min_values[i] || max_values[i] != bbox.max_values[i])
+                return false;
+        return true;
+    }
+
+    bool operator!=(const Bbox& bbox) const { return !operator==(bbox); }
+
 protected:
     void init(int d, T range = -std::numeric_limits<T>::infinity()) {
         for(int i=0; i<d; ++i)

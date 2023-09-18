@@ -28,13 +28,7 @@ int DDT_demo(int argc, char **argv)
   typedef CGAL::DDT::Kernel_traits<Point> Traits;
   typedef typename Traits::Bbox Bbox;
   typedef CGAL::DDT::Uniform_point_in_bbox<Point> Random_point_generator;
-  typedef typename TileIndexProperty::value_type Tile_index;
   typedef CGAL::Distributed_triangulation<Triangulation, TileIndexProperty, Serializer> Distributed_triangulation;
-
-  //typedef std::vector<std::pair<Tile_index, Point>> Point_set;
-  //typedef CGAL::Distributed_point_set<Point_set, CGAL::DDT::First_property_map<Point_set>>  Distributed_point_set;
-  //typedef std::vector<Point> Point_set;
-  //typedef CGAL::Distributed_point_set<Point_set, /* ??? */>  Distributed_point_set;
   typedef CGAL::DDT::Random_point_set<Random_point_generator> Point_set;
   typedef CGAL::Distributed_point_set<Point_set, CGAL::DDT::Partitioner_property_map<Point_set, Partitioner>>  Distributed_point_set;
 
