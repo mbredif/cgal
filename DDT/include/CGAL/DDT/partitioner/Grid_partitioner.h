@@ -112,7 +112,7 @@ public:
             p[i] += d*x;
             q[i] = p[i] + d;
         }
-        return Traits::bbox(Traits::point(p.begin(), p.end()), Traits::point(q.begin(), q.end()));
+        return make_bbox(Traits::point(p.begin(), p.end()), Traits::point(q.begin(), q.end()));
     }
 
     Bbox bbox() const {
@@ -121,7 +121,7 @@ public:
         std::size_t D = N.size();
         for(std::size_t i=0; i<D; ++i)
             q[i] = p[i] + N[i]/inv_step[i];
-        return Traits::bbox(Traits::point(p.begin(), p.end()), Traits::point(q.begin(), q.end()));
+        return make_bbox(Traits::point(p.begin(), p.end()), Traits::point(q.begin(), q.end()));
     }
 
 private:

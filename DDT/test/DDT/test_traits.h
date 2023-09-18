@@ -123,7 +123,7 @@ int test_info(const std::string& testname, int dim = D, int ND = 2, int NP = 50,
     std::vector<double> coord1(dim,  1);
     Point p0 = Traits::point(coord0.begin(), coord0.end());
     Point p1 = Traits::point(coord1.begin(), coord1.end());
-    Bbox bbox = Traits::bbox(p0, p1);
+    Bbox bbox = CGAL::DDT::make_bbox(p0, p1);
     Partitioner part1(1, bbox, ND  );
     Partitioner part2(1, bbox, ND+1);
 
@@ -146,7 +146,7 @@ int test_part(const std::string& testname, int dim = D, int ND = 2, int NP = 50,
     std::vector<double> coord1(dim,  1);
     Point p0 = Traits::point(coord0.begin(), coord0.end());
     Point p1 = Traits::point(coord1.begin(), coord1.end());
-    Bbox bbox = Traits::bbox(p0, p1);
+    Bbox bbox = CGAL::DDT::make_bbox(p0, p1);
     Partitioner part1(1, bbox, ND  );
     Partitioner part2(1, bbox, ND+1);
 

@@ -26,6 +26,7 @@ int DDT_demo(int argc, char **argv)
 {
   typedef typename Partitioner::Point Point;
   typedef CGAL::DDT::Kernel_traits<Point> Traits;
+  typedef typename Traits::Bbox Bbox;
   typedef CGAL::DDT::Random_points_in_bbox<Point> Random_points;
   typedef typename TileIndexProperty::value_type Tile_index;
   typedef CGAL::Distributed_triangulation<Triangulation, TileIndexProperty, Serializer> Distributed_triangulation;
@@ -105,7 +106,7 @@ int DDT_demo(int argc, char **argv)
   std::vector<double> coord1(dimension,  1);
   Point p0 = Traits::point(coord0.begin(), coord0.end());
   Point p1 = Traits::point(coord1.begin(), coord1.end());
-  typename Traits::Bbox bbox = Traits::bbox(p0, p1);
+  Bbox bbox = CGAL::DDT::make_bbox(p0, p1);
   Partitioner partitioner(1, bbox, NT.begin(), NT.end());
   Scheduler scheduler(max_concurrency);
   Serializer serializer(ser);

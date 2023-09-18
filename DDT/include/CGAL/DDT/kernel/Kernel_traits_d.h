@@ -48,12 +48,6 @@ struct Kernel_traits<CGAL::Wrap::Point_d<K>> {
     /// Bbox type
     typedef CGAL::DDT::Bbox<D, double, Point>                      Bbox;
 
-    static inline bool less_coordinate(const Point& p, const Point& q, int i) {
-      CGAL_assertion(D == 0 || p.dimension() == D);
-      CGAL_assertion(p.dimension() == q.dimension());
-        return p[i] < q[i];
-    }
-
     template<typename InputIterator>
     static inline Point point(InputIterator begin, InputIterator end) {
         int dim = std::distance(begin, end);
@@ -71,32 +65,13 @@ struct Kernel_traits<CGAL::Wrap::Point_d<K>> {
       return Bbox(dim);
     }
 
-    static inline Bbox bbox(const Point& p) {
-        int dim = p.dimension();
-        Bbox b(dim);
-        int i = 0;
-        for(int i = 0; i < dim; ++i) {
-            std::pair<double, double> interval = CGAL::to_interval(p[i]);
-            b.min(i) = interval.first;
-            b.max(i) = interval.second;
-        }
-        return b;
-    }
-
-    static inline Bbox bbox(const Point& p, const Point& q) {
-        CGAL_assertion(p.dimension() == q.dimension());
-        int dim = p.dimension();
-        Bbox bb(dim);
-        int i = 0;
-        for(int i = 0; i < dim; ++i) {
-            std::pair<double, double> a = CGAL::to_interval(p[i]);
-            std::pair<double, double> b = CGAL::to_interval(q[i]);
-            bb.min(i) = std::min(a.first, b.first);
-            bb.max(i) = std::max(a.second, b.second);
-        }
-        return bb;
-    }
 };
+
+template<typename K>
+inline bool less_coordinate(const CGAL::Wrap::Point_d<K>& p, const CGAL::Wrap::Point_d<K>& q, int i) {
+  CGAL_assertion(p.dimension() == q.dimension());
+    return p[i] < q[i];
+}
 
 template<typename K>
 inline double approximate_cartesian_coordinate(const CGAL::Wrap::Point_d<K>& p, int i)
@@ -105,6 +80,35 @@ inline double approximate_cartesian_coordinate(const CGAL::Wrap::Point_d<K>& p, 
     return CGAL::to_double(p[i]);
 }
 
+template<typename K>
+auto make_bbox(const CGAL::Wrap::Point_d<K>& p) {
+    typedef typename Kernel_traits<CGAL::Wrap::Point_d<K>>::Bbox  Bbox;
+    int dim = p.dimension();
+    Bbox b(dim);
+    int i = 0;
+    for(int i = 0; i < dim; ++i) {
+        std::pair<double, double> interval = CGAL::to_interval(p[i]);
+        b.min(i) = interval.first;
+        b.max(i) = interval.second;
+    }
+    return b;
+}
+
+template<typename K>
+auto make_bbox(const CGAL::Wrap::Point_d<K>& p, const CGAL::Wrap::Point_d<K>& q) {
+    typedef typename Kernel_traits<CGAL::Wrap::Point_d<K>>::Bbox  Bbox;
+    CGAL_assertion(p.dimension() == q.dimension());
+    int dim = p.dimension();
+    Bbox bb(dim);
+    int i = 0;
+    for(int i = 0; i < dim; ++i) {
+        std::pair<double, double> a = CGAL::to_interval(p[i]);
+        std::pair<double, double> b = CGAL::to_interval(q[i]);
+        bb.min(i) = std::min(a.first, b.first);
+        bb.max(i) = std::max(a.second, b.second);
+    }
+    return bb;
+}
 
 }
 }

@@ -16,9 +16,31 @@ namespace CGAL {
 namespace DDT {
 
 
-template<typename K>
+template<typename P>
 struct Kernel_traits {
+    typedef P Point;
+    typedef void Bbox;
+    static int D;
+
+    template<typename InputIterator>
+    Point make_point(InputIterator begin, InputIterator end);
+
+    Point make_point(int dim);
+
+    Bbox make_bbox(int dim);
 };
+
+template<typename Point>
+bool less_coordinate(const Point& p, const Point& q, int i);
+
+template<typename Point>
+double approximate_cartesian_coordinate(const Point& p, int i);
+
+template<typename Point>
+typename Kernel_traits<Point>::Bbox make_bbox(const Point& p);
+
+template<typename Point>
+typename Kernel_traits<Point>::Bbox make_bbox(const Point& p, const Point& q);
 
 }
 }

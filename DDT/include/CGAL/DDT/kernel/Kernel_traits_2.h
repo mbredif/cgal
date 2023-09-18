@@ -31,18 +31,14 @@ struct Kernel_traits<CGAL::Point_2<K>> {
     /// Point type
     typedef CGAL::Point_2<K> Point;
 
-    static inline bool less_coordinate(const Point& p, const Point& q, int i) {
-        CGAL_assertion(0 <= i && i < 2);
-        return p[i] < q[i];
-    }
-
     template<typename InputIterator>
     static inline Point point(InputIterator begin, InputIterator end) {
         CGAL_assertion(std::distance(begin, end) == 2);
         return Point(*begin, *(begin+1));
     }
 
-    static inline Point point(int /*dim*/) {
+    static inline Point point(int dim) {
+        CGAL_assertion(dim == 2);
         return Point();
     }
 
@@ -50,15 +46,13 @@ struct Kernel_traits<CGAL::Point_2<K>> {
         CGAL_assertion(dim == 2);
         return Bbox();
     }
-
-    static inline Bbox bbox(const Point& p) {
-        return Bbox(p.x(), p.y(), p.x(), p.y());
-    }
-
-    static inline Bbox bbox(const Point& p, const Point& q) {
-        return Bbox(p.x(), p.y(), q.x(), q.y());
-    }
 };
+
+template<typename K>
+inline bool less_coordinate(const CGAL::Point_2<K>& p, const CGAL::Point_2<K>& q, int i) {
+    CGAL_assertion(0 <= i && i < 2);
+    return p[i] < q[i];
+}
 
 template<typename K>
 inline double approximate_cartesian_coordinate(const CGAL::Point_2<K>& p, int i)
@@ -66,6 +60,17 @@ inline double approximate_cartesian_coordinate(const CGAL::Point_2<K>& p, int i)
     CGAL_assertion(0 <= i && i < 2);
     return CGAL::to_double(p[i]);
 }
+
+template<typename K>
+inline CGAL::Bbox_2 make_bbox(const CGAL::Point_2<K>& p) {
+    return CGAL::Bbox_2(p.x(), p.y(), p.x(), p.y());
+}
+
+template<typename K>
+inline CGAL::Bbox_2 make_bbox(const CGAL::Point_2<K>& p, const CGAL::Point_2<K>& q) {
+    return CGAL::Bbox_2(p.x(), p.y(), q.x(), q.y());
+}
+
 
 }
 }

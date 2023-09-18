@@ -457,8 +457,8 @@ public:
                 const Point& p = point(v);
                 for(int i=0; i<D; ++i)
                 {
-                    if(Traits::less_coordinate(p, point(vertices[i  ]), i)) vertices[i  ] = v;
-                    if(Traits::less_coordinate(point(vertices[i+D]), p, i)) vertices[i+D] = v;
+                    if(less_coordinate(p, point(vertices[i  ]), i)) vertices[i  ] = v;
+                    if(less_coordinate(point(vertices[i+D]), p, i)) vertices[i+D] = v;
                 }
             }
         }

@@ -68,6 +68,12 @@ double approximate_cartesian_coordinate(const ::Point& p, int i)
     return 0;
 }
 
+
+::Bbox make_bbox(const ::Point& p, const ::Point& q)
+{
+    return Impl::b;
+}
+
 }
 }
 
