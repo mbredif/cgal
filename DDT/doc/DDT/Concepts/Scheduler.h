@@ -121,32 +121,35 @@ public:
     ranges_transform(Container1& c1, Container2& c2, Transform transform, OutputIterator3 out3, Args2&&... args2)
     { return out3; }
 
-    /// \brief executes a function on all ranges of values with equivalent keys in the associative container `c1`,
-    ///        calling `transform(first1,last1,v2,out)` on each such range `(first1,last1)` in `c1`,
-    ///        on the value `v2` associated in `c2` with the key `k=first1->first` and a model of `OutputIterator`.
-    ///        This is a left join : if `c2` has no elements for an equivalent key `k` in `c1`, then an object is `emplace`d
+    /// \brief executes a function on all ranges of values with equivalent keys in the associative containers `c1` and `c3`,
+    ///        calling `transform(first,last,v2,out)` on each such range `(first,last)` in `c1` and `c3`,
+    ///        on the value `v2` associated in `c2` with the key `k=first->first` and a model of `OutputIterator` that may insert new values into `c3`.
+    ///        This is a left join : if `c2` has no elements for an equivalent key `k` in `c1` or `c3`, then an object is `emplace`d
     ///        in `c2` at this key and constructed with `(k, args2...)`.
-    ///        The output iterator `out` accepts assignments of `Container1::value_type` objects, which enables the scheduling
+    ///        The output iterator `out` is constructed using `std::inserter(c3, c3.end())`, which enables the scheduling
     ///        of further calls to the `transform` function.
-    ///        The aggregation into ranges of values from `c1` or scheduled using `out` is also unspecified. It is only
-    ///        specified that the ranges passed to `transform` have equivalent keys and that they form a partition of all the values from `c1` and `out`.
+    ///        The aggregation into ranges of values from `c1` or `c3` (scheduled using `out`) is also unspecified. It is only
+    ///        specified that the ranges passed to `transform` have equivalent keys and that they form a partition of all the values from `c1` and `c3`.
     ///        If `Container1` is non-const, then non-const iterators are passed to `transform` and its values may be modified.
     ///        If `Container2` is non-const, then a non-const reference is passed to `transform` and its values may be modified.
     /// \param c1 an associative container.
     /// \param c2 an associative container.
-    /// \param transform function called on each joined values: `transform(first1,last1,v2,out)`
-    /// \param args2 extra arguments passed to construct `Container2::mapped_type(k,args2...)` when a key `k` in `c1` is not found in `c2`
+    /// \param c3 an associative container.
+    /// \param transform function called on each joined values: `transform(first,last,v2,out)` where `(first,last)` is a range of equivalent keys from `c1` or `c3`
+    /// \param args2 extra arguments passed to construct `Container2::mapped_type(k,args2...)` when a key `k` in `c1` or `c3` is not found in `c2`
     ///
     /// \tparam Container1 a model of an `AssociativeContainer` that supports equivalent keys
     /// \tparam Container2 a model of an `AssociativeContainer` that supports unique keys, `Container1` and `Container2` share a common `key_type`
-    /// \tparam Transform a model of `Callable` with 2 `Container1::(const_)iterator`s as argument types `Container2::mapped_type`
+    /// \tparam Container3 a model of an `AssociativeContainer` that supports equivalent keys, insertion and range erasure
+    /// \tparam Transform a model of `Callable` with 2 `Container(1/3)::(const_)iterator`s as argument types, a reference to `Container2::mapped_type`
     ///         and a model of `OutputIterator` as argument types, and `OutputIterator` as return type.
     /// \tparam Args2 types for the extra constructor arguments
     template<typename Container1,
              typename Container2,
+             typename Container3,
              typename Transform,
              typename... Args2>
-    void ranges_for_each(Container1& c1, Container2& c2, Transform transform, Args2&&... args2) { }
+    void ranges_for_each(Container1& c1, Container2& c2, Container3& c3, Transform transform, Args2&&... args2) { }
 /// @}
 
     int thread_index() { return 0; }

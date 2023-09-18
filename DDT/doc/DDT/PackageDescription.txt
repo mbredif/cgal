@@ -40,8 +40,8 @@ The Distributed Delaunay Triangulation (DDT) package, ....
 - `Serializer`
 
 \cgalCRPSection{Classes}
-- `CGAL::Distributed_point_set<PointSet,TileIndexProperty,Serializer>`
-- `CGAL::Distributed_triangulation<Triangulation,TileIndexProperty,Serializer>`
+- `CGAL::Distributed_point_set<PointSet,VertexPropertyMap,Serializer>`
+- `CGAL::Distributed_triangulation<Triangulation,VertexPropertyMap,Serializer>`
 
 \cgalCRPSection{%Scheduler Classes}
 - `CGAL::DDT::Sequential_scheduler`
@@ -56,6 +56,15 @@ The Distributed Delaunay Triangulation (DDT) package, ....
 - `CGAL::DDT::File_points_serializer`
 - `CGAL::DDT::File_serializer`
 - `CGAL::DDT::No_serializer`
+
+\cgalCRPSection{%VertexPropertyMap Classes}
+- `CGAL::DDT::All_local_property_map<TileIndex>`
+- `CGAL::DDT::First_property_map<PointSet>`
+- `CGAL::DDT::Partitioner_property_map<TileIndex,Point>`
+- `CGAL::DDT::Vertex_info_property_map`
+- `CGAL::DDT::Vertex_info_id_property_map`
+- `CGAL::DDT::Vertex_data_property_map`
+- `CGAL::DDT::Vertex_data_id_property_map`
 
 */
 

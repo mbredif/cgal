@@ -359,13 +359,14 @@ struct MPI_scheduler
     void ranges_for_each(Container1& c1, Container2& c2, Container3& c3, Transform transform, Args2&&... args2)
     {
         CGAL_DDT_TRACE0(*this, "PERF", "for_each", "generic_work", "B");
-        typedef typename Container1::key_type         key_type;
         typedef typename Container1::iterator         iterator1;
+        typedef typename Container1::key_type         key_type1;
+        typedef typename Container3::key_type         key_type3;
         typedef typename Container3::iterator         iterator3;
         typedef std::insert_iterator<Container3>      inserter3;
         typedef typename Container3::value_type       value_type3;
 
-        std::set<key_type> keys1;
+        std::set<key_type1> keys1;
         for(iterator1 it1 = std::begin(c1); it1 != std::end(c1); ++it1)
             if(is_local(it1->first))
                 keys1.insert(it1->first);
@@ -385,15 +386,15 @@ struct MPI_scheduler
             out3 = iprobe_recv<value_type3>(MPI_ANY_SOURCE, value_tag, out3);
             while(!(c3.empty() && keys1.empty())) {
                 if (c3.empty()) {
-                    typename std::set<key_type>::iterator it = keys1.begin();
-                    key_type k = *it;
+                    typename std::set<key_type1>::iterator it = keys1.begin();
+                    key_type1 k = *it;
                     std::pair<iterator1,iterator1> range1 = c1.equal_range(k);
                     keys1.erase(it);
                     out3 = range_transform(range1.first, range1.second, c2, transform, out3, value_tag, std::forward<Args2>(args2)...);
 
                 } else {
                     iterator3 it = c3.begin();
-                    key_type k = it->first;
+                    key_type3 k = it->first;
                     std::pair<iterator3,iterator3> range3 = c3.equal_range(k);
 
                     // move range3 from c3 to v3

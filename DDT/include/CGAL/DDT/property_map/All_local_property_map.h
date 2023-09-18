@@ -18,7 +18,7 @@ namespace CGAL {
 namespace DDT {
 
 /// \ingroup PkgPropertyMapRef
-/// Property map that return the id of the Tile for all iterators.
+/// Property map that returns the `TileIndex` of the Tile for all its iterators.
 ///
 /// \cgalModels `ReadablePropertyMap`
 template <typename TileIndex>
