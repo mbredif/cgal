@@ -69,7 +69,11 @@ template<typename clock_type> struct trace_logger {
         CGAL_DDT_TRACE_(sch, cat, name, cname, ph, CGAL_DDT_TRACE_ARG(k1, v1))
 #define CGAL_DDT_TRACE2(sch, cat, name, cname, ph, k1, v1, k2, v2) \
         CGAL_DDT_TRACE_(sch, cat, name, cname, ph, CGAL_DDT_TRACE_ARG(k1, v1) \
-                                   << ", " << CGAL_DDT_TRACE_ARG(k2, v2))
+                                        << ", " << CGAL_DDT_TRACE_ARG(k2, v2))
+#define CGAL_DDT_TRACE3(sch, cat, name, cname, ph, k1, v1, k2, v2, k3, v3) \
+        CGAL_DDT_TRACE_(sch, cat, name, cname, ph, CGAL_DDT_TRACE_ARG(k1, v1) \
+                                        << ", " << CGAL_DDT_TRACE_ARG(k2, v2) \
+                                        << ", " << CGAL_DDT_TRACE_ARG(k3, v3))
 #define CGAL_DDT_TRACE0_LOCK(sch, cat, name, cname, ph) do { CGAL_DDT_TRACE_LOCK(sch)  CGAL_DDT_TRACE0(sch, cat, name, cname, ph); } while(0)
 #define CGAL_DDT_TRACE1_LOCK(sch, cat, name, cname, ph, k1, v1) do { CGAL_DDT_TRACE_LOCK(sch)  CGAL_DDT_TRACE1(sch, cat, name, cname, ph, k1, v1); } while(0)
 #define CGAL_DDT_TRACE2_LOCK(sch, cat, name, cname, ph, k1, v1, k2, v2) do { CGAL_DDT_TRACE_LOCK(sch)  CGAL_DDT_TRACE2(sch, cat, name, cname, ph, k1, v1, k2, v2); } while(0)

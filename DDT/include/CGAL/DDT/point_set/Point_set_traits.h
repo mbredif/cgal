@@ -60,13 +60,19 @@ struct Point_set_traits<PointSet, std::enable_if_t<std::is_default_constructible
     }
 
     static inline std::ostream& write(std::ostream& out, const PointSet& ps) {
+        out << ps.size() << " ";
         for(auto it = ps.begin(); it != ps.end(); ++it)
             out << it->first << " " << it->second << " ";
         return out;
     }
     static inline std::istream& read(std::istream& in, PointSet& ps) {
-            for(auto it = ps.begin(); it != ps.end(); ++it)
-            return in >> it->first >> it->second;
+        std::size_t size;
+        in >> size;
+        for(std::size_t i = 0; i<size; ++i) {
+            typename PointSet::value_type p;
+            in >> p.first >> p.second;
+            ps.emplace_back(p);
+        }
         return in;
 }
 };
