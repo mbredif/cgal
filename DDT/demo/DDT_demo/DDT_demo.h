@@ -27,22 +27,23 @@ int DDT_demo(int argc, char **argv)
   typedef typename Partitioner::Point Point;
   typedef CGAL::DDT::Kernel_traits<Point> Traits;
   typedef typename Traits::Bbox Bbox;
-  typedef CGAL::DDT::Random_points_in_bbox<Point> Random_points;
+  typedef CGAL::DDT::Uniform_point_in_bbox<Point> Random_point_generator;
   typedef typename TileIndexProperty::value_type Tile_index;
   typedef CGAL::Distributed_triangulation<Triangulation, TileIndexProperty, Serializer> Distributed_triangulation;
 
-  typedef std::vector<std::pair<Tile_index, Point>> Point_set;
-  typedef CGAL::Distributed_point_set<Point_set, CGAL::DDT::First_property_map<Point_set>>  Distributed_point_set;
+  //typedef std::vector<std::pair<Tile_index, Point>> Point_set;
+  //typedef CGAL::Distributed_point_set<Point_set, CGAL::DDT::First_property_map<Point_set>>  Distributed_point_set;
   //typedef std::vector<Point> Point_set;
   //typedef CGAL::Distributed_point_set<Point_set, /* ??? */>  Distributed_point_set;
-  //typedef CGAL::DDT::Random_point_set<Random_points> Point_set;
-  //typedef CGAL::Distributed_point_set<Point_set, CGAL::DDT::Partitioner_property_map<Point_set, Partitioner>>  Distributed_point_set;
+  typedef CGAL::DDT::Random_point_set<Random_point_generator> Point_set;
+  typedef CGAL::Distributed_point_set<Point_set, CGAL::DDT::Partitioner_property_map<Point_set, Partitioner>>  Distributed_point_set;
 
   int NP, loglevel, max_concurrency, max_number_of_tiles;
   std::vector<int> NT;
   std::string vrt, ply, cgal, pvtu, ser;
   double range;
   int dimension = Traits::D;
+  unsigned int seed = rand();
 
   po::options_description desc("Allowed options");
   desc.add_options()
@@ -52,6 +53,7 @@ int DDT_demo(int argc, char **argv)
   ("log,l", po::value<int>(&loglevel)->default_value(0), "log level")
   ("max_concurrency,j", po::value<int>(&max_concurrency)->default_value(0), "maximum concurrency (0=automatic)")
   ("tiles,t", po::value<std::vector<int>>(&NT), "number of tiles")
+  ("seed", po::value<unsigned int>(&seed), "seed of the random point generator")
   ("range,r", po::value<double>(&range)->default_value(1), "range")
   ("serialize,s", po::value<std::string>(&ser), "prefix for tile serialization")
   ("vrt", po::value<std::string>(&vrt), "VRT+CSV output basename")
@@ -118,6 +120,7 @@ int DDT_demo(int argc, char **argv)
   std::cout << "- Points      : " << NP << std::endl;
   std::cout << "- Concurrency : " << scheduler.max_concurrency() << std::endl;
   std::cout << "- memTiles    : " << max_number_of_tiles << std::endl;
+  std::cout << "- seed        : " << seed << std::endl;
   std::cout << "- VRT Out     : " << (vrt.empty() ? "[no output]" : vrt ) << std::endl;
   std::cout << "- PLY Out     : " << (ply.empty() ? "[no output]" : ply ) << std::endl;
   std::cout << "- PVTU Out    : " << (pvtu.empty()? "[no output]" : pvtu) << std::endl;
@@ -125,44 +128,45 @@ int DDT_demo(int argc, char **argv)
   std::cout << "- Tiles       : " << partitioner.size() << ", " << partitioner << std::endl;
   std::cout << "- Serializer  : " << serializer << std::endl;
 
-  CGAL::DDT::logging<> log("--- Overall --> ", loglevel);
-  log.step("Random_points   ");
-  Random_points generator(bbox);
-  Distributed_point_set points(generator, NP, partitioner);
-  //Point_set ps(NP, generator);
-  //Distributed_point_set points(ps, partitioner);
-
-  log.step("insertion       ");
-  std::size_t count = tri.insert(points, scheduler);
-
-  if ( vm.count("vrt")  )
+  std::size_t count = 0;
   {
+    CGAL::DDT::logging<> log("--- Overall --> ", loglevel);
+    log.step("Random_points   ");
+    Point_set ps(NP, bbox, seed);
+    Distributed_point_set points(ps, partitioner);
+
+    log.step("insertion       ");
+    count = tri.insert(points, scheduler);
+
+    if ( vm.count("vrt")  )
+    {
       log.step("write_vrt       ");
       tri.write(CGAL::DDT::VRT_serializer(vrt), scheduler);
-  }
+    }
 
-  if ( vm.count("cgal")  )
-  {
+    if ( vm.count("cgal")  )
+    {
       log.step("write_cgal       ");
       tri.write(CGAL::DDT::File_serializer(cgal), scheduler);
-  }
+    }
 
-  if ( vm.count("pvtu")  )
-  {
+    if ( vm.count("pvtu")  )
+    {
       log.step("write_pvtu       ");
       tri.write(CGAL::DDT::PVTU_serializer(pvtu), scheduler);
-  }
+    }
 
-  if ( vm.count("ply")  )
-  {
+    if ( vm.count("ply")  )
+    {
       log.step("write_ply       ");
       CGAL::DDT::write_ply(tri, ply+".ply");
-  }
+    }
 
-  if ( vm.count("check")  )
-  {
+    if ( vm.count("check")  )
+    {
       log.step("validity        ");
       std::cout << "Validity     \t" << (tri.is_valid(true, 5) ? "OK" : "ERROR!") << std::endl;
+    }
   }
   std::cout << std::endl << count << " points were inserted." << std::endl;
   return 0;

@@ -63,14 +63,18 @@ struct Distributed_point_set {
     bool empty() const { return size_ == 0; }
     std::size_t size() const { return size_; }
 
+    template<typename... Args>
+    std::pair<iterator, bool> try_emplace(const key_type& k, Args&&... args)
+    {
+        return tiles.emplace(std::piecewise_construct,
+            std::forward_as_tuple(k),
+            std::forward_as_tuple(k, tile_indices, std::forward<Args>(args)...));
+    }
 
     template<typename Point, typename Tile_index>
     void insert(const Point& point, Tile_index id, Tile_index tid)
     {
-        auto it = tiles.emplace(std::piecewise_construct,
-            std::forward_as_tuple(tid),
-            std::forward_as_tuple(tid, tile_indices)).first;
-        it->second.insert(point, id);
+        try_emplace(tid).first->second.insert(point, id);
     }
 
     Distributed_point_set(TileIndexProperty tile_indices = {}) : tile_indices(tile_indices) {}
@@ -93,12 +97,21 @@ struct Distributed_point_set {
         }
     }
 
-    template <typename Iterator>
-    Distributed_point_set(Tile_index id, Iterator begin, Iterator end) : tile_indices(id) {
-        for(Iterator it = begin; it != end; ++it, ++id) {
-            tiles.emplace(std::piecewise_construct,
-                std::forward_as_tuple(id),
-                std::forward_as_tuple(id, id, *it));
+    template <typename PointSetIterator>
+    Distributed_point_set(Tile_index id, PointSetIterator begin, PointSetIterator end) : tile_indices() {
+        for(PointSetIterator ps = begin; ps != end; ++ps, ++id)
+            try_emplace(id, *ps);
+    }
+
+    template<typename RandomPoint, typename Partitioner>
+    Distributed_point_set(const CGAL::DDT::Random_point_set<RandomPoint>& ps, Partitioner& part) : tile_indices(part) {
+        std::vector<std::pair<Tile_index, std::size_t>> counts;
+        count_random_points_in_tiles(ps, part, std::back_inserter(counts));
+        for(auto c : counts)
+        {
+            Tile_index id = c.first;
+            unsigned int seed = ps.seed() + std::hash<Tile_index>{}(id);
+            try_emplace(id, c.second, part.bbox(id), seed);
         }
     }
 

@@ -19,78 +19,103 @@ namespace CGAL {
 namespace DDT {
 
 template<typename P>
-struct Random_points_in_bbox
+struct Uniform_point_in_bbox
 {
     typedef Kernel_traits<P> Traits;
     typedef typename Traits::Point Point;
     typedef typename Traits::Bbox  Bbox;
-    std::mt19937 gen;
-    std::uniform_real_distribution<> dis;
-    Bbox bbox;
-    Point point;
-    Random_points_in_bbox(const Bbox bbox = {}) : bbox(bbox), dis(), gen() { ++(*this); }
+    Uniform_point_in_bbox(const Bbox bbox, unsigned int seed) : bbox_(bbox), distrib_(), gen_(seed), seed_(seed) {}
 
-    bool operator==(const Random_points_in_bbox& other) const { return point==other.point && bbox==other.bbox && dis==other.dis && gen==other.gen; }
-    const Point& operator*() const { return point; }
-    Random_points_in_bbox& operator++() {
-        int D = bbox.dimension();
+    void reset() { gen_.seed(seed_); }
+    const Point& point() const { return point_; }
+    const Bbox& bbox() const { return bbox_; }
+    unsigned int seed() const { return seed_; }
+
+    const Point& next() {
+        int D = bbox_.dimension();
         std::vector<double> p(D);
         for(int i=0; i<D; ++i) {
-            p[i] = bbox.min(i) + dis(gen)*(bbox.max(i)-bbox.min(i));
+            p[i] = bbox_.min(i) + distrib_(gen_)*(bbox_.max(i)-bbox_.min(i));
         }
-        point = Traits::point(p.begin(), p.end());
-        return *this;
+        return point_ = Traits::point(p.begin(), p.end());
     }
-    Random_points_in_bbox operator++(int) {
-        Random_points_in_bbox tmp = *this;
-        ++(*this);
-        return tmp;
-    }
+
+private:
+    std::mt19937 gen_;
+    std::uniform_real_distribution<> distrib_;
+    Bbox bbox_;
+    Point point_;
+    unsigned int seed_;
 };
 
 
-template<typename RandomPoint>
+template<typename RandomPointGenerator>
 struct Random_point_set {
-    typedef typename RandomPoint::Bbox   Bbox;
-    typedef typename RandomPoint::Point  value_type;
-    typedef Random_point_set             const_iterator;
-    Random_point_set(std::size_t size = 0, RandomPoint generator = {}) : generator(generator), size_(size) {}
+    typedef typename RandomPointGenerator::Point  value_type;
 
-    const value_type& operator*() const { return *generator; }
-    bool operator==(const const_iterator& it) const {
-        return size_ == it.size_;
-    }
-    bool operator!=(const const_iterator& rhs) const { return !(*this == rhs); }
-    const_iterator operator++() { --size_; ++generator; return *this; }
+    template<typename... Args>
+    Random_point_set(std::size_t size, Args&&... args) : size_(size), generator_(std::forward<Args>(args)...) {}
+    Random_point_set(std::size_t size, RandomPointGenerator& generator) : size_(size), generator_(generator) {}
 
-    const const_iterator& begin() const { return *this; }
-    const_iterator end  () const { return const_iterator(0    , generator); }
+    struct const_iterator {
+        const_iterator(RandomPointGenerator& generator, std::size_t remaining) : generator_(generator), remaining_(remaining) {
+            generator.next();
+        }
+
+        value_type operator*() const { return generator_.point(); }
+        bool operator==(const const_iterator& it) const {
+            return remaining_ == it.remaining_ && &generator_ == &it.generator_ ;
+        }
+
+        bool operator!=(const const_iterator& it) const { return !(*this == it); }
+        const_iterator operator++() { generator_.next(); --remaining_; return *this; }
+
+    private :
+        RandomPointGenerator& generator_;
+        std::size_t remaining_;
+    };
+
+    const_iterator begin() const { generator_.reset(); return const_iterator(generator_, size_); }
+    const_iterator end  () const { return const_iterator(generator_, 0); }
     std::size_t size() const { return size_; }
 
-    const Bbox& bbox() const { return generator.bbox; }
+    const RandomPointGenerator& generator() const { return generator_; }
+    unsigned int seed() const { return generator_.seed(); }
 
-    RandomPoint generator;
+private:
+    mutable RandomPointGenerator generator_;
     std::size_t size_;
 };
 
 /// specialization for Random_point_sets
-template<typename RandomPoint>
-struct Point_set_traits<Random_point_set<RandomPoint>>
+template<typename RandomPointGenerator>
+struct Point_set_traits<Random_point_set<RandomPointGenerator>>
 {
-    typedef Random_point_set<RandomPoint>     PointSet;
+    typedef Random_point_set<RandomPointGenerator>     PointSet;
     typedef typename PointSet::value_type     Point;
-    typedef typename PointSet::iterator                iterator;
-    typedef typename PointSet::const_iterator          const_iterator;
+    typedef typename PointSet::const_iterator iterator;
+    typedef typename PointSet::const_iterator const_iterator;
 
     static std::size_t size(const PointSet& ps) { return ps.size(); }
-    static const Point& point(const PointSet& ps, const_iterator v) {
+    static Point point(const PointSet& ps, const const_iterator& v) {
         return *v;
     }
     static void clear(PointSet& ps) {}
 
     static inline std::ostream& write(std::ostream& out, const PointSet& ps) { return out << ps; }
-    static inline std::istream& read(std::istream& in, PointSet& ps) { return in >> ps; }
 };
+
+template<typename Point>
+std::ostream& operator<<(std::ostream& out, const Uniform_point_in_bbox<Point>& ps)
+{
+    return out << ps.bbox() << " " << ps.seed();
+}
+
+template<typename RandomPointGenerator>
+std::ostream& operator<<(std::ostream& out, const Random_point_set<RandomPointGenerator>& ps)
+{
+    return out << ps.generator() << " " << ps.size();
+}
 
 
 }

@@ -39,7 +39,7 @@ public:
         : id_(id),
           ps_(std::forward<Args>(args)...),
           tile_indices(index_map),
-          local_size_(0)
+          local_size_(Traits::size(ps_))
     {}
 
     inline Tile_index id() const { return id_; }

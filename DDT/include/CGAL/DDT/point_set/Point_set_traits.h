@@ -26,7 +26,7 @@ struct Point_set_traits
     static std::size_t size(const PointSet& ps) { return ps.size(); }
 
     static const Point& point(const PointSet& ps, const_iterator v) {
-        return *ps;
+        return *v;
     }
     static void clear(PointSet& ps) { ps.clear(); }
     static std::pair<iterator, bool> insert(PointSet& ps, const Point& p, const_iterator hint = {})

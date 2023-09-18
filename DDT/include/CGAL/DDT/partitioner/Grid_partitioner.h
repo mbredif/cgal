@@ -74,9 +74,9 @@ public:
     /// Computes the tile index of the given point using its approximate Cartesian coordinates
     Tile_index operator()(const Point& p) const
     {
-        std::size_t D = N.size();
+        int D = N.size();
         Tile_index id = 0;
-        for(std::size_t i=0; i<D; ++i)
+        for(int i=D-1; i>=0; --i)
         {
             double f = (approximate_cartesian_coordinate(p,i)-origin[i])*inv_step[i];
             if (f <   0  ) f=0;

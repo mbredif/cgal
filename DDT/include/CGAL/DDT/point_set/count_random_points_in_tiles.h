@@ -22,20 +22,26 @@ namespace DDT {
 template<typename RandomPoints, typename Partitioner, typename OutputIterator>
 OutputIterator count_random_points_in_tiles(RandomPoints& points, const Partitioner& part, OutputIterator out);
 
-template<typename RandomPoint, typename TileIndex, typename Triangulation, typename OutputIterator>
+template<typename Point, typename TileIndex, typename Triangulation, typename OutputIterator>
 OutputIterator count_random_points_in_tiles(
-    const Random_point_set<RandomPoint>& points,
+    const Random_point_set<Uniform_point_in_bbox<Point>>& points,
     const Grid_partitioner<TileIndex,Triangulation>& part,
     OutputIterator out)
 {
     typedef Grid_partitioner<TileIndex,Triangulation> Partitioner;
-    typedef typename Partitioner::Point               Point;
     typedef typename Partitioner::Bbox                Bbox;
     Bbox part_bbox = part.bbox();
-    Bbox points_bbox = points.bbox();
+    Bbox points_bbox = points.generator().bbox();
     CGAL_assertion( part_bbox ==  points_bbox );
-    for(TileIndex i = part.begin(); i < part.end(); ++i) {
-        *out++ = {i, points.size()/part.size()};
+    std::vector<std::size_t> counts(part.size(), 0);
+    std::mt19937 gen(points.seed());
+    std::uniform_int_distribution<> distrib(0, part.size()-1);
+    for(std::size_t i = 0; i < points.size(); ++i) {
+        ++counts[distrib(gen)];
+    }
+    std::size_t i = 0;
+    for(TileIndex id = part.begin(); id < part.end(); ++id, ++i) {
+        *out++ = {id, counts[i]};
     }
     return out;
 }
