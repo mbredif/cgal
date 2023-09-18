@@ -6,11 +6,9 @@
 #include <CGAL/DDT/serializer/VRT_file_serializer.h>
 #include <CGAL/DDT/IO/write_ply.h>
 #include <CGAL/DDT/serializer/File_serializer.h>
-#include <CGAL/DDT/partitioner/Grid_partitioner.h>
 #include <CGAL/DDT/scheduler/Sequential_scheduler.h>
-#include <CGAL/DDT/property_map/Partitioner_property_map.h>
 #include <CGAL/Distributed_triangulation.h>
-#include <CGAL/DDT/point_set/Random_points_in_bbox.h>
+#include <CGAL/make_distributed_point_set.h>
 
 template <typename T>
 bool is_euler_valid(const T& tri)
@@ -53,11 +51,10 @@ int test_traits(Scheduler& scheduler,
     typedef typename CGAL::DDT::Triangulation_traits<Triangulation>::Point Point;
     typedef CGAL::DDT::Uniform_point_in_bbox<Point> Random_point_generator;
     typedef CGAL::DDT::Random_point_set<Random_point_generator> Point_set;
-    typedef CGAL::Distributed_point_set<Point_set, CGAL::DDT::Partitioner_property_map<Point_set, Partitioner1>>  Distributed_point_set;
 
     std::cout << "== Delaunay ==" << std::endl;
     Point_set ps(NP, partitioner1.bbox(), seed);
-    Distributed_point_set points(ps, partitioner1);
+    auto points = CGAL::make_distributed_point_set(ps, partitioner1);
     Distributed_triangulation1 tri1(dim, pmap1);
     tri1.insert(points, scheduler);
     if(!tri1.is_valid())

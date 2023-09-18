@@ -3,12 +3,11 @@
 
 #define CGAL_DEBUG_DDT
 
+#include <CGAL/make_distributed_point_set.h>
 #include <CGAL/Distributed_triangulation.h>
 #include <CGAL/DDT/serializer/VRT_file_serializer.h>
 #include <CGAL/DDT/serializer/PVTU_file_serializer.h>
 #include <CGAL/DDT/serializer/File_serializer.h>
-#include <CGAL/DDT/property_map/Partitioner_property_map.h>
-#include <CGAL/DDT/point_set/Random_points_in_bbox.h>
 #include <CGAL/DDT/IO/write_ply.h>
 #include <boost/program_options.hpp>
 #include "logging.h"
@@ -24,13 +23,11 @@ template<
 
 int DDT_demo(int argc, char **argv)
 {
-  typedef typename Partitioner::Point Point;
-  typedef CGAL::DDT::Kernel_traits<Point> Traits;
-  typedef typename Traits::Bbox Bbox;
-  typedef CGAL::DDT::Uniform_point_in_bbox<Point> Random_point_generator;
+  typedef typename Partitioner::Point                                                   Point;
+  typedef CGAL::DDT::Kernel_traits<Point>                                               Traits;
+  typedef typename Traits::Bbox                                                         Bbox;
   typedef CGAL::Distributed_triangulation<Triangulation, TileIndexProperty, Serializer> Distributed_triangulation;
-  typedef CGAL::DDT::Random_point_set<Random_point_generator> Point_set;
-  typedef CGAL::Distributed_point_set<Point_set, CGAL::DDT::Partitioner_property_map<Point_set, Partitioner>>  Distributed_point_set;
+  typedef CGAL::DDT::Random_point_set<CGAL::DDT::Uniform_point_in_bbox<Point>>          Point_set;
 
   int NP, loglevel, max_concurrency, max_number_of_tiles;
   std::vector<int> NT;
@@ -127,7 +124,7 @@ int DDT_demo(int argc, char **argv)
     CGAL::DDT::logging<> log("--- Overall --> ", loglevel);
     log.step("Random_points   ");
     Point_set ps(NP, bbox, seed);
-    Distributed_point_set points(ps, partitioner);
+    auto points = CGAL::make_distributed_point_set(ps, partitioner);
 
     log.step("insertion       ");
     count = tri.insert(points, scheduler);

@@ -16,7 +16,6 @@
 #include <CGAL/DDT/Tile_point_set.h>
 #include <CGAL/DDT/serializer/No_serializer.h>
 #include <CGAL/DDT/point_set/No_tile_points.h>
-#include <CGAL/DDT/point_set/count_random_points_in_tiles.h>
 
 namespace CGAL {
 
@@ -42,12 +41,6 @@ struct Distributed_point_set {
     typedef typename Container::key_type key_type;
     typedef typename Container::const_iterator const_iterator;
     typedef typename Container::node_type node_type;
-
-    template<typename P>
-    void push_back(P&& value) {
-        key_type key = value.first;
-        std::move(value.second.begin(), value.second.end(), std::back_inserter(tiles[key]));
-    }
 
     void clear() { tiles.clear(); }
     mapped_type& operator[](key_type key) { return tiles[key]; }
@@ -79,8 +72,8 @@ struct Distributed_point_set {
 
     Distributed_point_set(TileIndexProperty tile_indices = {}) : tile_indices(tile_indices) {}
 
-    template<typename Iterator, typename Partitioner>
-    Distributed_point_set(Iterator it, std::size_t size, Partitioner& part) : tile_indices() {
+    template<typename PointIterator, typename Partitioner>
+    Distributed_point_set(PointIterator it, std::size_t size, Partitioner& part) : tile_indices() {
         for(std::size_t i = 0; i < size; ++i, ++it) {
             Point p = *it;
             Tile_index id = part(p);
@@ -88,9 +81,9 @@ struct Distributed_point_set {
         }
     }
 
-    template<typename Iterator, typename Partitioner>
-    Distributed_point_set(Iterator begin, Iterator end, Partitioner& part) : tile_indices() {
-        for(Iterator it = begin; it != end; ++it) {
+    template<typename PointIterator, typename Partitioner>
+    Distributed_point_set(PointIterator begin, PointIterator end, Partitioner& part) : tile_indices() {
+        for(PointIterator it = begin; it != end; ++it) {
             Point p = *it;
             Tile_index id = part(p);
             insert(p, id, id);
@@ -102,19 +95,6 @@ struct Distributed_point_set {
         for(PointSetIterator ps = begin; ps != end; ++ps, ++id)
             try_emplace(id, id, *ps);
     }
-
-    template<typename RandomPoint, typename Partitioner>
-    Distributed_point_set(const CGAL::DDT::Random_point_set<RandomPoint>& ps, Partitioner& part) : tile_indices(part) {
-        std::vector<std::pair<Tile_index, std::size_t>> counts;
-        count_random_points_in_tiles(ps, part, std::back_inserter(counts));
-        for(auto c : counts)
-        {
-            Tile_index id = c.first;
-            unsigned int seed = ps.seed() + std::hash<Tile_index>{}(id);
-            try_emplace(id, c.second, part.bbox(id), seed);
-        }
-    }
-
 
     TileIndexProperty tile_indices;
     Container tiles;

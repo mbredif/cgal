@@ -40,13 +40,13 @@ The Distributed Delaunay Triangulation (DDT) package, ....
 - `Serializer`
 
 \cgalCRPSection{Classes}
-- `CGAL::Distributed_point_set<TileIndex,Point,PointSerializer>`
-- `CGAL::Distributed_triangulation<TileContainer>`
+- `CGAL::Distributed_point_set<PointSet,TileIndexProperty,Serializer>`
+- `CGAL::Distributed_triangulation<Triangulation,TileIndexProperty,Serializer>`
 
 \cgalCRPSection{%Scheduler Classes}
 - `CGAL::DDT::Sequential_scheduler`
 - `CGAL::DDT::TBB_scheduler`
-- `CGAL::DDT::MPI_scheduler` (wip)
+- `CGAL::DDT::MPI_scheduler`
 
 \cgalCRPSection{%Partitioner Classes}
 - `CGAL::DDT::Grid_partitioner`
