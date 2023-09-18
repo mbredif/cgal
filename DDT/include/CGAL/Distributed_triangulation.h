@@ -759,9 +759,9 @@ public:
     Statistics& statistics() { return statistics_; }
 
     Container tiles;
-    TileIndexProperty tile_indices;
 
-    private:
+private:
+    TileIndexProperty tile_indices;
     Statistics statistics_;
     int maximal_dimension_;
     Tile_index root = {};

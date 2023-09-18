@@ -15,7 +15,7 @@
 #include <map>
 #include <CGAL/DDT/Tile_point_set.h>
 #include <CGAL/DDT/serializer/No_serializer.h>
-#include <CGAL/DDT/point_set/No_tile_points.h>
+#include <CGAL/DDT/Tile_container.h>
 
 namespace CGAL {
 
@@ -33,7 +33,12 @@ struct Distributed_point_set {
     using Point                = typename Traits::Point;
     using Tile_index           = typename TileIndexProperty::value_type;
 
-    typedef std::map<Tile_index, Tile_point_set> Container;
+    using AssociativeContainer = std::map<Tile_index, Tile_point_set>; // unordered_map is not suitable as its iterators may get invalidated by try_emplace
+    using Container = std::conditional_t<
+        std::is_same_v<Serializer, CGAL::DDT::No_serializer>,              // No serialization ?
+        AssociativeContainer ,                                             // y: tiles are kept in memory
+        CGAL::DDT::Tile_container<AssociativeContainer, Serializer> >;     // n: using serialization and a tile container
+
     typedef typename Container::iterator iterator;
     typedef typename Container::value_type value_type;
     typedef typename Container::mapped_type mapped_type;
@@ -70,7 +75,12 @@ struct Distributed_point_set {
         try_emplace(tid).first->second.insert(point, id);
     }
 
-    Distributed_point_set(TileIndexProperty tile_indices = {}) : tile_indices(tile_indices) {}
+    template<typename... Args>
+    Distributed_point_set(TileIndexProperty tile_indices = {}, Args&&... args)
+    :   tiles(std::forward<Args>(args)...),
+        tile_indices(tile_indices),
+        size_(0)
+    {}
 
     template<typename PointIterator, typename Partitioner>
     Distributed_point_set(PointIterator it, std::size_t size, Partitioner& part) : tile_indices() {
@@ -96,8 +106,10 @@ struct Distributed_point_set {
             try_emplace(id, id, *ps);
     }
 
-    TileIndexProperty tile_indices;
     Container tiles;
+
+private:
+    TileIndexProperty tile_indices;
     std::size_t size_;
 };
 
