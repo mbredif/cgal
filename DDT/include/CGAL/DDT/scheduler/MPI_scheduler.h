@@ -40,7 +40,6 @@ struct MPI_scheduler
 
         // Get the rank of the process
         MPI_Comm_rank(comm, &comm_rank);
-        root_rank = 0;
 
         // Get the name of the processor
         int name_len;
@@ -235,7 +234,7 @@ struct MPI_scheduler
              typename Transform,
              typename OutputIterator3,
              typename... Args2>
-    OutputIterator3 range_transform(InputIterator1 first1, InputIterator1 last1, Container2& c2, Transform transform, OutputIterator3 out3, int tag, Args2&&... args2)
+    OutputIterator3 range_transform(InputIterator1 first1, InputIterator1 last1, Container2& c2, Transform transform, OutputIterator3 out3, Args2&&... args2)
     {
         typedef typename std::iterator_traits<InputIterator1>::value_type value_type1;
         typedef typename value_type1::first_type    key_type;
@@ -246,7 +245,7 @@ struct MPI_scheduler
             std::vector<value_type1> v1;
             std::move(first1, last1, std::back_inserter(v1));
             if (!v1.empty())
-                issend(r1, tag, v1);
+                issend(r1, v1);
             return out3;
         }
 
@@ -263,16 +262,16 @@ struct MPI_scheduler
 
 
     template<typename T>
-    void issend(int dest, int tag, const T& value) {
-        CGAL_DDT_TRACE2(*this, "PERF", "issend", 0, "B", dest, dest, tag, tag);
+    void issend(int dest, const T& value) {
+        CGAL_DDT_TRACE1(*this, "PERF", "issend", 0, "B", dest, dest);
         std::ostringstream oss;
         write(oss, value);
         int sendcount = oss.str().size();
         MPI_Request request;
-        int success1 = MPI_Issend(&sendcount, 1, MPI_INT, dest, tag, comm, &request);
+        int success1 = MPI_Issend(&sendcount, 1, MPI_INT, dest, size_tag, comm, &request);
         CGAL_assertion(success1 == MPI_SUCCESS);
         std::string& s = req_buf.emplace_back(std::move(oss.str()));
-        int success2 = MPI_Issend(s.data(), sendcount, MPI_CHAR, dest, tag, comm, &request);
+        int success2 = MPI_Issend(s.data(), sendcount, MPI_CHAR, dest, value_tag, comm, &request);
         CGAL_assertion(success2 == MPI_SUCCESS);
         req_value.push_back(request);
         ++req_send[dest];
@@ -280,13 +279,13 @@ struct MPI_scheduler
     }
 
     template<typename OutputValue, typename OutputIterator>
-    OutputIterator recv(int source, int tag, OutputIterator out) {
-        CGAL_DDT_TRACE2(*this, "PERF", "recv", 0, "B", source, source, tag, tag);
+    OutputIterator recv(int source, OutputIterator out) {
+        CGAL_DDT_TRACE1(*this, "PERF", "recv", 0, "B", source, source);
         int recvcount;
-        int success1 = MPI_Recv(&recvcount, 1, MPI_INT, source, tag, comm, MPI_STATUSES_IGNORE);
+        int success1 = MPI_Recv(&recvcount, 1, MPI_INT, source, size_tag, comm, MPI_STATUSES_IGNORE);
         CGAL_assertion(success1 == MPI_SUCCESS);
         std::vector<char> buf(recvcount+1, 0);
-        int success2 = MPI_Recv(buf.data(), recvcount, MPI_CHAR, source, tag, comm, MPI_STATUSES_IGNORE);
+        int success2 = MPI_Recv(buf.data(), recvcount, MPI_CHAR, source, value_tag, comm, MPI_STATUSES_IGNORE);
         CGAL_assertion(success2 == MPI_SUCCESS);
         CGAL_DDT_TRACE1(*this, "PERF", "recv", 0, "E", bytes, recvcount);
         CGAL_DDT_TRACE1(*this, "MPI", "deserialize", "generic_work", "B", bytes, recvcount);
@@ -297,17 +296,17 @@ struct MPI_scheduler
 
 
     template<typename OutputValue, typename OutputIterator>
-    OutputIterator iprobe_recv(int source, int tag, OutputIterator out)
+    OutputIterator poll(int source, OutputIterator out)
     {
         int flag;
         MPI_Status status;
-        int success = MPI_Iprobe(source, tag, comm, &flag, &status);
+        int success = MPI_Iprobe(source, value_tag, comm, &flag, &status);
         CGAL_assertion(success == MPI_SUCCESS);
         while(flag)
         {
-            out = recv<OutputValue>(status.MPI_SOURCE, status.MPI_TAG, out);
+            out = recv<OutputValue>(status.MPI_SOURCE, out);
             ++req_recv;
-            MPI_Iprobe(source, tag, comm, &flag, &status);
+            MPI_Iprobe(source, value_tag, comm, &flag, &status);
         }
         return out;
     }
@@ -371,8 +370,6 @@ struct MPI_scheduler
             if(is_local(it1->first))
                 keys1.insert(it1->first);
 
-        int value_tag = 0;
-
         inserter3 out3 = std::inserter(c3, c3.begin());
 
         req_send.assign(comm_size, 0);
@@ -383,14 +380,14 @@ struct MPI_scheduler
         MPI_Request all_done_request = MPI_REQUEST_NULL;
         bool all_done = false, done = false;
         do {
-            out3 = iprobe_recv<value_type3>(MPI_ANY_SOURCE, value_tag, out3);
+            out3 = poll<value_type3>(MPI_ANY_SOURCE, out3);
             while(!(c3.empty() && keys1.empty())) {
                 if (c3.empty()) {
                     typename std::set<key_type1>::iterator it = keys1.begin();
                     key_type1 k = *it;
                     std::pair<iterator1,iterator1> range1 = c1.equal_range(k);
                     keys1.erase(it);
-                    out3 = range_transform(range1.first, range1.second, c2, transform, out3, value_tag, std::forward<Args2>(args2)...);
+                    out3 = range_transform(range1.first, range1.second, c2, transform, out3, std::forward<Args2>(args2)...);
 
                 } else {
                     iterator3 it = c3.begin();
@@ -403,10 +400,10 @@ struct MPI_scheduler
                     c3.erase(range3.first, range3.second);
                     out3 = std::inserter(c3, c3.begin());
 
-                    out3 = range_transform(v3.begin(), v3.end(), c2, transform, out3, value_tag, std::forward<Args2>(args2)...);
+                    out3 = range_transform(v3.begin(), v3.end(), c2, transform, out3, std::forward<Args2>(args2)...);
                 }
                 test_some();
-                out3 = iprobe_recv<value_type3>(MPI_ANY_SOURCE, value_tag, out3);
+                out3 = poll<value_type3>(MPI_ANY_SOURCE, out3);
 
             } // while(!(c3.empty() && keys1.empty()))
 
@@ -453,13 +450,16 @@ struct MPI_scheduler
 private:
     MPI_Comm comm;
     int comm_size;
-    int comm_rank, root_rank;
+    int comm_rank;
     int pid;
     char processor_name[MPI_MAX_PROCESSOR_NAME];
     std::vector<MPI_Request> req_value;
     std::vector<std::string> req_buf;
     std::vector<int> req_send;
     int req_recv;
+    static const int root_rank = 0;
+    static const int size_tag = 1;
+    static const int value_tag = 2;
 
 #ifdef CGAL_DDT_TRACING
 public:
