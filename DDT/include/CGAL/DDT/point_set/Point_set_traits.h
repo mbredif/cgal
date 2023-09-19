@@ -12,6 +12,8 @@
 #ifndef CGAL_DDT_POINT_SET_TRAITS_H
 #define CGAL_DDT_POINT_SET_TRAITS_H
 
+#include <CGAL/IO/io.h>
+
 namespace CGAL {
 namespace DDT {
 
@@ -37,7 +39,7 @@ struct Point_set_traits
     static inline std::ostream& write(std::ostream& out, const PointSet& ps) {
         out << ps.size() << " ";
         for(auto it = ps.begin(); it != ps.end(); ++it)
-            out << CGAL::IO::serialize(*it) << " ";
+            out << IO::serialize(*it) << " ";
         return out;
     }
 
@@ -77,7 +79,7 @@ struct Point_set_traits<PointSet, std::enable_if_t<std::is_default_constructible
     static inline std::ostream& write(std::ostream& out, const PointSet& ps) {
         out << ps.size() << " ";
         for(auto it = ps.begin(); it != ps.end(); ++it)
-            out << it->first << " " << CGAL::IO::serialize(it->second) << " ";
+            out << it->first << " " << IO::serialize(it->second) << " ";
         return out;
     }
 
