@@ -68,6 +68,7 @@ auto make_distributed_point_set(
     DDT::Impl::count_random_points_in_tiles(points, partitioner, std::back_inserter(counts));
     for(auto c : counts)
     {
+        if (c.second == 0) continue; // skip empty tiles
         TileIndex id = c.first;
         unsigned int seed = points.seed() + std::hash<TileIndex>{}(id);
         dpoints.try_emplace(id, c.second, partitioner.bbox(id), seed);

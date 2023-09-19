@@ -48,6 +48,7 @@ public:
     inline int dimension() const { return Traits::dimension(ps_); }
     inline const_iterator begin() const { return std::begin(ps_); }
     inline const_iterator end  () const { return std::end  (ps_); }
+    inline bool empty() const { return std::empty(ps_); }
 
     inline std::size_t size() const { return Traits::size(ps_); }
     inline std::size_t local_size() const { return local_size_; }
@@ -194,7 +195,7 @@ std::istream& operator>>(std::istream& in, Tile_point_set<T, Pmap>& t)
 template<class T, class Pmap>
 std::ostream& write_summary(std::ostream& out, const Tile_point_set<T, Pmap>& t)
 {
-    return out << t.local_size();
+    return out << t.size();
 }
 
 }

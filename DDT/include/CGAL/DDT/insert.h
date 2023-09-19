@@ -53,7 +53,8 @@ OutputIterator splay_tile(TileTriangulation& tri, InputIterator first, InputIter
         PointSet points(vi.first, indices);
         for(auto v : vi.second)
             points.insert(tri.point(v), tri.vertex_id(v));
-        *out++ = { vi.first, std::move(points) };
+        if(!points.empty())
+            *out++ = { vi.first, std::move(points) };
     }
     return out;
 }
@@ -85,7 +86,8 @@ OutputIterator splay_root_triangulation(TileTriangulation& tri, InputIterator be
         PointSet points(vi.first, indices);
         for(auto v : vi.second)
             points.insert(tri.point(v), tri.vertex_id(v));
-        *out++ = { vi.first, std::move(points) };
+        if (!points.empty())
+            *out++ = { vi.first, std::move(points) };
     }
     return out;
 }
@@ -117,10 +119,11 @@ void splay_stars(
                     // send the extreme points along each axis to the root tile to initialize the star splaying
                     std::vector<Vertex_index> vertices;
                     tri.get_axis_extreme_points(vertices);
-                    PointSet2 ps(root, pointset_indices2);
+                    PointSet2 points(root, pointset_indices2);
                     for(auto v : vertices)
-                        ps.insert(tri.point(v), tri.vertex_id(v));
-                    *out++ = { root, std::move(ps) };
+                        points.insert(tri.point(v), tri.vertex_id(v));
+                    if (!points.empty())
+                        *out++ = { root, std::move(points) };
                 }
                 return out;
             }

@@ -122,7 +122,7 @@ struct MPI_scheduler
         auto first = std::begin(c), end = std::end(c), last = first;
         while(first != end) {
             if (++last == end || first->first != last->first) {
-                CGAL_DDT_TRACE2(*this, "PERF", "transform", 0, "B", k, to_string(first->first), in, to_summary(first, last));
+                CGAL_DDT_TRACE1(*this, "PERF", "transform", 0, "B", in, to_summary(first, last));
                 out = transform(first, last, out);
                 CGAL_DDT_TRACE0(*this, "PERF", "transform", 0, "E");
                 first = last;
@@ -142,9 +142,9 @@ struct MPI_scheduler
         auto first = std::begin(c), end = std::end(c), last = first;
         while(first != end) {
             if (++last == end || first->first != last->first) {
-                CGAL_DDT_TRACE1(*this, "PERF", "transform", 0, "B", k, to_string(first->first));
+                CGAL_DDT_TRACE1(*this, "PERF", "transform", 0, "B", in, to_summary(first, last));
                 V val = transform(first, last);
-                CGAL_DDT_TRACE2(*this, "PERF", "transform", 0, "E", value, val, in, to_summary(first, last));
+                CGAL_DDT_TRACE2(*this, "PERF", "transform", 0, "E", value, val, inout, to_summary(first, last));
                 value = reduce(value, val);
                 first = last;
             }
@@ -169,11 +169,12 @@ struct MPI_scheduler
         std::vector<OutputValue> values;
         while(first != end) {
             if (++last == end || first->first != last->first) {
-                std::vector<OutputValue> val;
-                CGAL_DDT_TRACE2(*this, "PERF", "transform", 0, "B", k, to_string(first->first), in, to_summary(first, last));
-                auto res = transform(first, last, std::back_inserter(val));
-                CGAL_DDT_TRACE1(*this, "PERF", "transform", 0, "E", value, to_string(res.first));
-                value = reduce(value, res.first);
+                CGAL_DDT_TRACE1(*this, "PERF", "transform", 0, "B", in, to_summary(first, last));
+                auto res = transform(first, last, out);
+                V val = res.first;
+                out = res.second;
+                CGAL_DDT_TRACE2(*this, "PERF", "transform", 0, "E", value, to_summary(val), inout, to_summary(first, last));
+                value = reduce(value, val);
                 first = last;
             }
         }
@@ -195,7 +196,7 @@ struct MPI_scheduler
         auto it2 = c2.emplace(std::piecewise_construct,
             std::forward_as_tuple(k),
             std::forward_as_tuple(k, std::forward<Args2>(args2)...)).first;
-        CGAL_DDT_TRACE2(*this, "PERF", "transform", 0, "B", k, to_string(k), in, to_summary(first1, last1));
+        CGAL_DDT_TRACE1(*this, "PERF", "transform", 0, "B", in, to_summary(first1, last1));
         out3 = transform(first1, last1, it2->second, out3);
         CGAL_DDT_TRACE1(*this, "PERF", "transform", 0, "E", inout, to_summary(first1, last1));
         return out3;
@@ -253,7 +254,7 @@ struct MPI_scheduler
             std::forward_as_tuple(k),
             std::forward_as_tuple(k, std::forward<Args2>(args2)...)).first;
 
-        CGAL_DDT_TRACE2(*this, "PERF", "transform", 0, "B", k, to_string(k), in, to_summary(first1, last1));
+        CGAL_DDT_TRACE1(*this, "PERF", "transform", 0, "B", in, to_summary(first1, last1));
         out3 = transform(first1, last1, it2->second, out3);
         CGAL_DDT_TRACE1(*this, "PERF", "transform", 0, "E", inout, to_summary(first1, last1));
         return out3;
@@ -274,7 +275,7 @@ struct MPI_scheduler
         int success2 = MPI_Issend(s.data(), sendcount, MPI_CHAR, dest, value_tag, comm, &request);
         CGAL_assertion(success2 == MPI_SUCCESS);
         req_value.push_back(request);
-        ++req_send[dest];
+        req_sent_since_barrier = true;
         CGAL_DDT_TRACE2(*this, "PERF", "issend", 0, "E", bytes, sendcount, value, to_summary(value.begin(), value.end()));
     }
 
@@ -289,15 +290,16 @@ struct MPI_scheduler
         CGAL_assertion(success2 == MPI_SUCCESS);
         CGAL_DDT_TRACE1(*this, "PERF", "recv", 0, "E", bytes, recvcount);
         CGAL_DDT_TRACE1(*this, "MPI", "deserialize", "generic_work", "B", bytes, recvcount);
+        // CGAL_DDT_TRACE2(*this, "MPI", "deserialize", "generic_work", "B", bytes, recvcount, buf, to_summary(buf.data()));
         out = deserialize<OutputValue>(buf.data(), out);
         CGAL_DDT_TRACE0(*this, "MPI", "deserialize", "generic_work", "E");
         return out;
     }
 
-
     template<typename OutputValue, typename OutputIterator>
     OutputIterator poll(int source, OutputIterator out)
     {
+        test_some();
         int flag;
         MPI_Status status;
         int success = MPI_Iprobe(source, value_tag, comm, &flag, &status);
@@ -305,7 +307,6 @@ struct MPI_scheduler
         while(flag)
         {
             out = recv<OutputValue>(status.MPI_SOURCE, out);
-            ++req_recv;
             MPI_Iprobe(source, value_tag, comm, &flag, &status);
         }
         return out;
@@ -372,10 +373,7 @@ struct MPI_scheduler
 
         inserter3 out3 = std::inserter(c3, c3.begin());
 
-        req_send.assign(comm_size, 0);
-        std::vector<int> req_send_(comm_size, 0);
-        req_recv = 0;
-        int req_recv_ = 0;
+        req_sent_since_barrier = false;
         MPI_Request req_recv_request = MPI_REQUEST_NULL;
         MPI_Request all_done_request = MPI_REQUEST_NULL;
         bool all_done = false, done = false;
@@ -402,7 +400,6 @@ struct MPI_scheduler
 
                     out3 = range_transform(v3.begin(), v3.end(), c2, transform, out3, std::forward<Args2>(args2)...);
                 }
-                test_some();
                 out3 = poll<value_type3>(MPI_ANY_SOURCE, out3);
 
             } // while(!(c3.empty() && keys1.empty()))
@@ -410,26 +407,16 @@ struct MPI_scheduler
             int flag, success;
             if (all_done_request == MPI_REQUEST_NULL) {
                 if (req_recv_request == MPI_REQUEST_NULL) {
-                    // prevent overflow : req_send stores the counts since the start of the last MPI_Ireduce_scatter_block
-                    std::swap(req_send, req_send_);
-                    req_send.assign(comm_size, 0);
-                    CGAL_DDT_TRACE1(*this, "MPI", "MPI_Ireduce_scatter_block", "generic_work", "B", send_, to_summary(req_send_.begin(), req_send_.end()));
-                    MPI_Ireduce_scatter_block(req_send_.data(), &req_recv_, 1, MPI_INT, MPI_SUM, comm, &req_recv_request);
+                    req_sent_since_barrier = false;
+                    CGAL_DDT_TRACE0(*this, "MPI", "MPI_Ibarrier", "generic_work", "B");
+                    MPI_Ibarrier(comm, &req_recv_request);
                 }
 
                 success = MPI_Test(&req_recv_request, &flag, MPI_STATUSES_IGNORE);
                 CGAL_assertion(success == MPI_SUCCESS);
                 if(!flag) continue;
-                CGAL_DDT_TRACE3(*this, "MPI", "MPI_Ireduce_scatter_block", "generic_work", "E",
-                    send, to_summary(req_send.begin(), req_send.end()),
-                    recv, req_recv,
-                    recv_, req_recv_);
-
-                req_recv -= req_recv_;
-                done = req_recv == 0;
-                for(int r = 0; done && r < comm_size; ++r) {
-                    done = (req_send[r] == 0);
-                }
+                CGAL_DDT_TRACE0(*this, "MPI", "MPI_Ibarrier", "generic_work", "E");
+                done = !req_sent_since_barrier;
                 CGAL_DDT_TRACE1(*this, "MPI", "MPI_Iallreduce", "generic_work", "B", in, done);
                 success = MPI_Iallreduce(&done, &all_done, 1, MPI_CXX_BOOL, MPI_LAND, comm, &all_done_request);
                 CGAL_assertion(success == MPI_SUCCESS);
@@ -455,8 +442,7 @@ private:
     char processor_name[MPI_MAX_PROCESSOR_NAME];
     std::vector<MPI_Request> req_value;
     std::vector<std::string> req_buf;
-    std::vector<int> req_send;
-    int req_recv;
+    bool req_sent_since_barrier;
     static const int root_rank = 0;
     static const int size_tag = 1;
     static const int value_tag = 2;
@@ -546,6 +532,7 @@ private:
     template<typename OutputValue, typename OutputIterator>
     OutputIterator deserialize(std::vector<char>& recvbuf, const std::vector<int>& rdispls, OutputIterator out) {
         CGAL_DDT_TRACE1(*this, "MPI", "deserialize", "generic_work", "B", bytes, recvbuf.size());
+        // CGAL_DDT_TRACE2(*this, "MPI", "deserialize", "generic_work", "B", bytes, recvbuf.size(), buf, to_summary(recvbuf.data()));
         for(int i = 0; i < comm_size; ++i) {
             if (rdispls[i+1] == rdispls[i]) continue;
             char c = recvbuf[rdispls[i+1]];
