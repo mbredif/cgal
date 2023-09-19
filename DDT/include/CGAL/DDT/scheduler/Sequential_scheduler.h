@@ -40,17 +40,17 @@ struct Sequential_scheduler
              typename Transform>
     OutputIterator ranges_transform(Container& c, Transform transform, OutputIterator out)
     {
-        CGAL_DDT_TRACE0(*this, "PERF", "transform", "generic_work", "B");
+        CGAL_DDT_TRACE0(*this, "PERF", Type<Transform>::name, "generic_work", "B");
         auto first = std::begin(c), end = std::end(c), last = first;
         while(first != end) {
             if (++last == end || first->first != last->first) {
-                CGAL_DDT_TRACE2(*this, "PERF", "transform", 0, "B", k, to_string(first->first), in, to_summary(first, last));
+                CGAL_DDT_TRACE2(*this, "PERF", Type<Transform>::name, 0, "B", k, to_string(first->first), in, to_summary(first, last));
                 out = transform(first, last, out);
-                CGAL_DDT_TRACE0(*this, "PERF", "transform", 0, "E");
+                CGAL_DDT_TRACE0(*this, "PERF", Type<Transform>::name, 0, "E");
                 first = last;
             }
         }
-        CGAL_DDT_TRACE0(*this, "PERF", "transform", "generic_work", "E");
+        CGAL_DDT_TRACE0(*this, "PERF", Type<Transform>::name, "generic_work", "E");
         return out;
     }
 
@@ -64,9 +64,9 @@ struct Sequential_scheduler
         auto first = std::begin(c), end = std::end(c), last = first;
         while(first != end) {
             if (++last == end || first->first != last->first) {
-                CGAL_DDT_TRACE2(*this, "PERF", "transform", 0, "B", k, to_string(first->first), in, to_summary(first, last));
+                CGAL_DDT_TRACE2(*this, "PERF", Type<Transform>::name, 0, "B", k, to_string(first->first), in, to_summary(first, last));
                 V val = transform(first, last);
-                CGAL_DDT_TRACE1(*this, "PERF", "transform", 0, "E", value, val);
+                CGAL_DDT_TRACE1(*this, "PERF", Type<Transform>::name, 0, "E", value, val);
                 value = reduce(value, val);
                 first = last;
             }
@@ -88,9 +88,9 @@ struct Sequential_scheduler
         auto first = std::begin(c), end = std::end(c), last = first;
         while(first != end) {
             if (++last == end || first->first != last->first) {
-                CGAL_DDT_TRACE2(*this, "PERF", "transform", 0, "B", k, to_string(first->first), in, to_summary(first, last));
+                CGAL_DDT_TRACE2(*this, "PERF", Type<Transform>::name, 0, "B", k, to_string(first->first), in, to_summary(first, last));
                 auto res = transform(first, last, out);
-                CGAL_DDT_TRACE1(*this, "PERF", "transform", 0, "E", value, to_string(res.first));
+                CGAL_DDT_TRACE1(*this, "PERF", Type<Transform>::name, 0, "E", value, to_string(res.first));
                 value = reduce(value, res.first);
                 out = res.second;
                 first = last;
@@ -114,9 +114,9 @@ struct Sequential_scheduler
             std::forward_as_tuple(k),
             std::forward_as_tuple(k, std::forward<Args2>(args2)...)).first;
         std::vector<OutputValue3> v3;
-        CGAL_DDT_TRACE2(*this, "PERF", "transform", 0, "B", k, to_string(k), in, to_summary(first1, last1));
+        CGAL_DDT_TRACE2(*this, "PERF", Type<Transform>::name, 0, "B", k, to_string(k), in, to_summary(first1, last1));
         transform(first1, last1, it2->second, std::back_inserter(v3));
-        CGAL_DDT_TRACE2(*this, "PERF", "transform", 0, "E", inout, to_summary(first1, last1), out, to_summary(v3.begin(), v3.end()));
+        CGAL_DDT_TRACE2(*this, "PERF", Type<Transform>::name, 0, "E", inout, to_summary(first1, last1), out, to_summary(v3.begin(), v3.end()));
         return std::move(v3.begin(), v3.end(), out3);
     }
 
@@ -128,7 +128,7 @@ struct Sequential_scheduler
              typename... Args2>
     OutputIterator3 ranges_transform(Container1& c1, Container2& c2, Transform transform, OutputIterator3 out3, Args2&&... args2)
     {
-        CGAL_DDT_TRACE0(*this, "PERF", "transform", "generic_work", "B");
+        CGAL_DDT_TRACE0(*this, "PERF", Type<Transform>::name, "generic_work", "B");
         auto first1 = std::begin(c1), end1 = std::end(c1), last1 = first1;
         while(first1 != end1) {
             if (++last1 == end1 || first1->first != last1->first) {
@@ -136,7 +136,7 @@ struct Sequential_scheduler
                 first1 = last1;
             }
         }
-        CGAL_DDT_TRACE0(*this, "PERF", "transform", "generic_work", "E");
+        CGAL_DDT_TRACE0(*this, "PERF", Type<Transform>::name, "generic_work", "E");
         return out3;
     }
 
@@ -166,9 +166,9 @@ struct Sequential_scheduler
                         std::forward_as_tuple(k),
                         std::forward_as_tuple(k, std::forward<Args2>(args2)...)).first;
                     std::vector<value_type3> v3;
-                    CGAL_DDT_TRACE2(*this, "PERF", "transform", 0, "B", k, to_string(k), in, to_summary(first3, last3));
+                    CGAL_DDT_TRACE2(*this, "PERF", Type<Transform>::name, 0, "B", k, to_string(k), in, to_summary(first3, last3));
                     transform(first3, last3, it2->second, std::back_inserter(v3));
-                    CGAL_DDT_TRACE2(*this, "PERF", "transform", 0, "E", inout, to_summary(first3, last3), out, to_summary(v3.begin(), v3.end()));
+                    CGAL_DDT_TRACE2(*this, "PERF", Type<Transform>::name, 0, "E", inout, to_summary(first3, last3), out, to_summary(v3.begin(), v3.end()));
                     c3.erase(first3, last3);
                     std::move(v3.begin(), v3.end(), std::inserter(c3, c3.begin()));
                 }

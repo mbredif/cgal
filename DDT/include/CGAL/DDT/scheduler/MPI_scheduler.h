@@ -118,17 +118,17 @@ struct MPI_scheduler
              typename Transform>
     OutputIterator ranges_transform(Container& c, Transform transform, OutputIterator out)
     {
-        CGAL_DDT_TRACE0(*this, "PERF", "transform", "generic_work", "B");
+        CGAL_DDT_TRACE0(*this, "PERF", Type<Transform>::name, "generic_work", "B");
         auto first = std::begin(c), end = std::end(c), last = first;
         while(first != end) {
             if (++last == end || first->first != last->first) {
-                CGAL_DDT_TRACE1(*this, "PERF", "transform", 0, "B", in, to_summary(first, last));
+                CGAL_DDT_TRACE1(*this, "PERF", Type<Transform>::name, 0, "B", in, to_summary(first, last));
                 out = transform(first, last, out);
-                CGAL_DDT_TRACE0(*this, "PERF", "transform", 0, "E");
+                CGAL_DDT_TRACE0(*this, "PERF", Type<Transform>::name, 0, "E");
                 first = last;
             }
         }
-        CGAL_DDT_TRACE0(*this, "PERF", "transform", "generic_work", "E");
+        CGAL_DDT_TRACE0(*this, "PERF", Type<Transform>::name, "generic_work", "E");
         return out;
     }
 
@@ -142,9 +142,9 @@ struct MPI_scheduler
         auto first = std::begin(c), end = std::end(c), last = first;
         while(first != end) {
             if (++last == end || first->first != last->first) {
-                CGAL_DDT_TRACE1(*this, "PERF", "transform", 0, "B", in, to_summary(first, last));
+                CGAL_DDT_TRACE1(*this, "PERF", Type<Transform>::name, 0, "B", in, to_summary(first, last));
                 V val = transform(first, last);
-                CGAL_DDT_TRACE2(*this, "PERF", "transform", 0, "E", value, val, inout, to_summary(first, last));
+                CGAL_DDT_TRACE2(*this, "PERF", Type<Transform>::name, 0, "E", value, val, inout, to_summary(first, last));
                 value = reduce(value, val);
                 first = last;
             }
@@ -169,11 +169,11 @@ struct MPI_scheduler
         std::vector<OutputValue> values;
         while(first != end) {
             if (++last == end || first->first != last->first) {
-                CGAL_DDT_TRACE1(*this, "PERF", "transform", 0, "B", in, to_summary(first, last));
+                CGAL_DDT_TRACE1(*this, "PERF", Type<Transform>::name, 0, "B", in, to_summary(first, last));
                 auto res = transform(first, last, out);
                 V val = res.first;
                 out = res.second;
-                CGAL_DDT_TRACE2(*this, "PERF", "transform", 0, "E", value, to_summary(val), inout, to_summary(first, last));
+                CGAL_DDT_TRACE2(*this, "PERF", Type<Transform>::name, 0, "E", value, to_summary(val), inout, to_summary(first, last));
                 value = reduce(value, val);
                 first = last;
             }
@@ -196,9 +196,9 @@ struct MPI_scheduler
         auto it2 = c2.emplace(std::piecewise_construct,
             std::forward_as_tuple(k),
             std::forward_as_tuple(k, std::forward<Args2>(args2)...)).first;
-        CGAL_DDT_TRACE1(*this, "PERF", "transform", 0, "B", in, to_summary(first1, last1));
+        CGAL_DDT_TRACE1(*this, "PERF", Type<Transform>::name, 0, "B", in, to_summary(first1, last1));
         out3 = transform(first1, last1, it2->second, out3);
-        CGAL_DDT_TRACE1(*this, "PERF", "transform", 0, "E", inout, to_summary(first1, last1));
+        CGAL_DDT_TRACE1(*this, "PERF", Type<Transform>::name, 0, "E", inout, to_summary(first1, last1));
         return out3;
     }
 
@@ -212,7 +212,7 @@ struct MPI_scheduler
     {
         std::vector<OutputValue3> v3;
         auto first1 = std::begin(c1), end1 = std::end(c1), last1 = first1;
-        CGAL_DDT_TRACE1(*this, "PERF", "transform", "generic_work", "B", in, to_summary(first1, last1));
+        CGAL_DDT_TRACE1(*this, "PERF", Type<Transform>::name, "generic_work", "B", in, to_summary(first1, last1));
         while(first1 != end1) {
             if (++last1 == end1 || first1->first != last1->first) {
                 if(is_local(first1->first))
@@ -220,7 +220,7 @@ struct MPI_scheduler
                 first1 = last1;
             }
         }
-        CGAL_DDT_TRACE2(*this, "PERF", "transform", "generic_work", "E", inout, to_summary(first1, last1), out, to_summary(v3.begin(), v3.end()));
+        CGAL_DDT_TRACE2(*this, "PERF", Type<Transform>::name, "generic_work", "E", inout, to_summary(first1, last1), out, to_summary(v3.begin(), v3.end()));
         CGAL_DDT_TRACE1(*this, "MPI", "all_to_all", "generic_work", "B", in, to_summary(v3.begin(), v3.end()));
         typedef std::remove_const_t<typename OutputValue3::first_type > first_type;
         typedef std::remove_const_t<typename OutputValue3::second_type> second_type;
@@ -254,9 +254,10 @@ struct MPI_scheduler
             std::forward_as_tuple(k),
             std::forward_as_tuple(k, std::forward<Args2>(args2)...)).first;
 
-        CGAL_DDT_TRACE1(*this, "PERF", "transform", 0, "B", in, to_summary(first1, last1));
+
+        CGAL_DDT_TRACE1(*this, "PERF", Type<Transform>::name, 0, "B", in, to_summary(first1, last1));
         out3 = transform(first1, last1, it2->second, out3);
-        CGAL_DDT_TRACE1(*this, "PERF", "transform", 0, "E", inout, to_summary(first1, last1));
+        CGAL_DDT_TRACE1(*this, "PERF", Type<Transform>::name, 0, "E", inout, to_summary(first1, last1));
         return out3;
     }
 

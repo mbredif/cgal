@@ -100,7 +100,6 @@ struct Point_set_traits<Random_point_set<RandomPointGenerator>>
     static Point point(const PointSet& ps, const const_iterator& v) {
         return *v;
     }
-    static void clear(PointSet& ps) {}
 
     static inline std::ostream& write(std::ostream& out, const PointSet& ps) { return out << ps; }
 };

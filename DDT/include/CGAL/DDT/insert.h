@@ -37,7 +37,7 @@ OutputIterator splay_tile(TileTriangulation& tri, InputIterator first, InputIter
     std::set<Vertex_index> inserted;
     for(InputIterator it = first; it != last; ++it) {
         tri.insert(it->second, inserted, true);
-        it->second.clear();
+        // it->second.clear();
         // TODO: For now, all points are inserted, disregarding memory constraints
         // if some remain, reschedule them : *out++ = { it->first, std::move(it->second) };
     }
@@ -77,7 +77,7 @@ OutputIterator splay_root_triangulation(TileTriangulation& tri, InputIterator be
             const Point& p = ps.point(v);
             inserted.push_back(tri.insert(p, id).first);
         }
-        ps.clear();
+        //ps.clear();
     }
     std::map<Tile_index, std::set<Vertex_index>> vertices;
     tri.get_finite_neighbors(inserted, vertices);
@@ -92,6 +92,37 @@ OutputIterator splay_root_triangulation(TileTriangulation& tri, InputIterator be
     return out;
 }
 
+template<typename PointSet2, typename PointIndices2, typename TileIndex>
+struct Star_splayer {
+    Star_splayer(PointIndices2 pointset_indices2, TileIndex root) : pointset_indices2(pointset_indices2), root(root) {}
+
+    TileIndex root;
+    PointIndices2 pointset_indices2;
+
+    template<typename PointSetIterator, typename TileTriangulation, typename OutputIterator>
+    OutputIterator operator() (PointSetIterator first, PointSetIterator last, TileTriangulation& tri, OutputIterator out) {
+        typedef typename TileTriangulation::Vertex_index Vertex_index;
+        if (tri.id() == root) {
+           return splay_root_triangulation<PointSet2>(tri, first, last, pointset_indices2, out);
+
+        } else {
+            bool empty = tri.number_of_vertices() == 0;
+            out = splay_tile<PointSet2>(tri, first, last, pointset_indices2, out);
+            if(empty) {
+                // send the extreme points along each axis to the root tile to initialize the star splaying
+                std::vector<Vertex_index> vertices;
+                tri.get_axis_extreme_points(vertices);
+                PointSet2 points(root, pointset_indices2);
+                for(auto v : vertices)
+                    points.insert(tri.point(v), tri.vertex_id(v));
+                if (!points.empty())
+                    *out++ = { root, std::move(points) };
+            }
+            return out;
+        }
+    }
+};
+
 template<
     typename TriangulationContainer, typename TriangulationIndices,
     typename PointsetContainer1,
@@ -103,32 +134,10 @@ void splay_stars(
     PointsetContainer2& points2, PointIndices2 pointset_indices2,
     Scheduler& sch, TileIndex root, int dim)
 {
-    typedef typename TriangulationContainer::mapped_type TileTriangulation;
-    typedef typename TileTriangulation::Vertex_index Vertex_index;
     typedef typename PointsetContainer2::value_type PointSetContainerValue2;
     typedef typename PointSetContainerValue2::second_type PointSet2;
-    sch.ranges_for_each(points1, triangulations, points2,
-        [&root, &pointset_indices2](auto first, auto last, TileTriangulation& tri, auto out) {
-            if (tri.id() == root) {
-               return splay_root_triangulation<PointSet2>(tri, first, last, pointset_indices2, out);
-
-            } else {
-                bool empty = tri.number_of_vertices() == 0;
-                out = splay_tile<PointSet2>(tri, first, last, pointset_indices2, out);
-                if(empty) {
-                    // send the extreme points along each axis to the root tile to initialize the star splaying
-                    std::vector<Vertex_index> vertices;
-                    tri.get_axis_extreme_points(vertices);
-                    PointSet2 points(root, pointset_indices2);
-                    for(auto v : vertices)
-                        points.insert(tri.point(v), tri.vertex_id(v));
-                    if (!points.empty())
-                        *out++ = { root, std::move(points) };
-                }
-                return out;
-            }
-        },
-        dim, triangulation_indices);
+    Star_splayer<PointSet2, PointIndices2, TileIndex> star_splayer(pointset_indices2, root);
+    sch.ranges_for_each(points1, triangulations, points2, star_splayer, dim, triangulation_indices);
 }
 
 } // namespace impl

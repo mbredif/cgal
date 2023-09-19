@@ -13,6 +13,7 @@
 
 #ifdef CGAL_DDT_TRACING
 
+
 #define CGAL_DDT_TRACE_(sch, cat, name, cname, ph, args) \
     do { \
         using std::to_string; \
@@ -31,9 +32,32 @@
 #define CGAL_DDT_TRACE_ARG(name, value) "\"" #name "\": " << value
 #define CGAL_DDT_TRACE_LOCK(sch) std::unique_lock lock((sch).mutex);
 
+#include <boost/core/demangle.hpp>
 
 namespace CGAL {
 namespace DDT {
+
+template<typename T> struct Type {
+    static std::string name;
+    static std::string init() {
+        // demangle
+        std::string demangled = boost::core::demangle(typeid(T).name());
+        // remove template parameter lists
+        std::string basename;
+        int open = 0;
+        for(auto c: demangled) switch (c) {
+            case '<': ++open; break;
+            case '>': --open; break;
+            default: if(!open) basename += c;
+        }
+        // remove everything after the start of the first parameter list, if any, including the parenthesis
+        basename = basename.substr(0, basename.find('('));
+        // remove the leading namespaces
+        basename = basename.substr(basename.rfind(':')+1);
+        return basename;
+    }
+};
+template<typename T> std::string Type<T>::name = Type<T>::init();
 
 template<typename clock_type> struct trace_logger {
     clock_type t0;

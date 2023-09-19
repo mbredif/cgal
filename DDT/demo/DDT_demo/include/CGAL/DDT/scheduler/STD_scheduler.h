@@ -50,7 +50,7 @@ struct STD_scheduler
              typename OutputIterator>
     OutputIterator ranges_transform(Container& c, Transform transform, OutputIterator out)
     {
-        CGAL_DDT_TRACE0(*this, "PERF", "transform", "generic_work", "B");
+        CGAL_DDT_TRACE0(*this, "PERF", Type<Transform>::name, "generic_work", "B");
         typedef typename Container::key_type key_type;
         std::vector<key_type> keys;
         get_unique_keys(c, keys);
@@ -58,16 +58,16 @@ struct STD_scheduler
         std::for_each(policy, keys.begin(), keys.end(), [this, &c, &transform, &out](key_type k){
                 auto range = c.equal_range(k);
                 std::vector<OutputValue> output;
-                CGAL_DDT_TRACE1_LOCK(*this, "PERF", "transform", 0, "B", k, to_string(k));
+                CGAL_DDT_TRACE1_LOCK(*this, "PERF", Type<Transform>::name, 0, "B", k, to_string(k));
                 transform(range.first, range.second, std::back_inserter(output));
                 std::unique_lock<std::mutex> lock(mutex);
-                CGAL_DDT_TRACE1(*this, "PERF", "transform", 0, "E", sizes, to_summary(output.begin(), output.end()));
+                CGAL_DDT_TRACE1(*this, "PERF", Type<Transform>::name, 0, "E", sizes, to_summary(output.begin(), output.end()));
                 CGAL_DDT_TRACE1(*this, "LOCK", "mutex", "bad", "B", k, to_string(k));
                 out = std::move(output.begin(), output.end(), out);
                 CGAL_DDT_TRACE0(*this, "LOCK", "mutex", "bad", "E");
         });
 
-        CGAL_DDT_TRACE0(*this, "PERF", "transform", "generic_work", "E");
+        CGAL_DDT_TRACE0(*this, "PERF", Type<Transform>::name, "generic_work", "E");
         return out;
     }
 
@@ -88,10 +88,10 @@ struct STD_scheduler
         value = std::transform_reduce(policy, keys.begin(), keys.end(), value, reduce, [this, &c, &transform, &out](key_type k){
                 auto range = c.equal_range(k);
                 std::vector<OutputValue> output;
-                CGAL_DDT_TRACE1_LOCK(*this, "PERF", "transform", 0, "B", k, to_string(k));
+                CGAL_DDT_TRACE1_LOCK(*this, "PERF", Type<Transform>::name, 0, "B", k, to_string(k));
                 auto res = transform(range.first, range.second, std::back_inserter(output));
                 std::unique_lock<std::mutex> lock(mutex);
-                CGAL_DDT_TRACE2(*this, "PERF", "transform", 0, "E", value, res.first, sizes, to_summary(output.begin(), output.end()));
+                CGAL_DDT_TRACE2(*this, "PERF", Type<Transform>::name, 0, "E", value, res.first, sizes, to_summary(output.begin(), output.end()));
                 CGAL_DDT_TRACE1(*this, "LOCK", "mutex", "bad", "B", k, to_string(k));
                 out = std::move(output.begin(), output.end(), out);
                 CGAL_DDT_TRACE0(*this, "LOCK", "mutex", "bad", "E");
@@ -115,9 +115,9 @@ struct STD_scheduler
 
         value = std::transform_reduce(policy, keys.begin(), keys.end(), value, reduce, [this, &c, &transform](key_type k){
                 auto range = c.equal_range(k);
-                CGAL_DDT_TRACE1_LOCK(*this, "PERF", "transform", 0, "B", k, to_string(k));
+                CGAL_DDT_TRACE1_LOCK(*this, "PERF", Type<Transform>::name, 0, "B", k, to_string(k));
                 V val = transform(range.first, range.second);
-                CGAL_DDT_TRACE1_LOCK(*this, "PERF", "transform", 0, "E", value, val);
+                CGAL_DDT_TRACE1_LOCK(*this, "PERF", Type<Transform>::name, 0, "E", value, val);
                 return val;
         });
 
@@ -134,7 +134,7 @@ struct STD_scheduler
     OutputIterator3
     ranges_transform(Container1& c1, Container2& c2, Transform transform, OutputIterator3 out3, Args2&&... args2)
     {
-        CGAL_DDT_TRACE0(*this, "PERF", "transform", "generic_work", "B");
+        CGAL_DDT_TRACE0(*this, "PERF", Type<Transform>::name, "generic_work", "B");
         typedef typename Container2::key_type key_type;
         std::vector<key_type> keys;
         get_unique_keys(c1, keys);
@@ -147,20 +147,20 @@ struct STD_scheduler
                     std::forward_as_tuple(k, std::forward<Args2>(args2)...)).first;
                 auto range1 = c1.equal_range(k);
                 CGAL_DDT_TRACE0(*this, "LOCK", "mutex", "bad", "E");
-                CGAL_DDT_TRACE2(*this, "PERF", "transform", 0, "B", k, to_string(k), in, to_summary(range1.first, range1.second));
+                CGAL_DDT_TRACE2(*this, "PERF", Type<Transform>::name, 0, "B", k, to_string(k), in, to_summary(range1.first, range1.second));
                 lock.unlock();
 
                 std::vector<OutputValue3> v3;
                 transform(range1.first, range1.second, it2->second, std::back_inserter(v3));
 
                 lock.lock();
-                CGAL_DDT_TRACE2(*this, "PERF", "transform", 0, "E", inout, to_summary(range1.first, range1.second), out, to_summary(v3.begin(), v3.end()));
+                CGAL_DDT_TRACE2(*this, "PERF", Type<Transform>::name, 0, "E", inout, to_summary(range1.first, range1.second), out, to_summary(v3.begin(), v3.end()));
                 CGAL_DDT_TRACE1(*this, "LOCK", "mutex", "bad", "B", k, to_string(k));
                 out3 = std::move(v3.begin(), v3.end(), out3);
                 CGAL_DDT_TRACE0(*this, "LOCK", "mutex", "bad", "E");
         });
 
-        CGAL_DDT_TRACE0(*this, "PERF", "transform", "generic_work", "E");
+        CGAL_DDT_TRACE0(*this, "PERF", Type<Transform>::name, "generic_work", "E");
         return out3;
     }
 

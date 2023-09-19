@@ -61,7 +61,6 @@ public:
         return Traits::point(ps_, v);
     }
 
-    inline void clear() { Traits::clear(ps_); }
     inline std::pair<iterator, bool> insert(const Point& p, Tile_index pid, const_iterator v = {}) {
         auto inserted = Traits::insert(ps_, p, v);
         if(inserted.second) {
