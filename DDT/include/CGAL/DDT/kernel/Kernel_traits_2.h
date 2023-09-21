@@ -71,6 +71,23 @@ inline CGAL::Bbox_2 make_bbox(const CGAL::Point_2<K>& p, const CGAL::Point_2<K>&
     return CGAL::Bbox_2(p.x(), p.y(), q.x(), q.y());
 }
 
+double measure(const CGAL::Bbox_2& b) {
+    double m = b.x_span();
+    if (m <= 0) return 0;
+    m*=b.y_span();
+    if (m <= 0) return 0;
+    return m;
+}
+
+double intersection_measure(const CGAL::Bbox_2& x, const CGAL::Bbox_2& y) {
+    double result = 1;
+    for(int i=0; i<2; ++i) {
+        result *= std::min(x.max(i), y.max(i)) -
+                  std::max(x.min(i), y.min(i));
+        if (result <= 0) return 0;
+    }
+    return result;
+}
 
 }
 }

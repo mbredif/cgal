@@ -42,6 +42,16 @@ typename Kernel_traits<Point>::Bbox make_bbox(const Point& p);
 template<typename Point>
 typename Kernel_traits<Point>::Bbox make_bbox(const Point& p, const Point& q);
 
+template<typename Domain>
+double measure(const Domain& d) {
+    return d.measure();
+}
+
+template<typename Domain>
+double intersection_measure(const Domain& x, const Domain& y) {
+    return x.intersection_measure(y);
+}
+
 }
 }
 

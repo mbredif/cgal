@@ -21,14 +21,18 @@ namespace DDT {
 template<typename P>
 struct Uniform_point_in_bbox
 {
-    typedef Kernel_traits<P> Traits;
+    typedef Kernel_traits<P>       Traits;
     typedef typename Traits::Point Point;
     typedef typename Traits::Bbox  Bbox;
+    typedef Bbox                   Domain;
+
+
     Uniform_point_in_bbox(const Bbox bbox, unsigned int seed) : bbox_(bbox), distrib_(), gen_(seed), seed_(seed) {}
 
     void reset() { gen_.seed(seed_); }
     const Point& point() const { return point_; }
     const Bbox& bbox() const { return bbox_; }
+    const Domain& domain() const { return bbox_; }
     unsigned int seed() const { return seed_; }
 
     const Point& next() {

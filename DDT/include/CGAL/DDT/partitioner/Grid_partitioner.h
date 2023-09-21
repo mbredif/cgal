@@ -30,6 +30,7 @@ public:
     typedef TileIndex Tile_index;
     typedef typename Traits::Point Point;
     typedef typename Traits::Bbox Bbox;
+    typedef Bbox Domain;
     typedef typename std::vector<std::size_t>::const_iterator const_size_iterator;
 
     /// Construction with a bbox, a range of number of grid steps in each dimension, and a base tile index.
@@ -123,6 +124,8 @@ public:
             q[i] = p[i] + N[i]/inv_step[i];
         return make_bbox(Traits::point(p.begin(), p.end()), Traits::point(q.begin(), q.end()));
     }
+    Domain domain() const { return bbox(); }
+    Domain domain(Tile_index id) const { return bbox(id); }
 
 private:
     std::size_t M;

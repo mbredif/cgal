@@ -33,7 +33,7 @@ protected:
 public:
     Bbox& operator+=(const Bbox& bbox)
     {
-        assert(min_values.size() == 0 || min_values.size() == bbox.min_values.size());
+        CGAL_assertion(min_values.size() == 0 || min_values.size() == bbox.min_values.size());
         int dim = bbox.min_values.size();
         for(int i=0; i<dim; ++i)
         {
@@ -66,6 +66,25 @@ public:
     inline T& max BOOST_PREVENT_MACRO_SUBSTITUTION (int i)
     {
         return max_values[i];
+    }
+
+    inline T measure() const {
+        T result = max_values[0] - min_values[0];
+        if (result <= 0) return 0;
+        for(int i=1; i<dimension(); ++i)
+            result *= max_values[i] - min_values[i];
+        return result;
+    }
+
+    inline T intersection_measure(const Bbox& bbox) const {
+        CGAL_assertion(dimension() == bbox.dimension());
+        T result = 1;
+        for(int i=0; i<dimension(); ++i) {
+            result *= std::min(max(i), bbox.max(i)) -
+                      std::max(min(i), bbox.min(i));
+            if (result <= 0) return 0;
+        }
+        return result;
     }
 
     bool operator==(const Bbox& bbox) const {

@@ -71,6 +71,27 @@ template<typename K>
 inline CGAL::Bbox_3 make_bbox(const CGAL::Point_3<K>& p, const CGAL::Point_3<K>& q) {
     return CGAL::Bbox_3(p.x(), p.y(), p.z(), q.x(), q.y(), q.z());
 }
+
+double measure(const CGAL::Bbox_3& b) {
+    double m = b.x_span();
+    if (m <= 0) return 0;
+    m*=b.y_span();
+    if (m <= 0) return 0;
+    m*=b.z_span();
+    if (m <= 0) return 0;
+    return m;
+}
+
+double intersection_measure(const CGAL::Bbox_3& x, const CGAL::Bbox_3& y) {
+    double result = 1;
+    for(int i=0; i<3; ++i) {
+        result *= std::min(x.max(i), y.max(i)) -
+                  std::max(x.min(i), y.min(i));
+        if (result <= 0) return 0;
+    }
+    return result;
+}
+
 }
 }
 
