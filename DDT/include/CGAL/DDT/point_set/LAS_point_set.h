@@ -13,6 +13,8 @@
 #define CGAL_DDT_LAS_TILE_POINTS_H
 #include <string>
 #include <CGAL/DDT/IO/read_las.h>
+#include <CGAL/DDT/property_map/All_local_property_map.h>
+#include <CGAL/Distributed_point_set.h>
 
 namespace CGAL {
 namespace DDT {
@@ -50,6 +52,7 @@ public:
 
     LAS_point_set(Tile_index id, const std::string& fn) : filename_(fn), id_(id) {
         read_LAS_header(fn, size_, pmin_, pmax_);
+        std::cout << fn << " -> " << size_ << std::endl;
     }
     const std::string& filename() const { return filename_; }
     const std::size_t size() const { return size_; }
@@ -85,6 +88,18 @@ struct Point_set_traits<LAS_point_set<I,P>>
     }
     static void clear(PointSet& ps) { CGAL_assertion(false); }
 };
+
+/// \ingroup PkgDDTFunctions
+/// makes a distributed point set from point set uniformly generated in its its domain and a partitioner
+/// assumes that the tile domains of the partitioner are not overlaping
+template<typename Point, typename TileIndex, typename StringIterator>
+CGAL::Distributed_point_set<LAS_point_set<TileIndex, Point>, All_local_property_map<TileIndex>>
+make_distributed_LAS_point_set(TileIndex id, StringIterator begin, StringIterator end)
+{
+    CGAL::Distributed_point_set<LAS_point_set<TileIndex, Point>, All_local_property_map<TileIndex>> points;
+    for(StringIterator filename = begin; filename != end; ++filename, ++id)
+        points.try_emplace(id, id, *filename);
+}
 
 }
 }

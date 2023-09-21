@@ -3,7 +3,8 @@
 
 #define CGAL_DEBUG_DDT
 
-#include <CGAL/make_distributed_point_set.h>
+#include <CGAL/DDT/kernel/Uniform_point_in_bbox_generator.h>
+#include <CGAL/DDT/point_set/Random_point_set.h>
 #include <CGAL/Distributed_triangulation.h>
 #include <CGAL/DDT/serializer/VRT_file_serializer.h>
 #include <CGAL/DDT/serializer/PVTU_file_serializer.h>
@@ -23,17 +24,19 @@ template<
 
 int DDT_demo(int argc, char **argv)
 {
-  typedef typename Partitioner::Point                                                   Point;
-  typedef CGAL::DDT::Kernel_traits<Point>                                               Traits;
-  typedef typename Traits::Bbox                                                         Bbox;
-  typedef CGAL::Distributed_triangulation<Triangulation, TileIndexProperty, Serializer> Distributed_triangulation;
-  typedef CGAL::DDT::Random_point_set<CGAL::DDT::Uniform_point_in_bbox<Point>>          Point_set;
+  typedef typename Partitioner::Point                                                    Point;
+  typedef CGAL::DDT::Kernel_traits<Point>                                                Traits;
+  typedef typename Traits::Bbox                                                          Bbox;
+  typedef CGAL::Distributed_triangulation<Triangulation, TileIndexProperty, Serializer>  Distributed_triangulation;
+  typedef CGAL::DDT::Uniform_point_in_bbox_generator<Point>                              Point_generator;
+  typedef CGAL::DDT::Random_point_set<Point_generator>                                   Point_set;
 
   int NP, loglevel, max_concurrency, max_number_of_tiles;
   std::vector<int> NT;
   std::string vrt, ply, cgal, pvtu, ser;
   double range;
   int dimension = Traits::D;
+  srand(time(NULL));
   unsigned int seed = rand();
 
   po::options_description desc("Allowed options");
@@ -124,7 +127,7 @@ int DDT_demo(int argc, char **argv)
     CGAL::DDT::logging<> log("--- Overall --> ", loglevel);
     log.step("Random_points   ");
     Point_set ps(NP, bbox, seed);
-    auto points = CGAL::make_distributed_point_set(ps, partitioner);
+    auto points = CGAL::DDT::make_distributed_point_set(ps, partitioner);
 
     log.step("insertion       ");
     count = tri.insert(points, scheduler);

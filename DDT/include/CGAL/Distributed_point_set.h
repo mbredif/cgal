@@ -69,12 +69,6 @@ struct Distributed_point_set {
             std::forward_as_tuple(k, tile_indices, std::forward<Args>(args)...));
     }
 
-    template<typename Point, typename Tile_index>
-    void insert(const Point& point, Tile_index id, Tile_index tid)
-    {
-        try_emplace(tid).first->second.insert(point, id);
-    }
-
     template<typename... Args>
     Distributed_point_set(TileIndexProperty tile_indices = {}, Args&&... args)
     :   tiles(std::forward<Args>(args)...),
@@ -82,8 +76,14 @@ struct Distributed_point_set {
         size_(0)
     {}
 
+    template<typename Point, typename Tile_index>
+    void insert(const Point& point, Tile_index id, Tile_index tid)
+    {
+        try_emplace(tid).first->second.insert(point, id);
+    }
+
     template<typename PointIterator, typename Partitioner>
-    Distributed_point_set(PointIterator it, std::size_t size, Partitioner& part) : tile_indices() {
+    void insert(PointIterator it, std::size_t size, Partitioner& part) {
         for(std::size_t i = 0; i < size; ++i, ++it) {
             Point p = *it;
             Tile_index id = part(p);
@@ -92,18 +92,12 @@ struct Distributed_point_set {
     }
 
     template<typename PointIterator, typename Partitioner>
-    Distributed_point_set(PointIterator begin, PointIterator end, Partitioner& part) : tile_indices() {
+    void insert(PointIterator begin, PointIterator end, Partitioner& part) {
         for(PointIterator it = begin; it != end; ++it) {
             Point p = *it;
             Tile_index id = part(p);
             insert(p, id, id);
         }
-    }
-
-    template <typename PointSetIterator>
-    Distributed_point_set(Tile_index id, PointSetIterator begin, PointSetIterator end) : tile_indices() {
-        for(PointSetIterator ps = begin; ps != end; ++ps, ++id)
-            try_emplace(id, id, *ps);
     }
 
     Container tiles;

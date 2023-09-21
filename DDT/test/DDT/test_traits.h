@@ -8,7 +8,9 @@
 #include <CGAL/DDT/serializer/File_serializer.h>
 #include <CGAL/DDT/scheduler/Sequential_scheduler.h>
 #include <CGAL/Distributed_triangulation.h>
-#include <CGAL/make_distributed_point_set.h>
+#include <CGAL/DDT/kernel/Uniform_point_in_bbox_generator.h>
+#include <CGAL/DDT/partitioner/Grid_partitioner.h>
+#include <CGAL/DDT/point_set/Random_point_set.h>
 
 template <typename T>
 bool is_euler_valid(const T& tri)
@@ -47,14 +49,14 @@ int test_traits(Scheduler& scheduler,
 
     typedef CGAL::Distributed_triangulation<Triangulation, TileIndexProperty1> Distributed_triangulation1;
     typedef CGAL::Distributed_triangulation<Triangulation, TileIndexProperty2> Distributed_triangulation2;
-    typedef typename Partitioner1::Tile_index Tile_index;
+    typedef typename Partitioner1::Tile_index                              Tile_index;
     typedef typename CGAL::DDT::Triangulation_traits<Triangulation>::Point Point;
-    typedef CGAL::DDT::Uniform_point_in_bbox<Point> Random_point_generator;
-    typedef CGAL::DDT::Random_point_set<Random_point_generator> Point_set;
+    typedef CGAL::DDT::Uniform_point_in_bbox_generator<Point>              Point_generator;
+    typedef CGAL::DDT::Random_point_set<Point_generator>                   Point_set;
 
     std::cout << "== Delaunay ==" << std::endl;
     Point_set ps(NP, partitioner1.bbox(), seed);
-    auto points = CGAL::make_distributed_point_set(ps, partitioner1);
+    auto points = CGAL::DDT::make_distributed_point_set(ps, partitioner1);
     Distributed_triangulation1 tri1(dim, pmap1);
     tri1.insert(points, scheduler);
     if(!tri1.is_valid())

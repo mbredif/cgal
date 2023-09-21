@@ -39,7 +39,8 @@ int main(int argc, char **argv)
     Distributed_triangulation tri(2, {}, max_number_of_tiles, serializer);
     Scheduler scheduler;
     Random_points generator(range);
-    Distributed_point_set points(generator, number_of_points, partitioner);
+    Distributed_point_set points;
+    points.insert(generator, number_of_points, partitioner);
     tri.insert(points, scheduler);
 
     tri.write(CGAL::DDT::VRT_serializer("out/"), scheduler);

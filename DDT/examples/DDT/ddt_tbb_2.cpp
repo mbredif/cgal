@@ -37,7 +37,8 @@ int main(int argc, char **argv)
     CGAL::Bbox_2 bbox(-range, -range, range, range);
     CGAL::DDT::Grid_partitioner<Tile_index, Point> partitioner(1, bbox, number_of_tiles_per_axis);
     Random_points generator(range);
-    Distributed_point_set points(generator, number_of_points, partitioner);
+    Distributed_point_set points;
+    points.insert(generator, number_of_points, partitioner);
 
     Scheduler scheduler(threads);
 

@@ -515,13 +515,13 @@ public:
         ids.reserve(input.size());
         indices.reserve(input.size());
 
-        for(auto it = input.begin(); it != input.end(); ++it)
+        for(auto it = input.begin(); it != input.end(); ++it, ++index)
         {
             Point p = input.point(it);
             Tile_index i = input.point_id(it);
             points.push_back(p);
             ids.push_back(i);
-            indices.push_back(++index);
+            indices.push_back(index);
         }
 
         // sort spatially the points

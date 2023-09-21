@@ -80,59 +80,6 @@ public:
         Traits::remove(ps_, v);
     }
 
-    inline void spatial_sort(std::vector<std::size_t>& indices, const std::vector<Point>& points) const { Traits::spatial_sort(ps_, indices, points); }
-
-    /// \name Tile_triangulation locality tests
-    /// @{
-    /// A finite vertex is local if its tile id matches the id of the tile triangulation (tile.vertex_id(vertex) == tile.id()), otherwise, it is foreign
-    /// Simplices may be local, mixed or foreign if respectively all, some or none of their finite incident vertices are local.
-
-    /// checks if a finite vertex is local : tile.vertex_id(vertex) == tile.id()
-    inline bool vertex_is_local(const_iterator v) const { return vertex_id(v) == id(); }
-
-    /// checks if a finite vertex is foreign : tile.vertex_id(vertex) != tile.id()
-    inline bool vertex_is_foreign(const_iterator v) const { return !vertex_is_local(v); }
-
-    /// collects at most 2*D vertices which points define the bounding box of the local tile vertices
-    template <class VertexContainer>
-    void get_axis_extreme_points(VertexContainer& out) const
-    {
-        std::vector<const_iterator> vertices;
-        int D = dimension();
-        vertices.reserve(2*D);
-        const_iterator v = begin();
-        // first local point
-        for(; v != end(); ++v)
-        {
-            if (vertex_is_local(v))
-            {
-                for(int i=0; i<2*D; ++i) vertices[i] = v;
-                break;
-            }
-        }
-        if(v == end()) return; // no local points
-        // other local points
-        for(; v != end(); ++v)
-        {
-            if (vertex_is_local(v))
-            {
-                const Point& p = point(v);
-                for(int i=0; i<D; ++i)
-                {
-                    if(Traits::less_coordinate(p, point(vertices[i  ]), i)) vertices[i  ] = v;
-                    if(Traits::less_coordinate(point(vertices[i+D]), p, i)) vertices[i+D] = v;
-                }
-            }
-        }
-        // remove duplicates (O(D^2) implementation, should we bother ?)
-        for(int i=0; i<2*D; ++i)
-        {
-            int j = 0;
-            for(; j<i; ++j) if(vertices[j]==vertices[i]) break;
-            if(i==j) out.push_back(vertices[i]);
-        }
-    }
-
     template <typename PointSet, typename IndexMap, typename OutputIterator>
     int insert(const PointSet& received, IndexMap received_indices, OutputIterator out)
     {
@@ -152,21 +99,6 @@ public:
             v = inserted.first;
             if (inserted.second) *out++ = v;
         }
-    }
-
-    bool are_vertices_equal(const_iterator v, const Point_set& ps, const_iterator psv) const
-    {
-        return Traits::are_vertices_equal(ps_, v, ps.ps_, psv);
-    }
-
-    const_iterator locate_vertex(const Point& p, const_iterator hint = const_iterator()) const
-    {
-        return Traits::locate_vertex(ps_, p, hint);
-    }
-
-    const_iterator relocate_vertex(const Tile_point_set& t, const_iterator v, const_iterator hint = {}) const
-    {
-        return locate_vertex(t.point(v), hint);
     }
 
     Point_set& point_set() { return ps_; }

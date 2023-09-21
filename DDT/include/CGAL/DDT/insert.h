@@ -74,7 +74,7 @@ OutputIterator splay_root_triangulation(TileTriangulation& tri, InputIterator be
         auto& ps = it->second;
         for(auto v = ps.begin(); v != ps.end(); ++v) {
             Tile_index id = ps.point_id(v);
-            const Point& p = ps.point(v);
+            Point p = ps.point(v);
             inserted.push_back(tri.insert(p, id).first);
         }
         //ps.clear();

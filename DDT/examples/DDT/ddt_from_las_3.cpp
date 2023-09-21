@@ -10,7 +10,6 @@
 #include <CGAL/DDT/serializer/File_serializer.h>
 #include <CGAL/DDT/point_set/LAS_point_set.h>
 #include <CGAL/DDT/serializer/PVTU_file_serializer.h>
-#include <CGAL/point_generators_3.h>
 
 // types
 typedef unsigned char Tile_index;
@@ -23,9 +22,7 @@ typedef CGAL::DDT::Vertex_info_property_map<Triangulation>                   Til
 
 typedef CGAL::DDT::TBB_scheduler                                             Scheduler;
 typedef CGAL::DDT::File_serializer                                           Serializer;
-typedef CGAL::DDT::LAS_point_set<Tile_index, Point>                          Point_set;
 typedef CGAL::Distributed_triangulation<Triangulation, TileIndexProperty, Serializer> Distributed_triangulation;
-typedef CGAL::Distributed_point_set<Point_set, CGAL::DDT::All_local_property_map<Tile_index>>  Distributed_point_set;
 
 int main(int argc, char*argv[])
 {
@@ -44,7 +41,7 @@ int main(int argc, char*argv[])
     Distributed_triangulation tri(3, {}, max_number_of_tiles, serializer);
     Scheduler scheduler;
 
-    Distributed_point_set points(1, begin, end);
+    auto points = CGAL::DDT::make_distributed_LAS_point_set<Point>(1, begin, end);
 
     std::cout << "Inserting points using " << max_number_of_tiles << " tiles at most in memory" << std::endl;
     tri.insert(points, scheduler);

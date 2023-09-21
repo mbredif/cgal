@@ -97,11 +97,11 @@ struct File_points_serializer
     std::vector<Point>  points;
     std::vector<Vertex_index> vertices;
     std::size_t index = 0;
-    for(Vertex_index v = tri.vertices_begin(); v != tri.vertices_end(); ++v) {
+    for(Vertex_index v = tri.vertices_begin(); v != tri.vertices_end(); ++v, ++index) {
       if (!tri.vertex_is_infinite(v)) {
         points.push_back(tri.point(v));
         vertices.push_back(v);
-        indices.push_back(++index);
+        indices.push_back(index);
       }
     }
     tri.spatial_sort(indices, points);

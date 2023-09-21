@@ -46,6 +46,9 @@ private:
     int dim;
 }; /* end Bbox */
 
+double measure(const Bbox& d) { return 0; }
+double intersection_measure(const Bbox& x, const Bbox& y) { return 0; }
+
 /// \name Streaming
 /// @{
 std::ostream& operator<<(std::ostream& out, const Bbox& bbox) { return out; }
