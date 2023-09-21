@@ -170,10 +170,10 @@ public:
         }
 
 #ifdef CGAL_DDT_TILE_CONTAINER_VERBOSE
-		write(std::cout << std::endl << "failed ", key, key) << std::endl;
+                write(std::cout << std::endl << "failed ", key, key) << std::endl;
 #endif
-		return false;
-	}
+                return false;
+        }
 
     const Serializer& serializer() const { return serializer_; }
 

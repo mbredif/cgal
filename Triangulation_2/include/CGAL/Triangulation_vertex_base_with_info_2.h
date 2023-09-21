@@ -47,7 +47,7 @@ public:
   Triangulation_vertex_base_with_info_2(const Point & p, Face_handle c)
     : Vb(p, c) {}
 
-  
+
   Triangulation_vertex_base_with_info_2(Face_handle c)
     : Vb(c) {}
 
@@ -69,7 +69,7 @@ template < typename Info_, typename GT,
            typename Vb = Triangulation_vertex_base_2<GT> >
 std::ostream& operator<< (std::ostream& os,Triangulation_vertex_base_with_info_2<Info_,GT,Vb> & vb)
 {
-  os << static_cast<Vb&>(vb);	     
+  os << static_cast<Vb&>(vb);
   if(IO::get_mode(os) == IO::BINARY) {
       write(os, vb.info());
   } else {
@@ -78,7 +78,7 @@ std::ostream& operator<< (std::ostream& os,Triangulation_vertex_base_with_info_2
   return os;
 }
 
-  
+
 } //namespace CGAL
 
 #endif // CGAL_TRIANGULATION_VERTEX_BASE_WITH_INFO_2_H

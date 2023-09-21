@@ -119,7 +119,7 @@ It thus iterates over the  **main** simplices of each loaded tiles in turn.
 In order to iterate over each main simplex of the overall DT in parallel, the loading of the tiles should be distributed among the parallel processes, so that each process loads a non-overlaping subset of the tiles. Then each process may iterate over its main simplices using the provided operators.
 
 \subsubsection SSSection_DDT_Traits  Traits*.hpp
-	The trait classes provide glue layers that hide or adapt the API discrepancies between DT implementations, so that the rest of the code is agnostic of the exact DT implementation : CGAL 2D, CGAL 3D, CGAL nD... (there used to be a geogram trait as well!)
+        The trait classes provide glue layers that hide or adapt the API discrepancies between DT implementations, so that the rest of the code is agnostic of the exact DT implementation : CGAL 2D, CGAL 3D, CGAL nD... (there used to be a geogram trait as well!)
         See for instance the nD trait `CGAL::DDT::Triangulation_traits_d`.
 
 
@@ -150,11 +150,11 @@ This scheduler uses a thread pool (std::thread) to distribute processing among m
 Communication is implemented by a shared inbox of points, with tile ids : tile id of the point, sending tile id of the source, and receiving tile id of the message target. This inbox is in shared memory and is thus protected by mutexes, contrary to other data structures such as Delaunay triangulations, which are not shared among threads.
 
 \subsubsection SSection_DDT_SparkSchedulers Spark implementation (not available here)
-	Spark is a big data framework written in scala available on Hadoop clusters. The Spark scheduler (not released here) is thus implemented in scala and uses Spark for the message passing of serialized point sets and triangulations and the distributed execution of C++ programs that are implemented using this library : read some serialized triangulation and/or point set, perform an operation (insertion, removal, simplification...) ).
+        Spark is a big data framework written in scala available on Hadoop clusters. The Spark scheduler (not released here) is thus implemented in scala and uses Spark for the message passing of serialized point sets and triangulations and the distributed execution of C++ programs that are implemented using this library : read some serialized triangulation and/or point set, perform an operation (insertion, removal, simplification...) ).
 
 \subsubsection SSection_DDT_Extension  Extensions
--	A MPI Scheduler is not implemented yet, but it should definitely be possible, either directly from scratch or using a framework such as Bitpit
-	https://optimad.github.io/bitpit/.
+-        A MPI Scheduler is not implemented yet, but it should definitely be possible, either directly from scratch or using a framework such as Bitpit
+        https://optimad.github.io/bitpit/.
 - Schedulers could be extended to support streaming by loading and unloading tiles as needed.
 
 \section Section_DDT_algo Algorithm description
