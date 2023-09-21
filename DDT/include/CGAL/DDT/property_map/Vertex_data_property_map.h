@@ -23,7 +23,7 @@ namespace DDT {
 /// Property map that accesses the data item of a Vertex_iterator in a Triangulation.
 /// It is mutable if `T` is not `const` and non-mutable otherwise.
 ///
-/// \cgalModels `ReadWritePropertyMap`
+/// \cgalModels{ReadWritePropertyMap}
 template <typename T>
 struct Vertex_data_property_map
 {
@@ -44,7 +44,7 @@ struct Vertex_data_property_map
 /// Property map that accesses the id member of the data item of a Vertex_iterator in a Triangulation.
 /// It is mutable if `T` is not `const` and non-mutable otherwise.
 ///
-/// \cgalModels `ReadWritePropertyMap`
+/// \cgalModels{ReadWritePropertyMap}
 template <typename T>
 struct Vertex_data_id_property_map
 {

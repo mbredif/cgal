@@ -17,7 +17,7 @@ namespace DDT {
 
 /// \ingroup PkgDDTPartitionerClasses
 /// Dummy partitioner that affects all points to a single tile.
-/// \cgalModels Partitioner
+/// \cgalModels{Partitioner}
 template<typename TileIndex, typename Triangulation>
 class Const_partitioner
 {

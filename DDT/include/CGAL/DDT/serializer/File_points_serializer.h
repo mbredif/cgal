@@ -25,7 +25,7 @@ std::ostream& operator<<(std::ostream& out, const File_points_serializer& serial
 /// It contains the iostream serialization of the point set of the tile triangulation.
 /// The point set of each tile is sorted spatially before saving, so that the Delaunay triangulation could be recomputed efficiently when the tile is reloaded.
 /// This trades off decreased disk usage and bandwith for increased computations.
-/// \cgalModels Serializer
+/// \cgalModels{Serializer}
 struct File_points_serializer
 {
 

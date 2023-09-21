@@ -26,7 +26,7 @@ namespace CGAL {
 namespace DDT {
 
 /// \ingroup PkgDDTSchedulerClasses
-/// \cgalModels Scheduler
+/// \cgalModels{Scheduler}
 struct MPI_scheduler
 {
     /// constructor

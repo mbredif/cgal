@@ -20,7 +20,7 @@ namespace DDT {
 /// \ingroup PkgPropertyMapRef
 /// Property map that looks up the `first` member of the PointSet's `value_type`.
 ///
-/// \cgalModels `ReadablePropertyMap`
+/// \cgalModels{ReadablePropertyMap}
 template <typename PointSet>
 struct First_property_map
 {

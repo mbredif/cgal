@@ -19,7 +19,7 @@ namespace CGAL {
 namespace DDT {
 
 // Select the median value among the set of inserted values (counting multiplicities).
-// \cgalModels Selector
+// \cgalModels{Selector}
 template<typename T>
 class Median_selector
 {

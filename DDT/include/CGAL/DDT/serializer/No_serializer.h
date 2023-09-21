@@ -21,7 +21,7 @@ namespace DDT {
 /// This serializer is a fake serializer that fails all saving and loading requests.
 /// It should be used to disable any serialization and perform all computations in memory.
 /// That provides the fastest computation, provided enough memory is available.
-/// \cgalModels Serializer
+/// \cgalModels{Serializer}
 struct No_serializer
 {
   template<typename Tile_index> bool is_readable(Tile_index) const { return false; }

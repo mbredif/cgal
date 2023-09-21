@@ -8,11 +8,13 @@
 The concept `VertexPropertyMap` describes the requirements of a readable property map from (Triangulation, Vertex_index) pairs to Tile_indices.
 If the mapped value does not only depend on the point embedding of the vertex, then it should also be writable.
 
-\cgalHasModel `CGAL::DDT::Partitioner_property_map`
-\cgalHasModel `CGAL::DDT::Vertex_info_property_map`
-\cgalHasModel `CGAL::DDT::Vertex_data_property_map`
-\cgalHasModel `CGAL::DDT::Vertex_info_id_property_map`
-\cgalHasModel `CGAL::DDT::Vertex_data_id_property_map`
+\cgalHasModelsBegin
+\cgalHasModels{CGAL::DDT::Partitioner_property_map}
+\cgalHasModels{CGAL::DDT::Vertex_info_property_map}
+\cgalHasModels{CGAL::DDT::Vertex_data_property_map}
+\cgalHasModels{CGAL::DDT::Vertex_info_id_property_map}
+\cgalHasModels{CGAL::DDT::Vertex_data_id_property_map}
+\cgalHasModelsEnd
 
 */
 #include <boost/property_map/property_map.hpp>

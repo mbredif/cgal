@@ -20,7 +20,7 @@ namespace DDT {
 /// \ingroup PkgPropertyMapRef
 /// Property map that returns the `TileIndex` of the Tile for all its iterators.
 ///
-/// \cgalModels `ReadablePropertyMap`
+/// \cgalModels{ReadablePropertyMap}
 template <typename TileIndex>
 struct All_local_property_map
 {

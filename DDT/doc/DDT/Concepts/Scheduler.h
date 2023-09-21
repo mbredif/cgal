@@ -14,10 +14,11 @@ on all `(first,last)` ranges, as if by sequentially computing `value=reduce(valu
 
 The member functions that take a `Transform` with an `OutputIterator` argument enable function calls to return an arbitrary number of elements.
 
-\cgalHasModel `CGAL::DDT::Sequential_scheduler`
-\cgalHasModel `CGAL::DDT::TBB_scheduler`
-\cgalHasModel `CGAL::DDT::MPI_scheduler` (work in progress)
-
+\cgalHasModelsBegin
+\cgalHasModels{CGAL::DDT::Sequential_scheduler}
+\cgalHasModels{CGAL::DDT::TBB_scheduler}
+\cgalHasModels{CGAL::DDT::MPI_scheduler}
+\cgalHasModelsEnd
 */
 #include <utility> // pair
 

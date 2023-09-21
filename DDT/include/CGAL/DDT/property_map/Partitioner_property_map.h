@@ -21,7 +21,7 @@ namespace DDT {
 /// \ingroup PkgPropertyMapRef
 /// Property map that evaluates a partitioner on the vertex point.
 ///
-/// \cgalModels `ReadablePropertyMap`
+/// \cgalModels{ReadablePropertyMap}
 template <typename T, typename Partitioner>
 struct Partitioner_property_map
 {

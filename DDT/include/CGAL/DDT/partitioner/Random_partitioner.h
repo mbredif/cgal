@@ -21,7 +21,7 @@ namespace DDT {
 // \ingroup PkgDDTPartitionerClasses
 // Affects points randomly to the range of tile indices [a, b].
 // For testing purposes only (correct but bad performance)
-// \cgalModels Partitioner
+// \cgalModels{Partitioner}
 template<typename TileIndex, typename Triangulation, typename Generator = std::default_random_engine>
 class Random_partitioner
 {

@@ -21,7 +21,7 @@ namespace DDT {
 /// \ingroup PkgDDTPartitionerClasses
 /// Partitions the domain enclosed by an axis aligned bounding box using a uniform grid.
 /// The number of grid steps in each dimension may be specified independently.
-/// \cgalModels Partitioner
+/// \cgalModels{Partitioner}
 template<typename TileIndex, typename Point_>
 class Grid_partitioner
 {

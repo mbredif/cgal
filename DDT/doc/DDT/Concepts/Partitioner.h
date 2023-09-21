@@ -10,8 +10,10 @@
 \cgalConcept
 
 The concept `Partitioner` describes the requirements for the class that assigns a tile index to each point.
-\cgalHasModel `CGAL::DDT::Const_partitioner`
-\cgalHasModel `CGAL::DDT::Grid_partitioner`
+\cgalHasModelsBegin
+\cgalHasModels{CGAL::DDT::Const_partitioner}
+\cgalHasModels{CGAL::DDT::Grid_partitioner}
+\cgalHasModelsEnd
 
 */
 
