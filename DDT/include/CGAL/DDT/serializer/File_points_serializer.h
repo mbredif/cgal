@@ -101,7 +101,7 @@ struct File_points_serializer
       if (!tri.vertex_is_infinite(v)) {
         points.push_back(tri.point(v));
         vertices.push_back(v);
-        indices.push_back(index++);
+        indices.push_back(++index);
       }
     }
     tri.spatial_sort(indices, points);

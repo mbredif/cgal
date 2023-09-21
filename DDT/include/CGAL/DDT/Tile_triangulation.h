@@ -521,7 +521,7 @@ public:
             Tile_index i = input.point_id(it);
             points.push_back(p);
             ids.push_back(i);
-            indices.push_back(index++);
+            indices.push_back(++index);
         }
 
         // sort spatially the points

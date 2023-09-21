@@ -141,7 +141,7 @@ write_vtu_cells_tag(std::ostream& os,
          ++c )
     {
       if(tr.cell_is_infinite(c) || !tr.cell_is_main(c)) continue;
-      for (int i=0; i<=dim; i++) {
+      for (int i=0; i<=dim; ++i) {
         os << V[tr.vertex(c, i)] << " ";
       }
     }
@@ -282,7 +282,7 @@ write_vtu_cells_binary(std::ostream& os,
       if(tr.cell_is_infinite(c) || !tr.cell_is_main(c)) continue;
       off += (dim+1);
       offsets.push_back(off);
-      for (int i=0; i<=dim; i++)
+      for (int i=0; i<=dim; ++i)
         connectivity_table.push_back(V[tr.vertex(c, i)]);
     }
 

@@ -188,7 +188,7 @@ public:
         Tile_const_iterator tile = c.tile();
         std::vector<int> vid;
         assert(tile->current_dimension() == 2);
-        for(int d = 0; d <= tile->current_dimension(); d++)
+        for(int d = 0; d <= tile->current_dimension(); ++d)
         {
             Vertex_iterator vit = main(vertex(c, d));
             vid.push_back(vertex_id(vit));
