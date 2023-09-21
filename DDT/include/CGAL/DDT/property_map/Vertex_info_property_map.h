@@ -44,7 +44,7 @@ struct Vertex_info_property_map
 /// Property map that accesses the id member of the info item of a Triangulation_vertex_base_with_info_2/3 handle.
 /// It is mutable if `T` is not `const` and non-mutable otherwise.
 ///
-/// \cgalModels `ReadWritePropertyMap`
+/// \cgalModels{ReadWritePropertyMap}
 template <typename T>
 struct Vertex_info_id_property_map
 {
