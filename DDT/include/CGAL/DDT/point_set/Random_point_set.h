@@ -30,7 +30,7 @@ struct Random_point_set {
 
     struct const_iterator {
         const_iterator(std::size_t remaining, PointGenerator& generator) : remaining_(remaining), generator_(generator) {
-            generator.next();
+            if (remaining > 0) generator.next();
         }
 
         value_type operator*() const { return generator_.point(); }

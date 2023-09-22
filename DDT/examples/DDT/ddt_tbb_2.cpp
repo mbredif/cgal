@@ -50,8 +50,9 @@ int main(int argc, char **argv)
 
     tri.write(CGAL::DDT::VRT_serializer("out/"), scheduler);
 
+
     CGAL::DDT::File_serializer serializer2;
-    std::cout << "temp directory 2: " << serializer.dirname() << std::endl;
+    std::cout << "temp directory 2: " << serializer2.dirname() << std::endl;
     Distributed_triangulation tri2(2, {}, max_number_of_tiles_in_mem, serializer2);
     CGAL::DDT::Grid_partitioner<Tile_index, Point> partitioner2(1, bbox, number_of_tiles_per_axis + 1);
     tri2.partition(partitioner2, tri, scheduler);

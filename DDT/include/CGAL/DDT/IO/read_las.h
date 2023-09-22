@@ -19,6 +19,7 @@ namespace DDT {
 template<typename Point>
 read_LAS_header(const std::string& fname, std::size_t& npoints, Point& pmin, Point& pmax)
 {
+  typedef Kernel_traits<Point> Traits;
   std::ifstream is(fname, std::ios::binary);
   CGAL::IO::set_mode(is, CGAL::IO::BINARY);
   if(!is) return false;
@@ -26,8 +27,12 @@ read_LAS_header(const std::string& fname, std::size_t& npoints, Point& pmin, Poi
   LASreaderLAS lasreader;
   lasreader.open(is);
   npoints = lasreader.npoints;
-  pmin = Point(lasreader.get_min_x(), lasreader.get_min_y(), lasreader.get_min_z());
-  pmax = Point(lasreader.get_max_x(), lasreader.get_max_y(), lasreader.get_max_z());
+  double coords[] = {
+    lasreader.get_min_x(), lasreader.get_min_y(), lasreader.get_min_z(),
+    lasreader.get_max_x(), lasreader.get_max_y(), lasreader.get_max_z()
+  };
+  pmin = Traits::point(coords  , coords+3);
+  pmax = Traits::point(coords+3, coords+6);
   return true;
 }
 

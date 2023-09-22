@@ -191,7 +191,8 @@ int main(int argc, char **argv)
     Scheduler scheduler;
 
     Distributed_triangulation tri1(N, {}, max_number_of_tiles_in_mem, serializer);
-    Distributed_point_set pointset(points.begin(), points.end(), partitioner);
+    Distributed_point_set pointset;
+    pointset.insert(points.begin(), points.end(), partitioner);
     tri1.insert(pointset, scheduler);
     errors += test_DDT(tri1);
 

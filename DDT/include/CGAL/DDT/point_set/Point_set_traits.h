@@ -74,7 +74,7 @@ struct Point_set_traits<PointSet, std::enable_if_t<std::is_default_constructible
 
     static std::pair<iterator, bool> insert(PointSet& ps, const Point& p, const_iterator hint = {})
     {
-        Tile_index i;
+        Tile_index i = {};
         return std::make_pair(ps.emplace(ps.end(), i, p), true);
     }
 
