@@ -98,6 +98,7 @@ public:
     typedef TileIndexProperty                                        Tile_index_property;
     typedef typename Tile_index_property::value_type                 Tile_index;
     typedef typename Traits::Point                   Point;
+    typedef typename Traits::Point_const_reference   Point_const_reference;
     typedef typename Traits::Vertex_index            Vertex_index;
     typedef typename Traits::Facet_index             Facet_index;
     typedef typename Traits::Cell_index              Cell_index;
@@ -168,7 +169,7 @@ public:
     }
 
     inline void clear() { if (!statistics_.valid) finalize(); Traits::clear(tri_); }
-    inline std::pair<Vertex_index, bool> insert(const Point& p, Tile_index id, Vertex_index v = Vertex_index()) {
+    inline std::pair<Vertex_index, bool> insert(Point_const_reference p, Tile_index id, Vertex_index v = Vertex_index()) {
         statistics_.valid = false;
         auto inserted = Traits::insert(tri_, p, v);
         if(inserted.second) {
@@ -213,7 +214,7 @@ public:
     template<typename OutputIterator>
     inline OutputIterator incident_cells(Vertex_index v, OutputIterator out) const { return Traits::incident_cells(tri_, v, out); }
     inline Vertex_index infinite_vertex() const { return Traits::infinite_vertex(tri_); }
-    inline const Point& point(Vertex_index v) const { return Traits::point(tri_, v); }
+    inline Point_const_reference point(Vertex_index v) const { return Traits::point(tri_, v); }
     /// @}
 
     /// \name Facet functions
@@ -454,7 +455,7 @@ public:
         {
             if (!vertex_is_infinite(v) && vertex_is_local(v))
             {
-                const Point& p = point(v);
+                Point_const_reference p = point(v);
                 for(int i=0; i<D; ++i)
                 {
                     if(less_coordinate(p, point(vertices[i  ]), i)) vertices[i  ] = v;
@@ -575,7 +576,7 @@ public:
     }
 
 
-    Vertex_index locate_vertex(const Point& p, Vertex_index hint = Vertex_index()) const
+    Vertex_index locate_vertex(Point_const_reference p, Vertex_index hint = Vertex_index()) const
     {
         return Traits::locate_vertex(tri_, p, hint);
     }

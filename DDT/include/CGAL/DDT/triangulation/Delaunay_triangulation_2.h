@@ -29,6 +29,7 @@ struct Triangulation_traits<CGAL::Delaunay_triangulation_2<GT, TDS_>> : public K
     typedef CGAL::Delaunay_triangulation_2<GT, TDS_>              Triangulation;
     typedef typename Triangulation::Triangulation_data_structure  TDS;
     typedef typename GT::Point_2                                  Point;
+    typedef typename Kernel_traits<Point>::Point_const_reference  Point_const_reference;
 
     static constexpr int D = 2;
     typedef typename TDS::Vertex_iterator                         Vertex_index;
@@ -128,7 +129,7 @@ struct Triangulation_traits<CGAL::Delaunay_triangulation_2<GT, TDS_>> : public K
         return out;
     }
 
-    static Vertex_index locate_vertex(const Triangulation& tri, const Point& p, Vertex_index hint = Vertex_index())
+    static Vertex_index locate_vertex(const Triangulation& tri, Point_const_reference p, Vertex_index hint = Vertex_index())
     {
         typename Triangulation::Locate_type  lt;
         int li;
@@ -136,7 +137,7 @@ struct Triangulation_traits<CGAL::Delaunay_triangulation_2<GT, TDS_>> : public K
         return (lt==Triangulation::VERTEX) ? vertex(tri, c, li) : vertices_end(tri);
     }
 
-    static std::pair<Vertex_index, bool> insert(Triangulation& tri, const Point& p, Vertex_index hint = Vertex_index())
+    static std::pair<Vertex_index, bool> insert(Triangulation& tri, Point_const_reference p, Vertex_index hint = Vertex_index())
     {
         typename Triangulation::Locate_type lt;
         int li;
@@ -175,7 +176,7 @@ struct Triangulation_traits<CGAL::Delaunay_triangulation_2<GT, TDS_>> : public K
         return false;
     }
 
-    static inline const Point& point(const Triangulation& tri, Vertex_index v)
+    static inline Point_const_reference point(const Triangulation& tri, Vertex_index v)
     {
         return v->point();
     }

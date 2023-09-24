@@ -43,7 +43,7 @@ public:
     {
     }
 
-    inline Tile_index operator()(const Point& p)
+    inline Tile_index operator()(Point_const_reference p)
     {
         return distribution(generator);
     }

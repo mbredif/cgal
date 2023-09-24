@@ -28,6 +28,7 @@ class Grid_partitioner
 public:
     typedef TileIndex Tile_index;
     typedef typename Traits::Point Point;
+    typedef typename Traits::Point_const_reference   Point_const_reference;
     typedef typename Traits::Bbox Bbox;
     typedef Bbox Domain;
     /// \todo not documented
@@ -77,7 +78,7 @@ public:
     }
 
     /// returns the tile index of the point `p`
-    Tile_index operator()(const Point& p) const
+    Tile_index operator()(Point_const_reference p) const
     {
         int D = N.size();
         Tile_index id = 0;

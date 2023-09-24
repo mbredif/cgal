@@ -36,6 +36,8 @@ private:
 public:
     /// point type
     typedef unspecified_type Point;
+    /// point const reference type
+    typedef unspecified_type Point_const_reference;
     /// Tile identifier type, model of `TileIndex`
     typedef unspecified_type Tile_index;
     /// user Info type
@@ -56,6 +58,7 @@ public:
     static constexpr int D;
 #else
     typedef ::Point Point;
+    typedef ::Point const& Point_const_reference;
     typedef ::TileIndex Tile_index;
     typedef VertexIndex Vertex_index;
     typedef FacetIndex Facet_index;
@@ -81,7 +84,7 @@ public:
     /// checks the validity of a Delaunay triangulation
     static bool is_valid(const Triangulation& tri, bool verbose = false, int level = 0) { return true; }
     /// locates a vertex in a Delaunay triangulation, given a query point `p`, and a `hint`, otherwise returns the infinite vertex
-    static Vertex_index locate_vertex(const Triangulation& tri, const Point& p, Vertex_index hint = Vertex_index()) { return hint; }
+    static Vertex_index locate_vertex(const Triangulation& tri, Point_const_reference p, Vertex_index hint = Vertex_index()) { return hint; }
     /// collects in the output iterator `out` all cells incident to the query vertex `v` in the triangulation `tri`
     template<typename OutputIterator>
     static OutputIterator incident_cells(const Triangulation& tri, Vertex_index v, OutputIterator out) { return out; }
@@ -116,7 +119,7 @@ public:
     static void clear(Triangulation& tri) {}
     /// inserts a vertex located at `point` in tile `id` into the triangulation, using the `hint` if available.
     /// @return a pair of the vertex index located at `point` and a boolean that reports if a vertex has been created.
-    static std::pair<Vertex_index, bool> insert(Triangulation& tri, const Point& p, Vertex_index hint = Vertex_index()) { return {hint,false}; }
+    static std::pair<Vertex_index, bool> insert(Triangulation& tri, Point_const_reference p, Vertex_index hint = Vertex_index()) { return {hint,false}; }
     /// removes a vertex from the triangulation
     static void remove(Triangulation& tri, Vertex_index v) {}
 /// @}
@@ -125,7 +128,7 @@ public:
 /// \name Accessors
 /// @{
     /// returns the point embedding of a vertex
-    static const Point& point(const Triangulation& tri, Vertex_index v) { return Impl::p; }
+    static Point_const_reference point(const Triangulation& tri, Vertex_index v) { return Impl::p; }
     /// returns the identifier of the tile where this vertex is local
     Tile_index  vertex_id  (const Triangulation& tri, Vertex_index v) { return {}; }
 /// @}

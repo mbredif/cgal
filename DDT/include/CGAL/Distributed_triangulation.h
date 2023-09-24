@@ -60,6 +60,7 @@ private:
     typedef typename Traits::Cell_index                 Tile_cell_index;
     typedef typename Traits::Facet_index                Tile_facet_index;
     typedef typename Traits::Point                      Point;
+    typedef typename Traits::Point_const_reference      Point_const_reference;
 
 public:
 /// \name Types
@@ -347,7 +348,7 @@ public:
     /// returns the point embedding of the vertex.
     /// This can be done locally without considering the main tile of the vertex, as point coordinates
     /// are replicated in all tiles.
-    const Point& point(Vertex_iterator v) const
+    Point_const_reference point(Vertex_iterator v) const
     {
         CGAL_assertion(is_valid(v));
         return v.triangulation().point(*v);
@@ -589,8 +590,8 @@ public:
     /// The scheduler provides the distribution environment (single thread, multithread, MPI...)
     /// \todo Only Delaunay?
     /// @returns v a descriptor to the inserted vertex and a bool
-    template<typename Point, typename Tile_index, typename Scheduler>
-    std::pair<Vertex_iterator, bool> insert(const Point& point, Tile_index id, Scheduler& sch)
+    template<typename Point_const_reference, typename Tile_index, typename Scheduler>
+    std::pair<Vertex_iterator, bool> insert(Point_const_reference point, Tile_index id, Scheduler& sch)
     {
         CGAL_DDT_TRACE0(sch, "DDT", "insert1", 0, "B");
         auto emplaced = tiles.emplace(std::piecewise_construct,
@@ -730,7 +731,7 @@ public:
                         for(const auto& v : vertex_set)
                         {
                             if (tri.vertex_is_infinite(v)) continue;
-                            const Point& p = tri.point(v);
+                            Point_const_reference p = tri.point(v);
                             points.emplace_back(part(p), p);
                         }
                         *out++ = {key, points};

@@ -31,6 +31,7 @@ struct Triangulation_traits<CGAL::Delaunay_triangulation<GT, TDS>> : public Kern
     typedef typename Triangulation::Vertex_const_iterator          Vertex_index;
     typedef typename Triangulation::Full_cell_const_iterator       Cell_index;
     typedef typename GT::Point_d                                   Point;
+    typedef typename Kernel_traits<Point>::Point_const_reference   Point_const_reference;
 
     static constexpr int D = Impl::Dim_value<typename Triangulation::Maximal_dimension>::value;
     typedef CGAL::DDT::Facet_index<D, Cell_index>                  Facet_index;
@@ -137,7 +138,7 @@ public:
         return out;
     }
 
-    static Vertex_index locate_vertex(const Triangulation& tri, const Point& p, Vertex_index hint = Vertex_index())
+    static Vertex_index locate_vertex(const Triangulation& tri, Point_const_reference p, Vertex_index hint = Vertex_index())
     {
         if (hint == Vertex_index()) hint = tri.infinite_vertex();
         typename Triangulation::Locate_type  lt;
@@ -147,7 +148,7 @@ public:
         return (lt==Triangulation::ON_VERTEX) ? f.vertex(0) : vertices_end(tri);
     }
 
-    static std::pair<Vertex_iterator, bool> insert(Triangulation& tri, const Point& p, Vertex_index hint = Vertex_index())
+    static std::pair<Vertex_iterator, bool> insert(Triangulation& tri, Point_const_reference p, Vertex_index hint = Vertex_index())
     {
         typename Triangulation::Locate_type lt;
         typename Triangulation::Face f(tri.maximal_dimension());
@@ -189,7 +190,7 @@ public:
         return false;
     }
 
-    static inline const Point& point(const Triangulation& tri, Vertex_index v)
+    static inline Point_const_reference point(const Triangulation& tri, Vertex_index v)
     {
         return v->point();
     }

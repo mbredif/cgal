@@ -18,9 +18,10 @@ The concept `RandomPointsInBox` describes the requirements of a output point ite
 */
 struct RandomPointsInBox {
     typedef ::Point Point;
+    typedef ::Point const& Point_const_reference;
     RandomPointsInBox(int dimension, double range) {}
     RandomPointsInBox& operator++() { return *this; }
-    const Point& operator*() const { return p; }
+    Point_const_reference operator*() const { return p; }
 private:
     Point p;
 };

@@ -77,8 +77,8 @@ struct Distributed_point_set {
         size_(0)
     {}
 
-    template<typename Point, typename Tile_index>
-    void insert(const Point& point, Tile_index id, Tile_index tid)
+    template<typename Point_const_reference, typename Tile_index>
+    void insert(Point_const_reference point, Tile_index id, Tile_index tid)
     {
         try_emplace(tid).first->second.insert(point, id);
     }

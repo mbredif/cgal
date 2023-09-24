@@ -20,6 +20,9 @@ public:
     /// point type
     typedef unspecified_type Point;
 
+    /// point const reference type
+    typedef unspecified_type Point_const_reference;
+
     /// A model of the `Bbox` concept
     typedef unspecified_type Bbox;
 
@@ -27,6 +30,7 @@ public:
     static constexpr int D;
 #else
     typedef ::Point Point;
+    typedef ::Point const& Point_const_reference;
     typedef ::Bbox Bbox;
     static constexpr int D=33;
 #endif
@@ -35,18 +39,18 @@ public:
     /// @}
 
     /// compares the `i`'th Cartesian coodinate of `p` and `q`
-    static bool less_coordinate(const Point& p, const Point& q, int i) { return true; }
+    static bool less_coordinate(Point_const_reference p, Point_const_reference q, int i) { return true; }
 
 
     static inline Bbox bbox(int dim) {
         return Impl::b;
     }
 
-    static inline Bbox bbox(const Point& p) {
+    static inline Bbox bbox(Point_const_reference p) {
         return Impl::b;
     }
 
-    static inline Bbox bbox(const Point& p, const Point& q) {
+    static inline Bbox bbox(Point_const_reference p, Point_const_reference q) {
         return Impl::b;
     }
 

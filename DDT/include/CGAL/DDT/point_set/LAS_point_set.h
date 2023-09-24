@@ -12,7 +12,7 @@
 #ifndef CGAL_DDT_LAS_TILE_POINTS_H
 #define CGAL_DDT_LAS_TILE_POINTS_H
 #include <string>
-#include <CGAL/DDT/IO/read_las.h>
+#include <CGAL/IO/read_las_points.h>
 #include <CGAL/DDT/property_map/All_local_property_map.h>
 #include <CGAL/Distributed_point_set.h>
 
@@ -29,6 +29,7 @@ public:
     typedef Kernel_traits<Point> Traits;
     typedef typename Traits::Bbox Bbox;
     typedef Point value_type;
+    typedef typename Kernel_traits<Point>::Point_const_reference const_reference;
     typedef TileIndex Tile_index;
 
     /// Single Pass Iterator
@@ -40,7 +41,7 @@ public:
         const_iterator& operator++() { --size_; next(); return *this;  }
         bool operator==(const_iterator it) const { return size_ == it.size_; }
         bool operator!=(const_iterator it) const { return size_ != it.size_; }
-        const Point& operator*() const { return point_; }
+        const_reference operator*() const { return point_; }
 
     private:
         void next() {
@@ -100,13 +101,14 @@ struct Point_set_traits<LAS_point_set<I,P>>
 {
     typedef LAS_point_set<I,P>                         PointSet;
     typedef typename PointSet::value_type              Point;
+    typedef typename PointSet::const_reference         Point_const_reference;
     typedef typename PointSet::const_iterator          iterator;
     typedef typename PointSet::const_iterator          const_iterator;
 
     static std::size_t size(const PointSet& ps) { return ps.size(); }
     static std::size_t local_size(const PointSet& ps) { return ps.local_size(); }
 
-    static Point point(const PointSet& ps, const_iterator v) {
+    static Point_const_reference point(const PointSet& ps, const_iterator v) {
         return *v;
     }
     static void clear(PointSet& ps) { CGAL_assertion(false); }

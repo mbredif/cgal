@@ -22,7 +22,7 @@ namespace CGAL {
 namespace DDT {
 
 namespace Impl {
-template<typename Container, typename Point, typename Derived>
+template<typename Container, typename Derived>
 class Bbox
 {
 protected:
@@ -109,8 +109,8 @@ protected:
 }
 
 // A D-dimensional axis aligned box
-template<unsigned int N, typename T, typename Point>
-class Bbox : public Impl::Bbox<std::array<T, N>, Point, Bbox<N,T,Point>>
+template<unsigned int N, typename T>
+class Bbox : public Impl::Bbox<std::array<T, N>, Bbox<N,T>>
 {
     enum { D = N };
 public:
@@ -120,8 +120,8 @@ public:
 };
 
 // A D-dimensional axis aligned box
-template<typename T, typename Point>
-class Bbox<0,T,Point> : public Impl::Bbox<std::vector<T>, Point, Bbox<0,T,Point>>
+template<typename T>
+class Bbox<0,T> : public Impl::Bbox<std::vector<T>, Bbox<0,T>>
 {
 public:
     inline int dimension() const { return this->min_values.size(); }
@@ -135,8 +135,8 @@ protected:
     }
 };
 
-template<typename Container, typename Point, typename Derived>
-std::ostream& operator<<(std::ostream& out, const Impl::Bbox<Container, Point, Derived>& bbox)
+template<typename Container, typename Derived>
+std::ostream& operator<<(std::ostream& out, const Impl::Bbox<Container, Derived>& bbox)
 {
     int d = bbox.dimension();
     for(int i=0; i<d; ++i)
@@ -145,13 +145,25 @@ std::ostream& operator<<(std::ostream& out, const Impl::Bbox<Container, Point, D
 }
 
 
-template<typename Container, typename Point, typename Derived>
-std::istream& operator>>(std::istream& in, Impl::Bbox<Container, Point, Derived>& bbox)
+template<typename Container, typename Derived>
+std::istream& operator>>(std::istream& in, Impl::Bbox<Container, Derived>& bbox)
 {
     int d = bbox.dimension();
     for(int i=0; i<d; ++i)
         in  >> bbox.min(i) >> bbox.max(i);
     return in;
+}
+
+template<unsigned int D, typename T, typename InputIterator0, typename InputIterator1>
+inline void set(Bbox<D, T>& bb, InputIterator0 begin0, InputIterator0 end0, InputIterator1 begin1, InputIterator1 end1) {
+    int dim0 = std::distance(begin0, end0);
+    CGAL_assertion(dim0 == std::distance(begin1, end1));
+    CGAL_assertion(D==0 || D == dim0);
+    bb = { dim0 };
+    for(int i = 0; begin0 != end0; ++i, ++begin0, ++begin1) {
+        bb.min(i) = std::min(*begin0, *begin1);
+        bb.max(i) = std::max(*begin0, *begin1);
+    }
 }
 
 }

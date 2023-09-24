@@ -12,6 +12,7 @@ typedef CGAL::Delaunay_triangulation_2<Geom_traits, TDS>                     Tri
 typedef CGAL::DDT::Vertex_info_property_map<Triangulation>                   TileIndexProperty;
 typedef CGAL::DDT::File_points_serializer                                    Serializer;
 typedef Triangulation::Point Point;
+typedef const Point& Point_const_reference;
 typedef CGAL::Bbox_2 Bbox;
 
 #include <CGAL/DDT/scheduler/Sequential_scheduler.h>
@@ -31,7 +32,7 @@ typedef CGAL::Distributed_point_set<Point_set, CGAL::DDT::First_property_map<Poi
 #define ddt_assert_eq(x, y) if ((x)!=(y)) { ddt_assert((x)==(y)); std::cerr << #x << " = " << x << std::endl << #y << " = " << y << std::endl; }
 #define ddt_assert_neq(x, y) if ((x)==(y)) { ddt_assert((x)!=(y)); std::cerr << #x << " = " << x << std::endl << #y << " = " << y << std::endl; }
 
-std::ostream& operator<<(std::ostream& out, const Point& p)
+std::ostream& operator<<(std::ostream& out, Point_const_reference p)
 {
     return out << p[0] << "," << p[1];
 }

@@ -182,14 +182,14 @@ void write_vtu_points_ascii(std::ostream& os,
                       const Tr & tr,
                       std::map<Vertex_index, std::size_t> & V)
 {
-  typedef typename Tr::Point Point;
+  typedef typename Tr::Point_const_reference Point_const_reference;
   int dim = tr.maximal_dimension();
   std::size_t inum = 0;
   for( Vertex_index v = tr.vertices_begin(); v != tr.vertices_end(); ++v)
   {
     if (tr.vertex_is_infinite(v)) continue;
     V[v] = inum++;
-    const Point& p = tr.point(v);
+    Point_const_reference p = tr.point(v);
     os << approximate_cartesian_coordinate(p,0) << " ";
     os << approximate_cartesian_coordinate(p,1) << " ";
     if(dim == 3)
@@ -238,8 +238,8 @@ write_vtu_points_binary(std::ostream& os,
             std::map<Vertex_index, std::size_t> & V)
 {
   int dim = tr.maximal_dimension();
-  typedef typename Triangulation::Tile_index Tile_index;
-  typedef typename Triangulation::Point      Point;
+  typedef typename Triangulation::Tile_index            Tile_index;
+  typedef typename Triangulation::Point_const_reference Point_const_reference;
 
   std::size_t inum = 0;
   std::vector<double> coordinates;
@@ -249,7 +249,7 @@ write_vtu_points_binary(std::ostream& os,
     {
       if (tr.vertex_is_infinite(v)) continue;
       V[v] = inum++;  // binary output => the map has not been filled yet
-      const Point& p = tr.point(v);
+      Point_const_reference p = tr.point(v);
       coordinates.push_back(approximate_cartesian_coordinate(p,0));
       coordinates.push_back(approximate_cartesian_coordinate(p,1));
       coordinates.push_back(dim == 3 ? approximate_cartesian_coordinate(p,2) : 0.0);

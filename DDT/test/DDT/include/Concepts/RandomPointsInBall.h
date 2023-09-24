@@ -20,7 +20,7 @@ struct RandomPointsInBall {
     typedef ::Point Point;
     RandomPointsInBall(int dimension, double range) {}
     RandomPointsInBall& operator++() { return *this; }
-    const Point& operator*() const { return p; }
+    Point_const_reference operator*() const { return p; }
 private:
     Point p;
 };

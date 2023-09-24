@@ -43,10 +43,12 @@ struct Kernel_traits<CGAL::Wrap::Point_d<K>> {
     /// Point type
     typedef typename K::Point_d Point;
 
+    typedef const Point& Point_const_reference;
+
     static constexpr int D = Impl::Dim_value<typename Point::Ambient_dimension>::value;
 
     /// Bbox type
-    typedef CGAL::DDT::Bbox<D, double, Point>                      Bbox;
+    typedef CGAL::DDT::Bbox<D, double>                      Bbox;
 
     template<typename InputIterator>
     static inline Point point(InputIterator begin, InputIterator end) {

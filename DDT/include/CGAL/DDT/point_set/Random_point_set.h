@@ -24,6 +24,7 @@ namespace DDT {
 template<typename PointGenerator>
 struct Random_point_set {
     typedef typename PointGenerator::Point  value_type;
+    typedef typename PointGenerator::Point_const_reference const_reference;
 
     template<typename... Args>
     Random_point_set(std::size_t size, Args&&... args) : size_(size), generator_(std::forward<Args>(args)...) {}
@@ -64,10 +65,11 @@ private:
 template<typename PointGenerator>
 struct Point_set_traits<Random_point_set<PointGenerator>>
 {
-    typedef Random_point_set<PointGenerator>     PointSet;
-    typedef typename PointSet::value_type     Point;
-    typedef typename PointSet::const_iterator iterator;
-    typedef typename PointSet::const_iterator const_iterator;
+    typedef Random_point_set<PointGenerator>   PointSet;
+    typedef typename PointSet::value_type      Point;
+    typedef typename PointSet::const_reference Point_const_reference;
+    typedef typename PointSet::const_iterator  iterator;
+    typedef typename PointSet::const_iterator  const_iterator;
 
     static std::size_t size(const PointSet& ps) { return ps.size(); }
     static Point point(const PointSet& ps, const const_iterator& v) {
@@ -133,7 +135,7 @@ make_distributed_point_set(const Random_point_set<PointGenerator>& points, const
         M -= m;
         n_points -= n;
         if (n>0)
-            dpoints.try_emplace(id, n_points, d, points.seed() + hash(id));
+            dpoints.try_emplace(id, n, d, points.seed() + hash(id));
     }
 
     // assign, if any, the remaining points to the first partition

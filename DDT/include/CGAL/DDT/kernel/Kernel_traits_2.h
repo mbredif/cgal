@@ -31,6 +31,8 @@ struct Kernel_traits<CGAL::Point_2<K>> {
     /// Point type
     typedef CGAL::Point_2<K> Point;
 
+    typedef const Point& Point_const_reference;
+
     template<typename InputIterator>
     static inline Point point(InputIterator begin, InputIterator end) {
         CGAL_assertion(std::distance(begin, end) == 2);

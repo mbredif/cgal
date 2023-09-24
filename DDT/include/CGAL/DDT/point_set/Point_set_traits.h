@@ -13,6 +13,7 @@
 #define CGAL_DDT_POINT_SET_TRAITS_H
 
 #include <CGAL/IO/io.h>
+#include <CGAL/DDT/kernel/Kernel_traits.h>
 
 namespace CGAL {
 namespace DDT {
@@ -23,16 +24,17 @@ template <typename PointSet, typename = void>
 struct Point_set_traits
 {
     typedef typename PointSet::value_type              Point;
+    typedef typename Kernel_traits<Point>::Point_const_reference Point_const_reference;
     typedef typename PointSet::iterator                iterator;
     typedef typename PointSet::const_iterator          const_iterator;
 
     static std::size_t size(const PointSet& ps) { return ps.size(); }
 
-    static const Point& point(const PointSet& ps, const_iterator v) {
+    static Point_const_reference point(const PointSet& ps, const_iterator v) {
         return *v;
     }
     static void clear(PointSet& ps) { ps.clear(); }
-    static std::pair<iterator, bool> insert(PointSet& ps, const Point& p, const_iterator hint = {})
+    static std::pair<iterator, bool> insert(PointSet& ps, Point_const_reference p, const_iterator hint = {})
     {
         return std::make_pair(ps.emplace(ps.end(), p), true);
     }
@@ -63,10 +65,11 @@ struct Point_set_traits<PointSet, std::enable_if_t<std::is_default_constructible
 {
     typedef typename PointSet::value_type::first_type  Tile_index;
     typedef typename PointSet::value_type::second_type Point;
+    typedef typename Kernel_traits<Point>::Point_const_reference Point_const_reference;
     typedef typename PointSet::iterator                iterator;
     typedef typename PointSet::const_iterator          const_iterator;
 
-    static const Point& point(const PointSet& ps, const_iterator v) {
+    static Point_const_reference point(const PointSet& ps, const_iterator v) {
         return v->second;
     }
 
@@ -74,7 +77,7 @@ struct Point_set_traits<PointSet, std::enable_if_t<std::is_default_constructible
     static std::size_t size(const PointSet& ps) { return ps.size(); }
 
 
-    static std::pair<iterator, bool> insert(PointSet& ps, const Point& p, const_iterator hint = {})
+    static std::pair<iterator, bool> insert(PointSet& ps, Point_const_reference p, const_iterator hint = {})
     {
         Tile_index i = {};
         return std::make_pair(ps.emplace(ps.end(), i, p), true);
