@@ -22,6 +22,7 @@ namespace DDT {
 /// \ingroup PkgDDTClasses
 /// \tparam Point type
 /// The LAS_tile_points is a proxy to a LAS file, to be read on demand
+/// \todo is it model of something?
 template<typename TileIndex, typename Point>
 class LAS_point_set {
 public:
@@ -93,6 +94,7 @@ private:
 
 
 /// general case, for Containers of points
+/// \todo is that really meant to be doc?
 template <typename I, typename P>
 struct Point_set_traits<LAS_point_set<I,P>>
 {
@@ -113,6 +115,7 @@ struct Point_set_traits<LAS_point_set<I,P>>
 /// \ingroup PkgDDTFunctions
 /// makes a distributed point set from point set uniformly generated in its its domain and a partitioner
 /// assumes that the tile domains of the partitioner are not overlaping
+/// \todo I don't understand what you mean here
 template<typename Point, typename TileIndex, typename StringIterator>
 CGAL::Distributed_point_set<LAS_point_set<TileIndex, Point>, All_local_property_map<TileIndex>>
 make_distributed_LAS_point_set(TileIndex id, StringIterator begin, StringIterator end)

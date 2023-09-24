@@ -19,8 +19,7 @@ namespace CGAL {
 namespace DDT {
 
 /// \ingroup PkgDDTPartitionerClasses
-/// Partitions the domain enclosed by an axis aligned bounding box using a uniform grid.
-/// The number of grid steps in each dimension may be specified independently.
+/// A partitioner that splits the domain enclosed by an axis aligned bounding box using a uniform grid with user defined step sizes.
 /// \cgalModels{Partitioner}
 template<typename TileIndex, typename Point_>
 class Grid_partitioner
@@ -31,10 +30,16 @@ public:
     typedef typename Traits::Point Point;
     typedef typename Traits::Bbox Bbox;
     typedef Bbox Domain;
+    /// \todo not documented
+    /// \todo can't you use a tuple or std::array?
     typedef typename std::vector<std::size_t>::const_iterator const_size_iterator;
 
     /// Construction with a bbox, a range of number of grid steps in each dimension, and a base tile index.
     /// If the range ends before providing enough elements, its last element is repeatedly used.
+    /// \todo rename bbox -> domain?
+    /// \todo shouldn't you use Iso_cuboid if a kernel with exact FT is used? Then domain would return an Iso_cuboid and bbox a Bbox? (maybe that's a pb for the generic Bbox type?)
+    /// \todo base tile index -> first index. Probably want to say that it correspond to the 0 cell of the grid and other cell are assigned an incremented index
+    /// \todo you may want to doc each parameter rather than do a sentence with all of them.
     template<typename Iterator>
     Grid_partitioner(Tile_index id0, const Bbox& bbox, Iterator it, Iterator end) : id0(id0)
     {
@@ -54,8 +59,7 @@ public:
         }
     }
 
-    /// Construction with a bbox, a number grid steps, and a base tile index
-    /// All dimensions have the same number of grid steps.
+    /// Construction with the base tile index, a bbox, the same step size for all dimensions.
     Grid_partitioner(Tile_index id0, const Bbox& bbox, std::size_t n) : id0(id0)
     {
         std::size_t D = bbox.dimension();
@@ -72,7 +76,7 @@ public:
         }
     }
 
-    /// Computes the tile index of the given point using its approximate Cartesian coordinates
+    /// returns the tile index of the point `p`
     Tile_index operator()(const Point& p) const
     {
         int D = N.size();
@@ -86,9 +90,10 @@ public:
         }
         return id+id0;
     }
-    /// begin iterator to the range providing the number of tile in each dimensions
+    /// returns begin iterator to the range providing the number of tile in each dimensions
+    /// \todo what about step_size(int i) instead?
     const_size_iterator size_begin() const { return N.begin(); }
-    /// end iterator to the range providing the number of tile in each dimensions
+    ///return  end iterator to the range providing the number of tile in each dimensions
     const_size_iterator size_end() const { return N.end(); }
     /// number of tile indices
     std::size_t size() const { return M; }

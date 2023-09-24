@@ -17,7 +17,7 @@
 namespace CGAL {
 namespace DDT {
 
-
+/// \todo not doc on purpose?
 class PVTU_serializer {
 public:
     PVTU_serializer(const std::string& dirname, bool binary = true) : dirname_(dirname), binary_(binary)

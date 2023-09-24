@@ -27,6 +27,7 @@ namespace DDT {
 
 /// \ingroup PkgDDTSchedulerClasses
 /// \cgalModels{Scheduler}
+/// \todo doc is empty
 struct MPI_scheduler
 {
     /// constructor

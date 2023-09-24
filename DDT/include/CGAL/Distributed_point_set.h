@@ -21,6 +21,7 @@ namespace CGAL {
 
 /// \ingroup PkgDDTClasses
 /// Distributed point set
+/// \todo add more doc in brief and members?
 template<typename PointSet_,
          typename TileIndexProperty_,
          typename Serializer = CGAL::DDT::No_serializer>

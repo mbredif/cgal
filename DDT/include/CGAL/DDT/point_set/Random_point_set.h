@@ -20,6 +20,7 @@
 namespace CGAL {
 namespace DDT {
 
+/// \todo not documented
 template<typename PointGenerator>
 struct Random_point_set {
     typedef typename PointGenerator::Point  value_type;
@@ -59,6 +60,7 @@ private:
 };
 
 /// specialization for Random_point_sets
+/// \todo meant to be doc?
 template<typename PointGenerator>
 struct Point_set_traits<Random_point_set<PointGenerator>>
 {
@@ -95,6 +97,7 @@ std::istream& operator>>(std::istream& in, Random_point_set<PointGenerator>& ps)
 /// \ingroup PkgDDTFunctions
 /// makes a distributed point set from point set uniformly generated in its its domain and a partitioner
 /// assumes that the tile domains of the partitioner are not overlaping
+/// \todo I don't understand what you mean
 template<typename PointGenerator, typename Partitioner>
 CGAL::Distributed_point_set<
     Random_point_set<PointGenerator>,

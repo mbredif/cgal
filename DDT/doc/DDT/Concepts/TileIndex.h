@@ -7,15 +7,16 @@
 \ingroup PkgDDTConcepts
 \cgalConcept
 
-The concept `Tile_index` describes the requirements for a Tile identifier in a distributed triangulation or a distributed point set.
+The concept `TileIndex` describes the requirements for a Tile identifier in a distributed triangulation or a distributed point set.
 
+/// \todo no function is documented here
 */
 struct TileIndex {
 
     /// Default constructible
     TileIndex() {}
 
-    /// \name Grid_partitioner requirements
+    /// \name Partitioner requirements
     /// @{
     TileIndex(std::size_t) {}
     TileIndex operator%(std::size_t) const { return {}; }
@@ -34,14 +35,17 @@ struct TileIndex {
     /// @}
 };
 
+/// \todo is this part of the concept?
 namespace std {
 std::string to_string(TileIndex) { return ""; }
 }
 
+/// \todo is this part of the concept?
 std::istream& operator>>(std::istream& in, TileIndex id) { return in; }
 
 
 /// make it hashable so that it can be used in unordered associative containers
+/// \todo Note that there exist `Hashable` and `DefaultConstructible` concepts
 template <>
 struct std::hash<TileIndex>
 {

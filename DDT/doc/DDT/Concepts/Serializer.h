@@ -4,6 +4,10 @@
 
 The concept `Serializer` describes the requirements for the class that serializes and deserializes tiles to and from off-memory storage.
 File serializers are enabling out of core processing, by streaming points in and out of memory.
+
+\todo it is not clear if the serializer is used for buffering triangulation or even for writing the final result (for future usage for example). A better scope should allow you to answer your question about `Distributed_triangulatioT::clear()`
+
+
 \cgalHasModelsBegin
 \cgalHasModels{CGAL::DDT::No_serializer}
 \cgalHasModels{CGAL::DDT::File_serializer}
@@ -15,14 +19,17 @@ File serializers are enabling out of core processing, by streaming points in and
 class Serializer
 {
 public:
-  /// Checks if a tile id is available for deserialization
+  /// checks if a tile id is available for deserialization
   template <typename TileIndex>
   bool is_readable(TileIndex) const { return false; }
-  /// Deserialize a tile, given its id, overwriting its triangulation on success. Returns whether deserialization succeeded.
+  /// deserializes a tile, given its id, overwriting its triangulation on success. Returns whether deserialization succeeded.
+  /// \todo: missing tparam `TileTriangulation`
   template<typename TileTriangulation> bool read(TileTriangulation&) const { return false; }
-  /// Serialize a tile. Returns whether serialization succeeded.
+  /// serializes a tile. Returns whether serialization succeeded.
+  /// \todo: missing tparam `TileTriangulation`
   template<typename TileTriangulation> bool write(const TileTriangulation& ) const { return false;}
 };
 
 /// Streaming
+/// \todo missing doc
 std::ostream& operator<<(std::ostream& out, const Serializer& serializer);

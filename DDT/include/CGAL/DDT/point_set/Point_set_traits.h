@@ -18,6 +18,7 @@ namespace CGAL {
 namespace DDT {
 
 /// general case, for Containers of points
+/// \todo meant to be doc?
 template <typename PointSet, typename = void>
 struct Point_set_traits
 {
@@ -56,6 +57,7 @@ struct Point_set_traits
 };
 
 /// specialization for Containers of (key,point) pairs
+/// \todo meant to be doc?
 template <typename PointSet>
 struct Point_set_traits<PointSet, std::enable_if_t<std::is_default_constructible_v<typename PointSet::value_type::first_type>>>
 {

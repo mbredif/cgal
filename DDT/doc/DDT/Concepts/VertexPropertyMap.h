@@ -5,7 +5,8 @@
 \ingroup PkgDDTConcepts
 \cgalConcept
 
-The concept `VertexPropertyMap` describes the requirements of a readable property map from (Triangulation, Vertex_index) pairs to Tile_indices.
+The concept `VertexPropertyMap` describes the requirements of a readable property map with
+`std::pair<Triangulation, Vertex_index>` as key type and a model of `TileIndex` as value type.
 If the mapped value does not only depend on the point embedding of the vertex, then it should also be writable.
 
 \cgalHasModelsBegin
@@ -15,6 +16,8 @@ If the mapped value does not only depend on the point embedding of the vertex, t
 \cgalHasModels{CGAL::DDT::Vertex_info_id_property_map}
 \cgalHasModels{CGAL::DDT::Vertex_data_id_property_map}
 \cgalHasModelsEnd
+
+\todo I'm not sure that you need a concept. You better put the doc directly in tparam of functions/classes needing it. Indeed Triangulation, Vertex_index and Tile_index are not defined here.
 
 */
 #include <boost/property_map/property_map.hpp>

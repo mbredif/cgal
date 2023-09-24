@@ -45,6 +45,8 @@ std::string to_summary(const tbb::blocked_range<T>& r, const Keys& keys) {
 
 /// \ingroup PkgDDTSchedulerClasses
 /// \cgalModels{Scheduler}
+/// \todo doc is empty
+/// requires TBB
 struct TBB_scheduler
 {
 

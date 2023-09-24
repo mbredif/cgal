@@ -22,6 +22,7 @@ namespace DDT {
 /// \ingroup PkgDDTSerializerClasses
 /// This serializer saves and loads the triangulation of each tile to the filesystem.
 /// It contains the iostream serialization of the tile triangulation.
+/// \todo most of my remarks for File_point_serializer applies here too
 /// \cgalModels{Serializer}
 class File_serializer {
 public:

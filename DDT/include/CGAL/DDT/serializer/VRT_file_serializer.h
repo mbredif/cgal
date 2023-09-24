@@ -17,7 +17,7 @@
 namespace CGAL {
 namespace DDT {
 
-
+/// \todo not doc on purpose?
 class VRT_serializer {
 public:
     VRT_serializer(const std::string& dirname, bool tins = true, bool verts = true, bool facets = true, bool cells = true)

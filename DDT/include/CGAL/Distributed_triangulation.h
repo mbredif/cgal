@@ -30,6 +30,9 @@ namespace CGAL {
 /// \ingroup PkgDDTRef
 /// \tparam template params to instantiate a `CGAL::DDT::Tile_container` that manages the storage of the triangulation tiles.
 /// The Distributed_triangulation class wraps a Container to expose a triangulation interface.
+/// \todo tparam is incorrect and other are missing
+/// \todo missing doc for public types that you want to expose
+/// \todo brief should be improved
 template<typename Triangulation_,
          typename TileIndexProperty_,
          typename Serializer = CGAL::DDT::No_serializer >
@@ -86,8 +89,10 @@ public:
     {}
 
     /// returns the dimension of the triangulation
+    /// \todo ambient dimension?
     inline int maximal_dimension() const { return maximal_dimension_; }
     /// returns the dimension of the triangulation
+    /// \todo isn't this static?
     inline int& maximal_dimension() { return maximal_dimension_; }
     /// returns the number of finite cells in the triangulation, including cells incident to the vertex at infinity.
     inline std::size_t number_of_finite_cells   () const { return statistics_.number_of_finite_cells;    }
@@ -125,14 +130,14 @@ public:
     /// \name Global Identifiers
     /// @{
 
-    /// returns a global id of the vertex iterator using its distance to vertices_begin. (implementation is linear in the returned id)
+    /// returns a global id of the vertex iterator using its distance to `vertices_begin` (implementation is linear in the returned id)
     int vertex_id(Vertex_iterator v) const
     {
         if (is_infinite(v)) return -1;
         return std::distance(vertices_begin(), main(v));
     }
 
-    /// returns a global id of the cell iterator using its distance to cells_begin. (implementation is linear in the returned id)
+    /// returns a global id of the cell iterator using its distance to `cells_begin` (implementation is linear in the returned id)
     int cell_id(Cell_iterator c) const
     {
         return std::distance(cells_begin(), main(c));
@@ -222,6 +227,7 @@ public:
     }
 
     /// \name Iterator tests
+    /// \todo doc missing
     /// @{
 
     bool is_local(const Vertex_iterator& v) const { return v.triangulation().vertex_is_local(*v); }
@@ -250,6 +256,7 @@ public:
     /// @}
 
     /// \name Tile identifiers from iterators
+    /// \todo doc missing
     /// @{
     Tile_index id(const Vertex_iterator&v) const { return v.triangulation().vertex_id(*v); }
     Tile_index id(const Facet_iterator& f) const { return f.triangulation().facet_id(*f); }
@@ -262,11 +269,11 @@ public:
 
     /// \name Iterator relocation
     /// @{
-    /// `relocate` functions return an alternative iterator that represents the same simplex,
-    /// but that lives in the tile with the provided Tile_index.
-    /// If the simplex is not represented there, the end iterator is returned
+    /// returns an alternative iterator that represents the same simplex,
+    /// but that lives in the tile corresponding to the tile index passed.
+    /// If the simplex is not presented that tile, the corresponding end iterator is returned
 
-    /// returns a vertex iterator equivalent to v in tile id. They represent the same vertex of the global triangulation.
+    /// returns a vertex iterator equivalent to `v` in the tile with index `id`. They represent the same vertex of the global triangulation.
     Vertex_iterator relocate(const Vertex_iterator& v, Tile_index id) const
     {
         CGAL_assertion(is_valid(v));
@@ -279,7 +286,7 @@ public:
         return Vertex_iterator(&tiles, tile, vertex);
     }
 
-    /// returns a facet iterator equivalent to f in tile id. They represent the same facet of the global triangulation.
+    /// returns a facet iterator equivalent to `f` in the tile with index `id`. They represent the same facet of the global triangulation.
     Facet_iterator relocate(const Facet_iterator& f, Tile_index id) const
     {
         CGAL_assertion(is_valid(f));
@@ -292,7 +299,7 @@ public:
         return Facet_iterator(&tiles, tile, facet);
     }
 
-    /// returns a cell iterator equivalent to c in tile id. They represent the same cell of the global triangulation.
+    /// returns a cell iterator equivalent to `c` in the tile with index `id`. They represent the same cell of the global triangulation.
     Cell_iterator relocate(const Cell_iterator& c, Tile_index id) const
     {
         CGAL_assertion(is_valid(c));
@@ -320,6 +327,7 @@ public:
 
     /// returns a representative iterator for the infinite vertex
     /// precondition : at least one tile is loaded.
+    /// \todo loaded is not defined
     inline Vertex_iterator infinite_vertex() const
     {
         CGAL_assertion(!tiles.empty());
@@ -328,8 +336,8 @@ public:
         return Vertex_iterator(&tiles, tile, tri.infinite_vertex());
     }
 
-    /// returns the ith vertex of cell c.
-    /// Indexing by i is consistent over all representatives of cell c, as its main representative is looked up.
+    /// returns the ith vertex of cell `c`.
+    /// Indexing by `i` is consistent over all representatives of cell `c`, as its main representative is looked up first.
     Vertex_iterator vertex (const Cell_iterator& c, const int i) const
     {
         CGAL_assertion(is_valid(c));
@@ -347,24 +355,26 @@ public:
 
     /// returns the mirror facet. This operation is performed locally: the resulting facet belongs
     /// to the same tile as the input facet.
-    /// Precondition: the facet f is valid (ie: at least one vertex is local among the covertex and the mirror vertex and the facet points)
+    /// Precondition: the facet `f` is valid (ie. at least one vertex is local among the covertex and the mirror vertex and the facet points)
     Facet_iterator mirror_facet(const Facet_iterator& f) const
     {
         CGAL_assertion(is_valid(f));
         return Facet_iterator(&tiles, f.tile(), f.triangulation().mirror_facet(*f));
     }
 
-    /// returns the mirror index of facet f, such that neighbor(cell(mirror_facet(f)), mirror_index)==cell(f)
+    /// returns the mirror index of facet `f`, such that `neighbor(cell(mirror_facet(f)), mirror_index)==cell(f)`
     /// The index of covertex of the main version of the mirror facet of f is considered, as indices may not be consistent across
     /// the representatives of mirror facet in other tiles.
+    /// \todo covertex is not defined and/or I don't know if it is a standard terminology
     inline int mirror_index(const Facet_iterator& f) const
     {
         CGAL_assertion(is_valid(f));
         return index_of_covertex(mirror_facet(f));
     }
 
-    /// returns the full cell that is incident to the input facet f and that joins the covertex with the vertices of f
+    /// returns the full cell that is incident to the input facet `f` and that joins the covertex with the vertices of `f`
     /// The operation is local iff the local cell of f is not foreign.
+    /// \todo full is not defined
     Cell_iterator cell(const Facet_iterator& f) const
     {
         CGAL_assertion(is_valid(f));
@@ -374,7 +384,7 @@ public:
         return Cell_iterator(&tiles, f.tile(), c);
     }
 
-    /// returns one of the full cells that is incident to the input vertex v. The operation is local
+    /// returns one of the full cells that is incident `v` in the triangulation of the same tile as `v`.
     Cell_iterator cell(const Vertex_iterator& v) const
     {
         const Tile_triangulation& triangulation = v.triangulation();
@@ -392,7 +402,8 @@ public:
         return cells_end();
     }
 
-    /// returns whether vertex v is incident to cell c. The operation is local in the tile of c
+    /// returns whether  `v` is incident to `c`. The operation is local in the tile of c
+    /// \todo will it return false if v and c not in the same tile triangulation?
     bool has_vertex(const Cell_iterator& c, const Vertex_iterator& v) const
     {
         Tile_cell_index tc = *c;
@@ -467,46 +478,47 @@ public:
     /// \name Iterator Local operations
     /// @{
     /// \cgalAdvancedBegin
-    /// The local_ functions are useful for advanced uses where the function calls can be done locally on the tile triangulation, without changing tile.
-    /// This is more efficient if the operation is garanteed to be local.
+    /// The following functions prefixed with `local_` are useful for advanced usages when the function calls can be done locally on the tile triangulation, without changing tile.
+    /// This is more efficient as the operation is garanteed to be local.
     /// Functions that have an input or output vertex index yield different results if performed locally,
     /// as the vertex ordering in cells is not garanteed to be consistent across tiles. In some cases however, like
     /// iterating over the vertices of a cell, a globally consistent indexing of the cell vertices may not be required
     /// and the local indexing of the local functions may be used instead for better performance.
     /// \cgalAdvancedEnd
 
-    /// returns the ith vertex of the cell c in its local tile.
+    /// returns the ith vertex of the cell `c` in its local tile.
     /// Advanced use: Access is local, thus more more effective, but the vertex index i corresponds
-    /// to the index in the local tile representative of cell c, which may not be consistent with
+    /// to the index in the local tile representative of cell `c`, which may not be consistent with
     /// the vertex ordering in its main representative.
+    /// \todo Replace Advance use: with advanced macro + preconditions?
     Vertex_iterator local_vertex (const Cell_iterator& c, const int i) const
     {
         CGAL_assertion(is_valid(c));
         return Vertex_iterator(&tiles, c.tile(), c.triangulation().vertex(*c, i));
     }
 
-    /// returns the index of the covertex of f in its local cell
+    /// returns the index of the covertex of `f` in its local cell
     /// Advanced use: Access is local, thus more more effective, but the returned index relates to
-    /// the local cell incident to f. The vertex ordering of the local cell may not correspond to the one of
+    /// the local cell incident to `f`. The vertex ordering of the local cell may not correspond to the one of
     /// its main representative.
-    /// Precondition: the local cell of f is not foreign.
+    /// Precondition: the local cell of `f` is not foreign.
     inline int local_index_of_covertex(const Facet_iterator& f) const
     {
         CGAL_assertion(is_valid(f));
         return f.triangulation().index_of_covertex(*f);
     }
 
-    /// constructs a facet locally given a cell and a local index i
-    /// Advanced use: Access is local, thus more more effective, but the returned facet is defined using the local index i,
-    /// which may indexing of the main representative of the cell c.
+    /// constructs a facet locally given a cell and a local index `i`
+    /// Advanced use: Access is local, thus more more effective, but the returned facet is defined using the local index `i`,
+    /// which may indexing of the main representative of the cell `c`.
     Facet_iterator local_facet(const Cell_iterator& c, int i) const
     {
         CGAL_assertion(is_valid(c));
         return Facet_iterator(&tiles, c.tile(), c.triangulation().facet(*c, i));
     }
 
-    /// returns the index of the mirror vertex of f locally
-    /// Advanced use: Access is local, thus more more effective, but the returned index relates to the local indexing of the local cell of the mirror of f
+    /// returns the index of the mirror vertex of `f` locally
+    /// Advanced use: Access is local, thus more more effective, but the returned index relates to the local indexing of the local cell of the mirror of `f`
     /// Precondition : the local cell of the mirror of f should not be foreign
     inline int local_mirror_index(const Facet_iterator& f) const
     {
@@ -517,8 +529,8 @@ public:
         return tri.mirror_index(c,tri.index_of_covertex(*f));
     }
 
-    /// returns the full cell that is adjacent to the input facet f and that joins the covertex with the vertices of f
-    /// Advanced use: Access is local, thus more more effective, but assumes that the local cell of f is not foreign.
+    /// returns the full cell that is adjacent to the input facet `f` and that joins the covertex with the vertices of `f`
+    /// Advanced use: Access is local, thus more more effective, but assumes that the local cell of `f` is not foreign.
     Cell_iterator local_cell(const Facet_iterator& f) const
     {
         CGAL_assertion(is_valid(f));
@@ -529,7 +541,7 @@ public:
     }
 
     /// @returns the covertex of the input facet f
-    /// Advanced use: Access is local, thus more more effective, but assumes that the local cell of f is not foreign.
+    /// Advanced use: Access is local, thus more more effective, but assumes that the local cell of `f` is not foreign.
     Vertex_iterator local_covertex(const Facet_iterator& f) const
     {
         CGAL_assertion(is_valid(f));
@@ -542,7 +554,7 @@ public:
 
 
     /// \ingroup PkgDDTInsert
-    /// triangulates the points into the tile container, so that each of its tile triangulations contain a local view of the overall
+    /// triangulates the points of a distributed point set using the tile partition of the distributed point set, so that each of its tile triangulations contain a local view of the overall
     /// triangulation of all inserted points.
     /// The scheduler provides the distribution environment (single thread, multithread, MPI...)
     /// @returns the number of newly inserted vertices
@@ -573,8 +585,9 @@ public:
 
 
     /// \ingroup PkgDDTInsert
-    /// inserts the given point in the tile given by the given id, in the Delaunay triangulation stored in the tile container.
+    /// inserts `point` in the tile given with index `id`, in the Delaunay triangulation stored in the tile container.
     /// The scheduler provides the distribution environment (single thread, multithread, MPI...)
+    /// \todo Only Delaunay?
     /// @returns v a descriptor to the inserted vertex and a bool
     template<typename Point, typename Tile_index, typename Scheduler>
     std::pair<Vertex_iterator, bool> insert(const Point& point, Tile_index id, Scheduler& sch)
@@ -626,6 +639,7 @@ public:
         return std::make_pair(res, true);
     }
 
+    /// \todo no doc for this one and the following functions?
     template <typename Scheduler>
     void finalize(Scheduler& sch)
     {
@@ -748,7 +762,7 @@ public:
     }
 
     /// clears the triangulation
-    /// todo: what is the semantics of clearing when a serializer is present ? should we delete the files ?
+    /// \todo: what is the semantics of clearing when a serializer is present ? should we delete the files ?
     void clear() {
         statistics_ = {};
         statistics_.valid = false;

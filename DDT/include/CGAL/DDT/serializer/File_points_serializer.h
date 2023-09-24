@@ -21,24 +21,27 @@ struct File_points_serializer;
 std::ostream& operator<<(std::ostream& out, const File_points_serializer& serializer);
 
 /// \ingroup PkgDDTSerializerClasses
-/// This serializer saves and loads the point set of each tile to the filesystem.
+/// This serializer saves and loads the point set of each tile on the disk using a user defined directory path.
 /// It contains the iostream serialization of the point set of the tile triangulation.
 /// The point set of each tile is sorted spatially before saving, so that the Delaunay triangulation could be recomputed efficiently when the tile is reloaded.
 /// This trades off decreased disk usage and bandwith for increased computations.
+/// \todo use std filesystem instead of boost?
+/// \todo does it need to be a full path or a local one works?
 /// \cgalModels{Serializer}
 struct File_points_serializer
 {
 
   /// Each tile is saved as the file "{dirname}/{tile_index}.txt".
-    File_points_serializer(const std::string& dirname = "") : dirname_(dirname)
-    {
-        if(dirname_.empty()) {
-            dirname_ = "tmp/" + boost::filesystem::unique_path().string();
-        }
-        boost::filesystem::path p(dirname_);
-        dirname_ = p.string()+"/";
-        boost::filesystem::create_directories(p);
-    }
+  /// \todo is dirname created if it does not exist?
+  File_points_serializer(const std::string& dirname = "") : dirname_(dirname)
+  {
+      if(dirname_.empty()) {
+          dirname_ = "tmp/" + boost::filesystem::unique_path().string();
+      }
+      boost::filesystem::path p(dirname_);
+      dirname_ = p.string()+"/";
+      boost::filesystem::create_directories(p);
+  }
 
 #ifdef CGAL_DEBUG_DDT
   ~File_points_serializer()
@@ -110,7 +113,8 @@ struct File_points_serializer
     return !out.fail();
   }
 
-  /// File system dirname
+  /// returns the directory on the disk where file are written and read
+  /// \todo is the full path ?
   const std::string& dirname() const { return dirname_; }
 
 private:

@@ -22,6 +22,7 @@ namespace DDT {
 
 /// \ingroup PkgDDTSchedulerClasses
 /// \cgalModels{Scheduler}
+/// \todo doc is empty
 struct Sequential_scheduler
 {
     /// constructor
