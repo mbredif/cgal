@@ -102,7 +102,7 @@ bool write_csv_facet(std::ostream& csv, const TileTriangulation& triangulation)
     for(Facet_index f = triangulation.facets_begin(); f != triangulation.facets_end(); ++f)
     {
         if(triangulation.facet_is_infinite(f)) continue;
-        Cell_index c = triangulation.cell(f);
+        Cell_index c = triangulation.cell_of_facet(f);
         int idx = triangulation.index_of_covertex(f);
         csv << "\"LINESTRING(";
         int local = 0;

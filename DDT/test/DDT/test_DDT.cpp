@@ -68,7 +68,7 @@ template<typename T>
 std::ostream& operator<<(std::ostream& out, const CGAL::DDT::Facet_iterator<T>& f)
 {
     auto& tri = f.triangulation();
-    auto c = tri.cell(*f);
+    auto c = tri.cell_of_facet(*f);
     out << "F" << f.id() << "|" << tri.facet_id(*f) << "(" << tri.index_of_covertex(*f) << " : ";
     write_point(out, tri, tri.vertex(c,0)) << " ; ";
     write_point(out, tri, tri.vertex(c,1)) << " ; ";

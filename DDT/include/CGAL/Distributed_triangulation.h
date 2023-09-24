@@ -173,7 +173,7 @@ public:
                 for(int d = 0; d <= tri.current_dimension(); ++d)
                 {
                     if(d==tri.index_of_covertex(f)) continue;
-                    Tile_cell_index c = tri.cell(f);
+                    Tile_cell_index c = tri.cell_of_facet(f);
                     Tile_vertex_index v = tri.vertex(c, d);
                     if(tri.vertex_is_infinite(v)) continue;
                     Tile_index tid = tri.vertex_id(v);
@@ -380,7 +380,7 @@ public:
     {
         CGAL_assertion(is_valid(f));
         const Tile_triangulation& tri = f.triangulation();
-        Tile_cell_index c = tri.cell(*f);
+        Tile_cell_index c = tri.cell_of_facet(*f);
         if(tri.cell_is_foreign(c)) return local_cell(main(f)); // any non foreign representative could do
         return Cell_iterator(&tiles, f.tile(), c);
     }
@@ -390,7 +390,7 @@ public:
     {
         const Tile_triangulation& triangulation = v.triangulation();
         Tile_vertex_index tv = *v;
-        Tile_cell_index tc = triangulation.cell(tv);
+        Tile_cell_index tc = triangulation.cell_of_vertex(tv);
         if(!triangulation.cell_is_foreign(tc))
             return Cell_iterator(&tiles, v.tile(), tc);
 
@@ -427,7 +427,7 @@ public:
     {
         CGAL_assertion(is_valid(f));
         const Tile_triangulation& tri = f.triangulation();
-        if (tri.cell_is_main(tri.cell(*f)))
+        if (tri.cell_is_main(tri.cell_of_facet(*f)))
             return local_index_of_covertex(f);
         return local_index_of_covertex(relocate(f, id(cell(f))));
     }
@@ -438,7 +438,7 @@ public:
     {
         CGAL_assertion(is_valid(f));
         const Tile_triangulation& tri = f.triangulation();
-        Tile_cell_index c = tri.cell(*f);
+        Tile_cell_index c = tri.cell_of_facet(*f);
         if(tri.cell_is_foreign(c)) return local_covertex(main(f)); // any non foreign representative could do
         return Vertex_iterator(&tiles, f.tile(), tri.covertex(*f));
     }
@@ -525,7 +525,7 @@ public:
     {
         CGAL_assertion(is_valid(f));
         const Tile_triangulation& tri= f.triangulation();
-        Tile_cell_index c = tri.cell(*f);
+        Tile_cell_index c = tri.cell_of_facet(*f);
         CGAL_assertion(!tri.cell_is_foreign(c));
         return tri.mirror_index(c,tri.index_of_covertex(*f));
     }
@@ -536,7 +536,7 @@ public:
     {
         CGAL_assertion(is_valid(f));
         const Tile_triangulation& tri= f.triangulation();
-        Tile_cell_index c = tri.cell(*f);
+        Tile_cell_index c = tri.cell_of_facet(*f);
         CGAL_assertion(!tri.cell_is_foreign(c));
         return Cell_iterator(&tiles, f.tile(), c);
     }
@@ -547,7 +547,7 @@ public:
     {
         CGAL_assertion(is_valid(f));
         const Tile_triangulation& tri = f.triangulation();
-        Tile_cell_index c = tri.cell(*f);
+        Tile_cell_index c = tri.cell_of_facet(*f);
         CGAL_assertion(!tri.cell_is_foreign(c));
         return Vertex_iterator(&tiles, f.tile(), tri.covertex(*f));
     }

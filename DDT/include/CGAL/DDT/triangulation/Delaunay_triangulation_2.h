@@ -263,12 +263,12 @@ struct Triangulation_traits<CGAL::Delaunay_triangulation_2<GT, TDS_>> : public K
         return vertex(tri, n, n->index(c));
     }
 
-    static inline Cell_index cell(const Triangulation& tri, Facet_index f)
+    static inline Cell_index cell_of_facet(const Triangulation& tri, Facet_index f)
     {
         return f.cell();
     }
 
-    static inline Cell_index cell(const Triangulation& tri, Vertex_index v)
+    static inline Cell_index cell_of_vertex(const Triangulation& tri, Vertex_index v)
     {
         return v->face();
     }

@@ -277,12 +277,12 @@ public:
         return vertex(tri, n, c->mirror_index(f.index_of_covertex()));
     }
 
-    static inline Cell_index cell(const Triangulation& tri, Facet_index f)
+    static inline Cell_index cell_of_facet(const Triangulation& tri, Facet_index f)
     {
         return f.cell();
     }
 
-    static inline Cell_index cell(const Triangulation& tri, Vertex_index v)
+    static inline Cell_index cell_of_vertex(const Triangulation& tri, Vertex_index v)
     {
         return v->full_cell();
     }

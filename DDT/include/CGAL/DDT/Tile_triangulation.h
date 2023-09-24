@@ -158,7 +158,7 @@ public:
     {
         selector.clear();
         int cid = index_of_covertex(f);
-        Cell_index c = cell(f);
+        Cell_index c = cell_of_facet(f);
         int D = current_dimension();
         for(int i=0; i<=D; ++i) {
             if (i == cid) continue;
@@ -202,7 +202,7 @@ public:
     /// A vertex is valid if it is finite
     inline bool vertex_is_valid(Vertex_index v) const { return !vertex_is_infinite(v); }
     /// A facet is valid if at least one of the following vertices is finite and local : its covertex, its mirror vertex and its incident vertices
-    inline bool facet_is_valid(Facet_index f) const { return !cell_is_foreign(cell(f)) || !vertex_is_foreign(mirror_vertex(f)); }
+    inline bool facet_is_valid(Facet_index f) const { return !cell_is_foreign(cell_of_facet(f)) || !vertex_is_foreign(mirror_vertex(f)); }
     /// A cell is valid if at least one of its incident vertices are finite and local
     inline bool cell_is_valid(Cell_index c) const { return !cell_is_foreign(c); }
     /// @}
@@ -222,8 +222,8 @@ public:
     inline int index_of_covertex(Facet_index f) const { return Traits::index_of_covertex(tri_, f); }
     inline Vertex_index covertex(Facet_index f) const { return Traits::covertex(tri_, f); }
     inline Vertex_index mirror_vertex(Facet_index f) const { return Traits::mirror_vertex(tri_, f); }
-    inline Cell_index cell(Facet_index f) const { return Traits::cell(tri_, f); }
-    inline Cell_index cell(Vertex_index v) const { return Traits::cell(tri_, v); }
+    inline Cell_index cell_of_facet(Facet_index f) const { return Traits::cell_of_facet(tri_, f); }
+    inline Cell_index cell_of_vertex(Vertex_index v) const { return Traits::cell_of_vertex(tri_, v); }
     inline Facet_index mirror_facet(Facet_index f) const { return Traits::mirror_facet(tri_, f); }
     inline int mirror_index(Facet_index f) const { return Traits::mirror_index(tri_, f); }
     /// @}
@@ -254,7 +254,7 @@ public:
     bool facet_is_local(F f) const
     {
         int icv = index_of_covertex(f);
-        auto c = cell(f);
+        auto c = cell_of_facet(f);
         for(int i=0; i<=current_dimension(); ++i)
         {
             if (i == icv) continue;
@@ -269,7 +269,7 @@ public:
     bool facet_is_mixed(F f) const
     {
         int icv = index_of_covertex(f);
-        auto c = cell(f);
+        auto c = cell_of_facet(f);
         bool local_found = false;
         bool foreign_found = false;
         for(int i=0; i <= current_dimension(); ++i)
@@ -296,7 +296,7 @@ public:
     bool facet_is_foreign(F f) const
     {
         int icv = index_of_covertex(f);
-        auto c = cell(f);
+        auto c = cell_of_facet(f);
         for(int i=0; i<=current_dimension(); ++i)
         {
             if ( i == icv ) continue;
@@ -590,7 +590,7 @@ public:
     Facet_index relocate_facet(const Tile_triangulation& t, Facet_index f) const
     {
         CGAL_assertion(t.facet_is_valid(f));
-        Cell_index c = t.cell(f);
+        Cell_index c = t.cell_of_facet(f);
         if(t.cell_is_foreign(c)) {
             Facet_index g = t.mirror_facet(f);
             Facet_index h = relocate_facet(t, g);

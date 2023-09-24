@@ -164,9 +164,9 @@ public:
     /// returns the covertex of the mirror of a facet
     static Vertex_index mirror_vertex(const Triangulation& tri, Facet_index f) { return {}; }
     /// returns the cell incident to a facet
-    static Cell_index cell(const Triangulation& tri, Facet_index f) { return {}; }
+    static Cell_index cell_of_facet(const Triangulation& tri, Facet_index f) { return {}; }
     /// returns one of the cells incident to a vertex
-    static Cell_index cell(const Triangulation& tri, Vertex_index f) { return {}; }
+    static Cell_index cell_of_vertex(const Triangulation& tri, Vertex_index f) { return {}; }
     /// returns the mirror facet of a facet
     static Facet_index mirror_facet(const Triangulation& tri, Facet_index f) { return {}; }
     /// returns the mirror index of a facet, which is the index of the covertex of its mirror facet
