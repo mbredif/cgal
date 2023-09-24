@@ -30,7 +30,7 @@ public:
     Const_partitioner(Tile_index id) : id_(id) {}
 
     /// The constant tile id affected to all points.
-    inline Tile_index operator()(const Point& p) const { return id_;}
+    inline Tile_index operator()(Point_const_reference p) const { return id_;}
     /// The constant tile id affected to all points.
     inline Tile_index id() const { return id_; }
     /// The number of tile indices, which is 1.
