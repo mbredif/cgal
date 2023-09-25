@@ -169,6 +169,7 @@ public:
     }
 
     inline void clear() { if (!statistics_.valid) finalize(); Traits::clear(tri_); }
+
     inline std::pair<Vertex_index, bool> insert(Point_const_reference p, Tile_index i, Vertex_index v = Vertex_index()) {
         statistics_.valid = false;
         auto inserted = Traits::insert(tri_, p, i, v);
@@ -501,27 +502,32 @@ public:
     /// If report_vertices_with_mixed_stars_only is true, then only the new vertices with mixed stars are reported.
     /// foreign vertices of the tile triangulation are automatically simplified if their star is foreign as well.
     /// @returns the number of inserted points (not counting the number of simplified points and the insertion of already inserted points)
-    template <typename PointSet>
-    int insert(const PointSet& input, std::set<Vertex_index>& inserted, bool report_vertices_with_mixed_stars_only=false)
+    template <typename PointSetIterator>
+    int insert(PointSetIterator begin, PointSetIterator end, std::set<Vertex_index>& inserted)
     {
         statistics_.valid = false;
         // retrieve the input points and ids in separate vectors
-        // compute the axis-extreme points on the way
         std::vector<Point> points;
         std::vector<Tile_index> ids;
         std::vector<std::size_t> indices;
-        std::size_t index=0;
-        points.reserve(input.size());
-        ids.reserve(input.size());
-        indices.reserve(input.size());
+        std::size_t index = 0;
+        std::size_t size  = 0;
+        for(PointSetIterator it = begin; it != end; ++it) size += it->second.size();
+        points.reserve(size);
+        ids.reserve(size);
+        indices.reserve(size);
 
-        for(auto it = input.begin(); it != input.end(); ++it, ++index)
-        {
-            Point p = input.point(it);
-            Tile_index i = input.point_id(it);
-            points.push_back(p);
-            ids.push_back(i);
-            indices.push_back(index);
+
+        for(PointSetIterator ps_it = begin; ps_it != end; ++ps_it) {
+            const auto&  ps = ps_it->second;
+            for(auto it = ps.begin(); it != ps.end(); ++it, ++index)
+            {
+                Point p = ps.point(it);
+                Tile_index i = ps.point_id(it);
+                points.push_back(p);
+                ids.push_back(i);
+                indices.push_back(index);
+            }
         }
 
         // sort spatially the points
@@ -539,10 +545,10 @@ public:
           } else if (!simplify(p.first)) {
               // update the hint and mark the unsimplified vertex for processing
               v = p.first;
-              if (!(report_vertices_with_mixed_stars_only && star_is_local(v)))
-                inserted.insert(v);
+              if (star_is_local(v))
+                  ++local_inserted_size;
               else
-                ++local_inserted_size;
+                  inserted.insert(v);
           }
         }
 

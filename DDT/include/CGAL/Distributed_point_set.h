@@ -64,47 +64,44 @@ struct Distributed_point_set {
     std::size_t size() const { return size_; }
 
     template<typename... Args>
-    std::pair<iterator, bool> try_emplace(const key_type& k, Args&&... args)
+    std::pair<iterator, bool> try_emplace(const key_type& k, TileIndexProperty indices = {}, Args&&... args)
     {
         return tiles.emplace(std::piecewise_construct,
             std::forward_as_tuple(k),
-            std::forward_as_tuple(k, tile_indices, std::forward<Args>(args)...));
+            std::forward_as_tuple(k, indices, std::forward<Args>(args)...));
     }
 
     template<typename... Args>
-    Distributed_point_set(TileIndexProperty tile_indices = {}, Args&&... args)
+    Distributed_point_set(Args&&... args)
     :   tiles(std::forward<Args>(args)...),
-        tile_indices(tile_indices),
         size_(0)
     {}
 
     template<typename Point_const_reference, typename Tile_index>
-    void insert(Point_const_reference point, Tile_index id, Tile_index tid)
+    void insert(Point_const_reference point, Tile_index id, Tile_index tid, TileIndexProperty indices = {})
     {
-        try_emplace(tid).first->second.insert(point, id);
+        try_emplace(tid, indices).first->second.insert(point, id);
     }
 
     template<typename PointIterator, typename Partitioner>
-    void insert(PointIterator it, std::size_t size, Partitioner& part) {
+    void insert(PointIterator it, std::size_t size, Partitioner& part, TileIndexProperty indices = {}) {
         for(std::size_t i = 0; i < size; ++i, ++it) {
             Point_const_reference p = *it;
             Tile_index id = part(p);
-            insert(p, id, id);
+            insert(p, id, id, indices);
         }
     }
 
     template<typename PointIterator, typename Partitioner>
-    void insert(PointIterator begin, PointIterator end, Partitioner& part) {
+    void insert(PointIterator begin, PointIterator end, Partitioner& part, TileIndexProperty indices = {}) {
         for(PointIterator it = begin; it != end; ++it) {
             Point_const_reference p = *it;
             Tile_index id = part(p);
-            insert(p, id, id);
+            insert(p, id, id, indices);
         }
     }
 
     Container tiles;
-    TileIndexProperty tile_indices;
-
 private:
     std::size_t size_;
 };

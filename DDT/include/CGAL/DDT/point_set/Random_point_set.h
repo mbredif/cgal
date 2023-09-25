@@ -102,19 +102,18 @@ std::istream& operator>>(std::istream& in, Random_point_set<PointGenerator>& ps)
 template<typename PointGenerator, typename Partitioner>
 CGAL::Distributed_point_set<
     Random_point_set<PointGenerator>,
-    Partitioner_property_map<Random_point_set<PointGenerator>, Partitioner>
+    boost::static_property_map<typename Partitioner::Tile_index>
 >
 make_distributed_point_set(const Random_point_set<PointGenerator>& points, const Partitioner& partitioner)
 {
     typedef Random_point_set<PointGenerator>              Point_set;
     typedef typename Partitioner::Tile_index              Tile_index;
-    typedef Partitioner_property_map<Point_set, Partitioner> PropertyMap;
-    //typedef boost::static_property_map<Tile_index>        PropertyMap;
+    typedef boost::static_property_map<Tile_index>        PropertyMap;
     typedef Distributed_point_set<Point_set, PropertyMap> Distributed_point_set;
     typedef typename PointGenerator::Domain               Domain;
     typedef typename Partitioner::Domain                  Tile_domain;
 
-    Distributed_point_set dpoints(partitioner);
+    Distributed_point_set dpoints;
     std::hash<Tile_index> hash;
     std::mt19937 gen(points.seed());
     Domain domain = points.generator().domain();
@@ -135,14 +134,14 @@ make_distributed_point_set(const Random_point_set<PointGenerator>& points, const
         M -= m;
         n_points -= n;
         if (n>0)
-            dpoints.try_emplace(id, n, d, points.seed() + hash(id));
+            dpoints.try_emplace(id, id, n, d, points.seed() + hash(id));
     }
 
     // assign, if any, the remaining points to the first partition
     if (n_points > 0) {
         Tile_index id = partitioner.begin();
         Tile_domain d = partitioner.domain(id);
-        dpoints.try_emplace(id, n_points, d, points.seed() + hash(id));
+        dpoints.try_emplace(id, id, n_points, d, points.seed() + hash(id));
     }
     return std::move(dpoints);
 }

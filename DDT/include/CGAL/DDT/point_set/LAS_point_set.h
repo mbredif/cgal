@@ -12,8 +12,8 @@
 #ifndef CGAL_DDT_LAS_TILE_POINTS_H
 #define CGAL_DDT_LAS_TILE_POINTS_H
 #include <string>
+#include <boost/property_map/property_map.hpp>
 #include <CGAL/IO/read_las_points.h>
-#include <CGAL/DDT/property_map/Default_tile_index_map.h>
 #include <CGAL/Distributed_point_set.h>
 
 namespace CGAL {
@@ -23,14 +23,13 @@ namespace DDT {
 /// \tparam Point type
 /// The LAS_tile_points is a proxy to a LAS file, to be read on demand
 /// \todo is it model of something?
-template<typename TileIndex, typename Point>
+template<typename Point>
 class LAS_point_set {
 public:
     typedef Kernel_traits<Point> Traits;
     typedef typename Traits::Bbox Bbox;
     typedef Point value_type;
     typedef typename Kernel_traits<Point>::Point_const_reference const_reference;
-    typedef TileIndex Tile_index;
 
     /// Single Pass Iterator
     struct const_iterator {
@@ -63,7 +62,7 @@ public:
     const_iterator begin() const { return {lasreader_, size()}; }
     const_iterator end  () const { return {lasreader_, 0}; }
 
-    LAS_point_set(Tile_index id, const std::string& fn) : filename_(fn), id_(id) {
+    LAS_point_set(const std::string& fn) : filename_(fn) {
         file_.open(filename_, std::ios::binary);
         CGAL::IO::set_mode(file_, CGAL::IO::BINARY);
         CGAL_assertion(!!file_);
@@ -78,12 +77,10 @@ public:
     const std::string& filename() const { return filename_; }
     const std::size_t size() const { return lasreader_.npoints; }
     const std::size_t local_size() const { return size(); }
-    Tile_index id() const { return id_; }
     const Bbox& bbox() const { return bbox_; }
 
 private:
     Bbox bbox_;
-    Tile_index id_;
     std::string filename_;
     mutable LASreaderLAS lasreader_;
     std::ifstream file_;
@@ -92,10 +89,10 @@ private:
 
 /// general case, for Containers of points
 /// \todo is that really meant to be doc?
-template <typename I, typename P>
-struct Point_set_traits<LAS_point_set<I,P>>
+template <typename P>
+struct Point_set_traits<LAS_point_set<P>>
 {
-    typedef LAS_point_set<I,P>                         PointSet;
+    typedef LAS_point_set<P>                           PointSet;
     typedef typename PointSet::value_type              Point;
     typedef typename PointSet::const_reference         Point_const_reference;
     typedef typename PointSet::const_iterator          iterator;
@@ -114,32 +111,16 @@ struct Point_set_traits<LAS_point_set<I,P>>
 /// assumes that the tile domains of the partitioner are not overlaping
 /// \todo I don't understand what you mean here
 template<typename Point, typename TileIndex, typename StringIterator>
-CGAL::Distributed_point_set<LAS_point_set<TileIndex, Point>, Default_tile_index_map<TileIndex, LAS_point_set<TileIndex, Point>>>
+CGAL::Distributed_point_set<LAS_point_set<Point>, boost::static_property_map<TileIndex>>
 make_distributed_LAS_point_set(TileIndex id, StringIterator begin, StringIterator end)
 {
-    typedef LAS_point_set<TileIndex, Point> PointSet;
-    CGAL::Distributed_point_set<PointSet, Default_tile_index_map<TileIndex, PointSet>> points;
+    typedef LAS_point_set<Point> PointSet;
+    CGAL::Distributed_point_set<PointSet,boost::static_property_map<TileIndex>> points;
     for(StringIterator filename = begin; filename != end; ++filename, ++id) {
         points.try_emplace(id, id, *filename);
     }
     return std::move(points);
 }
-
-template <typename TileIndex, typename Point>
-struct Default_tile_index_map<TileIndex, LAS_point_set<TileIndex, Point>>
-{
-/// \cond SKIP_IN_MANUAL
-    typedef TileIndex                              value_type;
-    typedef value_type&                            reference;
-    typedef boost::readable_property_map_tag       category;
-    typedef LAS_point_set<TileIndex, Point>        Tile;
-    typedef Default_tile_index_map<TileIndex, Tile>    Self;
-    typedef typename Tile::const_iterator          const_iterator;
-    typedef std::pair<const Tile&, const_iterator> const_key_type;
-
-    friend value_type get(Self pmap, const const_key_type& key) { return key.first.id(); }
-/// \endcond
-};
 
 }
 }

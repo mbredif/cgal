@@ -35,12 +35,7 @@ OutputIterator splay_tile(TileTriangulation& tri, InputIterator first, InputIter
 
     // insert them into the current tile triangulation and get the new foreign points
     std::set<Vertex_index> inserted;
-    for(InputIterator it = first; it != last; ++it) {
-        tri.insert(it->second, inserted, true);
-        // it->second.clear();
-        // TODO: For now, all points are inserted, disregarding memory constraints
-        // if some remain, reschedule them : *out++ = { it->first, std::move(it->second) };
-    }
+    tri.insert(first, last, inserted);
     if (inserted.empty()) return out;
 
     // get the relevant neighbor points
