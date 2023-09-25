@@ -82,13 +82,6 @@ public:
     template <typename PointSet, typename IndexMap, typename OutputIterator>
     int insert(const PointSet& received, IndexMap received_indices, OutputIterator out)
     {
-        // retrieve the input points and ids in separate vectors
-        // compute the axis-extreme points on the way
-        std::vector<Point> points;
-        std::vector<Tile_index> ids;
-        std::vector<std::size_t> indices;
-        std::size_t index=0;
-        points.reserve(received.size());
         iterator v;
         for(auto& r : received)
         {

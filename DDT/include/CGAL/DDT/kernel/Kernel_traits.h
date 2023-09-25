@@ -15,7 +15,6 @@
 namespace CGAL {
 namespace DDT {
 
-
 template<typename P>
 struct Kernel_traits {
     typedef P            Point;
