@@ -2,7 +2,6 @@
 #include <CGAL/Triangulation_vertex_base_with_info_3.h>
 #include <CGAL/DDT/triangulation/Delaunay_triangulation_3.h>
 #include <CGAL/DDT/property_map/Vertex_info_property_map.h>
-#include <CGAL/DDT/property_map/All_local_property_map.h>
 #include <CGAL/Distributed_triangulation.h>
 
 #include <CGAL/DDT/partitioner/Grid_partitioner.h>
