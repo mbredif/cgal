@@ -137,7 +137,8 @@ struct Triangulation_traits<CGAL::Delaunay_triangulation_2<GT, TDS_>> : public K
         return (lt==Triangulation::VERTEX) ? vertex(tri, c, li) : vertices_end(tri);
     }
 
-    static std::pair<Vertex_index, bool> insert(Triangulation& tri, Point_const_reference p, Vertex_index hint = Vertex_index())
+    template<typename TileIndex>
+    static std::pair<Vertex_index, bool> insert(Triangulation& tri, Point_const_reference p, TileIndex /*i*/, Vertex_index hint = Vertex_index())
     {
         typename Triangulation::Locate_type lt;
         int li;

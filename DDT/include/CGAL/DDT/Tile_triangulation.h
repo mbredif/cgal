@@ -169,13 +169,13 @@ public:
     }
 
     inline void clear() { if (!statistics_.valid) finalize(); Traits::clear(tri_); }
-    inline std::pair<Vertex_index, bool> insert(Point_const_reference p, Tile_index id, Vertex_index v = Vertex_index()) {
+    inline std::pair<Vertex_index, bool> insert(Point_const_reference p, Tile_index i, Vertex_index v = Vertex_index()) {
         statistics_.valid = false;
-        auto inserted = Traits::insert(tri_, p, v);
+        auto inserted = Traits::insert(tri_, p, i, v);
         if(inserted.second) {
             if constexpr (std::is_convertible_v<typename Tile_index_property::category, boost::writable_property_map_tag>)
-                put(tile_indices, std::make_pair(std::ref(tri_), inserted.first), id);
-            CGAL_assertion(get(tile_indices, std::make_pair(std::cref(tri_), inserted.first)) == id);
+                put(tile_indices, std::make_pair(std::ref(tri_), inserted.first), i);
+            CGAL_assertion(get(tile_indices, std::make_pair(std::cref(tri_), inserted.first)) == i);
         }
         return inserted;
     }

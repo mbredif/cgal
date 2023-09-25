@@ -148,7 +148,8 @@ public:
         return (lt==Triangulation::ON_VERTEX) ? f.vertex(0) : vertices_end(tri);
     }
 
-    static std::pair<Vertex_iterator, bool> insert(Triangulation& tri, Point_const_reference p, Vertex_index hint = Vertex_index())
+    template<typename TileIndex>
+    static std::pair<Vertex_iterator, bool> insert(Triangulation& tri, Point_const_reference p, TileIndex /*i*/, Vertex_index hint = Vertex_index())
     {
         typename Triangulation::Locate_type lt;
         typename Triangulation::Face f(tri.maximal_dimension());

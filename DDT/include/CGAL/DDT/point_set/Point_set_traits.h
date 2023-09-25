@@ -33,7 +33,9 @@ struct Point_set_traits
         return *v;
     }
     static void clear(PointSet& ps) { ps.clear(); }
-    static std::pair<iterator, bool> insert(PointSet& ps, Point_const_reference p, const_iterator hint = {})
+
+    template<typename Tile_index>
+    static std::pair<iterator, bool> insert(PointSet& ps, Point_const_reference p, Tile_index /*i*/, const_iterator hint = {})
     {
         return std::make_pair(ps.emplace(ps.end(), p), true);
     }
@@ -74,9 +76,8 @@ struct Point_set_traits<PointSet, std::enable_if_t<std::is_default_constructible
 
     static void clear(PointSet& ps) { ps.clear(); }
 
-    static std::pair<iterator, bool> insert(PointSet& ps, Point_const_reference p, const_iterator hint = {})
+    static std::pair<iterator, bool> insert(PointSet& ps, Point_const_reference p, Tile_index i, const_iterator hint = {})
     {
-        Tile_index i = {};
         return std::make_pair(ps.emplace(ps.end(), i, p), true);
     }
 
