@@ -129,7 +129,7 @@ public:
         std::vector<double> q(origin.begin(), origin.end());
         std::size_t D = N.size();
         for(std::size_t i=0; i<D; ++i)
-            q[i] = origin[i] + N[i]/inv_step[i];
+            q[i] += N[i]/inv_step[i];
         Bbox b;
         assign(b, origin.begin(), origin.end(), q.begin(), q.end());
         return b;

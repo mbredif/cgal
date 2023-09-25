@@ -175,8 +175,7 @@ public:
         if(inserted.second) {
             if constexpr (std::is_convertible_v<typename Tile_index_property::category, boost::writable_property_map_tag>)
                 put(tile_indices, std::make_pair(std::ref(tri_), inserted.first), id);
-            else
-                CGAL_assertion(get(tile_indices, std::make_pair(std::ref(tri_), inserted.first)) == id);
+            CGAL_assertion(get(tile_indices, std::make_pair(std::cref(tri_), inserted.first)) == id);
         }
         return inserted;
     }

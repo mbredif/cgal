@@ -23,7 +23,7 @@ namespace DDT {
 /// \todo not documented
 template<typename PointGenerator>
 struct Random_point_set {
-    typedef typename PointGenerator::Point  value_type;
+    typedef typename PointGenerator::Point                 value_type;
     typedef typename PointGenerator::Point_const_reference const_reference;
 
     template<typename... Args>

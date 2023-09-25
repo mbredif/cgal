@@ -19,10 +19,15 @@ namespace DDT {
 template<typename P>
 struct Kernel_traits {
     typedef P            Point;
-    typedef const Point& Point_const_reference;
+    typedef Point const& Point_const_reference;
     typedef void         Bbox;
     static int           D;
 };
+
+template<typename Point>
+inline void assign(Point& p, typename Kernel_traits<Point>::Point_const_reference q) {
+    p = q;
+}
 
 template<typename Point_reference, typename InputIterator>
 inline void assign(Point_reference p, InputIterator begin, InputIterator end) {

@@ -66,11 +66,9 @@ public:
         auto inserted = Traits::insert(ps_, p, v);
         if(inserted.second) {
             if (pid == id()) ++local_size_;
-            if constexpr (std::is_convertible_v<typename Tile_index_property::category, boost::writable_property_map_tag>) {
-                std::pair<Point_set&,iterator> key(std::ref(ps_), inserted.first);
-                put(tile_indices, key, pid);
-            } else
-                CGAL_assertion(get(tile_indices, std::make_pair(std::ref(ps_), inserted.first)) == pid);
+            if constexpr (std::is_convertible_v<typename Tile_index_property::category, boost::writable_property_map_tag>)
+                put(tile_indices, std::make_pair(std::ref(ps_), inserted.first), pid);
+            CGAL_assertion(get(tile_indices, std::make_pair(std::cref(ps_), inserted.first)) == pid);
         }
 
         return inserted;
@@ -104,6 +102,7 @@ public:
 
     Point_set& point_set() { return ps_; }
     const Point_set& point_set() const { return ps_; }
+    const Tile_index_property& indices() const { return tile_indices; }
 
 private:
     Tile_index id_;

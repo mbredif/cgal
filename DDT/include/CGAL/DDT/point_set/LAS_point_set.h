@@ -68,11 +68,9 @@ public:
         CGAL::IO::set_mode(file_, CGAL::IO::BINARY);
         CGAL_assertion(!!file_);
         lasreader_.open(file_);
-        double coords[] = {
-            lasreader_.get_min_x(), lasreader_.get_min_y(), lasreader_.get_min_z(),
-            lasreader_.get_max_x(), lasreader_.get_max_y(), lasreader_.get_max_z()
-        };
-        assign(bbox_, coords  , coords+3, coords+3, coords+6);
+        double coord0[] = { lasreader_.get_min_x(), lasreader_.get_min_y(), lasreader_.get_min_z() };
+        double coord1[] = { lasreader_.get_max_x(), lasreader_.get_max_y(), lasreader_.get_max_z() };
+        assign(bbox_, coord0, coord0+3, coord1, coord1+3);
     }
     ~LAS_point_set() {
         lasreader_.close();
