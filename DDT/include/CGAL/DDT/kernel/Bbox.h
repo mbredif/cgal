@@ -154,8 +154,14 @@ std::istream& operator>>(std::istream& in, Impl::Bbox<Container, Derived>& bbox)
     return in;
 }
 
+template<unsigned int D, typename T>
+inline void assign(CGAL::DDT::Bbox<D, T>& b, int dim) {
+    CGAL_assertion(D==0 || D == dim);
+    b = { dim };
+}
+
 template<unsigned int D, typename T, typename InputIterator0, typename InputIterator1>
-inline void set(Bbox<D, T>& bb, InputIterator0 begin0, InputIterator0 end0, InputIterator1 begin1, InputIterator1 end1) {
+inline void assign(Bbox<D, T>& bb, InputIterator0 begin0, InputIterator0 end0, InputIterator1 begin1, InputIterator1 end1) {
     int dim0 = std::distance(begin0, end0);
     CGAL_assertion(dim0 == std::distance(begin1, end1));
     CGAL_assertion(D==0 || D == dim0);

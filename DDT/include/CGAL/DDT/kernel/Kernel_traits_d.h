@@ -43,35 +43,29 @@ struct Kernel_traits<CGAL::Wrap::Point_d<K>> {
     /// Point type
     typedef typename K::Point_d Point;
 
-    typedef const Point& Point_const_reference;
-
     static constexpr int D = Impl::Dim_value<typename Point::Ambient_dimension>::value;
 
     /// Bbox type
     typedef CGAL::DDT::Bbox<D, double>                      Bbox;
 
-    template<typename InputIterator>
-    static inline Point point(InputIterator begin, InputIterator end) {
-        int dim = std::distance(begin, end);
-        CGAL_assertion(D == 0 || D == dim);
-        return Point(dim, begin, end);
-    }
+    /// Point const reference type
+    typedef Point const& Point_const_reference;
 
-    static inline Point point(int dim) {
-        CGAL_assertion(D == 0 || D == dim);
-        return Point(dim);
-    }
-
-    static inline Bbox bbox(int dim) {
-      CGAL_assertion(D == 0 || dim == D);
-      return Bbox(dim);
-    }
-
+    /// Model of Point_set with embedded TileIndex
+    template<typename TileIndex> using Point_set_with_id = std::vector<std::pair<TileIndex, Point>>;
 };
+
+template<typename K, typename InputIterator>
+inline void assign(CGAL::Wrap::Point_d<K>& p, InputIterator begin, InputIterator end) {
+    int dim = std::distance(begin, end);
+    CGAL_assertion(Kernel_traits<CGAL::Wrap::Point_d<K>>::D == 0 || Kernel_traits<CGAL::Wrap::Point_d<K>>::D == dim);
+    p = CGAL::Wrap::Point_d<K>(dim, begin, end);
+}
 
 template<typename K>
 inline bool less_coordinate(const CGAL::Wrap::Point_d<K>& p, const CGAL::Wrap::Point_d<K>& q, int i) {
-  CGAL_assertion(p.dimension() == q.dimension());
+    CGAL_assertion(p.dimension() == q.dimension());
+    CGAL_assertion(0 <= i && i < p.dimension());
     return p[i] < q[i];
 }
 
@@ -82,26 +76,25 @@ inline double approximate_cartesian_coordinate(const CGAL::Wrap::Point_d<K>& p, 
     return CGAL::to_double(p[i]);
 }
 
-template<typename K>
-auto make_bbox(const CGAL::Wrap::Point_d<K>& p) {
-    typedef typename Kernel_traits<CGAL::Wrap::Point_d<K>>::Bbox  Bbox;
+template<unsigned int D, typename T, typename K>
+inline void assign(CGAL::DDT::Bbox<D, T>& b, const CGAL::Wrap::Point_d<K>& p) {
     int dim = p.dimension();
-    Bbox b(dim);
+    CGAL_assertion(D==0 || D == dim);
+    b = { dim };
     int i = 0;
     for(int i = 0; i < dim; ++i) {
         std::pair<double, double> interval = CGAL::to_interval(p[i]);
         b.min(i) = interval.first;
         b.max(i) = interval.second;
     }
-    return b;
 }
 
-template<typename K>
-auto make_bbox(const CGAL::Wrap::Point_d<K>& p, const CGAL::Wrap::Point_d<K>& q) {
-    typedef typename Kernel_traits<CGAL::Wrap::Point_d<K>>::Bbox  Bbox;
-    CGAL_assertion(p.dimension() == q.dimension());
+template<unsigned int D, typename T, typename K>
+inline void assign(CGAL::DDT::Bbox<D, T>& bb, const CGAL::Wrap::Point_d<K>& p, const CGAL::Wrap::Point_d<K>& q) {
     int dim = p.dimension();
-    Bbox bb(dim);
+    CGAL_assertion(dim == q.dimension());
+    CGAL_assertion(D==0 || D == dim);
+    bb = { dim };
     int i = 0;
     for(int i = 0; i < dim; ++i) {
         std::pair<double, double> a = CGAL::to_interval(p[i]);
@@ -109,7 +102,6 @@ auto make_bbox(const CGAL::Wrap::Point_d<K>& p, const CGAL::Wrap::Point_d<K>& q)
         bb.min(i) = std::min(a.first, b.first);
         bb.max(i) = std::max(a.second, b.second);
     }
-    return bb;
 }
 
 }

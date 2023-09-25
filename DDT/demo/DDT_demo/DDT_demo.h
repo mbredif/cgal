@@ -100,9 +100,8 @@ int DDT_demo(int argc, char **argv)
 
   std::vector<double> coord0(dimension, -1);
   std::vector<double> coord1(dimension,  1);
-  Point p0 = Traits::point(coord0.begin(), coord0.end());
-  Point p1 = Traits::point(coord1.begin(), coord1.end());
-  Bbox bbox = CGAL::DDT::make_bbox(p0, p1);
+  Bbox bbox;
+  CGAL::DDT::assign(bbox, coord0.begin(), coord0.end(), coord1.begin(), coord1.end());
   Partitioner partitioner(1, bbox, NT.begin(), NT.end());
   Scheduler scheduler(max_concurrency);
   Serializer serializer(ser);

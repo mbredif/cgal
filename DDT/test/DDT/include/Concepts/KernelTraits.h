@@ -34,37 +34,14 @@ public:
     typedef ::Bbox Bbox;
     static constexpr int D=33;
 #endif
-
-
     /// @}
-
-    /// compares the `i`'th Cartesian coodinate of `p` and `q`
-    static bool less_coordinate(Point_const_reference p, Point_const_reference q, int i) { return true; }
-
-
-    static inline Bbox bbox(int dim) {
-        return Impl::b;
-    }
-
-    static inline Bbox bbox(Point_const_reference p) {
-        return Impl::b;
-    }
-
-    static inline Bbox bbox(Point_const_reference p, Point_const_reference q) {
-        return Impl::b;
-    }
-
-    template<typename InputIterator>
-    static inline Point point(InputIterator begin, InputIterator end) {
-        return Impl::p;
-    }
-
-    static inline Point point(int /*dim*/) {
-        return Impl::p;
-    }
-
-
 };
+
+template<typename InputIterator>
+void assign(::Point&, InputIterator begin, InputIterator end) {}
+
+/// compares the `i`'th Cartesian coodinate of `p` and `q`
+bool less_coordinate(::Point const & p, ::Point const & q, int i) { return true; }
 
 /// returns the ith coodinate of a point as a (possibly approximated) double
 double approximate_cartesian_coordinate(const ::Point& p, int i)
@@ -72,11 +49,12 @@ double approximate_cartesian_coordinate(const ::Point& p, int i)
     return 0;
 }
 
+void assign(::Bbox&, int dim) {}
+void assign(::Bbox&, ::Point const & p) {}
+void assign(::Bbox&, ::Point const & p, ::Point const & q) {}
+template<typename InputIterator0, typename InputIterator1>
+void assign(::Bbox&, InputIterator0 begin0, InputIterator0 end0, InputIterator1 begin1, InputIterator1 end1) {}
 
-::Bbox make_bbox(const ::Point& p, const ::Point& q)
-{
-    return Impl::b;
-}
 
 }
 }

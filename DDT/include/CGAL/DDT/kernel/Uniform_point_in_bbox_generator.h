@@ -24,7 +24,6 @@ struct Uniform_point_in_bbox_generator
 {
     typedef Kernel_traits<P>                       Traits;
     typedef typename Traits::Point                 Point;
-    //typedef typename Traits::Point_reference       Point_reference;
     typedef typename Traits::Point_const_reference Point_const_reference;
     typedef typename Traits::Bbox                  Bbox;
     typedef Bbox                                   Domain;
@@ -43,8 +42,7 @@ struct Uniform_point_in_bbox_generator
         for(int i=0; i<D; ++i) {
             coords[i] = bbox_.min(i) + distrib_(gen_)*(bbox_.max(i)-bbox_.min(i));
         }
-        //set(point_, coords.begin(), coords.end());
-        point_ = Traits::point(coords.begin(), coords.end());
+        assign(point_, coords.begin(), coords.end());
     }
 
 private:

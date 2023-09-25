@@ -18,30 +18,26 @@ namespace DDT {
 
 template<typename P>
 struct Kernel_traits {
-    typedef P Point;
-    typedef const Point&                               Point_const_reference;
-    typedef void Bbox;
-    static int D;
-
-    template<typename InputIterator>
-    Point make_point(InputIterator begin, InputIterator end);
-
-    Point make_point(int dim);
-
-    Bbox make_bbox(int dim);
+    typedef P            Point;
+    typedef const Point& Point_const_reference;
+    typedef void         Bbox;
+    static int           D;
 };
 
-template<typename Point_const_reference>
-bool less_coordinate(Point_const_reference p, Point_const_reference q, int i);
+template<typename Point_reference, typename InputIterator>
+inline void assign(Point_reference p, InputIterator begin, InputIterator end) {
+    std::copy(begin, end, p);
+}
 
 template<typename Point_const_reference>
-double approximate_cartesian_coordinate(Point_const_reference p, int i);
+double approximate_cartesian_coordinate(Point_const_reference p, int i) {
+    return double(p[i]);
+}
 
 template<typename Point_const_reference>
-typename Kernel_traits<Point_const_reference>::Bbox make_bbox(Point_const_reference p);
-
-template<typename Point_const_reference>
-typename Kernel_traits<Point_const_reference>::Bbox make_bbox(Point_const_reference p, Point_const_reference q);
+bool less_coordinate(Point_const_reference p, Point_const_reference q, int i) {
+    return p[i] < q[i];
+}
 
 template<typename Domain>
 double measure(const Domain& d) {

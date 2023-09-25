@@ -103,8 +103,10 @@ public:
     Tile_index end  () const { return id0+M; }
 
     Bbox bbox(Tile_index id) const {
+        Bbox b;
         if (id < id0 || !(id < id0 + size())) {
-            return Traits::bbox(N.size());
+            assign(b, N.size());
+            return b;
         }
         id = id - id0;
         std::size_t f(id);
@@ -119,16 +121,18 @@ public:
             p[i] += d*x;
             q[i] = p[i] + d;
         }
-        return make_bbox(Traits::point(p.begin(), p.end()), Traits::point(q.begin(), q.end()));
+        assign(b, p.begin(), p.end(), q.begin(), q.end());
+        return b;
     }
 
     Bbox bbox() const {
-        std::vector<double> p(origin.begin(), origin.end());
         std::vector<double> q(origin.begin(), origin.end());
         std::size_t D = N.size();
         for(std::size_t i=0; i<D; ++i)
-            q[i] = p[i] + N[i]/inv_step[i];
-        return make_bbox(Traits::point(p.begin(), p.end()), Traits::point(q.begin(), q.end()));
+            q[i] = origin[i] + N[i]/inv_step[i];
+        Bbox b;
+        assign(b, origin.begin(), origin.end(), q.begin(), q.end());
+        return b;
     }
     Domain domain() const { return bbox(); }
     Domain domain(Tile_index id) const { return bbox(id); }

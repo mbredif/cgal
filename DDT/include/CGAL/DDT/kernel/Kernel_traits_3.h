@@ -31,24 +31,21 @@ struct Kernel_traits<CGAL::Point_3<K>> {
     /// Point type
     typedef CGAL::Point_3<K> Point;
 
-    typedef const Point& Point_const_reference;
+    /// Point const reference type
+    typedef Point const& Point_const_reference;
 
-    template<typename InputIterator>
-    static inline Point point(InputIterator begin, InputIterator end) {
-        CGAL_assertion(std::distance(begin, end) == 3);
-        return Point(*begin, *(begin+1), *(begin+2));
-    }
-
-    static inline Point point(int dim) {
-        CGAL_assertion(dim == 3);
-        return Point();
-    }
-
-    static inline Bbox bbox(int dim) {
-        CGAL_assertion(dim == 3);
-        return Bbox();
-    }
+    /// Model of Point_set with embedded TileIndex
+    template<typename TileIndex> using Point_set_with_id = std::vector<std::pair<TileIndex, Point>>;
 };
+
+template<typename K, typename InputIterator>
+inline void assign(CGAL::Point_3<K>& p, InputIterator begin, InputIterator end) {
+    InputIterator x = begin++;
+    InputIterator y = begin++;
+    InputIterator z = begin;
+    CGAL_assertion(++begin == end);
+    p = { *x, *y, *z };
+}
 
 template<typename K>
 inline bool less_coordinate(const CGAL::Point_3<K>& p, const CGAL::Point_3<K>& q, int i) {
@@ -63,15 +60,31 @@ inline double approximate_cartesian_coordinate(const CGAL::Point_3<K>& p, int i)
     return CGAL::to_double(p[i]);
 }
 
-
-template<typename K>
-inline CGAL::Bbox_3 make_bbox(const CGAL::Point_3<K>& p) {
-    return CGAL::Bbox_3(p.x(), p.y(), p.z(), p.x(), p.y(), p.z());
+inline void assign(CGAL::Bbox_3& b, int dim) {
+    CGAL_assertion(dim == 3);
+    b = {};
 }
 
 template<typename K>
-inline CGAL::Bbox_3 make_bbox(const CGAL::Point_3<K>& p, const CGAL::Point_3<K>& q) {
-    return CGAL::Bbox_3(p.x(), p.y(), p.z(), q.x(), q.y(), q.z());
+inline void assign(CGAL::Bbox_3& b, const CGAL::Point_3<K>& p) {
+    b = { p.x(), p.y(), p.z(), p.x(), p.y(), p.z() };
+}
+
+template<typename K>
+inline void assign(CGAL::Bbox_3& b, const CGAL::Point_3<K>& p, const CGAL::Point_3<K>& q) {
+    b = { p.x(), p.y(), p.z(), q.x(), q.y(), q.z() };
+}
+
+template<typename InputIterator0, typename InputIterator1>
+inline void assign(CGAL::Bbox_3& b, InputIterator0 begin0, InputIterator0 end0, InputIterator1 begin1, InputIterator1 end1) {
+    InputIterator0 x0 = begin0++;
+    InputIterator0 y0 = begin0++;
+    InputIterator0 z0 = begin0;
+    InputIterator1 x1 = begin1++;
+    InputIterator1 y1 = begin1++;
+    InputIterator1 z1 = begin1;
+    CGAL_assertion(++begin0 == end0 && ++begin1 == end1);
+    b = { *x0, *y0, *z0, *x1, *y1, *z1 };
 }
 
 double measure(const CGAL::Bbox_3& b) {

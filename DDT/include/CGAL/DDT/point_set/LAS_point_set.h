@@ -53,7 +53,7 @@ public:
                 lasreader_.point.get_y(),
                 lasreader_.point.get_z()
             };
-            point_ = Traits::point(coords, coords+3);
+            assign(point_, coords, coords+3);
         }
         Point point_;
         LASreaderLAS& lasreader_;
@@ -72,9 +72,7 @@ public:
             lasreader_.get_min_x(), lasreader_.get_min_y(), lasreader_.get_min_z(),
             lasreader_.get_max_x(), lasreader_.get_max_y(), lasreader_.get_max_z()
         };
-        Point pmin = Traits::point(coords  , coords+3);
-        Point pmax = Traits::point(coords+3, coords+6);
-        bbox_ = make_bbox(pmin, pmax);
+        assign(bbox_, coords  , coords+3, coords+3, coords+6);
     }
     ~LAS_point_set() {
         lasreader_.close();
