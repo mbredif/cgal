@@ -9,8 +9,8 @@
 //
 // Author(s)     : Mathieu Brédif and Laurent Caraffa
 
-#ifndef CGAL_DDT_FIRST_PROPERTY_MAP_H
-#define CGAL_DDT_FIRST_PROPERTY_MAP_H
+#ifndef CGAL_DDT_Default_tile_index_map_H
+#define CGAL_DDT_Default_tile_index_map_H
 
 #include <boost/property_map/property_map.hpp>
 
@@ -22,9 +22,9 @@ namespace DDT {
 ///
 /// \cgalModels{ReadablePropertyMap}
 template <typename TileIndex, typename Tile>
-struct First_property_map;
+struct Default_tile_index_map;
 
 }
 }
 
-#endif // CGAL_DDT_FIRST_PROPERTY_MAP_H
+#endif // CGAL_DDT_Default_tile_index_map_H

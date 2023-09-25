@@ -22,7 +22,7 @@
 #include <CGAL/DDT/serializer/No_serializer.h>
 #include <CGAL/DDT/serializer/VRT_file_serializer.h>
 #include <CGAL/DDT/IO/trace_logger.h>
-#include <CGAL/DDT/property_map/First_property_map.h>
+#include <CGAL/DDT/property_map/Default_tile_index_map.h>
 #include <CGAL/assertions.h>
 
 namespace CGAL {
@@ -568,7 +568,7 @@ public:
         typedef CGAL::Distributed_point_set<PointSet1, IndexMap1, Serializer1>  Distributed_point_set1;
         typedef typename Distributed_point_set1::Point     Point;
         typedef typename CGAL::DDT::Kernel_traits<Point>::Point_set_with_id<Tile_index> PointSet2;
-        typedef CGAL::DDT::First_property_map<Tile_index, PointSet2> IndexMap2;
+        typedef CGAL::DDT::Default_tile_index_map<Tile_index, PointSet2> IndexMap2;
         IndexMap2 indices2;
         std::multimap<Tile_index, CGAL::DDT::Tile_point_set<PointSet2, IndexMap2>> points2;
 
@@ -610,7 +610,7 @@ public:
         }
 
         typedef typename CGAL::DDT::Kernel_traits<Point>::Point_set_with_id<Tile_index> PointSet;
-        typedef CGAL::DDT::First_property_map<Tile_index, PointSet> IndexMap;
+        typedef CGAL::DDT::Default_tile_index_map<Tile_index, PointSet> IndexMap;
         typedef CGAL::Distributed_point_set<PointSet, IndexMap>  Distributed_point_set;
         Distributed_point_set points;
 
