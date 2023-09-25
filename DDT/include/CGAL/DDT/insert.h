@@ -72,12 +72,8 @@ OutputIterator splay_root_triangulation(TileTriangulation& tri, InputIterator be
     std::vector<Vertex_index> inserted;
     for(InputIterator it = begin; it != end; ++it) {
         auto& ps = it->second;
-        for(auto v = ps.begin(); v != ps.end(); ++v) {
-            Tile_index id = ps.point_id(v);
-            Point p = ps.point(v);
-            inserted.push_back(tri.insert(p, id).first);
-        }
-        //ps.clear();
+        for(auto v = ps.begin(); v != ps.end(); ++v)
+            inserted.push_back(tri.insert(ps.point(v), ps.point_id(v)).first);
     }
     std::map<Tile_index, std::set<Vertex_index>> vertices;
     tri.get_finite_neighbors(inserted, vertices);

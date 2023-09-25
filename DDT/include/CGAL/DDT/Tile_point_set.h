@@ -58,7 +58,7 @@ public:
         return get(tile_indices, std::make_pair(std::ref(ps_), v));
     }
 
-    inline Point point(const_iterator v) const {
+    inline Point_const_reference point(const_iterator v) const {
         return Traits::point(ps_, v);
     }
 

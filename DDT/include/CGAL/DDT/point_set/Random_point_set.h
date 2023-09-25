@@ -35,7 +35,7 @@ struct Random_point_set {
             if (remaining > 0) generator.next();
         }
 
-        value_type operator*() const { return generator_.point(); }
+        const_reference operator*() const { return generator_.point(); }
         bool operator==(const const_iterator& it) const {
             return remaining_ == it.remaining_ && &generator_ == &it.generator_ ;
         }
@@ -71,7 +71,7 @@ struct Point_set_traits<Random_point_set<PointGenerator>>
     typedef typename PointSet::const_iterator  iterator;
     typedef typename PointSet::const_iterator  const_iterator;
 
-    static Point point(const PointSet& ps, const const_iterator& v) {
+    static Point_const_reference point(const PointSet& ps, const const_iterator& v) {
         return *v;
     }
 
