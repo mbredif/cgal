@@ -13,7 +13,7 @@
 #define CGAL_DDT_LAS_TILE_POINTS_H
 #include <string>
 #include <CGAL/IO/read_las_points.h>
-#include <CGAL/DDT/property_map/All_local_property_map.h>
+#include <CGAL/DDT/property_map/First_property_map.h>
 #include <CGAL/Distributed_point_set.h>
 
 namespace CGAL {
@@ -116,15 +116,32 @@ struct Point_set_traits<LAS_point_set<I,P>>
 /// assumes that the tile domains of the partitioner are not overlaping
 /// \todo I don't understand what you mean here
 template<typename Point, typename TileIndex, typename StringIterator>
-CGAL::Distributed_point_set<LAS_point_set<TileIndex, Point>, All_local_property_map<TileIndex>>
+CGAL::Distributed_point_set<LAS_point_set<TileIndex, Point>, First_property_map<TileIndex, LAS_point_set<TileIndex, Point>>>
 make_distributed_LAS_point_set(TileIndex id, StringIterator begin, StringIterator end)
 {
-    CGAL::Distributed_point_set<LAS_point_set<TileIndex, Point>, All_local_property_map<TileIndex>> points;
+    typedef LAS_point_set<TileIndex, Point> PointSet;
+    CGAL::Distributed_point_set<PointSet, First_property_map<TileIndex, PointSet>> points;
     for(StringIterator filename = begin; filename != end; ++filename, ++id) {
         points.try_emplace(id, id, *filename);
     }
     return std::move(points);
 }
+
+template <typename TileIndex, typename Point>
+struct First_property_map<TileIndex, LAS_point_set<TileIndex, Point>>
+{
+/// \cond SKIP_IN_MANUAL
+    typedef TileIndex                              value_type;
+    typedef value_type&                            reference;
+    typedef boost::readable_property_map_tag       category;
+    typedef LAS_point_set<TileIndex, Point>        Tile;
+    typedef First_property_map<TileIndex, Tile>    Self;
+    typedef typename Tile::const_iterator          const_iterator;
+    typedef std::pair<const Tile&, const_iterator> const_key_type;
+
+    friend value_type get(Self pmap, const const_key_type& key) { return key.first.id(); }
+/// \endcond
+};
 
 }
 }

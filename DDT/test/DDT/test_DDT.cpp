@@ -24,7 +24,7 @@ typedef CGAL::DDT::Grid_partitioner<Tile_index, Point> Partitioner;
 #include <CGAL/Distributed_triangulation.h>
 typedef CGAL::Distributed_triangulation<Triangulation, TileIndexProperty, Serializer> Distributed_triangulation;
 typedef std::vector<std::pair<Tile_index, Point>> Point_set;
-typedef CGAL::Distributed_point_set<Point_set, CGAL::DDT::First_property_map<Point_set>>  Distributed_point_set;
+typedef CGAL::Distributed_point_set<Point_set, CGAL::DDT::First_property_map<Tile_index, Point_set>>  Distributed_point_set;
 
 #include <CGAL/DDT/serializer/VRT_file_serializer.h>
 

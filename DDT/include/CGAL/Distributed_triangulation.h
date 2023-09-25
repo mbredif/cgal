@@ -567,8 +567,8 @@ public:
 
         typedef CGAL::Distributed_point_set<PointSet1, IndexMap1, Serializer1>  Distributed_point_set1;
         typedef typename Distributed_point_set1::Point     Point;
-        typedef std::vector<std::pair<Tile_index, Point>>  PointSet2;
-        typedef CGAL::DDT::First_property_map<PointSet2>   IndexMap2;
+        typedef typename CGAL::DDT::Kernel_traits<Point>::Point_set_with_id<Tile_index> PointSet2;
+        typedef CGAL::DDT::First_property_map<Tile_index, PointSet2> IndexMap2;
         IndexMap2 indices2;
         std::multimap<Tile_index, CGAL::DDT::Tile_point_set<PointSet2, IndexMap2>> points2;
 
@@ -609,8 +609,9 @@ public:
             return std::make_pair(res, false);
         }
 
-        typedef std::vector<std::pair<Tile_index, Point>> Point_set;
-        typedef CGAL::Distributed_point_set<Point_set, CGAL::DDT::First_property_map<Point_set>>  Distributed_point_set;
+        typedef typename CGAL::DDT::Kernel_traits<Point>::Point_set_with_id<Tile_index> PointSet;
+        typedef CGAL::DDT::First_property_map<Tile_index, PointSet> IndexMap;
+        typedef CGAL::Distributed_point_set<PointSet, IndexMap>  Distributed_point_set;
         Distributed_point_set points;
 
         if (emplaced.second) { // tile did not exist

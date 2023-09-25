@@ -106,12 +106,13 @@ CGAL::Distributed_point_set<
 >
 make_distributed_point_set(const Random_point_set<PointGenerator>& points, const Partitioner& partitioner)
 {
-    typedef Random_point_set<PointGenerator>                 Point_set;
+    typedef Random_point_set<PointGenerator>              Point_set;
+    typedef typename Partitioner::Tile_index              Tile_index;
     typedef Partitioner_property_map<Point_set, Partitioner> PropertyMap;
-    typedef Distributed_point_set<Point_set, PropertyMap>         Distributed_point_set;
-    typedef typename Partitioner::Tile_index                      Tile_index;
-    typedef typename PointGenerator::Domain                       Domain;
-    typedef typename Partitioner::Domain                          Tile_domain;
+    //typedef boost::static_property_map<Tile_index>        PropertyMap;
+    typedef Distributed_point_set<Point_set, PropertyMap> Distributed_point_set;
+    typedef typename PointGenerator::Domain               Domain;
+    typedef typename Partitioner::Domain                  Tile_domain;
 
     Distributed_point_set dpoints(partitioner);
     std::hash<Tile_index> hash;

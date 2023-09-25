@@ -28,11 +28,15 @@ public:
 
     /// the ambient dimension if it is static, 0 if it is dynamic
     static constexpr int D;
+
+    template<typename TileIndex>
+    using Point_set_with_id = unspecified_type;
 #else
     typedef ::Point Point;
     typedef ::Point const& Point_const_reference;
     typedef ::Bbox Bbox;
     static constexpr int D=33;
+    template<typename TileIndex> using Point_set_with_id = std::vector<std::pair<TileIndex, ::Point>>;
 #endif
     /// @}
 };
@@ -44,7 +48,7 @@ void assign(::Point&, InputIterator begin, InputIterator end) {}
 bool less_coordinate(::Point const & p, ::Point const & q, int i) { return true; }
 
 /// returns the ith coodinate of a point as a (possibly approximated) double
-double approximate_cartesian_coordinate(const ::Point& p, int i)
+double approximate_cartesian_coordinate(::Point const &p, int i)
 {
     return 0;
 }

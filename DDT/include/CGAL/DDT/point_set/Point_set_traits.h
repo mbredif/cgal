@@ -14,6 +14,7 @@
 
 #include <CGAL/IO/io.h>
 #include <CGAL/DDT/kernel/Kernel_traits.h>
+#include <CGAL/DDT/property_map/First_property_map.h>
 
 namespace CGAL {
 namespace DDT {
@@ -96,6 +97,26 @@ struct Point_set_traits<PointSet, std::enable_if_t<std::is_default_constructible
         }
         return in;
     }
+};
+
+template <typename Tile>
+struct First_property_map<typename Tile::value_type::first_type, Tile>
+{
+
+/// \cond SKIP_IN_MANUAL
+    typedef typename Tile::value_type::first_type  value_type;
+    typedef value_type&                            reference;
+    typedef boost::read_write_property_map_tag     category;
+    typedef First_property_map<value_type, Tile>   Self;
+    typedef typename Tile::iterator                iterator;
+    typedef typename Tile::const_iterator          const_iterator;
+    typedef std::pair<const Tile&, const_iterator> const_key_type;
+    typedef std::pair<Tile&, iterator>             key_type;
+
+
+    friend value_type get(Self pmap, const const_key_type& key) { return key.second->first; }
+    friend void put(Self pmap, const key_type& key, value_type v) { key.second->first = v; }
+/// \endcond
 };
 
 }

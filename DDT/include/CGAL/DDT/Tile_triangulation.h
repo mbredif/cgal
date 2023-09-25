@@ -140,7 +140,7 @@ public:
 
     inline Tile_index vertex_id(Vertex_index v) const {
         CGAL_assertion(!vertex_is_infinite(v));
-        return get(tile_indices, std::make_pair(std::ref(tri_), v));
+        return get(tile_indices, std::make_pair(std::cref(tri_), v));
     }
 
     Tile_index cell_id(Cell_index c) const
