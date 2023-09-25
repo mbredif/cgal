@@ -71,7 +71,6 @@ struct Point_set_traits<Random_point_set<PointGenerator>>
     typedef typename PointSet::const_iterator  iterator;
     typedef typename PointSet::const_iterator  const_iterator;
 
-    static std::size_t size(const PointSet& ps) { return ps.size(); }
     static Point point(const PointSet& ps, const const_iterator& v) {
         return *v;
     }

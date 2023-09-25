@@ -28,8 +28,6 @@ struct Point_set_traits
     typedef typename PointSet::iterator                iterator;
     typedef typename PointSet::const_iterator          const_iterator;
 
-    static std::size_t size(const PointSet& ps) { return ps.size(); }
-
     static Point_const_reference point(const PointSet& ps, const_iterator v) {
         return *v;
     }
@@ -74,8 +72,6 @@ struct Point_set_traits<PointSet, std::enable_if_t<std::is_default_constructible
     }
 
     static void clear(PointSet& ps) { ps.clear(); }
-    static std::size_t size(const PointSet& ps) { return ps.size(); }
-
 
     static std::pair<iterator, bool> insert(PointSet& ps, Point_const_reference p, const_iterator hint = {})
     {

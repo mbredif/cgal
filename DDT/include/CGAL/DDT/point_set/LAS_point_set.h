@@ -103,7 +103,6 @@ struct Point_set_traits<LAS_point_set<I,P>>
     typedef typename PointSet::const_iterator          iterator;
     typedef typename PointSet::const_iterator          const_iterator;
 
-    static std::size_t size(const PointSet& ps) { return ps.size(); }
     static std::size_t local_size(const PointSet& ps) { return ps.local_size(); }
 
     static Point_const_reference point(const PointSet& ps, const_iterator v) {

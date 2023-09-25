@@ -40,7 +40,7 @@ public:
         : id_(id),
           ps_(std::forward<Args>(args)...),
           tile_indices(index_map),
-          local_size_(Traits::size(ps_))
+          local_size_(std::size(ps_))
     {}
 
     inline Tile_index id() const { return id_; }
@@ -51,7 +51,7 @@ public:
     inline const_iterator end  () const { return std::end  (ps_); }
     inline bool empty() const { return std::empty(ps_); }
 
-    inline std::size_t size() const { return Traits::size(ps_); }
+    inline std::size_t size() const { return std::size(ps_); }
     inline std::size_t local_size() const { return local_size_; }
 
     inline Tile_index point_id(const_iterator v) const {

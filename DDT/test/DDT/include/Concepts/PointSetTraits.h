@@ -27,9 +27,6 @@ public:
     typedef ::TileIndex iterator;
 #endif
 
-
-    static std::size_t size(const PointSet& ps) { return 0; }
-
     static const value_type& point(const PointSet& ps, const_iterator v) {
         return Impl::p;
     }
@@ -56,9 +53,6 @@ public:
     typedef ::TileIndex const_iterator;
     typedef ::TileIndex iterator;
 #endif
-
-
-    static std::size_t size(const PointSet& ps) { return 0; }
 
     static const value_type& point(const PointSet& ps, const_iterator v) {
         return Impl::p;
