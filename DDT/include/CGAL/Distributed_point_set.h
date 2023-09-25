@@ -87,7 +87,7 @@ struct Distributed_point_set {
     template<typename PointIterator, typename Partitioner>
     void insert(PointIterator it, std::size_t size, Partitioner& part) {
         for(std::size_t i = 0; i < size; ++i, ++it) {
-            Point p = *it;
+            Point_const_reference p = *it;
             Tile_index id = part(p);
             insert(p, id, id);
         }
@@ -96,7 +96,7 @@ struct Distributed_point_set {
     template<typename PointIterator, typename Partitioner>
     void insert(PointIterator begin, PointIterator end, Partitioner& part) {
         for(PointIterator it = begin; it != end; ++it) {
-            Point p = *it;
+            Point_const_reference p = *it;
             Tile_index id = part(p);
             insert(p, id, id);
         }
