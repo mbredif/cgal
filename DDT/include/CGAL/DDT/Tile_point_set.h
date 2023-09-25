@@ -55,7 +55,7 @@ public:
     inline std::size_t local_size() const { return local_size_; }
 
     inline Tile_index point_id(const_iterator v) const {
-        return get(tile_indices, std::make_pair(std::ref(ps_), v));
+        return get(tile_indices, std::make_pair(std::cref(ps_), v));
     }
 
     inline Point_const_reference point(const_iterator v) const {

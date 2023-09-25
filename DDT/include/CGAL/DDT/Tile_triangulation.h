@@ -522,10 +522,8 @@ public:
             const auto&  ps = ps_it->second;
             for(auto it = ps.begin(); it != ps.end(); ++it, ++index)
             {
-                Point p = ps.point(it);
-                Tile_index i = ps.point_id(it);
-                points.push_back(p);
-                ids.push_back(i);
+                points.push_back(ps.point(it));
+                ids.push_back(ps.point_id(it));
                 indices.push_back(index);
             }
         }

@@ -31,10 +31,10 @@ public:
     typedef Point value_type;
     typedef typename Kernel_traits<Point>::Point_const_reference const_reference;
 
-    /// Single Pass Iterator
+    /// Single Pass Iterator : all iterators share and use the same reader and point storage (provided by LAS_point_set)
     struct const_iterator {
 
-        const_iterator(LASreaderLAS& lasreader, std::size_t size) : lasreader_(lasreader), size_(size) {
+        const_iterator(LASreaderLAS& lasreader, Point& point, std::size_t size) : lasreader_(lasreader), point_(point), size_(size) {
             next();
         }
         const_iterator& operator++() { --size_; next(); return *this;  }
@@ -54,13 +54,13 @@ public:
             };
             assign(point_, coords, coords+3);
         }
-        Point point_;
+        Point& point_;
         LASreaderLAS& lasreader_;
         std::size_t size_;
     };
 
-    const_iterator begin() const { return {lasreader_, size()}; }
-    const_iterator end  () const { return {lasreader_, 0}; }
+    const_iterator begin() const { return {lasreader_, point_, size()}; }
+    const_iterator end  () const { return {lasreader_, point_, 0}; }
 
     LAS_point_set(const std::string& fn) : filename_(fn) {
         file_.open(filename_, std::ios::binary);
@@ -82,6 +82,7 @@ public:
 private:
     Bbox bbox_;
     std::string filename_;
+    mutable Point point_;
     mutable LASreaderLAS lasreader_;
     std::ifstream file_;
 };
