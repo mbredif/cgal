@@ -82,7 +82,7 @@ bool write_csv_vert(std::ostream& csv, const TileTriangulation& triangulation)
     {
         if(triangulation.vertex_is_infinite(v)) continue;
         csv << "POINT( ";
-        Point_const_reference p = triangulation.point(v);
+        Point_const_reference p = triangulation.triangulation_point(v);
         for(int d=0; d<D; ++d)
             csv << approximate_cartesian_coordinate(p,d) << " ";
         csv << ")," << std::to_string(triangulation.vertex_id(v)) << "\n";
@@ -112,7 +112,7 @@ bool write_csv_facet(std::ostream& csv, const TileTriangulation& triangulation)
             if(i == idx) continue;
             Vertex_index v = triangulation.vertex(c,i);
             local += triangulation.vertex_is_local(v);
-            Point_const_reference p = triangulation.point(v);
+            Point_const_reference p = triangulation.triangulation_point(v);
             for(int d=0; d<D; ++d)
                 csv << approximate_cartesian_coordinate(p, d) << " ";
             if (++j < D) csv << ",";
@@ -139,13 +139,13 @@ bool write_csv_cell(std::ostream& csv, const TileTriangulation& triangulation)
         {
             Vertex_index v = triangulation.vertex(c,i);
             local += triangulation.vertex_is_local(v);
-            Point_const_reference p = triangulation.point(v);
+            Point_const_reference p = triangulation.triangulation_point(v);
             for(int d=0; d<D; ++d)
                 csv << approximate_cartesian_coordinate(p, d) << " ";
             csv << ",";
         }
         Vertex_index v = triangulation.vertex(c,0);
-        Point_const_reference p = triangulation.point(v);
+        Point_const_reference p = triangulation.triangulation_point(v);
         for(int d=0; d<D; ++d) // repeat first to close the polygon
             csv << approximate_cartesian_coordinate(p, d) << " ";
         csv << "))\"," << std::to_string(triangulation.cell_id(c)) << "," << local << "\n";
@@ -171,13 +171,13 @@ bool write_csv_tin(std::ostream& csv, const TileTriangulation& triangulation)
         for(int i=0; i<=D; ++i)
         {
             v = triangulation.vertex(c,i);
-            Point_const_reference p = triangulation.point(v);
+            Point_const_reference p = triangulation.triangulation_point(v);
             for(int d=0; d<D; ++d)
                 csv << approximate_cartesian_coordinate(p, d) << " ";
             csv << ",";
         }
         v = triangulation.vertex(c,0);
-        Point_const_reference p = triangulation.point(v);
+        Point_const_reference p = triangulation.triangulation_point(v);
         for(int d=0; d<D; ++d) // repeat first to close the polygon
             csv << approximate_cartesian_coordinate(p,d) << " ";
         csv << "))";

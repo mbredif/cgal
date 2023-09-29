@@ -58,12 +58,8 @@ public:
         return get(tile_indices, std::make_pair(std::cref(ps_), v));
     }
 
-    inline Point_const_reference point(const_iterator v) const {
-        return Traits::point(ps_, v);
-    }
-
-    inline std::pair<iterator, bool> insert(Point_const_reference p, Tile_index i, const_iterator v = {}) {
-        auto inserted = Traits::insert(ps_, p, i, v);
+    inline std::pair<iterator, bool> insert_point(Point_const_reference p, Tile_index i, const_iterator v = {}) {
+        auto inserted = insert(ps_, p, i, v);
         if(inserted.second) {
             if (i == id()) ++local_size_;
             if constexpr (std::is_convertible_v<typename Tile_index_property::category, boost::writable_property_map_tag>)
@@ -80,7 +76,7 @@ public:
     }
 
     template <typename PointSet, typename IndexMap, typename OutputIterator>
-    int insert(const PointSet& received, IndexMap received_indices, OutputIterator out)
+    int insert_range(const PointSet& received, IndexMap received_indices, OutputIterator out)
     {
         iterator v;
         for(auto& r : received)
@@ -107,13 +103,15 @@ private:
 template<class T, class Pmap>
 std::ostream& operator<<(std::ostream& out, const Tile_point_set<T, Pmap>& t)
 {
-    return CGAL::DDT::Point_set_traits<T>::write(out, t.point_set());
+    write(out, t.point_set());
+    return out;
 }
 
 template<class T, class Pmap>
 std::istream& operator>>(std::istream& in, Tile_point_set<T, Pmap>& t)
 {
-    return CGAL::DDT::Point_set_traits<T>::read(in, t.point_set());
+    read(in, t.point_set());
+    return in;
 }
 
 template<class T, class Pmap>

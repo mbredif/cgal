@@ -9,8 +9,8 @@
 //
 // Author(s)     : Mathieu Brédif and Laurent Caraffa
 
-#ifndef CGAL_DDT_RANDOM_POINTS_IN_BBOX_H
-#define CGAL_DDT_RANDOM_POINTS_IN_BBOX_H
+#ifndef CGAL_DDT_RANDOM_POINT_SET_H
+#define CGAL_DDT_RANDOM_POINT_SET_H
 
 #include <CGAL/Distributed_point_set.h>
 #include <CGAL/DDT/point_set/Point_set_traits.h>
@@ -71,13 +71,15 @@ struct Point_set_traits<Random_point_set<PointGenerator>>
     typedef typename PointSet::const_iterator  iterator;
     typedef typename PointSet::const_iterator  const_iterator;
 
-    static Point_const_reference point(const PointSet& ps, const const_iterator& v) {
-        return *v;
-    }
-
     static inline std::ostream& write(std::ostream& out, const PointSet& ps) { return out << ps; }
 };
 
+
+template<typename PointGenerator>
+typename PointGenerator::Point_const_reference
+point(const Random_point_set<PointGenerator>& ps, typename Random_point_set<PointGenerator>::const_iterator v) {
+    return *v;
+}
 
 template<typename PointGenerator>
 std::ostream& operator<<(std::ostream& out, const Random_point_set<PointGenerator>& ps)
@@ -149,5 +151,5 @@ make_distributed_point_set(const Random_point_set<PointGenerator>& points, const
 }
 }
 
-#endif // CGAL_DDT_RANDOM_POINTS_IN_BBOX_H
+#endif // CGAL_DDT_RANDOM_POINT_SET_H
 

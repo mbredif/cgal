@@ -15,6 +15,7 @@
 #include <CGAL/DDT/iterator/Vertex_iterator.h>
 #include <CGAL/DDT/iterator/Facet_iterator.h>
 #include <CGAL/DDT/iterator/Cell_iterator.h>
+#include <CGAL/DDT/point_set/Pair_container_point_set.h> // for Internal_property_map and Point_set_with_id
 #include <CGAL/Distributed_point_set.h>
 #include <CGAL/DDT/insert.h>
 #include <CGAL/DDT/Tile_triangulation.h>
@@ -22,7 +23,6 @@
 #include <CGAL/DDT/serializer/No_serializer.h>
 #include <CGAL/DDT/serializer/VRT_file_serializer.h>
 #include <CGAL/DDT/IO/trace_logger.h>
-#include <CGAL/DDT/property_map/Default_tile_index_map.h>
 #include <CGAL/assertions.h>
 
 namespace CGAL {
@@ -89,8 +89,7 @@ public:
         statistics_()
     {}
 
-    /// returns the dimension of the triangulation
-    /// \todo ambient dimension?
+    /// returns the ambient dimension of the triangulation
     inline int maximal_dimension() const { return maximal_dimension_; }
     /// returns the dimension of the triangulation
     /// \todo isn't this static?
@@ -351,7 +350,7 @@ public:
     Point_const_reference point(Vertex_iterator v) const
     {
         CGAL_assertion(is_valid(v));
-        return v.triangulation().point(*v);
+        return v.triangulation().triangulation_point(*v);
     }
 
     /// returns the mirror facet. This operation is performed locally: the resulting facet belongs
@@ -568,7 +567,7 @@ public:
         typedef CGAL::Distributed_point_set<PointSet1, IndexMap1, Serializer1>  Distributed_point_set1;
         typedef typename Distributed_point_set1::Point     Point;
         typedef typename CGAL::DDT::Kernel_traits<Point>::Point_set_with_id<Tile_index> PointSet2;
-        typedef CGAL::DDT::Default_tile_index_map<Tile_index, PointSet2> IndexMap2;
+        typedef CGAL::DDT::Internal_property_map<PointSet2> IndexMap2;
         IndexMap2 indices2;
         std::multimap<Tile_index, CGAL::DDT::Tile_point_set<PointSet2, IndexMap2>> points2;
 
@@ -610,7 +609,7 @@ public:
         }
 
         typedef typename CGAL::DDT::Kernel_traits<Point>::Point_set_with_id<Tile_index> PointSet;
-        typedef CGAL::DDT::Default_tile_index_map<Tile_index, PointSet> IndexMap;
+        typedef CGAL::DDT::Internal_property_map<PointSet> IndexMap;
         typedef CGAL::Distributed_point_set<PointSet, IndexMap>  Distributed_point_set;
         Distributed_point_set points;
 
@@ -708,7 +707,7 @@ public:
     void partition(const Partitioner& part, const DistributedTriangulation& that, Scheduler& sch) {
         CGAL_DDT_TRACE0(sch, "DDT", "partition", 0, "B");
         typedef typename Tile_triangulation::Vertex_index Vertex_index;
-        typedef std::vector<std::pair<Tile_index, Point>> PointSet;
+        typedef typename CGAL::DDT::Kernel_traits<Point>::Point_set_with_id<Tile_index> PointSet;
         typedef std::multimap<Tile_index, PointSet> PointSetContainer;
         PointSetContainer point_sets;
         sch.template ranges_transform<typename PointSetContainer::value_type>(that.tiles,
@@ -719,7 +718,7 @@ public:
                     for(Vertex_index v = tri.vertices_begin(); v != tri.vertices_end(); ++v)
                     {
                         if (tri.vertex_is_infinite(v)) continue;
-                        Tile_index key = part(tri.point(v));
+                        Tile_index key = part(tri.triangulation_point(v));
                         std::set<Vertex_index>& vertex_set = vertex_set_map[key];
                         vertex_set.insert(v);
                         tri.adjacent_vertices(v, std::inserter(vertex_set, vertex_set.end()));
@@ -732,7 +731,7 @@ public:
                         for(const auto& v : vertex_set)
                         {
                             if (tri.vertex_is_infinite(v)) continue;
-                            Point_const_reference p = tri.point(v);
+                            Point_const_reference p = tri.triangulation_point(v);
                             points.emplace_back(part(p), p);
                         }
                         *out++ = {key, points};

@@ -4,8 +4,8 @@
 #define CGAL_DEBUG_DDT
 
 #include <CGAL/DDT/kernel/Uniform_point_in_bbox_generator.h>
-#include <CGAL/DDT/point_set/Random_point_set.h>
 #include <CGAL/Distributed_triangulation.h>
+#include <CGAL/DDT/point_set/Random_point_set.h>
 #include <CGAL/DDT/serializer/VRT_file_serializer.h>
 #include <CGAL/DDT/serializer/PVTU_file_serializer.h>
 #include <CGAL/DDT/serializer/File_serializer.h>

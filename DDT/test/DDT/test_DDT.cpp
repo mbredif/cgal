@@ -23,8 +23,9 @@ typedef CGAL::DDT::Grid_partitioner<Tile_index, Point> Partitioner;
 
 #include <CGAL/Distributed_triangulation.h>
 typedef CGAL::Distributed_triangulation<Triangulation, TileIndexProperty, Serializer> Distributed_triangulation;
+
 typedef std::vector<std::pair<Tile_index, Point>> Point_set;
-typedef CGAL::Distributed_point_set<Point_set, CGAL::DDT::Default_tile_index_map<Tile_index, Point_set>>  Distributed_point_set;
+typedef CGAL::Distributed_point_set<Point_set, CGAL::DDT::Internal_property_map<Point_set>>  Distributed_point_set;
 
 #include <CGAL/DDT/serializer/VRT_file_serializer.h>
 
@@ -42,7 +43,7 @@ typedef typename Distributed_triangulation::Vertex_iterator Vertex_iterator;
 template<typename Tile_triangulation>
 std::ostream& write_point(std::ostream& out, const Tile_triangulation& tri, typename Tile_triangulation::Vertex_index v) {
     if (tri.vertex_is_infinite(v)) return out << "inf";
-    return out << tri.vertex_id(v) << "|" << tri.point(v);
+    return out << tri.vertex_id(v) << "|" << tri.triangulation_point(v);
 }
 
 template<typename T>

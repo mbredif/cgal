@@ -189,7 +189,7 @@ void write_vtu_points_ascii(std::ostream& os,
   {
     if (tr.vertex_is_infinite(v)) continue;
     V[v] = inum++;
-    Point_const_reference p = tr.point(v);
+    Point_const_reference p = tr.triangulation_point(v);
     os << approximate_cartesian_coordinate(p,0) << " ";
     os << approximate_cartesian_coordinate(p,1) << " ";
     if(dim == 3)
@@ -249,7 +249,7 @@ write_vtu_points_binary(std::ostream& os,
     {
       if (tr.vertex_is_infinite(v)) continue;
       V[v] = inum++;  // binary output => the map has not been filled yet
-      Point_const_reference p = tr.point(v);
+      Point_const_reference p = tr.triangulation_point(v);
       coordinates.push_back(approximate_cartesian_coordinate(p,0));
       coordinates.push_back(approximate_cartesian_coordinate(p,1));
       coordinates.push_back(dim == 3 ? approximate_cartesian_coordinate(p,2) : 0.0);

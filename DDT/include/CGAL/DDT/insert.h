@@ -47,7 +47,7 @@ OutputIterator splay_tile(TileTriangulation& tri, InputIterator first, InputIter
     {
         PointSet points(vi.first, indices);
         for(auto v : vi.second)
-            points.insert(tri.point(v), tri.vertex_id(v));
+            points.insert_point(tri.triangulation_point(v), tri.vertex_id(v));
         if(!points.empty())
             *out++ = { vi.first, std::move(points) };
     }
@@ -68,7 +68,7 @@ OutputIterator splay_root_triangulation(TileTriangulation& tri, InputIterator be
     for(InputIterator it = begin; it != end; ++it) {
         auto& ps = it->second;
         for(auto v = ps.begin(); v != ps.end(); ++v)
-            inserted.push_back(tri.insert(ps.point(v), ps.point_id(v)).first);
+            inserted.push_back(tri.insert(point(ps.point_set(), v), ps.point_id(v)).first);
     }
     std::map<Tile_index, std::set<Vertex_index>> vertices;
     tri.get_finite_neighbors(inserted, vertices);
@@ -76,7 +76,7 @@ OutputIterator splay_root_triangulation(TileTriangulation& tri, InputIterator be
     {
         PointSet points(vi.first, indices);
         for(auto v : vi.second)
-            points.insert(tri.point(v), tri.vertex_id(v));
+            points.insert_point(tri.triangulation_point(v), tri.vertex_id(v));
         if (!points.empty())
             *out++ = { vi.first, std::move(points) };
     }
@@ -105,7 +105,7 @@ struct Star_splayer {
                 tri.get_axis_extreme_points(vertices);
                 PointSet2 points(root, pointset_indices2);
                 for(auto v : vertices)
-                    points.insert(tri.point(v), tri.vertex_id(v));
+                    points.insert_point(tri.triangulation_point(v), tri.vertex_id(v));
                 if (!points.empty())
                     *out++ = { root, std::move(points) };
             }

@@ -9,8 +9,8 @@
 //
 // Author(s)     : Mathieu Brédif and Laurent Caraffa
 
-#ifndef CGAL_DDT_Default_tile_index_map_H
-#define CGAL_DDT_Default_tile_index_map_H
+#ifndef CGAL_DDT_INTERNAL_PROPERTY_MAP_H
+#define CGAL_DDT_INTERNAL_PROPERTY_MAP_H
 
 #include <boost/property_map/property_map.hpp>
 
@@ -18,13 +18,13 @@ namespace CGAL {
 namespace DDT {
 
 /// \ingroup PkgPropertyMapRef
-/// Property map that looks up the `first` member of the PointSet's `value_type`.
-///
+/// Default property map. Any `PointSet` or `Triangulation` tile should specialize
+/// this property map to expose its internal storage for a property if on is available
 /// \cgalModels{ReadablePropertyMap}
-template <typename TileIndex, typename Tile>
-struct Default_tile_index_map;
+template <typename Tile, typename = void>
+struct Internal_property_map;
 
 }
 }
 
-#endif // CGAL_DDT_Default_tile_index_map_H
+#endif // CGAL_DDT_INTERNAL_PROPERTY_MAP_H

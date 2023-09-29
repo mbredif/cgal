@@ -9,10 +9,10 @@
 //
 // Author(s)     : Mathieu Brédif and Laurent Caraffa
 
-#ifndef CGAL_DDT_LAS_TILE_POINTS_H
-#define CGAL_DDT_LAS_TILE_POINTS_H
+#ifndef CGAL_DDT_LAS_POINT_SET_H
+#define CGAL_DDT_LAS_POINT_SET_H
 #include <string>
-#include <boost/property_map/property_map.hpp>
+#include <CGAL/DDT/point_set/Point_set_traits.h>
 #include <CGAL/IO/read_las_points.h>
 #include <CGAL/Distributed_point_set.h>
 
@@ -98,14 +98,13 @@ struct Point_set_traits<LAS_point_set<P>>
     typedef typename PointSet::const_reference         Point_const_reference;
     typedef typename PointSet::const_iterator          iterator;
     typedef typename PointSet::const_iterator          const_iterator;
-
-    static std::size_t local_size(const PointSet& ps) { return ps.local_size(); }
-
-    static Point_const_reference point(const PointSet& ps, const_iterator v) {
-        return *v;
-    }
-    static void clear(PointSet& ps) { CGAL_assertion(false); }
 };
+
+template <typename P>
+typename Point_set_traits<LAS_point_set<P>>::Point_const_reference
+point(const LAS_point_set<P>& ps, typename Point_set_traits<LAS_point_set<P>>::const_iterator v) {
+    return *v;
+}
 
 /// \ingroup PkgDDTFunctions
 /// makes a distributed point set from point set uniformly generated in its its domain and a partitioner
@@ -126,4 +125,4 @@ make_distributed_LAS_point_set(TileIndex id, StringIterator begin, StringIterato
 }
 }
 
-#endif // CGAL_DDT_LAS_TILE_POINTS_H
+#endif // CGAL_DDT_LAS_POINT_SET_H

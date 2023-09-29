@@ -23,7 +23,7 @@ typedef CGAL::DDT::TBB_scheduler                                             Sch
 typedef CGAL::DDT::File_serializer                                           Serializer;
 typedef CGAL::Distributed_triangulation<Triangulation, TileIndexProperty, Serializer>             Distributed_triangulation;
 typedef std::vector<std::pair<Tile_index, Point>> Point_set;
-typedef CGAL::Distributed_point_set<Point_set, CGAL::DDT::Default_tile_index_map<Tile_index, Point_set>>  Distributed_point_set;
+typedef CGAL::Distributed_point_set<Point_set, CGAL::DDT::Internal_property_map<Point_set>>  Distributed_point_set;
 
 int main(int argc, char **argv)
 {

@@ -80,7 +80,7 @@ struct Distributed_point_set {
     template<typename Point_const_reference, typename Tile_index>
     void insert(Point_const_reference point, Tile_index id, Tile_index tid, TileIndexProperty indices = {})
     {
-        try_emplace(tid, indices).first->second.insert(point, id);
+        try_emplace(tid, indices).first->second.insert_point(point, id);
     }
 
     template<typename PointIterator, typename Partitioner>

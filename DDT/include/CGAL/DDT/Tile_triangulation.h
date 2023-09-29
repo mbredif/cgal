@@ -214,7 +214,7 @@ public:
     template<typename OutputIterator>
     inline OutputIterator incident_cells(Vertex_index v, OutputIterator out) const { return Traits::incident_cells(tri_, v, out); }
     inline Vertex_index infinite_vertex() const { return Traits::infinite_vertex(tri_); }
-    inline Point_const_reference point(Vertex_index v) const { return Traits::point(tri_, v); }
+    inline Point_const_reference triangulation_point(Vertex_index v) const { return Traits::point(tri_, v); }
     /// @}
 
     /// \name Facet functions
@@ -455,11 +455,11 @@ public:
         {
             if (!vertex_is_infinite(v) && vertex_is_local(v))
             {
-                Point_const_reference p = point(v);
+                Point_const_reference p = triangulation_point(v);
                 for(int i=0; i<D; ++i)
                 {
-                    if(less_coordinate(p, point(vertices[i  ]), i)) vertices[i  ] = v;
-                    if(less_coordinate(point(vertices[i+D]), p, i)) vertices[i+D] = v;
+                    if(less_coordinate(p, triangulation_point(vertices[i  ]), i)) vertices[i  ] = v;
+                    if(less_coordinate(triangulation_point(vertices[i+D]), p, i)) vertices[i+D] = v;
                 }
             }
         }
@@ -522,7 +522,7 @@ public:
             const auto&  ps = ps_it->second;
             for(auto it = ps.begin(); it != ps.end(); ++it, ++index)
             {
-                points.push_back(ps.point(it));
+                points.push_back(point(ps.point_set(),it));
                 ids.push_back(ps.point_id(it));
                 indices.push_back(index);
             }
@@ -587,7 +587,7 @@ public:
     Vertex_index relocate_vertex(const Tile_triangulation& t, Vertex_index v, Vertex_index hint = Vertex_index()) const
     {
         if(t.vertex_is_infinite(v)) return infinite_vertex();
-        return locate_vertex(t.point(v), hint);
+        return locate_vertex(t.triangulation_point(v), hint);
     }
 
     Facet_index relocate_facet(const Tile_triangulation& t, Facet_index f) const

@@ -112,7 +112,7 @@ void write_ply_property_vert(const TileTriangulation& triangulation, std::ostrea
     {
         if(triangulation.vertex_is_infinite(v)) continue;
         Tile_index id = triangulation.vertex_id(v);
-        Point_const_reference p = triangulation.point(v);
+        Point_const_reference p = triangulation.triangulation_point(v);
         for(int d=0; d<D; ++d)
         {
             float coord = float(approximate_cartesian_coordinate(p,d));
