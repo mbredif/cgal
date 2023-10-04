@@ -31,8 +31,8 @@ struct Distributed_point_set {
     using Tile_point_set       = CGAL::DDT::Tile_point_set<Point_set, TileIndexProperty>;
     using Traits               = CGAL::DDT::Point_set_traits<Point_set>;
     using Vertex_index         = typename Traits::const_iterator;
-    using Point                = typename Traits::Point;
-    using Point_const_reference= typename Traits::Point_const_reference;
+    using Point                = typename Traits::value_type;
+    using Point_const_reference= typename Traits::const_reference;
     using Tile_index           = typename TileIndexProperty::value_type;
 
     using AssociativeContainer = std::map<Tile_index, Tile_point_set>; // unordered_map is not suitable as its iterators may get invalidated by try_emplace

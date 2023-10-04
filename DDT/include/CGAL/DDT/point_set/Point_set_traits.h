@@ -20,7 +20,12 @@ namespace DDT {
 /// general case, for Containers of points
 /// \todo meant to be doc?
 template <typename PointSet, typename = void>
-struct Point_set_traits {};
+struct Point_set_traits {
+    typedef typename PointSet::value_type      value_type;
+    typedef typename Kernel_traits<value_type>::Point_const_reference const_reference;
+    typedef typename PointSet::const_iterator  iterator;
+    typedef typename PointSet::const_iterator  const_iterator;
+};
 
 template<typename T, typename = void> struct is_point_set : public std::false_type {};
 template<typename T>

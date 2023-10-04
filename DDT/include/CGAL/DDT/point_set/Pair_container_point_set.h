@@ -21,14 +21,13 @@
 namespace CGAL {
 namespace DDT {
 
-/// specialization for Containers of (key,point) pairs
-/// \todo meant to be doc?
+// specialization for Containers of (key,point) pairs
 template <typename PointSet>
 struct Point_set_traits<PointSet, std::enable_if_t<mpl::is_pair_container_v<PointSet>>>
 {
     typedef typename PointSet::value_type::first_type  Tile_index;
-    typedef typename PointSet::value_type::second_type Point;
-    typedef typename Kernel_traits<Point>::Point_const_reference Point_const_reference;
+    typedef typename PointSet::value_type::second_type value_type;
+    typedef typename Kernel_traits<value_type>::Point_const_reference const_reference;
     typedef typename PointSet::iterator                iterator;
     typedef typename PointSet::const_iterator          const_iterator;
 
@@ -37,7 +36,7 @@ struct Point_set_traits<PointSet, std::enable_if_t<mpl::is_pair_container_v<Poin
 
 template <typename PointSet>
 std::enable_if_t<mpl::is_pair_container_v<PointSet>,
-typename Point_set_traits<PointSet>::Point_const_reference>
+typename Point_set_traits<PointSet>::const_reference>
 point(const PointSet& ps, typename Point_set_traits<PointSet>::const_iterator v) {
     return v->second;
 }
@@ -45,7 +44,7 @@ point(const PointSet& ps, typename Point_set_traits<PointSet>::const_iterator v)
 template <typename PointSet, typename Tile_index>
 std::enable_if_t<mpl::is_pair_container_v<PointSet>,
 std::pair<typename Point_set_traits<PointSet>::iterator, bool>>
-insert(PointSet& ps, typename Point_set_traits<PointSet>::Point_const_reference p,
+insert(PointSet& ps, typename Point_set_traits<PointSet>::const_reference p,
     Tile_index i, typename Point_set_traits<PointSet>::const_iterator hint)
 {
     return std::make_pair(ps.emplace(ps.end(), i, p), true);

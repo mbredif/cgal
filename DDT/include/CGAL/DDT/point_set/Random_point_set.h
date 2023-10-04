@@ -20,16 +20,37 @@
 namespace CGAL {
 namespace DDT {
 
-/// \todo not documented
+/// A point set that provides a single pass constant iterator to a sequence of on-the-fly generated points.
+/// This point set saves memory by keeping a single point in memory, which is the last generated point.
+/// Thus the const_reference is invalidated as soon as the iterator is incremented.
+/// \cgalModels{PointSet}
+/// \tparam PointGenerator a model of `PointGenerator`
 template<typename PointGenerator>
 struct Random_point_set {
-    typedef typename PointGenerator::Point                 value_type;
-    typedef typename PointGenerator::Point_const_reference const_reference;
 
+    /// Point type
+    typedef typename PointGenerator::value_type      value_type;
+
+    // const reference to Point type
+    typedef typename PointGenerator::const_reference const_reference;
+
+    /// constructs a `Random_point_set` from its `size` and the arguments to be forwarded to the `PointGenerator` constructor
     template<typename... Args>
     Random_point_set(std::size_t size, Args&&... args) : size_(size), generator_(std::forward<Args>(args)...) {}
+
+    /// constructs a `Random_point_set` from its `size` and a `PointGenerator` reference
     Random_point_set(std::size_t size, PointGenerator& generator) : size_(size), generator_(generator) {}
 
+#ifdef DOXYGEN_RUNNING
+private:
+    struct unspecified_type {};
+public:
+    /// constant single pass iterator type over the generated points.
+    typedef unspecified_type const_iterator;
+    /// constant single pass iterator type over the generated points.
+    typedef unspecified_type iterator;
+#else
+    /// constant single pass iterator type over the generated points.
     struct const_iterator {
         const_iterator(std::size_t remaining, PointGenerator& generator) : remaining_(remaining), generator_(generator) {
             if (remaining > 0) generator.next();
@@ -47,36 +68,26 @@ struct Random_point_set {
         PointGenerator& generator_;
         std::size_t remaining_;
     };
+    /// constant single pass iterator type over the generated points.
+    typedef const_iterator iterator;
+#endif
 
+    /// begin const iterator
     const_iterator begin() const { generator_.reset(); return const_iterator(size_, generator_); }
+    /// end const iterator
     const_iterator end  () const { return const_iterator(0, generator_); }
+    /// number of points
     std::size_t size() const { return size_; }
-
+    /// underlying `PointGenerator`
     const PointGenerator& generator() const { return generator_; }
-    unsigned int seed() const { return generator_.seed(); }
 
 private:
     mutable PointGenerator generator_;
     std::size_t size_;
 };
 
-/// specialization for Random_point_sets
-/// \todo meant to be doc?
 template<typename PointGenerator>
-struct Point_set_traits<Random_point_set<PointGenerator>>
-{
-    typedef Random_point_set<PointGenerator>   PointSet;
-    typedef typename PointSet::value_type      Point;
-    typedef typename PointSet::const_reference Point_const_reference;
-    typedef typename PointSet::const_iterator  iterator;
-    typedef typename PointSet::const_iterator  const_iterator;
-
-    static inline std::ostream& write(std::ostream& out, const PointSet& ps) { return out << ps; }
-};
-
-
-template<typename PointGenerator>
-typename PointGenerator::Point_const_reference
+typename PointGenerator::const_reference
 point(const Random_point_set<PointGenerator>& ps, typename Random_point_set<PointGenerator>::const_iterator v) {
     return *v;
 }
@@ -98,8 +109,8 @@ std::istream& operator>>(std::istream& in, Random_point_set<PointGenerator>& ps)
 }
 
 /// \ingroup PkgDDTFunctions
-/// makes a distributed point set from point set uniformly generated in its its domain and a partitioner
-/// assumes that the tile domains of the partitioner are not overlaping
+/// constructs a distributed point set from a `Random_point_set` and a `Partitioner`.
+/// It assumes that the tile domains of the partitioner are not overlaping
 /// \todo I don't understand what you mean
 template<typename PointGenerator, typename Partitioner>
 CGAL::Distributed_point_set<
@@ -117,7 +128,7 @@ make_distributed_point_set(const Random_point_set<PointGenerator>& points, const
 
     Distributed_point_set dpoints;
     std::hash<Tile_index> hash;
-    std::mt19937 gen(points.seed());
+    std::mt19937 gen(points.generator().seed());
     Domain domain = points.generator().domain();
 
     // get the number of generated points that fall into the partitioner's domain
@@ -136,14 +147,14 @@ make_distributed_point_set(const Random_point_set<PointGenerator>& points, const
         M -= m;
         n_points -= n;
         if (n>0)
-            dpoints.try_emplace(id, id, n, d, points.seed() + hash(id));
+            dpoints.try_emplace(id, id, n, d, points.generator().seed() + hash(id));
     }
 
     // assign, if any, the remaining points to the first partition
     if (n_points > 0) {
         Tile_index id = partitioner.begin();
         Tile_domain d = partitioner.domain(id);
-        dpoints.try_emplace(id, id, n_points, d, points.seed() + hash(id));
+        dpoints.try_emplace(id, id, n_points, d, points.generator().seed() + hash(id));
     }
     return std::move(dpoints);
 }

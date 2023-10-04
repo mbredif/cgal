@@ -15,31 +15,30 @@
 namespace CGAL {
 namespace DDT {
 
-template<typename P>
+template<typename Point>
 struct Kernel_traits {
-    typedef P            Point;
-    typedef Point const& Point_const_reference;
+    typedef Point const& const_reference;
     typedef void         Bbox;
     static int           D;
 };
 
 template<typename Point>
-inline void assign(Point& p, typename Kernel_traits<Point>::Point_const_reference q) {
+inline void assign(Point& p, typename Kernel_traits<Point>::const_reference q) {
     p = q;
 }
 
-template<typename Point_reference, typename InputIterator>
-inline void assign(Point_reference p, InputIterator begin, InputIterator end) {
+template<typename Reference, typename InputIterator>
+inline void assign(Reference p, InputIterator begin, InputIterator end) {
     std::copy(begin, end, p);
 }
 
-template<typename Point_const_reference>
-double approximate_cartesian_coordinate(Point_const_reference p, int i) {
+template<typename ConstReference>
+double approximate_cartesian_coordinate(ConstReference p, int i) {
     return double(p[i]);
 }
 
-template<typename Point_const_reference>
-bool less_coordinate(Point_const_reference p, Point_const_reference q, int i) {
+template<typename ConstReference>
+bool less_coordinate(ConstReference p, ConstReference q, int i) {
     return p[i] < q[i];
 }
 

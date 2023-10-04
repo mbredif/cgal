@@ -29,8 +29,8 @@ public:
     typedef Point_set_traits<T>                      Traits;
     typedef TileIndexProperty                        Tile_index_property;
     typedef typename Tile_index_property::value_type Tile_index;
-    typedef typename Traits::Point                   Point;
-    typedef typename Traits::Point_const_reference   Point_const_reference;
+    typedef typename Traits::value_type              value_type;
+    typedef typename Traits::const_reference         const_reference;
     typedef typename Traits::iterator                iterator;
     typedef typename Traits::const_iterator          const_iterator;
 
@@ -58,7 +58,7 @@ public:
         return get(tile_indices, std::make_pair(std::cref(ps_), v));
     }
 
-    inline std::pair<iterator, bool> insert_point(Point_const_reference p, Tile_index i, const_iterator v = {}) {
+    inline std::pair<iterator, bool> insert_point(const_reference p, Tile_index i, const_iterator v = {}) {
         auto inserted = insert(ps_, p, i, v);
         if(inserted.second) {
             if (i == id()) ++local_size_;
@@ -81,7 +81,7 @@ public:
         iterator v;
         for(auto& r : received)
         {
-            Point_const_reference p = Point_set_traits<PointSet>::point(received, r);
+            const_reference p = Point_set_traits<PointSet>::point(received, r);
             Tile_index id = get(received_indices, r);
             auto inserted = insert(p, id, v);
             v = inserted.first;

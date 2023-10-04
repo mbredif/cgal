@@ -19,20 +19,9 @@
 namespace CGAL {
 namespace DDT {
 
-/// general case, for Containers of points
-/// \todo meant to be doc?
-template <typename PointSet>
-struct Point_set_traits<PointSet, std::enable_if_t<mpl::is_container_v<PointSet> && !mpl::is_pair_container_v<PointSet>>>
-{
-    typedef typename PointSet::value_type              Point;
-    typedef typename Kernel_traits<Point>::Point_const_reference Point_const_reference;
-    typedef typename PointSet::iterator                iterator;
-    typedef typename PointSet::const_iterator          const_iterator;
-};
-
 template <typename PointSet>
 std::enable_if_t<mpl::is_container_v<PointSet> && !mpl::is_pair_container_v<PointSet>,
-typename Point_set_traits<PointSet>::Point_const_reference>
+typename Point_set_traits<PointSet>::const_reference>
 point(const PointSet& ps, typename Point_set_traits<PointSet>::const_iterator v) {
     return *v;
 }
@@ -40,13 +29,13 @@ point(const PointSet& ps, typename Point_set_traits<PointSet>::const_iterator v)
 template <typename PointSet, typename Tile_index>
 std::enable_if_t<mpl::is_container_v<PointSet> && !mpl::is_pair_container_v<PointSet>,
 std::pair<typename Point_set_traits<PointSet>::iterator, bool>>
-insert(PointSet& ps, typename Point_set_traits<PointSet>::Point_const_reference p, Tile_index /*i*/,
+insert(PointSet& ps, typename Point_set_traits<PointSet>::const_reference p, Tile_index /*i*/,
     typename Point_set_traits<PointSet>::const_iterator hint)
 {
     return std::make_pair(ps.emplace(ps.end(), p), true);
 }
 
-} // DDT
+} // namespace DDT
 
 template <typename PointSet>
 std::enable_if_t<mpl::is_container_v<PointSet> && !mpl::is_pair_container_v<PointSet>, std::ostream&>
@@ -70,7 +59,7 @@ operator>>(std::istream& in, PointSet& ps) {
     return in;
 }
 
-}
+} // namespace CGAL
 
 #endif // CGAL_DDT_CONTAINER_POINT_SET_H
 

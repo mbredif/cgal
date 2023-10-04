@@ -62,8 +62,6 @@ OutputIterator splay_root_triangulation(TileTriangulation& tri, InputIterator be
     typedef typename value_type::second_type                         Pointset;
     typedef typename TileTriangulation::Tile_index                   Tile_index;
     typedef typename TileTriangulation::Vertex_index                 Vertex_index;
-    typedef typename Pointset::const_iterator                        Point_index;
-    typedef typename Pointset::Point                                 Point;
     std::vector<Vertex_index> inserted;
     for(InputIterator it = begin; it != end; ++it) {
         auto& ps = it->second;

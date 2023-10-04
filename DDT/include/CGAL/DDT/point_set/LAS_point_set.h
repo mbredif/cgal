@@ -22,7 +22,7 @@ namespace DDT {
 /// \ingroup PkgDDTClasses
 /// \tparam Point type
 /// The LAS_tile_points is a proxy to a LAS file, to be read on demand
-/// \todo is it model of something?
+/// \cgalModels{PointSet}
 template<typename Point>
 class LAS_point_set {
 public:
@@ -58,6 +58,7 @@ public:
         LASreaderLAS& lasreader_;
         std::size_t size_;
     };
+    typedef const_iterator iterator;
 
     const_iterator begin() const { return {lasreader_, point_, size()}; }
     const_iterator end  () const { return {lasreader_, point_, 0}; }
@@ -87,20 +88,8 @@ private:
     std::ifstream file_;
 };
 
-/// general case, for Containers of points
-/// \todo is that really meant to be doc?
 template <typename P>
-struct Point_set_traits<LAS_point_set<P>>
-{
-    typedef LAS_point_set<P>                           PointSet;
-    typedef typename PointSet::value_type              Point;
-    typedef typename PointSet::const_reference         Point_const_reference;
-    typedef typename PointSet::const_iterator          iterator;
-    typedef typename PointSet::const_iterator          const_iterator;
-};
-
-template <typename P>
-typename Point_set_traits<LAS_point_set<P>>::Point_const_reference
+typename Point_set_traits<LAS_point_set<P>>::const_reference
 point(const LAS_point_set<P>& ps, typename Point_set_traits<LAS_point_set<P>>::const_iterator v) {
     return *v;
 }

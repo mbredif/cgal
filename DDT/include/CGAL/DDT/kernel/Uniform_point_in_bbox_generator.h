@@ -23,15 +23,15 @@ template<typename P>
 struct Uniform_point_in_bbox_generator
 {
     typedef Kernel_traits<P>                       Traits;
-    typedef typename Traits::Point                 Point;
-    typedef typename Traits::Point_const_reference Point_const_reference;
+    typedef typename Traits::Point                 value_type;
+    typedef typename Traits::Point_const_reference const_reference;
     typedef typename Traits::Bbox                  Bbox;
     typedef Bbox                                   Domain;
 
     Uniform_point_in_bbox_generator(const Bbox& bbox, unsigned int seed) : bbox_(bbox), distrib_(), gen_(seed), seed_(seed) {}
 
     void reset() { gen_.seed(seed_); }
-    Point_const_reference point() const { return point_; }
+    const_reference point() const { return point_; }
     const Bbox& bbox() const { return bbox_; }
     const Domain& domain() const { return bbox_; }
     unsigned int seed() const { return seed_; }
@@ -48,7 +48,7 @@ struct Uniform_point_in_bbox_generator
 private:
     std::mt19937 gen_;
     std::uniform_real_distribution<> distrib_;
-    Point point_;
+    value_type point_;
     Bbox bbox_;
     unsigned int seed_;
 };
