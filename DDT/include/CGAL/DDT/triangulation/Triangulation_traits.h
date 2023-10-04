@@ -19,6 +19,13 @@ template<typename T>
 struct Triangulation_traits
 {};
 
+template<typename T, typename = void>
+struct is_triangulation : public std::false_type {};
+
+template<typename T>
+struct is_triangulation<T, typename Triangulation_traits<T>::Point> : public std::true_type {};
+template<class T> inline constexpr bool is_triangulation_v = is_triangulation<T>::value;
+
 }
 }
 

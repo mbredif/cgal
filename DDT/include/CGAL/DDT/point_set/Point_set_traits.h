@@ -20,10 +20,15 @@ namespace DDT {
 /// general case, for Containers of points
 /// \todo meant to be doc?
 template <typename PointSet, typename = void>
-struct Point_set_traits;
+struct Point_set_traits {};
 
-template <typename PointSet>
-void clear(const PointSet& ps) {
+template<typename T, typename = void> struct is_point_set : public std::false_type {};
+template<typename T>
+struct is_point_set<T, typename Point_set_traits<T>::Point> : public std::true_type {};
+template<class T> inline constexpr bool is_point_set_v = is_point_set<T>::value;
+
+template <typename T>
+std::enable_if<is_point_set_v<T>,void> clear(const T& ps) {
     ps.clear();
 }
 

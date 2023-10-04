@@ -21,8 +21,8 @@ namespace DDT {
 
 /// general case, for Containers of points
 /// \todo meant to be doc?
-template <typename PointSet, typename = void>
-struct Point_set_traits
+template <typename PointSet>
+struct Point_set_traits<PointSet, std::enable_if_t<mpl::is_container_v<PointSet> && !mpl::is_pair_container_v<PointSet>>>
 {
     typedef typename PointSet::value_type              Point;
     typedef typename Kernel_traits<Point>::Point_const_reference Point_const_reference;
@@ -49,7 +49,7 @@ insert(PointSet& ps, typename Point_set_traits<PointSet>::Point_const_reference 
 } // DDT
 
 template <typename PointSet>
-std::enable_if_t<DDT::mpl::is_container_v<PointSet> && !DDT::mpl::is_pair_container_v<PointSet>, std::ostream&>
+std::enable_if_t<mpl::is_container_v<PointSet> && !mpl::is_pair_container_v<PointSet>, std::ostream&>
 operator<<(std::ostream& out, const PointSet& ps) {
     out << ps.size() << " ";
     for(auto it = ps.begin(); it != ps.end(); ++it)
@@ -58,7 +58,7 @@ operator<<(std::ostream& out, const PointSet& ps) {
 }
 
 template <typename PointSet>
-std::enable_if_t<DDT::mpl::is_container_v<PointSet> && !DDT::mpl::is_pair_container_v<PointSet>, std::istream&>
+std::enable_if_t<mpl::is_container_v<PointSet> && !mpl::is_pair_container_v<PointSet>, std::istream&>
 operator>>(std::istream& in, PointSet& ps) {
     std::size_t size;
     in >> size;

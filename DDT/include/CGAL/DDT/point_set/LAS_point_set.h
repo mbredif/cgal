@@ -87,7 +87,6 @@ private:
     std::ifstream file_;
 };
 
-
 /// general case, for Containers of points
 /// \todo is that really meant to be doc?
 template <typename P>
