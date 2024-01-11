@@ -41,8 +41,7 @@ public:
     /// returns the tile index of point `p`.
     Tile_index operator()(Point_const_reference p) const { return {}; }
 
-    /// return the number of tile indices.
-    /// \todo Is it the number of tiles or the largest tile index (maybe tile indices are not contiguous)
+    /// returns the number of tile indices.
     std::size_t size() const { return 0; }
 
 }; /* end Partitioner */

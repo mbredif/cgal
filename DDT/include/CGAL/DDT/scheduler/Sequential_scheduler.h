@@ -22,7 +22,9 @@ namespace DDT {
 
 /// \ingroup PkgDDTSchedulerClasses
 /// \cgalModels{Scheduler}
-/// \todo doc is empty
+/// This scheduler provides a simple sequential single core implementation.
+/// This is useful for debugging as it is single thread and runs more reproducibly (no ordering non-determinism due to multi-threading),
+/// but also for cpu or memory-constrained cases that may not leverage multi-threading.
 struct Sequential_scheduler
 {
     /// constructor

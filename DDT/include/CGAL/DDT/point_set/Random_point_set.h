@@ -20,6 +20,7 @@
 namespace CGAL {
 namespace DDT {
 
+/// \ingroup PkgDDTPointSetClasses
 /// A point set that provides a single pass constant iterator to a sequence of on-the-fly generated points.
 /// This point set saves memory by keeping a single point in memory, which is the last generated point.
 /// Thus the const_reference is invalidated as soon as the iterator is incremented.
@@ -108,7 +109,7 @@ std::istream& operator>>(std::istream& in, Random_point_set<PointGenerator>& ps)
     return in;
 }
 
-/// \ingroup PkgDDTFunctions
+/// \ingroup PkgDDTPointSetClasses
 /// constructs a distributed point set from a `Random_point_set` and a `Partitioner`.
 /// It assumes that the tile domains of the partitioner are not overlaping
 /// \todo I don't understand what you mean

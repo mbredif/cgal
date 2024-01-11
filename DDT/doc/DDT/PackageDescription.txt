@@ -11,12 +11,11 @@
 /// \defgroup PkgDDTSerializerClasses Serializer Classes
 /// \ingroup PkgDDTRef
 
-/// \defgroup PkgDDTClasses Classes
+/// \defgroup PkgDDTPointSetClasses PointSet Classes
 /// \ingroup PkgDDTRef
 
-/// \defgroup PkgDDTFunctions Functions
+/// \defgroup PkgDDTTriangulationClasses Triangulation Classes
 /// \ingroup PkgDDTRef
-
 
 /*!
 \addtogroup PkgDDTRef

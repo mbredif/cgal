@@ -28,9 +28,10 @@
 namespace CGAL {
 
 /// \ingroup PkgDDTRef
-/// \tparam template params to instantiate a `CGAL::DDT::Tile_container` that manages the storage of the triangulation tiles.
 /// The Distributed_triangulation class wraps a Container to expose a triangulation interface.
-/// \todo tparam is incorrect and other are missing
+/// \tparam Triangulation model of `Triangulation`, which stores local triangulations.
+/// \tparam TileIndexProperty model of `VertexPropertyMap`, which provides access to the tile index of the triangulation vertices.
+/// \tparam Serializer model of `Serializer`. If not provided, serialization is disabled and computations are performed in core using `CGAL::DDT::No_serializer`
 /// \todo missing doc for public types that you want to expose
 /// \todo brief should be improved
 template<typename Triangulation_,
@@ -39,12 +40,22 @@ template<typename Triangulation_,
 class Distributed_triangulation
 {
 public:
+    /// the local `Triangulation` type
     using Triangulation        = Triangulation_;
+    /// the `VertexPropertyMap` type
     using TileIndexProperty    = TileIndexProperty_;
 
+    /// the type for Tile indices
     using Tile_index           = typename TileIndexProperty::value_type;
+
+    /// the type for Tile data, wrapping the local trangulation and the tile index property.
     using Tile_triangulation   = CGAL::DDT::Tile_triangulation<Triangulation, TileIndexProperty>;
+
+private:
     using AssociativeContainer = std::map<Tile_index, Tile_triangulation>; // unordered_map is not suitable as its iterators may get invalidated by try_emplace
+
+public:
+    /// the associative container type that maps `Tile_index` to `Tile_triangulation`
     using Container = std::conditional_t<
         std::is_same_v<Serializer, CGAL::DDT::No_serializer>,              // No serialization ?
         AssociativeContainer ,                                             // y: tiles are kept in memory
@@ -92,7 +103,7 @@ public:
     /// returns the ambient dimension of the triangulation
     inline int maximal_dimension() const { return maximal_dimension_; }
     /// returns the dimension of the triangulation
-    /// \todo isn't this static?
+    /// \todo It should be non mutable, but read_cgal_json needs to modify it.
     inline int& maximal_dimension() { return maximal_dimension_; }
     /// returns the number of finite cells in the triangulation, including cells incident to the vertex at infinity.
     inline std::size_t number_of_finite_cells   () const { return statistics_.number_of_finite_cells;    }
@@ -230,40 +241,64 @@ public:
     /// \todo doc missing
     /// @{
 
+    /// returns whether the vertex iterator is referring to a tile triangulation where the vertex is local.
     bool is_local(const Vertex_iterator& v) const { return v.triangulation().vertex_is_local(*v); }
+    /// returns whether the facet iterator is referring to a tile triangulation where the facet is local.
     bool is_local(const Facet_iterator&  f) const { return f.triangulation().facet_is_local(*f); }
+    /// returns whether the cell iterator is referring to a tile triangulation where the cell is local.
     bool is_local(const Cell_iterator&   c) const { return c.triangulation().cell_is_local(*c); }
 
-    bool is_valid(const Vertex_iterator& v) const { return v.triangulation().vertex_is_valid(*v); } // + tile toujours chargée ?
-    bool is_valid(const Facet_iterator&  f) const { return f.triangulation().facet_is_valid(*f); } // + tile toujours chargée ?
-    bool is_valid(const Cell_iterator&   c) const { return c.triangulation().cell_is_valid(*c); } // + tile toujours chargée ?
+    /// returns whether the vertex iterator is valid.
+    /// \todo should we check if tile is loaded ?
+    bool is_valid(const Vertex_iterator& v) const { return v.triangulation().vertex_is_valid(*v); }
+    /// returns whether the facet iterator is valid.
+    /// \todo should we check if tile is loaded ?
+    bool is_valid(const Facet_iterator&  f) const { return f.triangulation().facet_is_valid(*f); }
+    /// returns whether the cell iterator is valid.
+    /// \todo should we check if tile is loaded ?
+    bool is_valid(const Cell_iterator&   c) const { return c.triangulation().cell_is_valid(*c); }
 
-    // vertices are never mixed
+    /// returns whether the facet iterator is referring to a tile triangulation where the facet is mixed (neither local nor foreign).
     bool is_mixed(const Facet_iterator& f) const { return f.triangulation().facet_is_mixed(*f); }
+    /// returns whether the cell iterator is referring to a tile triangulation where the cell is mixed (neither local nor foreign).
     bool is_mixed(const Cell_iterator&  c) const { return c.triangulation().cell_is_mixed(*c); }
 
+    /// returns whether the vertex iterator is referring to a tile triangulation where the vertex is foreign.
     bool is_foreign(const Vertex_iterator& v) const { return v.triangulation().vertex_is_foreign(*v); }
+    /// returns whether the facet iterator is referring to a tile triangulation where the facet is foreign.
     bool is_foreign(const Facet_iterator&  f) const { return f.triangulation().facet_is_foreign(*f); }
+    /// returns whether the cell iterator is referring to a tile triangulation where the cell is foreign.
     bool is_foreign(const Cell_iterator&   c) const { return c.triangulation().cell_is_foreign(*c); }
 
+    /// returns whether the vertex iterator is referring to a tile triangulation where the vertex is main.
     bool is_main(const Vertex_iterator& v) const { return v.triangulation().vertex_is_main(*v); }
+    /// returns whether the facet iterator is referring to a tile triangulation where the facet is main.
     bool is_main(const Facet_iterator&  f) const { return f.triangulation().facet_is_main(*f); }
+    /// returns whether the cell iterator is referring to a tile triangulation where the cell is main.
     bool is_main(const Cell_iterator&   c) const { return c.triangulation().cell_is_main(*c); }
 
+    /// returns whether the vertex is the infinite vertex.
     bool is_infinite(const Vertex_iterator& v) const { return v.triangulation().vertex_is_infinite(*v); }
+    /// returns whether the facet is incident to the infinite vertex.
     bool is_infinite(const Facet_iterator&  f) const { return f.triangulation().facet_is_infinite(*f); }
+    /// returns whether the cell is incident to the infinite vertex.
     bool is_infinite(const Cell_iterator&   c) const { return c.triangulation().cell_is_infinite(*c); }
     /// @}
 
     /// \name Tile identifiers from iterators
-    /// \todo doc missing
     /// @{
+    /// returns the tile id of the vertex.
     Tile_index id(const Vertex_iterator&v) const { return v.triangulation().vertex_id(*v); }
+    /// returns the tile id of the facet.
     Tile_index id(const Facet_iterator& f) const { return f.triangulation().facet_id(*f); }
+    /// returns the tile id of the cell.
     Tile_index id(const Cell_iterator&  c) const { return c.triangulation().cell_id(*c); }
 
+    /// returns the tile id of the tile referred by the iterator.
     Tile_index tile_id(const Vertex_iterator& v) const { return v.id(); }
+    /// returns the tile id of the tile referred by the iterator.
     Tile_index tile_id(const Facet_iterator&  f) const { return f.id(); }
+    /// returns the tile id of the tile referred by the iterator.
     Tile_index tile_id(const Cell_iterator&   c) const { return c.id(); }
     /// @}
 
@@ -640,7 +675,7 @@ public:
         return std::make_pair(res, true);
     }
 
-    /// \todo no doc for this one and the following functions?
+    /// finalizes the distributed triangulation by updating its number of simplex statistics.
     template <typename Scheduler>
     void finalize(Scheduler& sch)
     {
@@ -654,6 +689,7 @@ public:
         CGAL_DDT_TRACE0(sch, "DDT", "finalize", 0, "E");
     }
 
+    /// writes the distributed triangulation using the provided Writer and Scheduler
     template <typename Writer, typename Scheduler>
     bool write(const Writer& writer, Scheduler& sch) const
     {
@@ -669,6 +705,8 @@ public:
         return ok;
     }
 
+    /// reads the distributed triangulation using the provided Reader and Scheduler
+    /// \todo : what happens to the serializer ?
     template <typename Reader, typename Scheduler>
     bool read(const Reader& reader, Scheduler& sch)
     {
@@ -685,6 +723,8 @@ public:
         return ok;
     }
 
+    /// combined read and write. This is equivalent to calling `read(reader,sch)` followed by `write(writer,sch)`,
+    /// but is more optimal as it is implemented in a single pass over the tiles.
     template <typename Reader, typename Writer, typename Scheduler>
     bool read_write(const Reader& reader, const Writer& writer, Scheduler& sch)
     {
@@ -703,6 +743,7 @@ public:
         return ok;
     }
 
+    /// initiliazes in `this` the distributed triangulation resulting from repartitioning the input distributed triangulation `that`
     template <typename DistributedTriangulation, typename Partitioner, typename Scheduler>
     void partition(const Partitioner& part, const DistributedTriangulation& that, Scheduler& sch) {
         CGAL_DDT_TRACE0(sch, "DDT", "partition", 0, "B");
@@ -764,6 +805,7 @@ public:
 
     /// clears the triangulation
     /// \todo: what is the semantics of clearing when a serializer is present ? should we delete the files ?
+    /// \todo: I am not sure...
     void clear() {
         statistics_ = {};
         statistics_.valid = false;

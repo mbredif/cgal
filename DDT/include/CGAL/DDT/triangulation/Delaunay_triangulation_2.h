@@ -23,6 +23,10 @@
 namespace CGAL {
 namespace DDT {
 
+/// \ingroup PkgDDTTriangulationClasses
+/// Triangulation_traits specialization for the CGAL::Delaunay_triangulation_2 class.
+/// \cgalModels{Triangulation}
+/// \tparam CGAL::Delaunay_triangulation_2 The adapted triangulation
 template<typename GT, typename TDS_>
 struct Triangulation_traits<CGAL::Delaunay_triangulation_2<GT, TDS_>> : public Kernel_traits<typename GT::Point_2>
 {
@@ -310,6 +314,10 @@ struct Triangulation_traits<CGAL::Delaunay_triangulation_2<GT, TDS_>> : public K
     static inline std::istream& read(std::istream& in, Triangulation& tri) { return in >> tri; }
 };
 
+/// \ingroup PkgDDTPointSetClasses
+/// Point_set_traits specialization for the CGAL::Delaunay_triangulation_2 class.
+/// \cgalModels{PointSet}
+/// \tparam CGAL::Delaunay_triangulation_2 The adapted triangulation.
 template<typename GT, typename TDS_>
 struct Point_set_traits<CGAL::Delaunay_triangulation_2<GT, TDS_>> : public Triangulation_traits<CGAL::Delaunay_triangulation_2<GT, TDS_>>
 {

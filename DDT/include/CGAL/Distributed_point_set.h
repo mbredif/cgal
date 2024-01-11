@@ -19,7 +19,7 @@
 
 namespace CGAL {
 
-/// \ingroup PkgDDTClasses
+/// \ingroup PkgDDTRef
 /// Distributed point set
 /// \todo add more doc in brief and members?
 template<typename PointSet_,

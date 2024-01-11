@@ -19,7 +19,7 @@
 namespace CGAL {
 namespace DDT {
 
-/// \ingroup PkgDDTClasses
+/// \ingroup PkgDDTPointSetClasses
 /// \tparam Point type
 /// The LAS_tile_points is a proxy to a LAS file, to be read on demand
 /// \cgalModels{PointSet}
@@ -94,7 +94,7 @@ point(const LAS_point_set<P>& ps, typename Point_set_traits<LAS_point_set<P>>::c
     return *v;
 }
 
-/// \ingroup PkgDDTFunctions
+/// \ingroup PkgDDTPointSetClasses
 /// makes a distributed point set from point set uniformly generated in its its domain and a partitioner
 /// assumes that the tile domains of the partitioner are not overlaping
 /// \todo I don't understand what you mean here
