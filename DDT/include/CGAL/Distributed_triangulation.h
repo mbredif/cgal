@@ -455,6 +455,16 @@ public:
                 return true;
         return false;
     }
+    /// returns the covertex of a facet f, which is the only vertex of the facet's cell that is not incident to this facet.
+    /// The operation is local iff the local cell of f is not foreign
+    Vertex_iterator covertex(const Facet_iterator& f) const
+    {
+        CGAL_assertion(is_valid(f));
+        const Tile_triangulation& tri = f.triangulation();
+        Tile_cell_index c = tri.cell_of_facet(*f);
+        if(tri.cell_is_foreign(c)) return local_covertex(main(f)); // any non foreign representative could do
+        return Vertex_iterator(&tiles, f.tile(), tri.covertex(*f));
+    }
 
     /// returns the index of the covertex of a facet f
     /// The operation is local iff the local cell of f is main
@@ -465,17 +475,6 @@ public:
         if (tri.cell_is_main(tri.cell_of_facet(*f)))
             return local_index_of_covertex(f);
         return local_index_of_covertex(relocate(f, id(cell(f))));
-    }
-
-    /// returns the covertex of a facet f
-    /// The operation is local iff the local cell of f is not foreign
-    Vertex_iterator covertex(const Facet_iterator& f) const
-    {
-        CGAL_assertion(is_valid(f));
-        const Tile_triangulation& tri = f.triangulation();
-        Tile_cell_index c = tri.cell_of_facet(*f);
-        if(tri.cell_is_foreign(c)) return local_covertex(main(f)); // any non foreign representative could do
-        return Vertex_iterator(&tiles, f.tile(), tri.covertex(*f));
     }
 
     /// returns the mirror_vertex of a facet f, as the covertex of its mirror facet.
