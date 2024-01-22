@@ -103,7 +103,7 @@ public:
     /// returns the ambient dimension of the triangulation
     inline int maximal_dimension() const { return maximal_dimension_; }
     /// returns the dimension of the triangulation
-    /// \todo It should be non mutable, but read_cgal_json needs to modify it.
+    /// \todo MB: It should be non mutable, but read_cgal_json needs to modify it when the dimension is dynamic
     inline int& maximal_dimension() { return maximal_dimension_; }
     /// returns the number of finite cells in the triangulation, including cells incident to the vertex at infinity.
     inline std::size_t number_of_finite_cells   () const { return statistics_.number_of_finite_cells;    }
@@ -238,7 +238,6 @@ public:
     }
 
     /// \name Iterator tests
-    /// \todo doc missing
     /// @{
 
     /// returns whether the vertex iterator is referring to a tile triangulation where the vertex is local.
@@ -249,13 +248,13 @@ public:
     bool is_local(const Cell_iterator&   c) const { return c.triangulation().cell_is_local(*c); }
 
     /// returns whether the vertex iterator is valid.
-    /// \todo should we check if tile is loaded ?
+    /// \todo MB: should we check if tile is loaded ?
     bool is_valid(const Vertex_iterator& v) const { return v.triangulation().vertex_is_valid(*v); }
     /// returns whether the facet iterator is valid.
-    /// \todo should we check if tile is loaded ?
+    /// \todo MB: should we check if tile is loaded ?
     bool is_valid(const Facet_iterator&  f) const { return f.triangulation().facet_is_valid(*f); }
     /// returns whether the cell iterator is valid.
-    /// \todo should we check if tile is loaded ?
+    /// \todo MB: should we check if tile is loaded ?
     bool is_valid(const Cell_iterator&   c) const { return c.triangulation().cell_is_valid(*c); }
 
     /// returns whether the facet iterator is referring to a tile triangulation where the facet is mixed (neither local nor foreign).
@@ -363,6 +362,7 @@ public:
     /// returns a representative iterator for the infinite vertex
     /// precondition : at least one tile is loaded.
     /// \todo loaded is not defined
+    /// MB: I agree that this doc needs to define "loaded". But my guess is that we should lift this precondition and enable provide a dummy Vertex_iterator for the infinite vertex that does not need any loaded tile (eg with tile=tiles.end())
     inline Vertex_iterator infinite_vertex() const
     {
         CGAL_assertion(!tiles.empty());
