@@ -75,18 +75,19 @@ public:
     ranges_transform_reduce(Container& c, Transform transform, V value, Reduce reduce, OutputIterator out) { return { value, out }; }
 
     /// \brief executes a function on all ranges of values with equivalent keys in the associative container `c`,
-    ///        calling `transform(first,last)` on each such range `[first,last)` in `c`.
+    ///        calling `v=transform(first,last)` on each such range `[first,last)` in `c` and aggregating each returned value `v`
+    ///        using `value=reduce(value,v)`.
     ///        If `Container` is non-const, then non-const iterators are passed to `transform` and its values may be modified.
-    /// \todo reduction not mentioned in brief/long description
-    /// \todo maybe put tparam Transform before `Reduce`, that way it is easier to define what is `U`
+    /// \todo reduction not mentioned in brief/long description MB: done
+    /// \todo maybe put tparam Transform before `Reduce`, that way it is easier to define what is `U` MB: done
     /// \param c an associative container
     /// \param transform function called on each range
     /// \param value initial value of the reduction
     /// \param reduce function called to produce the reduced result
     /// \tparam Container a model of `AssociativeContainer` that supports equivalent keys
-    /// \tparam V the return type of the `reduce` function
-    /// \tparam Reduce a model of `Callable` with `V` and a type `U` as argument types and `V` as its return type
-    /// \tparam Transform a model of `Callable` with 2 `Container::(const_)iterator`s as argument types and `U` as return type.
+    /// \tparam Transform a model of `Callable` with 2 `Container::(const_)iterator`s as argument types and calling `U` its return type.
+    /// \tparam V the type of the aggregated value.
+    /// \tparam Reduce a model of `Callable` with `V` and `U` as argument types and `V` as its return type
     /// \return `value` the reduced value after all updates by `transform`.
     ///         The reduced value is computed by applying `value=reduce(value, transform(first,last))` on all aforementioned ranges.
     template<typename Container,
