@@ -36,11 +36,11 @@ public:
     typedef typename std::vector<std::size_t>::const_iterator const_size_iterator;
 
     /// Construction with a bbox, a range of number of grid steps in each dimension, and a base tile index.
-    /// If the range ends before providing enough elements, its last element is repeatedly used.
-    /// \todo rename bbox -> domain?
-    /// \todo shouldn't you use Iso_cuboid if a kernel with exact FT is used? Then domain would return an Iso_cuboid and bbox a Bbox? (maybe that's a pb for the generic Bbox type?)
-    /// \todo base tile index -> first index. Probably want to say that it correspond to the 0 cell of the grid and other cell are assigned an incremented index
-    /// \todo you may want to doc each parameter rather than do a sentence with all of them.
+    /// \todo rename bbox -> domain? MB: ok if it is not confusing
+    /// \todo shouldn't you use Iso_cuboid if a kernel with exact FT is used? Then domain would return an Iso_cuboid and bbox a Bbox? (maybe that's a pb for the generic Bbox type?) MB: I think that this class should not be aware of these concerns. It is up to the traits to provide either a bbox or a is_cuboid (approximate or exact predicates). the traits api may have to be extended accordingly.
+    /// \param id0 tile index of the first tile of the grid. Subsequent tile indices are sequentially incremented.
+    /// \param bbox overall domain of the grid partitioner.
+    /// \param (it,end) range of integers, providing the number of grid elements in each dimension. If the range ends before providing enough elements, its last element is repeatedly used.
     template<typename Iterator>
     Grid_partitioner(Tile_index id0, const Bbox& bbox, Iterator it, Iterator end) : id0(id0)
     {
@@ -92,7 +92,7 @@ public:
         return id+id0;
     }
     /// returns begin iterator to the range providing the number of tile in each dimensions
-    /// \todo what about step_size(int i) instead?
+    /// \todo what about step_size(int i) instead? MB: if you feel like it
     const_size_iterator size_begin() const { return N.begin(); }
     ///return  end iterator to the range providing the number of tile in each dimensions
     const_size_iterator size_end() const { return N.end(); }
