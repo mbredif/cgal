@@ -6,7 +6,7 @@
 \ingroup PkgDDTConcepts
 \cgalConcept
 
-The concept `Triangulation` describes the requirements for the class that assigns a tile index to each point.
+The concept `Triangulation` describes the requirements for the class that maintains a Delaunay triangulation.
 \cgalHasModelsBegin
 \cgalHasModels{CGAL::Delaunay_Triangulation}
 \cgalHasModels{CGAL::Delaunay_Triangulation_2}
