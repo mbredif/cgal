@@ -400,16 +400,16 @@ public:
     /// returns the mirror index of facet `f`, such that `neighbor(cell(mirror_facet(f)), mirror_index)==cell(f)`
     /// The index of covertex of the main version of the mirror facet of f is considered, as indices may not be consistent across
     /// the representatives of mirror facet in other tiles.
-    /// \todo covertex is not defined and/or I don't know if it is a standard terminology
+    /// \todo covertex is not defined and/or I don't know if it is a standard terminology MB: I thought it was. That's the only vertex of the cell of the facet that is not incident to the facet.
     inline int mirror_index(const Facet_iterator& f) const
     {
         CGAL_assertion(is_valid(f));
         return index_of_covertex(mirror_facet(f));
     }
 
-    /// returns the full cell that is incident to the input facet `f` and that joins the covertex with the vertices of `f`
+    /// returns the cell that is incident to the input facet `f` and that joins the covertex with the vertices of `f`
     /// The operation is local iff the local cell of f is not foreign.
-    /// \todo full is not defined
+    /// \todo full is not defined MB: ok. "full cell" -> "cell"
     Cell_iterator cell(const Facet_iterator& f) const
     {
         CGAL_assertion(is_valid(f));
@@ -419,7 +419,7 @@ public:
         return Cell_iterator(&tiles, f.tile(), c);
     }
 
-    /// returns one of the full cells that is incident `v` in the triangulation of the same tile as `v`.
+    /// returns one of the cells that is incident `v` in the triangulation of the same tile as `v`.
     Cell_iterator cell(const Vertex_iterator& v) const
     {
         const Tile_triangulation& triangulation = v.triangulation();
@@ -437,8 +437,9 @@ public:
         return cells_end();
     }
 
-    /// returns whether  `v` is incident to `c`. The operation is local in the tile of c
-    /// \todo will it return false if v and c not in the same tile triangulation?
+    /// returns whether `v` is incident to `c`. The operation is local in the tile of `c` and looks for a vertex in this tile
+    /// if there is a vertex with the same coordinates as `v`
+    /// \todo will it return false if v and c not in the same tile triangulation? MB: no if another representant exists there. (updated doc)
     bool has_vertex(const Cell_iterator& c, const Vertex_iterator& v) const
     {
         Tile_cell_index tc = *c;
@@ -525,7 +526,7 @@ public:
     /// Advanced use: Access is local, thus more more effective, but the vertex index i corresponds
     /// to the index in the local tile representative of cell `c`, which may not be consistent with
     /// the vertex ordering in its main representative.
-    /// \todo Replace Advance use: with advanced macro + preconditions?
+    /// \todo Replace Advance use: with advanced macro + preconditions? MB:ok
     Vertex_iterator local_vertex (const Cell_iterator& c, const int i) const
     {
         CGAL_assertion(is_valid(c));
@@ -564,7 +565,7 @@ public:
         return tri.mirror_index(c,tri.index_of_covertex(*f));
     }
 
-    /// returns the full cell that is adjacent to the input facet `f` and that joins the covertex with the vertices of `f`
+    /// returns the cell that is adjacent to the input facet `f` and that joins the covertex with the vertices of `f`
     /// Advanced use: Access is local, thus more more effective, but assumes that the local cell of `f` is not foreign.
     Cell_iterator local_cell(const Facet_iterator& f) const
     {
@@ -622,7 +623,7 @@ public:
     /// \ingroup PkgDDTInsert
     /// inserts `point` in the tile given with index `id`, in the Delaunay triangulation stored in the tile container.
     /// The scheduler provides the distribution environment (single thread, multithread, MPI...)
-    /// \todo Only Delaunay?
+    /// \todo Only Delaunay? MB: yes in the first release ;). For the following release, we may try to support other insertion order independent triangulations.
     /// @returns v a descriptor to the inserted vertex and a bool
     template<typename Point_const_reference, typename Tile_index, typename Scheduler>
     std::pair<Vertex_iterator, bool> insert(Point_const_reference point, Tile_index id, Scheduler& sch)
@@ -706,7 +707,8 @@ public:
     }
 
     /// reads the distributed triangulation using the provided Reader and Scheduler
-    /// \todo : what happens to the serializer ?
+    /// \todo : what happens to the serializer ? MB: good point. I think that the current implementation will overwrite the data provided by the serializer with data provided by the reader
+    /// first in memory and then on disk for tiles that have been swaped out of memory
         template <typename Reader, typename Scheduler>
         bool read(const Reader& reader, Scheduler& sch)
     {
@@ -804,8 +806,7 @@ public:
     }
 
     /// clears the triangulation
-    /// \todo: what is the semantics of clearing when a serializer is present ? should we delete the files ?
-    /// \todo: I am not sure...
+    /// \todo: what is the semantics of clearing when a serializer is present ? should we delete the files ? MB: I am not sure...
     void clear() {
         statistics_ = {};
         statistics_.valid = false;
