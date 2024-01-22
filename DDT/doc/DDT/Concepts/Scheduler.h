@@ -46,11 +46,12 @@ public:
              typename OutputIterator>
     OutputIterator ranges_transform(Container& c, Transform transform, OutputIterator out) { return out; }
 
-    /// \brief executes a function on all ranges of values with equivalent keys in the associative container `c`, calling `transform(first,last,out)`
-    ///        on each such range `[first,last)` in `c`.
+    /// \brief executes a function on all ranges of values with equivalent keys in the associative container `c`, calling `v=transform(first,last,out)`
+    ///        on each such range `[first,last)` in `c` and aggregating each returned value `v`
+    ///        using `value=reduce(value,v)`.
     ///        If `Container` is non-const, then non-const iterators are passed to `transform` and its values may be modified.
-    /// \todo reduction is not mentionned in the brief/long description
-    /// \todo maybe put tparam Transform before `Reduce`, that way it is easier to define what is `U`
+    /// \todo reduction is not mentionned in the brief/long description MB: done
+    /// \todo maybe put tparam Transform before `Reduce`, that way it is easier to define what is `U` MB: done
     /// \param c an associative container
     /// \param transform function called on each range
     /// \param value initial value of the reduction
@@ -59,10 +60,10 @@ public:
     /// \tparam OutputValue the type that is put in `out` by `transform`
     /// \tparam Container a model of `AssociativeContainer` that supports equivalent keys
     /// \tparam OutputIterator a model of `OutputIterator` used by `transform`
-    /// \tparam V the return type of a call to `reduce`
-    /// \tparam Reduce a model of `Callable` with `V` and a type `U` as argument types and `V` as its return type
     /// \tparam Transform a model of `Callable` with 2 `Container::(const_)iterator`s and 1 `OutputIterator` as argument types,
-    ///         and `std::pair<U, OutputIterator>` as return type.
+    ///         and `std::pair<U, OutputIterator>` as return type for some type `U`.
+    /// \tparam V the return type of a call to `reduce`
+    /// \tparam Reduce a model of `Callable` with `V` and `U` as argument types and `V` as its return type
     /// \return `(value, out)` the reduced value and the output iterator after all updates by `transform`.
     ///         The reduced value is computed by applying `value=reduce(value, transform(first,last,out))` on all aforementioned ranges.
     template<typename OutputValue,
@@ -103,7 +104,7 @@ public:
     ///        in `c2` using `emplace(k, args2...)`.
     ///        If `Container1` is non-const, then non-const iterators are passed to `transform` and its values may be modified.
     ///        If `Container2` is non-const, then a non-const reference is passed to `transform` and its values may be modified.
-    /// \todo question valid for all functions: it should be clear that the range of elements with equivalent keys must be of size > 1
+    /// \todo question valid for all functions: it should be clear that the range of elements with equivalent keys must be of size > 1 MB: why ?
     /// \param c1 an associative container
     /// \param c2 an associative container
     /// \param out3 output iterator
@@ -131,17 +132,18 @@ public:
     /// \brief executes a function on all ranges of values with equivalent keys in the associative containers `c1` and `c3`,
     ///        calling `transform(first,last,v2,out)` on each such range `[first,last)` in `c1` and `c3`,
     ///        with `v2` being the value in `c2` associated in to the key `k=first1->first`
-    ///        This is a left join: if `c2` has no elements for an equivalent key `k` in `c1`, then an object is put in
+    ///        This is a left join: if `c2` has no elements for an equivalent key `k` in `c1` or `c3`, then an object is put in
     ///        in `c2` using `emplace(k, args2...)`.
     ///        The output iterator `out` is constructed using `std::inserter(c3, c3.end())`, which enables the scheduling
     ///        of further calls to the `transform` function.
     ///        The aggregation into ranges of values from `c1` or `c3` (scheduled using `out`) is also unspecified. It is only
-    ///        specified that the ranges passed to `transform` have equivalent keys and that they form a partition of all the values from `c1` and `c3`.
+    ///        specified that the ranges passed to `transform` have equivalent keys and that they form a partition of all the values from `c1` and all the initial values of `c3`.
     ///        If `Container1` is non-const, then non-const iterators are passed to `transform` and its values may be modified.
     ///        If `Container2` is non-const, then a non-const reference is passed to `transform` and its values may be modified.
-    /// \param c1 an associative container.
-    /// \param c2 an associative container.
-    /// \param c3 an associative container.
+    /// \param c1 an immutable associative container. When the function returns, `c1` is not modified and all its ranges of values with equivalent keys have been processed.
+    /// \param c2 a mutable associative container.
+    /// \param c3 a mutable associative container. Ranges of values with equivalent keys in `c3` are removed from `c3` upon transform calls.
+    /// When the function returns, `c3` is empty because of all its ranges of values with equivalent keys have been iteratively processed, including both initial values and inserted values.
     /// \param transform function called on each joined values: `transform(first,last,v2,out)` where `(first,last)` is a range of equivalent keys from `c1` or `c3`
     /// \param args2 extra arguments passed to construct `Container2::mapped_type(k,args2...)` when a key `k` in `c1` or `c3` is not found in `c2`
     ///
@@ -151,7 +153,7 @@ public:
     /// \tparam Transform a model of `Callable` with 2 `Container(1/3)::(const_)iterator`s as argument types, a reference to `Container2::mapped_type`
     ///         and a model of `OutputIterator` as argument types, and `OutputIterator` as return type.
     /// \tparam Args2 extra types for constructing elements in `Container2`.
-    /// \todo the role of c3 is not clear here. I don't get if c1 and c3 should both contain the ranges and if there is a recursion since values are put in c3
+    /// \todo the role of c3 is not clear here. I don't get if c1 and c3 should both contain the ranges and if there is a recursion since values are put in c3 MB: I gave it a try
     template<typename Container1,
              typename Container2,
              typename Container3,
