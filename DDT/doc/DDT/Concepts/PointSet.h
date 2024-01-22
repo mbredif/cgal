@@ -20,6 +20,9 @@ The concept `PointSet` describes the requirements for classes that model sequenc
 */
 /// \todo MB: should this concept have model or adapt CGAL::Point_set_2, CGAL::Point_set_3... ?
 /// \todo MB: empty concept, to be populated
+/// \todo MB: this file should ensure that the PointSetTraits specialization and the related free functions are provided (see models)
+/// \todo MB: rewrites static functions into free functions in each model PointSetTraits specialization.
+/// \todo MB: can we make CGAL::Distributed_point_set a model of PointSet ?
 class PointSet {};
 
 

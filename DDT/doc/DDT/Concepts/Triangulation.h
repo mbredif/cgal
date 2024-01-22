@@ -16,7 +16,7 @@ The concept `Triangulation` describes the requirements for the class that mainta
 */
 
 /// \todo MB: this file should ensure that the TriangulationTraits specialization and the related free functions are provided (see models)
-/// \todo MB: rewrites static functions into free functions in each model.
+/// \todo MB: rewrites static functions into free functions in each model TriangulationTraits specialization.
 /// \todo MB: can we make CGAL::Distributed_triangulation a model of Triangulation ?
 class Triangulation {
 }; /* end Triangulation */

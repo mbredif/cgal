@@ -9,7 +9,7 @@
 
 The concept `TileIndex` describes the requirements for a Tile identifier in a distributed triangulation or a distributed point set.
 
-/// \todo no function is documented here
+/// \todo no function is documented here MB: ok. should we put trivial docs for each operator ?
 */
 struct TileIndex {
 
@@ -35,17 +35,17 @@ struct TileIndex {
     /// @}
 };
 
-/// \todo is this part of the concept?
+/// \todo is this part of the concept? MB: I think it is required for serialization (disk streaming and MPI scheduling)
 namespace std {
 std::string to_string(TileIndex) { return ""; }
 }
 
-/// \todo is this part of the concept?
+/// \todo is this part of the concept? MB: I think it is required for deserialization (disk streaming and MPI scheduling)
 std::istream& operator>>(std::istream& in, TileIndex id) { return in; }
 
 
 /// make it hashable so that it can be used in unordered associative containers
-/// \todo Note that there exist `Hashable` and `DefaultConstructible` concepts
+/// \todo Note that there exist `Hashable` and `DefaultConstructible` concepts. MB: ok, we should use it then
 template <>
 struct std::hash<TileIndex>
 {

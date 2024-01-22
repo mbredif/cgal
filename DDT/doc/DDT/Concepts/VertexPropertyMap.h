@@ -18,6 +18,7 @@ If the mapped value does not only depend on the point embedding of the vertex, t
 \cgalHasModelsEnd
 
 \todo I'm not sure that you need a concept. You better put the doc directly in tparam of functions/classes needing it. Indeed Triangulation, Vertex_index and Tile_index are not defined here.
+MB: the intent was to document all models of the concept in a single place
 
 */
 #include <boost/property_map/property_map.hpp>

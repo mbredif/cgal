@@ -18,7 +18,7 @@ namespace CGAL {
 namespace DDT {
 
 /// general case, for Containers of points
-/// \todo meant to be doc?
+/// \todo meant to be doc? MB: maybe not. Maybe the doc should be moved to the PointSet concept
 template <typename PointSet, typename = void>
 struct Point_set_traits {
     typedef typename PointSet::value_type      value_type;
