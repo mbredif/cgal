@@ -7,6 +7,7 @@ File serializers are enabling out of core processing, by streaming points in and
 
 \todo it is not clear if the serializer is used for buffering triangulation or even for writing the final result (for future usage for example).
 A better scope should allow you to answer your question about `Distributed_triangulatioT::clear()`
+MB: it is currently used for many things : initial loading of an immutable dataset, initial loading of a mutable dataset that is to be mutated in place when data is brought out of memory, saving the final results...
 
 
 \cgalHasModelsBegin
@@ -16,7 +17,7 @@ A better scope should allow you to answer your question about `Distributed_trian
 \cgalHasModelsEnd
 
 */
-
+/// \todo MB: concept to be populated with begin_ and end_ functions ? should we split it into readers, writers and both ?
 class Serializer
 {
 public:

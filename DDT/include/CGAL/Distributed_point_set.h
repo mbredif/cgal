@@ -20,8 +20,12 @@
 namespace CGAL {
 
 /// \ingroup PkgDDTRef
-/// Distributed point set
-/// \todo add more doc in brief and members?
+/// The Distributed_point_set class wraps a Container to expose a point set interface.
+/// \tparam PointSet model of `PointSet`, which stores local point sets.
+/// \tparam TileIndexProperty model of `VertexPropertyMap`, which provides access to the tile index of the points.
+/// \tparam Serializer model of `Serializer`. If not provided, serialization is disabled and computations are performed in core using `CGAL::DDT::No_serializer`
+/// \todo add more doc in brief and members? API to be discussed. MB: Serializer is not used yet. For now the distributed point set can only be made scalable in memory when the
+/// distributed point set is an immutable input, by using an out-of-memory PointSet model such as LAS_point_set or Random_point_set.
 template<typename PointSet_,
          typename TileIndexProperty_,
          typename Serializer = CGAL::DDT::No_serializer>

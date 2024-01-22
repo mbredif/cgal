@@ -26,8 +26,9 @@ namespace CGAL {
 namespace DDT {
 
 /// \ingroup PkgDDTSchedulerClasses
+/// This scheduler provides a distributed implementation based on the MPI library.
+/// requires an MPI library.
 /// \cgalModels{Scheduler}
-/// \todo doc is empty
 struct MPI_scheduler
 {
     /// constructor
@@ -97,17 +98,20 @@ struct MPI_scheduler
         MPI_Finalize();
     }
 
+    /// Communicator size.
     inline int max_concurrency() const
     {
         return comm_size;
     }
 
+    /// returns the rank of the process on which this tile index is assigned.
+    /// The current implementation relies on a modulo of the hash of the tile index, which tries to balance the load across processing elements but may lack locality.
     template<typename Tile_index> inline int rank(Tile_index id) const
     {
-        // Surely not the most optimal repartition of tile ids across processing elements (lacks locality)
         return std::hash<Tile_index>{}(id) % comm_size;
     }
 
+    /// tests if the tile is assigned to the current process.
     template<typename Tile_index> inline bool is_local(Tile_index id) const
     {
         return comm_rank == rank(id);

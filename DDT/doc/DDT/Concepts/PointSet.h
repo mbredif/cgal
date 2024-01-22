@@ -18,6 +18,8 @@ The concept `PointSet` describes the requirements for classes that model sequenc
 \cgalHasModelsEnd
 
 */
+/// \todo MB: should this concept have model or adapt CGAL::Point_set_2, CGAL::Point_set_3... ?
+/// \todo MB: empty concept, to be populated
 class PointSet {};
 
 

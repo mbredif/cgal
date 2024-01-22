@@ -1,50 +1,25 @@
 
-#ifndef CGAL_DDT_CONCEPT_PARTITIONER
-#define CGAL_DDT_CONCEPT_PARTITIONER
-
-#include <Concepts/TileIndex.h>
-#include <Concepts/Point.h>
+#ifndef CGAL_DDT_CONCEPT_TRIANGULATION
+#define CGAL_DDT_CONCEPT_TRIANGULATION
 
 /*!
 \ingroup PkgDDTConcepts
 \cgalConcept
 
-The concept `Partitioner` describes the requirements for the class that assigns a tile index to each point.
+The concept `Triangulation` describes the requirements for the class that assigns a tile index to each point.
 \cgalHasModelsBegin
-\cgalHasModels{CGAL::DDT::Const_partitioner}
-\cgalHasModels{CGAL::DDT::Grid_partitioner}
+\cgalHasModels{CGAL::Delaunay_Triangulation}
+\cgalHasModels{CGAL::Delaunay_Triangulation_2}
+\cgalHasModels{CGAL::Delaunay_Triangulation_3}
 \cgalHasModelsEnd
 
 */
 
-class Partitioner {
-public:
+/// \todo MB: this file should ensure that the TriangulationTraits specialization and the related free functions are provided (see models)
+/// \todo MB: rewrites static functions into free functions in each model.
+class Triangulation {
+}; /* end Triangulation */
 
-/// \name Types
-/// @{
 
-#ifdef DOXYGEN_RUNNING
-    /// model of `TileIndex`
-    typedef unspecified_type Tile_index;
-    /// Point type
-    typedef unspecified_type Point;
-    /// point const reference type
-    typedef unspecified_type Point_const_reference;
-#else
-    typedef ::TileIndex Tile_index;
-    typedef ::Point Point;
-    typedef ::Point const& Point_const_reference;
-#endif
 
-/// @}
-
-    /// returns the tile index of point `p`.
-    Tile_index operator()(Point_const_reference p) const { return {}; }
-
-    /// return the number of tile indices.
-    /// \todo Is it the number of tiles or the largest tile index (maybe tile indices are not contiguous)
-    std::size_t size() const { return 0; }
-
-}; /* end Partitioner */
-
-#endif // CGAL_DDT_CONCEPT_PARTITIONER
+#endif // CGAL_DDT_CONCEPT_TRIANGULATION
