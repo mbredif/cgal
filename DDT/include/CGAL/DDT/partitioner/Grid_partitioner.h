@@ -31,8 +31,8 @@ public:
     typedef typename Traits::Point_const_reference   Point_const_reference;
     typedef typename Traits::Bbox Bbox;
     typedef Bbox Domain;
-    /// \todo not documented
-    /// \todo can't you use a tuple or std::array?
+    /// \todo not documented MB: -> unspecified type ?
+    /// \todo can't you use a tuple or std::array? MB: ideally yes : we need (provided by the traits?) a utility class that may be static (std::array) for fixed dimension kernels and dynamic (std::vector) for dynamic dimension kernel (can be reused in various places such as bbox)
     typedef typename std::vector<std::size_t>::const_iterator const_size_iterator;
 
     /// Construction with a bbox, a range of number of grid steps in each dimension, and a base tile index.

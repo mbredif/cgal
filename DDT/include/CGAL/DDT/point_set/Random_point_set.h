@@ -49,7 +49,7 @@ public:
     /// single pass iterator type over the generated points.
     typedef unspecified_type const_iterator;
     /// single pass const iterator type over the generated points.
-    /// \todo do we really need `iterator` ?
+    /// \todo MB: do we really need `iterator` ?
     typedef unspecified_type iterator;
 #else
     struct const_iterator {
@@ -110,8 +110,10 @@ std::istream& operator>>(std::istream& in, Random_point_set<PointGenerator>& ps)
 
 /// \ingroup PkgDDTPointSetClasses
 /// constructs a distributed point set from a `Random_point_set` and a `Partitioner`.
-/// It assumes that the tile domains of the partitioner are not overlaping
-/// \todo I don't understand what you mean
+/// It assumes that the tile domains of the partitioner are not overlaping.
+/// \tparam PointGenerator a random point generator.
+/// \tparam Partitioner model of the Partitioner concept.
+/// \todo I don't understand what you mean. MB:rephrased. ok?
 template<typename PointGenerator, typename Partitioner>
 CGAL::Distributed_point_set<
     Random_point_set<PointGenerator>,

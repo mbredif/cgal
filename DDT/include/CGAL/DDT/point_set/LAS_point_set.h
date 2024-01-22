@@ -42,7 +42,7 @@ public:
     /// single pass const iterator : all iterators of a LAS_point_set share the same reader and point storage
     typedef unspecified_type const_iterator;
     /// single pass iterator : all iterators of a LAS_point_set share the same reader and point storage
-    /// \todo do we really need `iterator` ?
+    /// \todo MB:do we really need `iterator` ?
     typedef unspecified_type iterator;
 #else
     struct const_iterator {
