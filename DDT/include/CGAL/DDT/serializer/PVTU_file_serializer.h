@@ -17,15 +17,22 @@
 namespace CGAL {
 namespace DDT {
 
-/// \todo not doc on purpose?
+/// \ingroup PkgDDTSerializerClasses
+/// This serializer is used to save a distributed triangulation on disk using the PVTU format from VTK, which is supported by https://www.paraview.org/ .
+/// https://docs.vtk.org/en/latest/design_documents/VTKFileFormats.html#punstructuredgrid
+/// \cgalModels{Serializer}
 class PVTU_serializer {
 public:
+    /// constructor
+    /// \param dirname directory
+    /// \param binary selects VTU binary or ascii mode
     PVTU_serializer(const std::string& dirname, bool binary = true) : dirname_(dirname), binary_(binary)
     {
         boost::filesystem::path p(dirname_);
         boost::filesystem::create_directories(p);
     }
 
+    /// writes the tile triangulation as a VTU file.
     template <class TileTriangulation>
     bool write(const TileTriangulation& tri) const
     {
@@ -34,12 +41,14 @@ public:
         return true;
     }
 
+    /// initiates writing the distributed triangulation.
     template <typename DistributedTriangulation>
     bool write_begin(const DistributedTriangulation& tri, int) const
     {
         return true;
     }
 
+    /// terminates writing the distributed triangulation, as a PVTU file.
     template <typename DistributedTriangulation>
     bool write_end(const DistributedTriangulation& tri, int id) const
     {
@@ -47,7 +56,7 @@ public:
         return write_pvtu(os, tri);
     }
 
-    /// File system directory name
+    /// File system directory name.
     const std::string& dirname() const { return dirname_; }
 
 private:

@@ -20,18 +20,31 @@ namespace CGAL {
 namespace DDT {
 
 /// \ingroup PkgDDTPointSetClasses
-/// \tparam Point type
-/// The LAS_tile_points is a proxy to a LAS file, to be read on demand
+/// The LAS_tile_points is a proxy to a LAS file.
+/// Points are read on demand, providing a constant-memory iteration over the points in a LAS file.
 /// \cgalModels{PointSet}
+/// \tparam Point type.
 template<typename Point>
 class LAS_point_set {
 public:
     typedef Kernel_traits<Point> Traits;
+    /// Bbox type
     typedef typename Traits::Bbox Bbox;
+    /// Point type
     typedef Point value_type;
+    /// const reference to Point type
     typedef typename Kernel_traits<Point>::Point_const_reference const_reference;
 
-    /// Single Pass Iterator : all iterators share and use the same reader and point storage (provided by LAS_point_set)
+#ifdef DOXYGEN_RUNNING
+private:
+    struct unspecified_type {};
+public:
+    /// single pass const iterator : all iterators of a LAS_point_set share the same reader and point storage
+    typedef unspecified_type const_iterator;
+    /// single pass iterator : all iterators of a LAS_point_set share the same reader and point storage
+    /// \todo do we really need `iterator` ?
+    typedef unspecified_type iterator;
+#else
     struct const_iterator {
 
         const_iterator(LASreaderLAS& lasreader, Point& point, std::size_t size) : lasreader_(lasreader), point_(point), size_(size) {
@@ -59,10 +72,15 @@ public:
         std::size_t size_;
     };
     typedef const_iterator iterator;
+#endif
 
+    /// begin single pass iterator
     const_iterator begin() const { return {lasreader_, point_, size()}; }
+    /// end single pass iterator
     const_iterator end  () const { return {lasreader_, point_, 0}; }
 
+    /// constructor
+    /// \param fn filename of the LAS file.
     LAS_point_set(const std::string& fn) : filename_(fn) {
         file_.open(filename_, std::ios::binary);
         CGAL::IO::set_mode(file_, CGAL::IO::BINARY);
@@ -75,9 +93,14 @@ public:
     ~LAS_point_set() {
         lasreader_.close();
     }
+
+    /// filename of the LAS file.
     const std::string& filename() const { return filename_; }
+    /// number of points in the LAS file, provided by the LAS header.
     const std::size_t size() const { return lasreader_.npoints; }
+    /// returns `size()`
     const std::size_t local_size() const { return size(); }
+    /// bounding box of the points provided by the LAS header.
     const Bbox& bbox() const { return bbox_; }
 
 private:
@@ -95,9 +118,12 @@ point(const LAS_point_set<P>& ps, typename Point_set_traits<LAS_point_set<P>>::c
 }
 
 /// \ingroup PkgDDTPointSetClasses
-/// makes a distributed point set from point set uniformly generated in its its domain and a partitioner
-/// assumes that the tile domains of the partitioner are not overlaping
-/// \todo I don't understand what you mean here
+/// makes a distributed point set from a collection of LAS files
+/// \tparam Point model.
+/// \tparam TileIndex model.
+/// \tparam StringIterator model.
+/// \param (begin, end) range of strings, used as filenames for LAS files.
+/// \param id tile index of the LAS point set read at filename "*begin". Tile indices are consecutive from `id` to id+distance(begin,end)-1
 template<typename Point, typename TileIndex, typename StringIterator>
 CGAL::Distributed_point_set<LAS_point_set<Point>, boost::static_property_map<TileIndex>>
 make_distributed_LAS_point_set(TileIndex id, StringIterator begin, StringIterator end)

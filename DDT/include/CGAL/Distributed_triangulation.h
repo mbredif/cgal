@@ -707,8 +707,8 @@ public:
 
     /// reads the distributed triangulation using the provided Reader and Scheduler
     /// \todo : what happens to the serializer ?
-    template <typename Reader, typename Scheduler>
-    bool read(const Reader& reader, Scheduler& sch)
+        template <typename Reader, typename Scheduler>
+        bool read(const Reader& reader, Scheduler& sch)
     {
         clear();
         CGAL_DDT_TRACE0(sch, "DDT", "read", 0, "B");

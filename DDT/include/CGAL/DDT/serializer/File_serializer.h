@@ -20,12 +20,13 @@ namespace CGAL {
 namespace DDT {
 
 /// \ingroup PkgDDTSerializerClasses
-/// This serializer saves and loads the triangulation of each tile to the filesystem.
-/// It contains the iostream serialization of the tile triangulation.
-/// \todo most of my remarks for File_point_serializer applies here too
+/// This serializer may be used to save and load a distributed triangulation on disk.
+/// It uses CGAL's iostream serialization for reading and writing each tile triangulation and a JSON file for the overall distributed triangulation metadata.
+/// \todo most of my remarks for File_point_serializer applies here too MB: ok
 /// \cgalModels{Serializer}
 class File_serializer {
 public:
+    /// constructor
     File_serializer(const std::string& dirname = "") : dirname_(dirname)
     {
         if(dirname_.empty()) {
@@ -36,6 +37,7 @@ public:
         boost::filesystem::create_directories(p);
     }
 
+    /// writes a tile triangulation to disk using cgal's ostream serialization, as a TXT file using CGAL's iostream serialization.
     template <class TileTriangulation>
     bool write(const TileTriangulation& tri) const
     {
@@ -43,12 +45,14 @@ public:
         return write_cgal_tile(os, tri);
     }
 
+    /// initiates the writing of a distributed triangulation to disk.
     template <typename DistributedTriangulation>
     bool write_begin(const DistributedTriangulation& tri, int) const
     {
         return true;
     }
 
+    /// finalizes the writing of a distributed triangulation to disk, as a JSON file.
     template <typename DistributedTriangulation>
     bool write_end(const DistributedTriangulation& tri, int id) const
     {
@@ -56,6 +60,7 @@ public:
         return write_json_tiles(os, tri);
     }
 
+    /// tests whether a tile is readable, given its index.
     template <typename TileIndex>
     bool is_readable(TileIndex id) const
     {
@@ -63,6 +68,7 @@ public:
         return is.is_open();
     }
 
+    /// reads in place a tile from disk, using its index `tri.id()`.
     template<typename TileTriangulation>
     bool read(TileTriangulation& tri) const
     {
@@ -70,6 +76,7 @@ public:
         return read_cgal_tile(is, tri);
     }
 
+    /// initiates the reading of distributed triangulation from disk.
     template <typename DistributedTriangulation>
     bool read_begin(DistributedTriangulation& tri, int id) const
     {
@@ -77,6 +84,7 @@ public:
         return read_cgal_json(is, tri);
     }
 
+    /// terminates the reading of distributed triangulation from disk.
     template <typename DistributedTriangulation>
     bool read_end(DistributedTriangulation& tri, int id) const
     {

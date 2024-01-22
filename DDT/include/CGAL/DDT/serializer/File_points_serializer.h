@@ -21,18 +21,19 @@ struct File_points_serializer;
 std::ostream& operator<<(std::ostream& out, const File_points_serializer& serializer);
 
 /// \ingroup PkgDDTSerializerClasses
-/// This serializer saves and loads the point set of each tile on the disk using a user defined directory path.
-/// It contains the iostream serialization of the point set of the tile triangulation.
+/// This serializer may be used to save and load a distributed triangulation on disk.
+/// It uses CGAL's iostream serialization for reading and writing the point set of each tile triangulation and a JSON file for the overall distributed triangulation metadata.
+/// Rather than writing triangulations, this serializer writes only the point sets, and recomputes the Delaunay triangulation upon reading.
 /// The point set of each tile is sorted spatially before saving, so that the Delaunay triangulation could be recomputed efficiently when the tile is reloaded.
 /// This trades off decreased disk usage and bandwith for increased computations.
-/// \todo use std filesystem instead of boost?
-/// \todo does it need to be a full path or a local one works?
+/// \todo use std filesystem instead of boost? MB: ok
+/// \todo does it need to be a full path or a local one works? MB: whatever works is fine with me
 /// \cgalModels{Serializer}
 struct File_points_serializer
 {
 
   /// Each tile is saved as the file "{dirname}/{tile_index}.txt".
-  /// \todo is dirname created if it does not exist?
+  /// \todo is dirname created if it does not exist? MB: I think it should
   File_points_serializer(const std::string& dirname = "") : dirname_(dirname)
   {
       if(dirname_.empty()) {
@@ -53,6 +54,7 @@ struct File_points_serializer
 #endif
 
 
+  /// tests whether a tile is readable, given its index.
   template <typename TileIndex>
   bool is_readable(TileIndex id) const
   {
@@ -61,6 +63,7 @@ struct File_points_serializer
     return in.is_open();
   }
 
+  /// reads a point set from disk and insert them in `tri`, using its index `tri.id()`.
   template<typename TileTriangulation> bool read(TileTriangulation& tri) const
   {
 #ifdef CGAL_DEBUG_DDT
@@ -87,6 +90,7 @@ struct File_points_serializer
     return false;
   }
 
+  /// writes the sorted points of a tile triangulation to disk using cgal's ostream serialization, as a TXT file using CGAL's iostream serialization.
   template<typename TileTriangulation> bool write(const TileTriangulation& tri) const {
 #ifdef CGAL_DEBUG_DDT
     ++nb_save;
@@ -114,7 +118,7 @@ struct File_points_serializer
   }
 
   /// returns the directory on the disk where file are written and read
-  /// \todo is the full path ?
+  /// \todo is the full path ? MB: not sure, whatever works
   const std::string& dirname() const { return dirname_; }
 
 private:

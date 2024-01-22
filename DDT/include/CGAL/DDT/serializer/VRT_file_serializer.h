@@ -17,9 +17,18 @@
 namespace CGAL {
 namespace DDT {
 
-/// \todo not doc on purpose?
+/// \ingroup PkgDDTSerializerClasses
+/// This serializer is used to save a distributed triangulation on disk using the VRT and CSV formats from GDAL, for GIS applications such as https://www.qgis.org .
+/// https://gdal.org/drivers/vector/vrt.html
+/// \cgalModels{Serializer}
 class VRT_serializer {
 public:
+    /// constructor.
+    /// \param dirname the directory path.
+    /// \param tins enables the `wkbTIN` export of the tile triangulations.
+    /// \param verts enables the `wkbPoint` export of the tile triangulation vertices.
+    /// \param facets enables the `wkbLineString` export of the tile triangulation facets.
+    /// \param cells enables the `wkbPolygon` export of the tile triangulation cells.
     VRT_serializer(const std::string& dirname, bool tins = true, bool verts = true, bool facets = true, bool cells = true)
     : dirname_(dirname), tins(tins), verts(verts), facets(facets), cells(cells)
     {
@@ -29,6 +38,7 @@ public:
         boost::filesystem::create_directories(dirname_+"/t");
     }
 
+    /// writes the tile triangulation as VRT+CSV file pairs.
     template <class TileTriangulation>
     bool write(const TileTriangulation& tri) const
     {
@@ -39,12 +49,14 @@ public:
         return true;
     }
 
+    /// initiates writing the distributed triangulation.
     template <typename DistributedTriangulation>
-    bool write_begin(const DistributedTriangulation& tri, int id) const
+    bool write_begin(const DistributedTriangulation& tri, int) const
     {
         return true;
     }
 
+    /// terminates writing the distributed triangulation, as a union VRT file.
     template <typename DistributedTriangulation>
     bool write_end(const DistributedTriangulation& tri, int id) const
     {
@@ -56,7 +68,7 @@ public:
         return true;
     }
 
-    /// File system directory name
+    /// File system directory name.
     const std::string& dirname() const { return dirname_; }
 
     bool tins, verts, facets, cells;

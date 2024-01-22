@@ -21,7 +21,7 @@ namespace CGAL {
 namespace DDT {
 
 /// \ingroup PkgDDTPointSetClasses
-/// A point set that provides a single pass constant iterator to a sequence of on-the-fly generated points.
+/// A point set that provides a single pass const iterator to a sequence of on-the-fly generated points.
 /// This point set saves memory by keeping a single point in memory, which is the last generated point.
 /// Thus the const_reference is invalidated as soon as the iterator is incremented.
 /// \cgalModels{PointSet}
@@ -46,12 +46,12 @@ struct Random_point_set {
 private:
     struct unspecified_type {};
 public:
-    /// constant single pass iterator type over the generated points.
+    /// single pass iterator type over the generated points.
     typedef unspecified_type const_iterator;
-    /// constant single pass iterator type over the generated points.
+    /// single pass const iterator type over the generated points.
+    /// \todo do we really need `iterator` ?
     typedef unspecified_type iterator;
 #else
-    /// constant single pass iterator type over the generated points.
     struct const_iterator {
         const_iterator(std::size_t remaining, PointGenerator& generator) : remaining_(remaining), generator_(generator) {
             if (remaining > 0) generator.next();
@@ -69,7 +69,6 @@ public:
         PointGenerator& generator_;
         std::size_t remaining_;
     };
-    /// constant single pass iterator type over the generated points.
     typedef const_iterator iterator;
 #endif
 
