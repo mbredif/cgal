@@ -78,6 +78,7 @@ struct File_points_serializer
     std::ifstream in(fname, std::ios::in | std::ios::binary);
 
     std::size_t count;
+    in >> count;
     Vertex_index v;
     for(std::size_t i = 0; i < count; ++i) {
         Point p;
