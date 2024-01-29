@@ -3,6 +3,10 @@
 #include <CGAL/DDT/selector/Median_selector.h>
 #include <iostream>
 
+#if !defined(__PRETTY_FUNCTION__) && !defined(__GNUC__)
+#define __PRETTY_FUNCTION__ __FUNCSIG__
+#endif
+
 template<typename T>
 bool test_selection(const char *pretty_function, T selected, T expected) {
     if (selected != expected)
