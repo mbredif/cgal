@@ -116,7 +116,7 @@ public:
         for(std::size_t i=0; i<D; ++i)
         {
             std::size_t x = f % N[i];
-            double d = 1.d/inv_step[i];
+            double d = 1.0 /inv_step[i];
             f /= N[i];
             p[i] += d*x;
             q[i] = p[i] + d;
